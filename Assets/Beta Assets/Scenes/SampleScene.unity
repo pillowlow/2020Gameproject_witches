@@ -139,11 +139,11 @@ MonoBehaviour:
   attackPoint: {fileID: 1098311370}
   enemyLayers:
     serializedVersion: 2
-    m_Bits: 1024
+    m_Bits: 4096
   attackRange: 0.75
   feetPos: {fileID: 610324464}
   isInvincible: 0
-  collisionSize: {x: 1, y: 1}
+  collisionSize: {x: 1.2, y: 2.5}
   hearts:
   - {fileID: 1762055044668409472}
   - {fileID: 1762055045702012062}
@@ -161,7 +161,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 23994776}
-  m_Layer: 10
+  m_Layer: 12
   m_Name: Ground Detection
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -307,7 +307,7 @@ GameObject:
   - component: {fileID: 394869463}
   - component: {fileID: 394869464}
   - component: {fileID: 394869467}
-  m_Layer: 10
+  m_Layer: 12
   m_Name: Opossum
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -407,9 +407,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 394869459}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6093aa2e089048c4fb718727943941d7, type: 3}
+  m_Script: {fileID: 11500000, guid: d8a109009f2f6194baa825a5b0683e2d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  speed: 5
+  groundDetection: {fileID: 23994776}
 --- !u!114 &394869464
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -419,9 +421,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 394869459}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 86e449fd3c4d1804db4f2f31d10a9e84, type: 3}
+  m_Script: {fileID: 11500000, guid: 59783dfc58d58f44b89dda9026b5c1aa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  maxHealth: 3
+  atk: 1
 --- !u!61 &394869465
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -553,9 +557,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 394869459}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 810540bd6b0c40a4e98ed6f872d2e1bb, type: 3}
+  m_Script: {fileID: 11500000, guid: 757622f5bc0c08449a6c6cd6fd48f917, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  deathSound: {fileID: 8300000, guid: 2981956aab954b9479c946eb679c0ef2, type: 3}
+  destroy: 1
+  destroyTime: 0.06
 --- !u!50 &394869468
 Rigidbody2D:
   serializedVersion: 4
@@ -719,7 +726,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 610324464}
-  m_Layer: 12
+  m_Layer: 10
   m_Name: Feet Pos
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -749,7 +756,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1098311370}
-  m_Layer: 12
+  m_Layer: 10
   m_Name: Attack Point
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -918,7 +925,7 @@ GameObject:
   - component: {fileID: 1248226760}
   - component: {fileID: 1248226759}
   - component: {fileID: 1248226769}
-  m_Layer: 10
+  m_Layer: 12
   m_Name: Eagle Shoot
   m_TagString: Enemy
   m_Icon: {fileID: 0}
@@ -1031,7 +1038,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerLayer:
     serializedVersion: 2
-    m_Bits: 4096
+    m_Bits: 1024
   detectRange: 9
 --- !u!82 &1248226763
 AudioSource:
@@ -1157,9 +1164,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 757622f5bc0c08449a6c6cd6fd48f917, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  deathSound: {fileID: 0}
-  destroy: 0
-  destroyTime: 0
+  deathSound: {fileID: 8300000, guid: 2981956aab954b9479c946eb679c0ef2, type: 3}
+  destroy: 1
+  destroyTime: 0.06
 --- !u!114 &1248226766
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1347,7 +1354,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1314400314}
-  m_Layer: 10
+  m_Layer: 12
   m_Name: Ground Detection
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1498,15 +1505,15 @@ GameObject:
   - component: {fileID: 1518883601}
   - component: {fileID: 1518883600}
   - component: {fileID: 1518883602}
-  - component: {fileID: 1518883606}
-  - component: {fileID: 1518883607}
   - component: {fileID: 1518883599}
   - component: {fileID: 1518883608}
+  - component: {fileID: 1518883606}
+  - component: {fileID: 1518883607}
   - component: {fileID: 1518883609}
   - component: {fileID: 1518883605}
   - component: {fileID: 1518883604}
   - component: {fileID: 1518883603}
-  m_Layer: 10
+  m_Layer: 12
   m_Name: Eagle
   m_TagString: Enemy
   m_Icon: {fileID: 0}
@@ -1699,9 +1706,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 1518883598}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 86e449fd3c4d1804db4f2f31d10a9e84, type: 3}
+  m_Script: {fileID: 11500000, guid: 59783dfc58d58f44b89dda9026b5c1aa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  maxHealth: 0
+  atk: 0
 --- !u!114 &1518883607
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1711,9 +1720,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 1518883598}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6093aa2e089048c4fb718727943941d7, type: 3}
+  m_Script: {fileID: 11500000, guid: 757622f5bc0c08449a6c6cd6fd48f917, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  deathSound: {fileID: 8300000, guid: 2981956aab954b9479c946eb679c0ef2, type: 3}
+  destroy: 1
+  destroyTime: 0.06
 --- !u!82 &1518883608
 AudioSource:
   m_ObjectHideFlags: 0
@@ -1819,9 +1831,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 1518883598}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 772f26a63548d984aac85237d9d8c8bb, type: 3}
+  m_Script: {fileID: 11500000, guid: 18f33a535df480b4ebe02cde7ff15fd1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  playerLayer:
+    serializedVersion: 2
+    m_Bits: 1024
+  detectRange: 7
 --- !u!1 &1550610532
 GameObject:
   m_ObjectHideFlags: 0
@@ -2067,7 +2083,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1945389337}
-  m_Layer: 10
+  m_Layer: 12
   m_Name: Enemy
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2211,7 +2227,7 @@ GameObject:
   - component: {fileID: 1958011299}
   - component: {fileID: 1958011298}
   - component: {fileID: 1958011297}
-  m_Layer: 10
+  m_Layer: 12
   m_Name: Opossum (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2242,9 +2258,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 1958011295}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 810540bd6b0c40a4e98ed6f872d2e1bb, type: 3}
+  m_Script: {fileID: 11500000, guid: d8a109009f2f6194baa825a5b0683e2d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  speed: 5
+  groundDetection: {fileID: 1314400314}
 --- !u!114 &1958011298
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2254,9 +2272,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 1958011295}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 86e449fd3c4d1804db4f2f31d10a9e84, type: 3}
+  m_Script: {fileID: 11500000, guid: 757622f5bc0c08449a6c6cd6fd48f917, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  deathSound: {fileID: 8300000, guid: 2981956aab954b9479c946eb679c0ef2, type: 3}
+  destroy: 1
+  destroyTime: 0.06
 --- !u!114 &1958011299
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2266,9 +2287,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 1958011295}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6093aa2e089048c4fb718727943941d7, type: 3}
+  m_Script: {fileID: 11500000, guid: 59783dfc58d58f44b89dda9026b5c1aa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  maxHealth: 2
+  atk: 1
 --- !u!82 &1958011300
 AudioSource:
   m_ObjectHideFlags: 0
@@ -2475,7 +2498,7 @@ GameObject:
   - component: {fileID: 2039565875}
   - component: {fileID: 2039565874}
   - component: {fileID: 2039565873}
-  m_Layer: 10
+  m_Layer: 12
   m_Name: Frog (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2601,9 +2624,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 2039565871}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6093aa2e089048c4fb718727943941d7, type: 3}
+  m_Script: {fileID: 11500000, guid: 757622f5bc0c08449a6c6cd6fd48f917, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  deathSound: {fileID: 8300000, guid: 2981956aab954b9479c946eb679c0ef2, type: 3}
+  destroy: 1
+  destroyTime: 0.06
 --- !u!114 &2039565875
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2613,9 +2639,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 2039565871}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 86e449fd3c4d1804db4f2f31d10a9e84, type: 3}
+  m_Script: {fileID: 11500000, guid: 59783dfc58d58f44b89dda9026b5c1aa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  maxHealth: 0
+  atk: 0
 --- !u!58 &2039565876
 CircleCollider2D:
   m_ObjectHideFlags: 0
@@ -2717,7 +2745,7 @@ GameObject:
   - component: {fileID: 2096804417}
   - component: {fileID: 2096804420}
   - component: {fileID: 2096804421}
-  m_Layer: 10
+  m_Layer: 12
   m_Name: Knight
   m_TagString: Enemy
   m_Icon: {fileID: 0}
@@ -2842,9 +2870,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 2096804413}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 86e449fd3c4d1804db4f2f31d10a9e84, type: 3}
+  m_Script: {fileID: 11500000, guid: 757622f5bc0c08449a6c6cd6fd48f917, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  deathSound: {fileID: 8300000, guid: 2981956aab954b9479c946eb679c0ef2, type: 3}
+  destroy: 0
+  destroyTime: 1.2
 --- !u!114 &2096804419
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2854,9 +2885,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 2096804413}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6093aa2e089048c4fb718727943941d7, type: 3}
+  m_Script: {fileID: 11500000, guid: 59783dfc58d58f44b89dda9026b5c1aa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  maxHealth: 3
+  atk: 1
 --- !u!50 &2096804420
 Rigidbody2D:
   serializedVersion: 4
@@ -3097,7 +3130,7 @@ GameObject:
   - component: {fileID: 2123285277}
   - component: {fileID: 2123285276}
   - component: {fileID: 2123285279}
-  m_Layer: 10
+  m_Layer: 12
   m_Name: Frog
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3196,9 +3229,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 2123285272}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6093aa2e089048c4fb718727943941d7, type: 3}
+  m_Script: {fileID: 11500000, guid: 757622f5bc0c08449a6c6cd6fd48f917, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  deathSound: {fileID: 8300000, guid: 2981956aab954b9479c946eb679c0ef2, type: 3}
+  destroy: 1
+  destroyTime: 0.06
 --- !u!114 &2123285277
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3208,9 +3244,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 2123285272}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 86e449fd3c4d1804db4f2f31d10a9e84, type: 3}
+  m_Script: {fileID: 11500000, guid: 59783dfc58d58f44b89dda9026b5c1aa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  maxHealth: 2
+  atk: 1
 --- !u!58 &2123285278
 CircleCollider2D:
   m_ObjectHideFlags: 0
@@ -3340,7 +3378,7 @@ GameObject:
   - component: {fileID: 7588458}
   - component: {fileID: 1463392079004109}
   - component: {fileID: 1463392079004112}
-  m_Layer: 12
+  m_Layer: 10
   m_Name: Player
   m_TagString: Player
   m_Icon: {fileID: 7866945982896999795, guid: 0000000000000000d000000000000000, type: 0}
@@ -3362,7 +3400,7 @@ MonoBehaviour:
   jumpsound: {fileID: 8300000, guid: b2fc9b67f0513e244971c3111b36e80e, type: 3}
   OnGround: 0
   feetPos: {fileID: 610324464}
-  feetSize: {x: 1, y: 1}
+  feetSize: {x: 1.2, y: 0.3}
   Ground:
     serializedVersion: 2
     m_Bits: 512
@@ -3382,8 +3420,8 @@ MonoBehaviour:
   maxHealth: 6
   attackDamage: 1
   attackSpeed: 1
-  jumpAttackForce: 10
-  jumpForce: 10
+  jumpAttackForce: 15
+  jumpForce: 12
   jumpTime: 0.3
   minHeight: 1
   speed: 7

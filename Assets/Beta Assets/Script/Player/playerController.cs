@@ -34,6 +34,7 @@ public class playerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        //在feetPos創建一個Box碰撞器
         OnGround = Physics2D.OverlapBox(feetPos.position, feetSize,0.0f, Ground);
         jump();
         movement();
@@ -45,6 +46,7 @@ public class playerController : MonoBehaviour
         {
             //transform.Translate(new Vector2(speed, 0) * Time.deltaTime);
             rb.velocity = new Vector2(Unit.speed, rb.velocity.y);
+            //翻轉player
             if(transform.rotation != Quaternion.Euler(0, 0, 0))
             {
                 transform.rotation = Quaternion.Euler(0, 0, 0);
@@ -81,6 +83,7 @@ public class playerController : MonoBehaviour
             animator.SetBool("Grounded", true);
             if (Input.GetKeyDown(KeyCode.K))
             {
+                //set jumpTimeCounter
                 jumpTimeCounter = Unit.jumpTime;
                 audioSource.PlayOneShot(jumpsound);
             }
@@ -93,18 +96,21 @@ public class playerController : MonoBehaviour
         {
             if (jumpTimeCounter > 0)
             {
+                //start jumpTimeCounter and jump
                 rb.velocity = Vector2.up * Unit.jumpForce;
                 jumpTimeCounter -= Time.deltaTime;
             }
         }
         else
         {
+            //reset jumpTimeCounter
             jumpTimeCounter = 0;
         }
     }
 
     private void OnDrawGizmos()
     {
+        //draw FeetPos碰撞器
         Gizmos.DrawWireCube(feetPos.position,feetSize);
     }
 }

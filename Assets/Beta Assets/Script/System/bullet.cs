@@ -14,11 +14,12 @@ public class bullet : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
-        player = GameObject.Find("Player").transform;
         
+        player = GameObject.Find("Player").transform;
         target=new Vector2(player.position.x,(player.position.y+1.25f));
+        
 		Vector2 lookDir = target - rb.position;
-		float angle = Mathf.Atan2(lookDir.y,lookDir.x)*Mathf.Rad2Deg - 90f;
+        float angle = Mathf.Atan2(lookDir.y,lookDir.x)*Mathf.Rad2Deg - 90f;
 		rb.rotation=angle;
     }
 
