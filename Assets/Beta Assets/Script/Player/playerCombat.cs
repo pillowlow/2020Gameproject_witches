@@ -44,6 +44,7 @@ public class playerCombat : MonoBehaviour
         Unit = GetComponent<playerUnit>();
         audioSource = GetComponent<AudioSource>();
         
+        //set currentHealth
         currentHealth = Unit.maxHealth;
     }
     void Update()
@@ -56,7 +57,7 @@ public class playerCombat : MonoBehaviour
                 nextAttackTime = Time.time + 1f / Unit.attackSpeed;
             }
         }
-
+        //非Invincible下會受到Collision Damage
         if (!isInvincible)
         {
             CollisionDamage();
@@ -68,6 +69,7 @@ public class playerCombat : MonoBehaviour
         animator.SetTrigger("Attack");
         if (PlayerController.OnGround)
         {
+            ////在attackPoint創建一個Circle碰撞器[]
             Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(attackPoint.position, attackRange, enemyLayers);
             foreach (Collider2D enemy in hitEnemies)
             {
@@ -129,6 +131,7 @@ public class playerCombat : MonoBehaviour
         animator.SetTrigger("Death");
         audioSource.PlayOneShot(death);
         rb.velocity=new Vector2(0,0);
+        Invincible(3.8f);
         GetComponent<playerCombat>().enabled = false;
         GetComponent<playerController>().enabled = false;
         StartCoroutine(Reborn());
@@ -139,7 +142,7 @@ public class playerCombat : MonoBehaviour
         yield return new WaitForSeconds(3);
         currentHealth = Unit.maxHealth;
         animator.SetTrigger("Recover");
-        yield return new WaitForSeconds(0.8f); 
+        yield return new WaitForSeconds(0.8f);
         GetComponent<playerCombat>().enabled = true;
         GetComponent<playerController>().enabled = true;
         
