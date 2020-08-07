@@ -7,10 +7,10 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: flowers
-  m_Shader: {fileID: -6465566751694194690, guid: 76b5a2aff90e35045a715a77d6216150,
+  m_Name: waterfalltail
+  m_Shader: {fileID: -6465566751694194690, guid: 2019f9ee8b2d25e448a93341ff092e0b,
     type: 3}
-  m_ShaderKeywords: ETC1_EXTERNAL_ALPHA
+  m_ShaderKeywords: 
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -25,11 +25,11 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Emission:
-        m_Texture: {fileID: 2800000, guid: 7fe4be9e219e30f48aaa6c8727ca45c2, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 64e3a378bb7d2fb448bb3b20b2de82a6, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MaskTex:
@@ -41,17 +41,9 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
-    - Vector1_2FA88158: 10
-    - Vector1_75B27AC8: 0.05
-    - Vector1_CADEE4BA: 1
-    - Vector1_CE8D9D07: 0.1
-    - Vector1_D6082A68: 0.3
-    - Vector1_D7AE8486: 10
-    - Vector1_FF17F8B: 1
     - _EnableExternalAlpha: 0
     m_Colors:
-    - Color_6CF7F17F: {r: 1.4645761, g: 3.975278, b: 3.9962003, a: 0}
-    - Vector2_14439228: {r: 1, g: 3, b: 0, a: 0}
+    - Color_A9136978: {r: 0.043137256, g: 0.05490196, b: 0.05490196, a: 0}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _Flip: {r: 1, g: 1, b: 1, a: 1}
     - _RendererColor: {r: 1, g: 1, b: 1, a: 1}

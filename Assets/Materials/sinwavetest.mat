@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: flowers
-  m_Shader: {fileID: -6465566751694194690, guid: 76b5a2aff90e35045a715a77d6216150,
+  m_Name: sinwavetest
+  m_Shader: {fileID: -6465566751694194690, guid: f093b0ce7ab99c44db840efd4be8878a,
     type: 3}
   m_ShaderKeywords: ETC1_EXTERNAL_ALPHA
   m_LightmapFlags: 4
@@ -20,12 +20,12 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
-    - _AlphaTex:
+    - Texture2D_FB5AC0BC:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - _Emission:
-        m_Texture: {fileID: 2800000, guid: 7fe4be9e219e30f48aaa6c8727ca45c2, type: 3}
+    - _AlphaTex:
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
@@ -41,17 +41,8 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
-    - Vector1_2FA88158: 10
-    - Vector1_75B27AC8: 0.05
-    - Vector1_CADEE4BA: 1
-    - Vector1_CE8D9D07: 0.1
-    - Vector1_D6082A68: 0.3
-    - Vector1_D7AE8486: 10
-    - Vector1_FF17F8B: 1
     - _EnableExternalAlpha: 0
     m_Colors:
-    - Color_6CF7F17F: {r: 1.4645761, g: 3.975278, b: 3.9962003, a: 0}
-    - Vector2_14439228: {r: 1, g: 3, b: 0, a: 0}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _Flip: {r: 1, g: 1, b: 1, a: 1}
     - _RendererColor: {r: 1, g: 1, b: 1, a: 1}

@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: water
+  m_Name: waterscene_01_01
   m_Shader: {fileID: -6465566751694194690, guid: fd900eb3c172786488681b2eaa1f72e3,
     type: 3}
   m_ShaderKeywords: ETC1_EXTERNAL_ALPHA
@@ -24,12 +24,16 @@ Material:
         m_Texture: {fileID: 8400000, guid: bbbd54d84e2b1c94985563c62099c24a, type: 2}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _0:
+        m_Texture: {fileID: 8400000, guid: af45588ed62c9ec498cb9e47dcb26060, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _AlphaTex:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 4dfad14d2fd30c440b64a01026f9d636, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MaskTex:
@@ -37,6 +41,10 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _NormalMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SampleTexture2D_3038374E_Texture_1:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
@@ -57,32 +65,41 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
-    - Vector1_129A813: 1.19
+    - Vector1_129A813: 1.46
+    - Vector1_12DC3A7B: 1
+    - Vector1_25FD52DA: 0.01
     - Vector1_3620D998: 10.62
-    - Vector1_3C05FD4D: 5
-    - Vector1_45DCBAA2: 1.42
+    - Vector1_3C05FD4D: 3
+    - Vector1_45DCBAA2: 1.87
     - Vector1_45EE2E7A: 0.2
     - Vector1_4668663E: 0.5
+    - Vector1_51F207A8: 0.2
+    - Vector1_566FF3FD: 0.1
     - Vector1_634996F3: 2
-    - Vector1_65CD2B52: 0.09
-    - Vector1_65D4460B: 3.6
+    - Vector1_65CD2B52: 0.06
+    - Vector1_65D4460B: 0.6
+    - Vector1_79AD4AF3: 1
     - Vector1_7BE7B3B1: 0.4
-    - Vector1_7C9DFB98: 0.03
-    - Vector1_8EB55703: 4
-    - Vector1_9CFE05EC: 15.67
+    - Vector1_7C9DFB98: 0.05
+    - Vector1_8EB55703: 2
+    - Vector1_9CFE05EC: 22.4
     - Vector1_9FA26071: 2
     - Vector1_B0CF6913: 5
     - Vector1_B487C77A: 0
     - Vector1_CED6319C: 2
+    - Vector1_D09AB9C6: 0.1
+    - Vector1_DEB24DCF: 8
     - Vector1_F451B6EB: 3.47
+    - Vector1_FFBBAF78: 2
     - _EnableExternalAlpha: 0
     m_Colors:
     - Color_2B54C26A: {r: 0.3764706, g: 0.3764706, b: 0.227451, a: 0}
-    - Color_2D44F6D9: {r: 0.2962065, g: 0.3018868, b: 0.14097543, a: 1}
+    - Color_2D44F6D9: {r: 0.25221217, g: 0.254717, b: 0.10693307, a: 1}
     - Color_AD1B8E91: {r: 0.17989053, g: 0.36320755, b: 0.31737828, a: 0}
     - Color_E2BDBE08: {r: 1, g: 0.9971647, b: 0.7877358, a: 0}
     - Vector2_2A846D5B: {r: 1.17, g: -1.16, b: 0, a: 0}
     - Vector2_73409ADB: {r: 0.5, g: 1, b: 0, a: 0}
+    - Vector2_7940C23F: {r: 0.5, g: 0.5, b: 0, a: 0}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _Flip: {r: 1, g: 1, b: 1, a: 1}
     - _RendererColor: {r: 1, g: 1, b: 1, a: 1}
