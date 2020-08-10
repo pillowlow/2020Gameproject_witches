@@ -7,8 +7,10 @@ public class enemyDetect : MonoBehaviour
 {
     // Start is called before the first frame update
     public LayerMask playerLayer;
-    public float detectRange;
+    public bool box;
+    public Vector2 detectRange;
     private bool detectPlayer=false;
+    public Vector2 target;
     void Start()
     {
         
@@ -17,7 +19,12 @@ public class enemyDetect : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        detectPlayer = Physics2D.OverlapCircle(gameObject.transform.position, detectRange,playerLayer);
+        
+    }
+
+    private void detectCircle()
+    {
+        detectPlayer = Physics2D.OverlapCircle(gameObject.transform.position, detectRange.x,playerLayer);
         if (detectPlayer)
         {
             GetComponent<AIPath>().canSearch = true;
@@ -37,12 +44,23 @@ public class enemyDetect : MonoBehaviour
             {
                 GetComponent<enemyShoot>().enabled = false;
             }
-                
         }
     }
 
+    private void detectBox()
+    {
+        //detectPlayer=Physics2D.OverlapBox(target,de)
+    }
     private void OnDrawGizmosSelected()
     {
-        Gizmos.DrawWireSphere(gameObject.transform.position, detectRange);
+        if (box)
+        {
+            Gizmos.DrawCube(target,detectRange);
+            gi
+        }
+        else
+        {
+            Gizmos.DrawWireSphere(target, detectRange.x);
+        }
     }
 }
