@@ -56,7 +56,7 @@ public class enemyDetect : MonoBehaviour
         if (box)
         {
             Gizmos.DrawCube(target,detectRange);
-            gi
+           
         }
         else
         {
