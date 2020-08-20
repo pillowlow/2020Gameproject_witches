@@ -789,6 +789,7 @@ GameObject:
   - component: {fileID: 1241378657}
   - component: {fileID: 1241378656}
   - component: {fileID: 1241378655}
+  - component: {fileID: 1241378659}
   m_Layer: 4
   m_Name: Water
   m_TagString: Untagged
@@ -905,6 +906,25 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!95 &1241378659
+Animator:
+  serializedVersion: 3
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1241378654}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 1ef62e7e5b1d64e458e26949163d963d, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorControllerStateOnDisable: 0
 --- !u!1 &1248226757
 GameObject:
   m_ObjectHideFlags: 0
@@ -1036,12 +1056,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 18f33a535df480b4ebe02cde7ff15fd1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  target: {fileID: 0}
   playerLayer:
     serializedVersion: 2
     m_Bits: 1024
   box: 0
   detectRange: {x: 0, y: 0}
-  target: {x: 0, y: 0}
 --- !u!82 &1248226763
 AudioSource:
   m_ObjectHideFlags: 0
@@ -1806,12 +1826,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 18f33a535df480b4ebe02cde7ff15fd1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  target: {fileID: 1518883598}
   playerLayer:
     serializedVersion: 2
     m_Bits: 1024
   box: 0
   detectRange: {x: 1, y: 1}
-  target: {x: 0, y: 0}
 --- !u!1 &1550610532
 GameObject:
   m_ObjectHideFlags: 0
@@ -3349,7 +3369,6 @@ GameObject:
   - component: {fileID: 7588458}
   - component: {fileID: 1463392079004109}
   - component: {fileID: 1463392079004112}
-  - component: {fileID: 1463392079004113}
   m_Layer: 10
   m_Name: Player
   m_TagString: Player
@@ -3523,18 +3542,6 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 0.18176588, y: 0.3689346}
   m_EdgeRadius: 0
---- !u!114 &1463392079004113
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1463392079004108}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b4389cb97c2f78943b2f7dc60787c566, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!4 &4588935215627918
 Transform:
   m_ObjectHideFlags: 0

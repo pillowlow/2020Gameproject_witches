@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Net.Mime;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 
@@ -29,7 +30,7 @@ public class playerCombat : MonoBehaviour
     private int currentHealth;
 
     public bool isInvincible = false;
-    private bool isRecover = false;
+    private bool isReborn = false;
 
     public Vector2 collisionSize;
 
@@ -132,6 +133,7 @@ public class playerCombat : MonoBehaviour
         audioSource.PlayOneShot(death);
         rb.velocity=new Vector2(0,0);
         Invincible(3.8f);
+        gameObject.tag = "";
         GetComponent<playerCombat>().enabled = false;
         GetComponent<playerController>().enabled = false;
         StartCoroutine(Reborn());
@@ -139,10 +141,15 @@ public class playerCombat : MonoBehaviour
 
     private IEnumerator Reborn()
     {
+        print(Unit.rebornScene);
         yield return new WaitForSeconds(3);
+        isReborn = true;
+        SceneManager.LoadScene(Unit.rebornScene);
+        transform.position=GameObject.Find("rebornPoint").transform.position;
         currentHealth = Unit.maxHealth;
         animator.SetTrigger("Recover");
         yield return new WaitForSeconds(0.8f);
+        gameObject.tag = "Player";
         GetComponent<playerCombat>().enabled = true;
         GetComponent<playerController>().enabled = true;
         

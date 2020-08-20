@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class playerUnit : MonoBehaviour
 {
@@ -17,4 +18,7 @@ public class playerUnit : MonoBehaviour
     public float RecoverTime;
     public Vector2 Knockback;
     public int moneny;
+    public string rebornScene;
+    public string nextScene;
+    
 }
