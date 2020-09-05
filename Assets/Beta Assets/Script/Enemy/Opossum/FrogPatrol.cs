@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class enmeyPatrolGround : MonoBehaviour
+public class FrogPatrol : MonoBehaviour
 {
     public float speed;
     private float distance=0.5f;
