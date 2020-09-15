@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class teleportPoint : MonoBehaviour
+public class OptionsMenu : MonoBehaviour
 {
-    public string nextscene;
     // Start is called before the first frame update
     void Start()
     {

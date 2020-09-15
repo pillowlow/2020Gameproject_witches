@@ -6,6 +6,10 @@ using UnityEngine.SceneManagement;
 public class rebornPoint : MonoBehaviour
 {
     public GameObject player;
+    public string rebornScene;
+    public string rebornLocation;
+    
+    
     // Start is called before the first frame update
     void Start()
     {
