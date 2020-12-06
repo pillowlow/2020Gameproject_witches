@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: blurEffect_02
-  m_Shader: {fileID: -6465566751694194690, guid: 2f657a04d89d75c4faf78db3171d1db7,
+  m_Shader: {fileID: -6465566751694194690, guid: 93051b6f263b2434da582301312b58de,
     type: 3}
   m_ShaderKeywords: ETC1_EXTERNAL_ALPHA
   m_LightmapFlags: 4
@@ -36,10 +36,16 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _whatevertex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Floats:
     - Vector1_17689185: 1
     - Vector1_3C8B4E63: 0.005
+    - Vector1_D166ABB2: 0.008
     - Vector1_D50344FA: 0.1
+    - Vector1_FC751353: 0.6
     - _EnableExternalAlpha: 0
     m_Colors:
     - Vector2_D8E97BB2: {r: 0.5, g: 0.5, b: 0, a: 0}

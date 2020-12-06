@@ -4,27 +4,34 @@ using UnityEngine;
 
 public class viewmove : MonoBehaviour
 {
-   private float lengthx, startposx, lengthy, startposy; 
+   private float  camstartposx, camstartposy,startposx,startposy; 
        public GameObject cam;
        public float parllaxEffectX;
        public float parllaxEffectY;
        
        void Start()
        {
-           startposx =transform.position.x;
-           lengthx=GetComponent<SpriteRenderer>().bounds.size.x;
-           startposy =transform.position.y;
-           lengthy=GetComponent<SpriteRenderer>().bounds.size.y;
+           camstartposx = cam.transform.position.x;
+           camstartposy = cam.transform.position.y;
+           startposx = transform.position.x;
+           startposy = transform.position.y;
        }
    
        // Update is called once per frame
         void FixedUpdate()
-       {
-           
-           float distx = ((cam.transform.position.x-startposx) * parllaxEffectX);
-           float disty = ((cam.transform.position.y-startposy) * parllaxEffectY);
-    
-           transform.position=new Vector3(startposx+distx, y: startposy+disty,transform.position.z);
+        { 
+            
+            var temp= ParllaxCount(cam.transform.position.x,cam.transform.position.y);
+            
+            transform.position=new Vector3(startposx+temp.Item1, y: startposy+temp.Item2,transform.position.z);
 
        }
+
+        (float,float) ParllaxCount(float camx, float camy)
+        {
+            float distx, disty;
+            distx = ((cam.transform.position.x-camstartposx) * parllaxEffectX);
+            disty = ((cam.transform.position.y-camstartposy) * parllaxEffectY);
+            return (distx, disty);
+        }
 }
