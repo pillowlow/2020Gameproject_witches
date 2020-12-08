@@ -18,7 +18,7 @@ public class viewmove : MonoBehaviour
        }
    
        // Update is called once per frame
-        void FixedUpdate()
+        void Update()
         { 
             
             var temp= ParllaxCount(cam.transform.position.x,cam.transform.position.y);
