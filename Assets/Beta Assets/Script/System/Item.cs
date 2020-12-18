@@ -16,7 +16,7 @@ public class Item : MonoBehaviour
     public GameObject itemButton;
     private void Start()
     {
-        Inventory = GameObject.FindGameObjectWithTag("Player").GetComponent<playerInventory>();
+        //Inventory = GameObject.FindGameObjectWithTag("Player").GetComponent<playerInventory>();
     }
 
     private void OnTriggerEnter2D(Collider2D other)
