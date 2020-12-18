@@ -52,7 +52,7 @@ public class PlayerMovement : MonoBehaviour
             //fly = true;
         }
 
-        controller.Move(x * walkSpeed * Time.deltaTime, false, jump);
+        controller.Jump(jump);
 
     }
 
