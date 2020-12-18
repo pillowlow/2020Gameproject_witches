@@ -16,6 +16,7 @@ public class PlayerManager : MonoBehaviour
     public GameObject player;
 
     public static bool isTalking = false;
+    public static bool talkable = false;
     public static bool isFlying = false;
     public static bool isJumping = false;
 
