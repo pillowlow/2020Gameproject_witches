@@ -8,11 +8,12 @@ public class manuUI : MonoBehaviour
     public GameObject title,title2,title3,left1,left2,start,setting,exit;
     public bool picnum;
     public Text t_start,t_setting,t_exit;
-    Color Imagecolor,c_left1,c_left2,c_start,c_setting,c_exit;
+    Color Imagecolor,Image2color,c_left1,c_left2,c_start,c_setting,c_exit;
     // Start is called before the first frame update
     void Start()
     {
         Imagecolor = new Color(1f,1f,1f,0);
+        Image2color = new Color(1f,1f,1f,0);
         c_left1 = new Color(1f,1f,1f,1);
         c_left2 = new Color(1f,1f,1f,0);
         c_start = new Color(1f,1f,1f,0);
@@ -26,11 +27,11 @@ public class manuUI : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(Imagecolor.a == 1) Imagecolor.a = 1;
-        else Imagecolor.a += 0.001f;
+        if(Imagecolor.a <= 1) Imagecolor.a += 0.001f;
+        if(Image2color.a <= 1 && Imagecolor.a >= 0.5f) Image2color.a += 0.001f;
 
         title.GetComponent<Image>().color = Imagecolor;
-        title2.GetComponent<Image>().color = Imagecolor;
+        title2.GetComponent<Image>().color = Image2color;
         title3.GetComponent<Image>().color = Imagecolor;
 
         if(picnum == true){
@@ -63,6 +64,6 @@ public class manuUI : MonoBehaviour
 
     public void START()
     {
-        SceneManager.LoadScene(3);
+        SceneManager.LoadScene(2);
     }
 }
