@@ -7,17 +7,7 @@ public class EnemyManager : MonoBehaviour
     [Header("Info")]
     public int hp;
     public int damage;
-
-    void Start()
-    {
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    public int exp;
 
     public void Damaged(int damageInput)
     {

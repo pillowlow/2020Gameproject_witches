@@ -74,7 +74,6 @@ GameObject:
   - component: {fileID: 8567368290944869671}
   - component: {fileID: 8567368290944869664}
   - component: {fileID: 8567368290944869665}
-  - component: {fileID: 8567368290944869674}
   - component: {fileID: 8567368290944869675}
   - component: {fileID: 8567368290944869673}
   m_Layer: 10
@@ -231,34 +230,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cam: {fileID: 0}
---- !u!114 &8567368290944869674
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8567368290944869666}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bac0a8395064d114ca62fee244b30d4d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_JumpForce: 700
-  m_CrouchSpeed: 0.36
-  m_MovementSmoothing: 0.05
-  m_AirControl: 0
-  m_WhatIsGround:
-    serializedVersion: 2
-    m_Bits: 31543
-  m_GroundCheck: {fileID: 8567368290563911952}
-  m_CeilingCheck: {fileID: 8567368292080287496}
-  m_CrouchDisableCollider: {fileID: 0}
-  OnLandEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  OnCrouchEvent:
-    m_PersistentCalls:
-      m_Calls: []
+  offset: {x: 0, y: 0, z: 0}
 --- !u!114 &8567368290944869675
 MonoBehaviour:
   m_ObjectHideFlags: 0

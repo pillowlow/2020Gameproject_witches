@@ -25,20 +25,63 @@ public class PlayerManager : MonoBehaviour
     public static bool onGround = false;
 
     public static int mode = 0;
-    public static int state = StateCode.idel;
+    public static StateCode state = StateCode.idel;
     public static int hp = 100;
     public static int damage = 10;
 
-    public static class StateCode
+    public enum StateCode {
+        idel, moving, jumping, falling, takingHit, attack1, 
+        attack1_connection , attack2 , attack2_connection 
+    };
+
+    public static class Exp
     {
-        public static int idel = 0;
-        public static int moving = 1;
-        public static int jumping = 2;
-        public static int falling = 3;
-        public static int attack1 = 4;
-        public static int attack1_connection = 5;
-        public static int attack2 = 6;
-        public static int attack2_connection = 7;
+        static int lv = 0;
+        static int value = 0;
+
+        public static int GetValue()
+        {
+            return value;
+        }
+        public static int GetLv()
+        {
+            return lv;
+        }
+        public static void AssignValue(int val)
+        {
+            value = val;
+        }
+        public static void AssignLv(int val)
+        {
+            lv = val;
+        }
+    }
+
+    public static class Damage
+    {
+        static int lvDamage;
+        static int equipDamage;
+
+        public static int GetDamage()
+        {
+            return lvDamage + equipDamage;
+        }
+        public static int GetLvDamage()
+        {
+            return lvDamage;
+        }
+        public static int GetEquipDamage()
+        {
+            return equipDamage;
+        }
+        public static void AssignLvDamage(int damage)
+        {
+            lvDamage = damage;
+        }
+        public static void AssignEquipDamage(int damage)
+        {
+            equipDamage = damage;
+        }
     }
 }
 
