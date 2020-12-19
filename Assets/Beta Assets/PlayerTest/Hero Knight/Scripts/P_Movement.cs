@@ -13,8 +13,6 @@ public class P_Movement : MonoBehaviour
     public LayerMask groundLayer;
     public Transform groundCheck;
 
-    CharacterController2D controller;
-
     Rigidbody2D rig;
     Animator anim;
 
@@ -26,7 +24,6 @@ public class P_Movement : MonoBehaviour
     {
         rig = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
-        controller = GetComponent<CharacterController2D>();
     }
 
     void Update()
@@ -67,7 +64,7 @@ public class P_Movement : MonoBehaviour
         {
             if (PlayerManager.state == PlayerManager.StateCode.moving)
                 PlayerManager.state = PlayerManager.StateCode.idel;
-
+            
             rig.velocity = new Vector2(0, rig.velocity.y);
         }
     }
@@ -89,7 +86,7 @@ public class P_Movement : MonoBehaviour
         {
             if (rig.velocity.y < 0) PlayerManager.state = PlayerManager.StateCode.falling;
         }
-        else if (!controller.GetOnGround() && rig.velocity.y <= 0)
+        else if (!PlayerManager.onGround && rig.velocity.y <= 0)
         {
             PlayerManager.state = PlayerManager.StateCode.falling;
         }
@@ -104,6 +101,7 @@ public class P_Movement : MonoBehaviour
     void CheckMoveable()
     {
         bool moveable = true;
+        if (PlayerManager.state == PlayerManager.StateCode.takingHit) moveable = false;
         if (PlayerManager.state == PlayerManager.StateCode.attack1) moveable = false;
         if (PlayerManager.state == PlayerManager.StateCode.attack1_connection) moveable = false;
         if (PlayerManager.state == PlayerManager.StateCode.attack2) moveable = false;
@@ -131,6 +129,8 @@ public class P_Movement : MonoBehaviour
         anim.SetFloat("SpeedX", Mathf.Abs(rig.velocity.x));
         anim.SetFloat("SpeedY", rig.velocity.y);
         anim.SetBool("OnGround", PlayerManager.onGround);
+
+        if (Input.GetKeyDown(KeyCode.J)) anim.SetTrigger("TakeHit");
 
         /*if (fly)
         {
