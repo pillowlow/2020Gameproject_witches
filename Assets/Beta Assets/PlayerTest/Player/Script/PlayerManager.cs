@@ -23,6 +23,8 @@ public class PlayerManager : MonoBehaviour
     public static bool isJumping = false;
     public static bool moveable = true;
     public static bool onGround = false;
+    public static int talk_man;
+
 
     public static int mode = 0;
     public static StateCode state = StateCode.idel;
