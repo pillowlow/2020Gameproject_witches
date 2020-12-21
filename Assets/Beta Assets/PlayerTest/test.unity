@@ -853,6 +853,12 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!4 &456760997 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8567368290563911952, guid: 7bd3740f75bb988479051b0ab721ead0,
+    type: 3}
+  m_PrefabInstance: {fileID: 8567368292612801827}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &667508383
 GameObject:
   m_ObjectHideFlags: 0
@@ -3316,7 +3322,7 @@ PrefabInstance:
     - target: {fileID: 8567368290944869665, guid: 7bd3740f75bb988479051b0ab721ead0,
         type: 3}
       propertyPath: offset.y
-      value: 2
+      value: -1
       objectReference: {fileID: 0}
     - target: {fileID: 8567368290944869666, guid: 7bd3740f75bb988479051b0ab721ead0,
         type: 3}
@@ -3388,6 +3394,11 @@ PrefabInstance:
       propertyPath: walkSpeed
       value: 7
       objectReference: {fileID: 0}
+    - target: {fileID: 8567368290944869675, guid: 7bd3740f75bb988479051b0ab721ead0,
+        type: 3}
+      propertyPath: groundCheck
+      value: 
+      objectReference: {fileID: 456760997}
     - target: {fileID: 8567368291030236042, guid: 7bd3740f75bb988479051b0ab721ead0,
         type: 3}
       propertyPath: m_LocalPosition.x
