@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using UnityEditorInternal;
 using UnityEngine;
 
 public class PlayerManager : MonoBehaviour
@@ -25,15 +24,18 @@ public class PlayerManager : MonoBehaviour
     public static bool onGround = false;
     public static int talk_man;
 
-
-    public static int mode = 0;
+    public static ModeCode mode = ModeCode.normal;
     public static StateCode state = StateCode.idel;
     public static int hp = 100;
     public static int damage = 10;
 
     public enum StateCode {
-        idel, moving, jumping, falling, takingHit, attack1, 
-        attack1_connection , attack2 , attack2_connection 
+        idel, moving, jumping, falling, flying, takingHit, attack1, 
+        attack1_connection , attack2 , attack2_connection
+    };
+
+    public enum ModeCode{
+        normal, transform
     };
 
     public static class Exp
