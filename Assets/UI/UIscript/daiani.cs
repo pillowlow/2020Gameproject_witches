@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class daiani : MonoBehaviour
 {
-    public Animation villhead,Villager,Villager_ani,Princess,player,dailog;
+    public Animation villhead,Villager,Villager_ani,littlegirl_ani,Princess,player,dailog,littlegirl,villager2,villager3;
     // Start is called before the first frame update
     void Start()
     {
@@ -37,13 +37,20 @@ public class daiani : MonoBehaviour
                         Princess.Play("公主UI");
                         break;
                     case 4:
-
+                        villager2["村民2動畫UI"].time = 0;
+                        villager2["村民2動畫UI"].speed = 1;
+                        villager2.Play("村民2動畫UI");
+                        villager3["村民3動畫UI"].time = 0;
+                        villager3["村民3動畫UI"].speed = 1;
+                        villager3.Play("村民3動畫UI");
                         break;
                     case 5:
-                        
+                        littlegirl_ani.enabled = false;
+                        littlegirl["小女孩動畫UI"].time = 0;
+                        littlegirl["小女孩動畫UI"].speed = 1;
+                        littlegirl.Play("小女孩動畫UI");
                         break;
-                    case 6:
-                    
+                    default :
                         break;
                 }
                 player["主角UI"].time = 0;
