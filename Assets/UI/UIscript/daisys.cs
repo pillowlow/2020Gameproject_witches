@@ -35,7 +35,7 @@ public class daisys : MonoBehaviour
     void Update()
     {
         if(PlayerManager.talk_man == 1){
-            if(Input.GetKeyDown(KeyCode.Tab) &&　index == textList.Count)
+            if((Input.GetKeyDown(KeyCode.Tab) &&　index == textList.Count) || Input.GetKeyDown(KeyCode.Escape))
             {
                 index = 0;
                 playertalk = 0;

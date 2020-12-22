@@ -18,8 +18,12 @@ public class playerdailogtrigger : MonoBehaviour
             case "公主":
                 PlayerManager.talk_man = 3;
                 break;
-            default : 
-            break;
+            case "村民2":
+                PlayerManager.talk_man = 4;
+                break;
+            case "小女孩":
+                PlayerManager.talk_man = 5;
+                break;
         }
         if(coll.tag == "Player")
         {

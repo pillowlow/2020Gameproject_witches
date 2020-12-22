@@ -33,7 +33,7 @@ public class Princessdialog : MonoBehaviour
     {
         if(PlayerManager.talk_man == 3)
         {
-            if(Input.GetKeyDown(KeyCode.Tab) &&　index == textList.Count)
+            if((Input.GetKeyDown(KeyCode.Tab) &&　index == textList.Count) || Input.GetKeyDown(KeyCode.Escape))
             {
                 index = 0;
                 playertalk = 0;
