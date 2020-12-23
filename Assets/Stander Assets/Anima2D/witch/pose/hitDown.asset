@@ -1,0 +1,91 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae0543fe805424df99fe08ce744cbe49, type: 3}
+  m_Name: hitDown
+  m_EditorClassIdentifier: 
+  m_PoseEntries:
+  - path: heap
+    localPosition: {x: -1.0337485, y: -1.5960102, z: 0}
+    localRotation: {x: -0, y: -0, z: 0.6862154, w: 0.7273984}
+    localScale: {x: 1, y: 1, z: 1}
+  - path: heap/back
+    localPosition: {x: 1.1532946, y: 0, z: 0}
+    localRotation: {x: 0, y: 0, z: -0.017203346, w: 0.99985206}
+    localScale: {x: 1, y: 1, z: 1}
+  - path: heap/back/neck
+    localPosition: {x: 1.5901431, y: -0.000000238957, z: 0}
+    localRotation: {x: 0, y: 0, z: 0.03418129, w: 0.99941564}
+    localScale: {x: 1, y: 1, z: 1}
+  - path: heap/back/neck/head
+    localPosition: {x: 0.62998, y: -0.0000000015133992, z: 0}
+    localRotation: {x: 0, y: 0, z: 0.0108513925, w: -0.9999412}
+    localScale: {x: 1, y: 1, z: 1}
+  - path: heap/back/neck/head/hair 1
+    localPosition: {x: 1.0984284, y: -1.4352297, z: 0}
+    localRotation: {x: 0, y: 0, z: -0.99991083, w: 0.013356575}
+    localScale: {x: 1, y: 1, z: 1}
+  - path: heap/back/neck/head/hair 1/hair 2
+    localPosition: {x: 0.99999994, y: 0.000000059604645, z: 0}
+    localRotation: {x: 0, y: 0, z: -0.067778505, w: 0.99770045}
+    localScale: {x: 1, y: 1, z: 1}
+  - path: heap/back/neck/head/hair 1/hair 2/hair 3
+    localPosition: {x: 1.114167, y: 0.00000011327211, z: 0}
+    localRotation: {x: 0, y: 0, z: 0.12210799, w: 0.9925168}
+    localScale: {x: 1, y: 1, z: 1}
+  - path: heap/back/neck/head/hair 1/hair 2/hair 3/hair 4
+    localPosition: {x: 0.9999997, y: 0.00000014808029, z: 0}
+    localRotation: {x: 0, y: 0, z: 0.07008975, w: 0.9975407}
+    localScale: {x: 1, y: 1, z: 1}
+  - path: heap/back/neck/LU arm
+    localPosition: {x: -0.39761853, y: -0.45304757, z: 0}
+    localRotation: {x: 0, y: 0, z: -0.9611761, w: 0.27593574}
+    localScale: {x: 1, y: 1, z: 1}
+  - path: heap/back/neck/LU arm/LL arm
+    localPosition: {x: 1.5563395, y: -0.000000059604645, z: 0}
+    localRotation: {x: 0, y: 0, z: -0.2938119, w: 0.9558633}
+    localScale: {x: 1, y: 1, z: 1}
+  - path: heap/back/neck/LU arm/LL arm/weapon
+    localPosition: {x: 1.0000013, y: -0.000000023923349, z: 0}
+    localRotation: {x: 0, y: 0, z: 0.875456, w: 0.483298}
+    localScale: {x: 1, y: 1, z: 1}
+  - path: heap/back/equip 1
+    localPosition: {x: 0.25307947, y: 0.14296642, z: 0}
+    localRotation: {x: 0, y: 0, z: 0.99963784, w: -0.026911411}
+    localScale: {x: 1, y: 1, z: 1}
+  - path: heap/back/equip 2
+    localPosition: {x: -0.02354107, y: -0.083071135, z: 0}
+    localRotation: {x: 0, y: 0, z: 0.99934334, w: -0.03623496}
+    localScale: {x: 1, y: 1, z: 1}
+  - path: heap/back/equip 3
+    localPosition: {x: -0.33514518, y: -0.30325493, z: 0}
+    localRotation: {x: 0, y: 0, z: -0.9998188, w: 0.019036207}
+    localScale: {x: 1, y: 1, z: 1}
+  - path: heap/back/knife
+    localPosition: {x: -0.3040385, y: -0.508046, z: 0}
+    localRotation: {x: 0, y: 0, z: -0.99166936, w: 0.1288099}
+    localScale: {x: 1, y: 1, z: 1}
+  - path: heap/RU leg
+    localPosition: {x: -0.07412911, y: 0.41222885, z: 0}
+    localRotation: {x: 0, y: 0, z: 0.9767819, w: 0.21423618}
+    localScale: {x: 1, y: 1, z: 1}
+  - path: heap/RU leg/RL leg
+    localPosition: {x: 1.2549132, y: -0.000000029802322, z: 0}
+    localRotation: {x: 0, y: 0, z: 0.28135955, w: 0.9596024}
+    localScale: {x: 1, y: 1, z: 1}
+  - path: heap/LU leg
+    localPosition: {x: 0.015937202, y: -0.44857243, z: 0}
+    localRotation: {x: 0, y: 0, z: -0.9719963, w: 0.23499618}
+    localScale: {x: 1, y: 1, z: 1}
+  - path: heap/LU leg/LL leg
+    localPosition: {x: 1.4813031, y: -0.000000059604645, z: 0}
+    localRotation: {x: 0, y: 0, z: 0, w: 1}
+    localScale: {x: 1, y: 1, z: 1}
