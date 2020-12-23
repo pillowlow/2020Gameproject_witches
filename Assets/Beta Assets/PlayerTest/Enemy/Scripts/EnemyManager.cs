@@ -9,10 +9,11 @@ public class EnemyManager : MonoBehaviour
     public int damage;
     public int exp;
 
+    public enum StateCode {idel, jumping, moving,  };
+
     public void Damaged(int damageInput)
     {
         hp = hp - damageInput;
         hp = (hp < 0) ? 0 : hp;
-        Debug.Log(hp);
     }
 }
