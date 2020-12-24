@@ -29,8 +29,17 @@ public class P_Movement : MonoBehaviour
     void Update()
     {
         Movement();
-        Jump();
-        Fall();
+
+        if(PlayerManager.mode == PlayerManager.ModeCode.normal)
+        {
+            Jump();
+            Fall();
+        }
+        else if(PlayerManager.mode == PlayerManager.ModeCode.transform)
+        {
+            Fly();
+        }
+
         AnimationControl();
     }
 
@@ -98,6 +107,17 @@ public class P_Movement : MonoBehaviour
         }
     }
 
+    void Fly()
+    {
+        if (PlayerManager.moveable && Input.GetButtonDown("Jump"))
+         {
+            rig.velocity = new Vector2(rig.velocity.x, 0);
+            rig.AddForce(new Vector2(0, flyForce));
+            PlayerManager.state = PlayerManager.StateCode.flying;
+         }
+
+    }
+
     void CheckMoveable()
     {
         bool moveable = true;
@@ -139,11 +159,5 @@ public class P_Movement : MonoBehaviour
             Fly();
         }*/
 
-    }
-
-    public void Fly()
-    {
-        rig.velocity = new Vector2(rig.velocity.x, 0);
-        rig.AddForce(new Vector2(0, flyForce));
     }
 }
