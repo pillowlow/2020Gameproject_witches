@@ -31,7 +31,8 @@ public class PlayerManager : MonoBehaviour
 
     public enum StateCode {
         idel, moving, jumping, falling, flying, takingHit, attack1, 
-        attack1_connection , attack2 , attack2_connection
+        attack1_connection , attack2 , attack2_connection, flyAttack1,
+        flyAttack1_connection
     };
 
     public enum ModeCode{
