@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class P_Movement : MonoBehaviour
 {
+    [Header("Mode")]
+    public PlayerManager.ModeCode initialMode;
+
     [Header("Movement")]
     public float walkSpeed;
     public float flyForce;
@@ -16,29 +19,39 @@ public class P_Movement : MonoBehaviour
     Rigidbody2D rig;
     Animator anim;
 
-    bool fly = false;
-
     float onGroundRadius = .05f;
 
     void Start()
     {
         rig = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
+        PlayerManager.mode = initialMode;
     }
 
     void Update()
     {
+        CheckOnGround();
+        CheckMoveable();
+
         Movement();
-        Jump();
+
+        if(PlayerManager.mode == PlayerManager.ModeCode.normal)
+        {
+            Jump();
+        }
+        else if(PlayerManager.mode == PlayerManager.ModeCode.transform)
+        {
+            Fly();
+        }
+
         Fall();
+
         AnimationControl();
     }
 
     void Movement()
     {
         float x = Input.GetAxis("Horizontal");
-
-        CheckMoveable();
 
         if (PlayerManager.moveable && Mathf.Abs(x) > 0.1f)
         {
@@ -71,8 +84,6 @@ public class P_Movement : MonoBehaviour
 
     void Jump()
     {
-        CheckOnGround();
-
         if (PlayerManager.moveable && PlayerManager.onGround && Input.GetButtonDown("Jump"))
         {
             rig.AddForce(new Vector2(0f, jumpForce));
@@ -82,7 +93,7 @@ public class P_Movement : MonoBehaviour
 
     void Fall()
     {
-        if (PlayerManager.state == PlayerManager.StateCode.jumping)
+        if (PlayerManager.state == PlayerManager.StateCode.jumping || PlayerManager.state == PlayerManager.StateCode.flying)
         {
             if (rig.velocity.y < 0) PlayerManager.state = PlayerManager.StateCode.falling;
         }
@@ -91,11 +102,21 @@ public class P_Movement : MonoBehaviour
             PlayerManager.state = PlayerManager.StateCode.falling;
         }
 
-
         if(PlayerManager.state == PlayerManager.StateCode.falling && PlayerManager.onGround)
         {
             PlayerManager.state = PlayerManager.StateCode.idel;
         }
+    }
+
+    void Fly()
+    {
+        if (PlayerManager.moveable && Input.GetButtonDown("Jump"))
+         {
+            rig.velocity = new Vector2(rig.velocity.x, 0);
+            rig.AddForce(new Vector2(0, flyForce));
+            PlayerManager.state = PlayerManager.StateCode.flying;
+         }
+
     }
 
     void CheckMoveable()
@@ -105,7 +126,7 @@ public class P_Movement : MonoBehaviour
         if (PlayerManager.state == PlayerManager.StateCode.attack1) moveable = false;
         if (PlayerManager.state == PlayerManager.StateCode.attack1_connection) moveable = false;
         if (PlayerManager.state == PlayerManager.StateCode.attack2) moveable = false;
-        if (PlayerManager.state == PlayerManager.StateCode.attack2_connection) moveable = false;
+        if (PlayerManager.state == PlayerManager.StateCode.attack2_connection) moveable = false;  
 
         PlayerManager.moveable = moveable;
     }
@@ -139,11 +160,5 @@ public class P_Movement : MonoBehaviour
             Fly();
         }*/
 
-    }
-
-    public void Fly()
-    {
-        rig.velocity = new Vector2(rig.velocity.x, 0);
-        rig.AddForce(new Vector2(0, flyForce));
     }
 }
