@@ -5,6 +5,7 @@ using UnityEngine;
 public class P_Attack : MonoBehaviour
 {
     [Header("Attack")]
+    public ParticleSystem attackParticle;
     public float attackWaitingTime;
     public Transform[] attackPoints;
     public float[] attackRange;
@@ -18,6 +19,7 @@ public class P_Attack : MonoBehaviour
     {
         rig = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
+        AttackParticleActive(false);
     }
 
     void Update()
@@ -46,6 +48,7 @@ public class P_Attack : MonoBehaviour
             if (CheckAttackable())
             {
                 anim.SetTrigger("Attack1");
+                AttackParticleActive();
                 rig.velocity = new Vector2(0, rig.velocity.y);
                 lastAttactTime = Time.time;
                 PlayerManager.state = PlayerManager.StateCode.attack1;
@@ -59,6 +62,25 @@ public class P_Attack : MonoBehaviour
 
         }
     }
+
+    void Attack_Transform_Input()
+    {
+        if (Input.GetButtonDown("Fire1"))
+        {
+            float dtime = Time.time - lastAttactTime;
+            if (CheckAttackable())
+            {
+                anim.SetTrigger("Attack1");
+                lastAttactTime = Time.time;
+
+                if (PlayerManager.state == PlayerManager.StateCode.flying || PlayerManager.state == PlayerManager.StateCode.falling)
+                    PlayerManager.state = PlayerManager.StateCode.flyAttack1;
+                else
+                    PlayerManager.state = PlayerManager.StateCode.attack1;
+            }
+        }
+    }
+
     bool CheckAttackable()
     {
         bool attackable = false;
@@ -90,6 +112,8 @@ public class P_Attack : MonoBehaviour
             PlayerManager.state = PlayerManager.StateCode.attack2_connection;
         else if (type == 3)
             PlayerManager.state = PlayerManager.StateCode.flyAttack1_connection;
+
+        
     }
 
     public void Attack_Transform(int type)
@@ -114,27 +138,18 @@ public class P_Attack : MonoBehaviour
         else if (PlayerManager.state == PlayerManager.StateCode.attack2_connection) changeState = true;
         else if (PlayerManager.state == PlayerManager.StateCode.flyAttack1_connection) changeState = true;
 
-        Debug.Log("222");
+        if (changeState)
+        {
+            PlayerManager.state = PlayerManager.StateCode.idel;
+        }
+        AttackParticleActive(false);
 
-        if (changeState) PlayerManager.state = PlayerManager.StateCode.idel;
     }
 
-    void Attack_Transform_Input()
+    public void AttackParticleActive(bool b = true)
     {
-        if (Input.GetButtonDown("Fire1"))
-        {
-            float dtime = Time.time - lastAttactTime;
-            if (CheckAttackable())
-            {
-                anim.SetTrigger("Attack1");
-                lastAttactTime = Time.time;
-
-                if(PlayerManager.state == PlayerManager.StateCode.flying || PlayerManager.state == PlayerManager.StateCode.falling)
-                    PlayerManager.state = PlayerManager.StateCode.flyAttack1;
-                else 
-                    PlayerManager.state = PlayerManager.StateCode.attack1;
-            }
-        }
+        if (b) attackParticle.gameObject.SetActive(b);
+        else attackParticle.gameObject.SetActive(b);
     }
 
     private void OnDrawGizmos()
