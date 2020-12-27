@@ -148,6 +148,9 @@ public class P_Attack : MonoBehaviour
 
     public void AttackParticleActive(bool b = true)
     {
+        //if (b) attackParticle.Play();
+        //else attackParticle.Stop();
+
         if (b) attackParticle.gameObject.SetActive(b);
         else attackParticle.gameObject.SetActive(b);
     }
