@@ -5,17 +5,15 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 public class manuUI : MonoBehaviour
 {
-    public GameObject title,title2,title3,left1,left2,start,setting,exit;
+    public GameObject title,title2,title3,start,setting,exit,particle;
     public bool picnum;
     public Text t_start,t_setting,t_exit;
-    Color Imagecolor,Image2color,c_left1,c_left2,c_start,c_setting,c_exit;
+    Color Imagecolor,Image2color,c_start,c_setting,c_exit;
     // Start is called before the first frame update
     void Start()
     {
         Imagecolor = new Color(1f,1f,1f,0);
         Image2color = new Color(1f,1f,1f,0);
-        c_left1 = new Color(1f,1f,1f,1);
-        c_left2 = new Color(1f,1f,1f,0);
         c_start = new Color(1f,1f,1f,0);
         c_setting = new Color(1f,1f,1f,0);
         c_exit = new Color(1f,1f,1f,0);
@@ -34,16 +32,6 @@ public class manuUI : MonoBehaviour
         title2.GetComponent<Image>().color = Image2color;
         title3.GetComponent<Image>().color = Imagecolor;
 
-        if(picnum == true){
-            if(c_left1.a <= 1f)  c_left1.a += 0.001f;
-            if(c_left2.a >= 0) c_left2.a -= 0.005f;
-        }else if(picnum == false){
-            if(c_left2.a <= 1f) c_left2.a += 0.001f;
-            if(c_left1.a >= 0)c_left1.a -= 0.005f;
-        }
-
-        left1.GetComponent<Image>().color = c_left1;
-        left2.GetComponent<Image>().color = c_left2;
 
         if(Imagecolor.a >= 0.5f && c_start.a <= 0.7f) c_start.a += 0.001f;
         if(c_start.a >= 0.5f && c_setting.a <= 0.7f) c_setting.a += 0.001f; 
@@ -55,6 +43,14 @@ public class manuUI : MonoBehaviour
         start.GetComponent<Image>().color = c_start;
         setting.GetComponent<Image>().color = c_setting;
         exit.GetComponent<Image>().color = c_exit;
+
+        if(Input.GetMouseButtonDown(0)){
+            //Vector3 camera = Camera.main.WorldToScreenPoint(Camera..tanstorm.position);// 相機是世界的，世界到螢幕
+            Vector3 pos = new Vector3(Input.mousePosition.x, Input.mousePosition.y, 0);
+            pos = Camera.main.ScreenToWorldPoint(pos) + new Vector3(1.8f,-2.15f,0);
+            GameObject del = Instantiate(particle, pos, particle.transform.rotation);
+            Destroy(del,2);
+        }
     }
 
     void change_picture()

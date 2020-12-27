@@ -14,6 +14,7 @@ public class PlayerManager : MonoBehaviour
     #endregion
 
     public GameObject player;
+    public GameObject player_transform;
     public LayerMask enemyLayer;
 
     public static bool isTalking = false;
