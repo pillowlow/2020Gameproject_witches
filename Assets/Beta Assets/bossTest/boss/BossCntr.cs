@@ -6,6 +6,8 @@ using UnityEngine;
 public class BossCntr : MonoBehaviour
 {
     [Header("Movement")]
+    public GameObject walkParticle;
+    public Transform walkPos;
     public float moveForce;
     public float jumpForce;
     int direction = -1;
@@ -25,6 +27,7 @@ public class BossCntr : MonoBehaviour
     public Transform[] snipePoints;
     public GameObject[] attackPoints;
     public float[] attackRange;
+    public float snipeForce;
 
     [Header("Testing")]
     public bool testing;
@@ -129,15 +132,7 @@ public class BossCntr : MonoBehaviour
             case 10:
                 if (snipeable == true)
                 {
-                    Vector3 sp =  CheckFaceSnipePoint();
-
-                    transform.position = Vector3.SmoothDamp(transform.position, sp, ref velocity__, 0.2f);
-
-                    if (CheckDistance(sp, transform.position, 1) < 0.7)
-                    {
-                        anim.SetTrigger("SSnipe");
-                        state = 0;
-                    }
+                    state = 0;
                 }
                 break;
 
@@ -180,7 +175,7 @@ public class BossCntr : MonoBehaviour
         float rand = Random.Range(0f,1f);
         if(distanceP < 6.5f)
         {
-            if (rand < 0.2f) state = 7;
+            if (rand < 0.5f) state = 9;
             else state = 4;
         }
         else
@@ -189,7 +184,6 @@ public class BossCntr : MonoBehaviour
             else if (rand < 0.43f) state = 9;
             else state = 7;
         }
-        state = 7;
     }
 
     void WalkToPlayer()
@@ -217,6 +211,10 @@ public class BossCntr : MonoBehaviour
     #region Animation_Events
     public void One_Step_Walk()
     {
+        GameObject eff = Instantiate(walkParticle);
+        eff.transform.position = walkPos.position;
+        eff.GetComponent<ParticleSystem>().Play();
+
         rig.AddForce(new Vector2(direction * moveForce, 0));
     }
 
@@ -249,13 +247,19 @@ public class BossCntr : MonoBehaviour
     {
         if (Physics2D.Raycast(attackPoints[0].transform.position, new Vector3(direction,0,0), attackRange[0], playerLayerMask))
         {
-            StartCoroutine(cameraShake.Shake(0.1f, 0.5f));
+            //StartCoroutine(cameraShake.Shake(0.1f, 0.5f));
         }
     }
 
     public void Snipe()
     {
+        rig.AddForce(new Vector2(snipeForce * direction, 0));
         snipeable = true;
+    }
+
+    public void SnipeEnd()
+    {
+        rig.velocity = Vector2.zero;
     }
 
     #endregion
