@@ -33,7 +33,7 @@ public class Twovillagerdai : MonoBehaviour
     {
         if(PlayerManager.talk_man == 4)
         {
-            if((Input.GetKeyDown(KeyCode.Tab) &&　index == textList.Count) || Input.GetKeyDown(KeyCode.Escape))
+            if((Input.GetKeyDown(KeyCode.Tab) &&　index == textList.Count) || (PlayerManager.isTalking && Input.GetKeyDown(KeyCode.Escape)))
             {
                 index = 0;
                 playertalk = 0;

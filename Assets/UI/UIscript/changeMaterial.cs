@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class changeMaterial : MonoBehaviour
 {
-    public Material a,b,c,d;
+    public Material a,b,c,d,e;
     public float san;
     // Start is called before the first frame update
     void Start()
@@ -17,7 +17,9 @@ public class changeMaterial : MonoBehaviour
     void Update()
     {
         san = SanityValue.san;
-        if(san<=60 && san >= 40){
+        if(san > 60){
+            GetComponent<Image>().material = e;
+        }else if(san<=60 && san >= 40){
             GetComponent<Image>().material = a;
         }else if(san < 40 && san >= 20){
             GetComponent<Image>().material = b;

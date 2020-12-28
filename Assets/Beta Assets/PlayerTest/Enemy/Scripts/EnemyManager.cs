@@ -16,4 +16,9 @@ public class EnemyManager : MonoBehaviour
         hp = hp - damageInput;
         hp = (hp < 0) ? 0 : hp;
     }
+
+    public int GetHp()
+    {
+        return hp;
+    }
 }

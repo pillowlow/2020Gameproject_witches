@@ -5,6 +5,7 @@ using UnityEngine.UI;
 
 public class Princessdialog : MonoBehaviour
 {
+    public GameObject teleport,arrow; 
   [Header("UI組件")]
     public Text text_labe;
     [Header("文本文件")]
@@ -33,7 +34,7 @@ public class Princessdialog : MonoBehaviour
     {
         if(PlayerManager.talk_man == 3)
         {
-            if((Input.GetKeyDown(KeyCode.Tab) &&　index == textList.Count) || Input.GetKeyDown(KeyCode.Escape))
+            if((Input.GetKeyDown(KeyCode.Tab) &&　index == textList.Count) || (PlayerManager.isTalking && Input.GetKeyDown(KeyCode.Escape)))
             {
                 index = 0;
                 playertalk = 0;
@@ -47,6 +48,8 @@ public class Princessdialog : MonoBehaviour
                 dailog["對話框"].time = dailog["對話框"].length;
                 dailog["對話框"].speed = -1;
                 dailog.Play("對話框");
+                teleport.SetActive(true);
+                arrow.SetActive(true);
             }else if(Input.GetKeyDown(KeyCode.Tab) && textfinish && PlayerManager.talkable)
             {
                 playertalk++;
