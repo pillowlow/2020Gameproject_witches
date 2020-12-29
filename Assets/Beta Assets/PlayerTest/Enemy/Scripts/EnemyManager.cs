@@ -8,13 +8,17 @@ public class EnemyManager : MonoBehaviour
     public int hp;
     public int damage;
     public int exp;
+    public bool isDie = false;
+    public StateCode state = StateCode.idel;
 
-    public enum StateCode {idel, jumping, moving,  };
+    public enum StateCode {idel, jumping, moving, die};
 
     public void Damaged(int damageInput)
     {
         hp = hp - damageInput;
         hp = (hp < 0) ? 0 : hp;
+
+
     }
 
     public int GetHp()

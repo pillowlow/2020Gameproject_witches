@@ -25,4 +25,9 @@ public class P_TakeDamage : MonoBehaviour
 
         PlayerManager.hp = hp;
     }
+
+    public void TakeHitEnd()
+    {
+        PlayerManager.state = PlayerManager.StateCode.idel;
+    }
 }

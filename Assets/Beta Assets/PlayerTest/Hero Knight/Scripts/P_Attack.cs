@@ -5,7 +5,7 @@ using UnityEngine;
 public class P_Attack : MonoBehaviour
 {
     [Header("Attack")]
-    public ParticleSystem attackParticle;
+    public GameObject attackParticle;
     public float attackWaitingTime;
     public Transform[] attackPoints;
     public float[] attackRange;
@@ -28,6 +28,15 @@ public class P_Attack : MonoBehaviour
             NormalUpdate();
         else if (PlayerManager.mode == PlayerManager.ModeCode.transform)
             TransformUpdate();
+
+        TureOffAttackParticle();
+
+    }
+
+    void TureOffAttackParticle()
+    {
+        if(PlayerManager.state == PlayerManager.StateCode.takingHit)
+            AttackParticleActive(false);
     }
 
     void NormalUpdate()
@@ -142,15 +151,13 @@ public class P_Attack : MonoBehaviour
         {
             PlayerManager.state = PlayerManager.StateCode.idel;
         }
-        AttackParticleActive(false);
+        if(PlayerManager.mode == PlayerManager.ModeCode.normal)
+            AttackParticleActive(false);
 
     }
 
     public void AttackParticleActive(bool b = true)
     {
-        //if (b) attackParticle.Play();
-        //else attackParticle.Stop();
-
         if (b) attackParticle.gameObject.SetActive(b);
         else attackParticle.gameObject.SetActive(b);
     }

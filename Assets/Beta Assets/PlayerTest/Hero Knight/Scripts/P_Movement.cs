@@ -123,10 +123,11 @@ public class P_Movement : MonoBehaviour
     {
         bool moveable = true;
         if (PlayerManager.state == PlayerManager.StateCode.takingHit) moveable = false;
+        if (PlayerManager.state == PlayerManager.StateCode.die) moveable = false;
         if (PlayerManager.state == PlayerManager.StateCode.attack1) moveable = false;
         if (PlayerManager.state == PlayerManager.StateCode.attack1_connection) moveable = false;
         if (PlayerManager.state == PlayerManager.StateCode.attack2) moveable = false;
-        if (PlayerManager.state == PlayerManager.StateCode.attack2_connection) moveable = false;  
+        if (PlayerManager.state == PlayerManager.StateCode.attack2_connection) moveable = false;
 
         PlayerManager.moveable = moveable;
     }
@@ -150,15 +151,5 @@ public class P_Movement : MonoBehaviour
         anim.SetFloat("SpeedX", Mathf.Abs(rig.velocity.x));
         anim.SetFloat("SpeedY", rig.velocity.y);
         anim.SetBool("OnGround", PlayerManager.onGround);
-
-        if (Input.GetKeyDown(KeyCode.J)) anim.SetTrigger("TakeHit");
-
-        /*if (fly)
-        {
-            anim.SetTrigger("Fly");
-            fly = false;
-            Fly();
-        }*/
-
     }
 }
