@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.Remoting.Messaging;
 using UnityEngine;
 
 public class BossCntr : MonoBehaviour
@@ -13,7 +12,6 @@ public class BossCntr : MonoBehaviour
     int direction = -1;
 
     [Header("Player")]
-    public GameObject player;
     public LayerMask playerLayerMask;
 
     [Header("Camera")]
@@ -24,7 +22,6 @@ public class BossCntr : MonoBehaviour
     public float stopRange;
 
     [Header("Attack")]
-    public Transform[] snipePoints;
     public GameObject[] attackPoints;
     public float[] attackRange;
     public float snipeForce;
@@ -33,31 +30,51 @@ public class BossCntr : MonoBehaviour
     public bool testing;
 
     int state;
+    int originHp;
     float counter, timer;
     float distanceP;
     bool snipeable;
     Vector3 velocity__ = Vector3.zero;
 
+    GameObject player, player_, player_T;
     Rigidbody2D rig;
     Animator anim;
+    EnemyManager eManager;
 
     void Start()
     {
         rig = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
-        Physics2D.IgnoreCollision(player.GetComponent<Collider2D>(), GetComponent<Collider2D>());
+        //Physics2D.IgnoreCollision(player.GetComponent<Collider2D>(), GetComponent<Collider2D>());
+
+        player_ = PlayerManager.instance.player;
+        player_T = PlayerManager.instance.player_transform;
 
         state = 1;
         counter = 0;
         timer = 0;
-        snipeable = false;
+        snipeable = false;        
+        eManager = GetComponent<EnemyManager>();
+        originHp = eManager.GetHp();
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (PlayerManager.mode == PlayerManager.ModeCode.normal) player = player_;
+        else player = player_T;
+
         Timer();
-        if(testing) Testing();
+        if(eManager.GetHp() <= 0)
+        {
+            if(eManager.isDie != true)
+            {
+                eManager.isDie = true;
+                Destroy(GetComponent<Collider2D>());
+                Destroy(rig);
+                anim.SetTrigger("Die");
+            }
+        }
         else BossAI();
         
     }
@@ -74,11 +91,18 @@ public class BossCntr : MonoBehaviour
                 {
                     timer = 0;
                     state = 1;
+                    counter = 0;
                 }
                 break;
 
             case 1:
-                if(timer > bossWaitingTime)
+                float bossWaitingTime_ = bossWaitingTime;
+                float hpEff = GetComponent<EnemyManager>().GetHp() / originHp;
+
+                if (hpEff <= 0.3) bossWaitingTime_ = 1;
+                else if (hpEff <= 0.5) bossWaitingTime = 2;
+
+                if (timer > bossWaitingTime_)
                 {
                     state = 2;
                 }
@@ -132,7 +156,7 @@ public class BossCntr : MonoBehaviour
             case 10:
                 if (snipeable == true)
                 {
-                    state = 0;
+                    Attack0();
                 }
                 break;
 
@@ -160,22 +184,12 @@ public class BossCntr : MonoBehaviour
         else transform.rotation = Quaternion.Euler(Vector3.zero);
     }
 
-    Vector3 CheckFaceSnipePoint()
-    {
-        for (int i = 0; i < snipePoints.Length; i++)
-        {
-            if ((snipePoints[i].position.x - transform.position.x) * direction > 0)
-                return new Vector3(snipePoints[i].position.x, transform.position.y, transform.position.z);
-        }
-        return Vector3.zero;
-    }
-
     void AttackSwitch()
     {
         float rand = Random.Range(0f,1f);
         if(distanceP < 6.5f)
         {
-            if (rand < 0.5f) state = 9;
+            if (rand < 0.4f) state = 9;
             else state = 4;
         }
         else
@@ -190,6 +204,7 @@ public class BossCntr : MonoBehaviour
     {
         if(distanceP > stopRange)
         {
+            counter = timer;
             anim.SetTrigger("Walk");
             state = 5;
         }
@@ -205,6 +220,12 @@ public class BossCntr : MonoBehaviour
         {
             anim.SetTrigger("SWalk");
             state = 6;
+        }
+        else if (counter + 3.5 < timer)
+        {
+            anim.SetTrigger("SWalk");
+            FacePlayer();
+            state = 7;
         }
     }
 
@@ -238,16 +259,20 @@ public class BossCntr : MonoBehaviour
 
     public void JumpAttack()
     {
-        if (Physics2D.Raycast(attackPoints[0].transform.position, new Vector3(direction, 0, 0), attackRange[0], playerLayerMask))
+        if (Physics2D.Raycast(attackPoints[1].transform.position, new Vector3(direction, 0, 0), attackRange[0], playerLayerMask))
         {
-            //PlayerDamage();
+            int damage = GetComponent<EnemyManager>().damage;
+            if (PlayerManager.state != PlayerManager.StateCode.takingHit)
+                PlayerManager.TakeDamage(damage);
         }
     }
     public void Attack0()
     {
         if (Physics2D.Raycast(attackPoints[0].transform.position, new Vector3(direction,0,0), attackRange[0], playerLayerMask))
         {
-            //StartCoroutine(cameraShake.Shake(0.1f, 0.5f));
+            int damage = GetComponent<EnemyManager>().damage;
+            if (PlayerManager.state != PlayerManager.StateCode.takingHit)
+                PlayerManager.TakeDamage(damage);
         }
     }
 
@@ -259,6 +284,7 @@ public class BossCntr : MonoBehaviour
 
     public void SnipeEnd()
     {
+        state = 0;
         rig.velocity = Vector2.zero;
     }
 
@@ -295,12 +321,6 @@ public class BossCntr : MonoBehaviour
         {
             Gizmos.color = Color.red;
             Gizmos.DrawLine(attackPoints[i].transform.position, attackPoints[i].transform.position + new Vector3(attackRange[i] * direction, 0, 0));
-        }
-
-        for (int i=0; i < snipePoints.Length; i++)
-        {
-            Gizmos.color = Color.green;
-            Gizmos.DrawWireSphere(snipePoints[i].position, 0.5f);
         }
     }
 }

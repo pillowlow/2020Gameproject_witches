@@ -10,12 +10,18 @@ public class PlayerManager : MonoBehaviour
     private void Awake()
     {
         instance = this;
+        rig = instance.player.GetComponent<Rigidbody2D>();
+        anim = instance.player.GetComponent<Animator>();
+        anim_t = instance.player_transform.GetComponent<Animator>();
     }
     #endregion
 
     public GameObject player;
     public GameObject player_transform;
     public LayerMask enemyLayer;
+
+    Rigidbody2D rig;
+    Animator anim, anim_t;
 
     public static bool isTalking = false;
     public static bool talkable = false;
@@ -28,10 +34,11 @@ public class PlayerManager : MonoBehaviour
     public static ModeCode mode = ModeCode.normal;
     public static StateCode state = StateCode.idel;
     public static int hp = 100;
-    public static int damage = 10;
+    public static int damage = 5;
+    public static int sanityValue = 100;
 
     public enum StateCode {
-        idel, moving, jumping, falling, flying, takingHit, attack1, 
+        idel, die, moving, jumping, falling, flying, takingHit, attack1, 
         attack1_connection , attack2 , attack2_connection, flyAttack1,
         flyAttack1_connection
     };
@@ -89,5 +96,40 @@ public class PlayerManager : MonoBehaviour
             equipDamage = damage;
         }
     }
+
+    public static void TakeDamage(int damage)
+    {
+        int hp_ = hp;
+
+        if (state != StateCode.takingHit && state != StateCode.die)
+        {
+            hp_ = (hp_ - damage > 0) ? hp_ - damage : 0;
+            state = PlayerManager.StateCode.takingHit;
+
+            if (mode == ModeCode.normal) instance.anim.SetTrigger("TakeHit");
+            else instance.anim_t.SetTrigger("TakeHit");
+
+        }
+
+        if(hp_ == 0 && state != StateCode.die)
+        {
+            if(mode != ModeCode.normal)
+            {
+                instance.player_transform.GetComponent<P_Transform>().Transform(ModeCode.normal);
+            }
+
+            instance.anim.SetBool("Die", true);
+            instance.anim.SetTrigger("DieT");
+            state = StateCode.die;
+        }
+
+        hp = hp_;
+    }
+    public static void AssignSanityValue(int value)
+    {
+        sanityValue += value;
+    }
+
+
 }
 

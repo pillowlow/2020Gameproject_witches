@@ -10,8 +10,7 @@ public class teleport : MonoBehaviour
     {
         if(cantele && Input.GetKeyDown(KeyCode.W))
         {
-            print("FUCK");
-            SceneManager.LoadScene(2);
+            SceneManager.LoadScene(3);
         }
     }
     void OnTriggerExit2D(Collider2D coll)

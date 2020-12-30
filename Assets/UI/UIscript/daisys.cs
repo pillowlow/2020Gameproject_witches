@@ -39,7 +39,7 @@ public class daisys : MonoBehaviour
             {
                 index = 0;
                 playertalk = 0;
-                text_labe.text = textList[index];
+                text_labe.text = "";
                 villhead["村長對話"].time = villhead["村長對話"].length;
                 villhead["村長對話"].speed = -1;
                 villhead.Play("村長對話");

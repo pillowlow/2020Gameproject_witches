@@ -37,7 +37,7 @@ public class Twovillagerdai : MonoBehaviour
             {
                 index = 0;
                 playertalk = 0;
-                text_labe.text = textList[index];
+                text_labe.text = " ";
                 NPC["村民3動畫UI"].time = NPC["村民3動畫UI"].length;
                 NPC["村民3動畫UI"].speed = -1;
                 NPC.Play("村民3動畫UI");

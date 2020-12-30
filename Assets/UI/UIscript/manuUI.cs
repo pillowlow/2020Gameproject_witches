@@ -25,17 +25,17 @@ public class manuUI : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(Imagecolor.a <= 1) Imagecolor.a += 0.001f;
-        if(Image2color.a <= 1 && Imagecolor.a >= 0.5f) Image2color.a += 0.001f;
+        if(Imagecolor.a <= 1) Imagecolor.a += 0.01f;
+        if(Image2color.a <= 1 && Imagecolor.a >= 0.5f) Image2color.a += 0.01f;
 
         title.GetComponent<Image>().color = Imagecolor;
         title2.GetComponent<Image>().color = Image2color;
         title3.GetComponent<Image>().color = Imagecolor;
 
 
-        if(Imagecolor.a >= 0.5f && c_start.a <= 0.7f) c_start.a += 0.001f;
-        if(c_start.a >= 0.5f && c_setting.a <= 0.7f) c_setting.a += 0.001f; 
-        if(c_setting.a >= 0.5f && c_exit.a <= 0.7f) c_exit.a += 0.001f;
+        if(Imagecolor.a >= 0.5f && c_start.a <= 0.7f) c_start.a += 0.01f;
+        if(c_start.a >= 0.5f && c_setting.a <= 0.7f) c_setting.a += 0.01f; 
+        if(c_setting.a >= 0.5f && c_exit.a <= 0.7f) c_exit.a += 0.01f;
 
         t_start.color = c_start;
         t_setting.color = c_setting;
@@ -60,6 +60,15 @@ public class manuUI : MonoBehaviour
 
     public void START()
     {
-        SceneManager.LoadScene(2);
+        SceneManager.LoadScene(1);
+    }
+
+    public void Quit (){
+
+        #if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+        #else
+        Application.Quit();
+        #endif
     }
 }
