@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class BossCntr : MonoBehaviour
 {
+    public GameObject attackParticle;
     [Header("Movement")]
     public GameObject walkParticle;
     public Transform walkPos;
@@ -92,13 +93,14 @@ public class BossCntr : MonoBehaviour
                     timer = 0;
                     state = 1;
                     counter = 0;
+                    AttackParticleActive(false);
                 }
                 break;
 
             case 1:
                 float bossWaitingTime_ = bossWaitingTime;
                 float hpEff = GetComponent<EnemyManager>().GetHp() / originHp;
-
+                AttackParticleActive(false);
                 if (hpEff <= 0.3) bossWaitingTime_ = 1;
                 else if (hpEff <= 0.5) bossWaitingTime = 2;
 
@@ -111,29 +113,36 @@ public class BossCntr : MonoBehaviour
             case 2:
                 FacePlayer();
                 state = 3;
+                AttackParticleActive(false);
                 break;
 
             case 3:
                 AttackSwitch();
+                AttackParticleActive(false);
                 break;
 
             case 4:
                 WalkToPlayer();
+                AttackParticleActive(false);
                 break;
 
             case 5:
                 ReachToPlayer();
+                AttackParticleActive(false);
                 break;
 
             case 6:
                 anim.SetTrigger("attack0");
                 state = 0;
+                AttackParticleActive(true);
                 break;
 
             case 7:
                 anim.SetTrigger("Jump");
                 state = 8;
+                AttackParticleActive(false);
                 break;
+                
 
             case 8:
                 if (anim.GetCurrentAnimatorStateInfo(0).IsName("jump_mid") &&
@@ -143,6 +152,7 @@ public class BossCntr : MonoBehaviour
                     anim.SetTrigger("SJump");
                     CameraShake_(0.4f);
                     JumpAttack();
+                    AttackParticleActive(false);
                     state = 0;
                 }
                 break;
@@ -150,13 +160,16 @@ public class BossCntr : MonoBehaviour
             case 9:
                 anim.SetTrigger("Snipe");
                 state = 10;
+                AttackParticleActive(true);
                 snipeable = false;
                 break;
+               
 
             case 10:
                 if (snipeable == true)
                 {
                     Attack0();
+                    AttackParticleActive(true);
                 }
                 break;
 
@@ -212,8 +225,12 @@ public class BossCntr : MonoBehaviour
         {
             state = 6;
         }
+    } 
+    void AttackParticleActive(bool b = true)
+    {
+        if (b) attackParticle.gameObject.SetActive(b);
+        else attackParticle.gameObject.SetActive(b);
     }
-
     void ReachToPlayer()
     {
         if (distanceP <= stopRange)
@@ -228,6 +245,7 @@ public class BossCntr : MonoBehaviour
             state = 7;
         }
     }
+    
 
     #region Animation_Events
     public void One_Step_Walk()
