@@ -133,6 +133,52 @@ RectTransform:
     type: 3}
   m_PrefabInstance: {fileID: 2331969406994993912}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &55997025 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3055036497386531040, guid: 8edd61a70031f2949b1c2aebe63c8e33,
+    type: 3}
+  m_PrefabInstance: {fileID: 405918156}
+  m_PrefabAsset: {fileID: 0}
+--- !u!61 &55997026
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 55997025}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: -0.7156358, y: -2.1902711}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.5}
+    oldSize: {x: 10, y: 10}
+    newSize: {x: 10, y: 10}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 8.568728, y: 2.149713}
+  m_EdgeRadius: 0
+--- !u!114 &55997028
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 55997025}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5b0c389b6a502c4395348ca9227df6f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  im_san: {fileID: 653306795}
+  inoil: 0
 --- !u!1 &128202026
 GameObject:
   m_ObjectHideFlags: 0
@@ -3189,6 +3235,52 @@ MonoBehaviour:
   cam: {fileID: 0}
   parllaxEffectX: 0
   parllaxEffectY: 0
+--- !u!1 &821730285 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3055036497386531040, guid: 8edd61a70031f2949b1c2aebe63c8e33,
+    type: 3}
+  m_PrefabInstance: {fileID: 2001398883}
+  m_PrefabAsset: {fileID: 0}
+--- !u!61 &821730286
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 821730285}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: -0.64958906, y: -2.1653037}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.5}
+    oldSize: {x: 10, y: 10}
+    newSize: {x: 10, y: 10}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 11.299178, y: 3.0710363}
+  m_EdgeRadius: 0
+--- !u!114 &821730288
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 821730285}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5b0c389b6a502c4395348ca9227df6f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  im_san: {fileID: 653306795}
+  inoil: 0
 --- !u!1 &829223831
 GameObject:
   m_ObjectHideFlags: 0
@@ -23092,6 +23184,41 @@ PrefabInstance:
       propertyPath: m_Materials.Array.data[3]
       value: 
       objectReference: {fileID: 2100000, guid: ee3225e86fae43840b9d42dca7b1880f, type: 2}
+    - target: {fileID: 7800089875052701681, guid: 899611d4d2a462041b2dbf432040ecc5,
+        type: 3}
+      propertyPath: m_Parameters.widthCurve.m_Curve.Array.data[0].time
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7800089875052701681, guid: 899611d4d2a462041b2dbf432040ecc5,
+        type: 3}
+      propertyPath: m_Parameters.widthCurve.m_Curve.Array.data[0].value
+      value: 0.4999981
+      objectReference: {fileID: 0}
+    - target: {fileID: 7800089875052701681, guid: 899611d4d2a462041b2dbf432040ecc5,
+        type: 3}
+      propertyPath: m_Parameters.widthCurve.m_Curve.Array.data[0].inSlope
+      value: 1.8482153
+      objectReference: {fileID: 0}
+    - target: {fileID: 7800089875052701681, guid: 899611d4d2a462041b2dbf432040ecc5,
+        type: 3}
+      propertyPath: m_Parameters.widthCurve.m_Curve.Array.data[0].outSlope
+      value: 1.8482153
+      objectReference: {fileID: 0}
+    - target: {fileID: 7800089875052701681, guid: 899611d4d2a462041b2dbf432040ecc5,
+        type: 3}
+      propertyPath: m_Parameters.widthCurve.m_Curve.Array.data[0].outWeight
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7800089875052701681, guid: 899611d4d2a462041b2dbf432040ecc5,
+        type: 3}
+      propertyPath: m_Parameters.widthCurve.m_Curve.Array.data[1].value
+      value: 0.9648599
+      objectReference: {fileID: 0}
+    - target: {fileID: 7800089875052701681, guid: 899611d4d2a462041b2dbf432040ecc5,
+        type: 3}
+      propertyPath: m_Parameters.widthCurve.m_Curve.Array.data[1].time
+      value: 0.34584954
+      objectReference: {fileID: 0}
     - target: {fileID: 7800089875063187157, guid: 899611d4d2a462041b2dbf432040ecc5,
         type: 3}
       propertyPath: m_LocalPosition.y

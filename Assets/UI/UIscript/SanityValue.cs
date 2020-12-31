@@ -39,7 +39,7 @@ public class SanityValue : MonoBehaviour
         if(PlayerManager.isTalking == false){
             if(inoil && PlayerManager.sanityValue>=10) PlayerManager.AssignSanityValue(-10);
             else if(inoil && PlayerManager.sanityValue < 10) PlayerManager.sanityValue = 0;
-            else if(PlayerManager.sanityValue < 100) PlayerManager.AssignSanityValue(5);
+            else if(PlayerManager.sanityValue < 100) PlayerManager.AssignSanityValue(1);
         }
     }
 }

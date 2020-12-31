@@ -57,6 +57,7 @@ public class BossCntr : MonoBehaviour
         snipeable = false;        
         eManager = GetComponent<EnemyManager>();
         originHp = eManager.GetHp();
+        AttackParticleActive(true);
     }
 
     // Update is called once per frame
@@ -264,7 +265,7 @@ public class BossCntr : MonoBehaviour
 
     public void CameraShake_(float magnitude)
     {
-        StartCoroutine(cameraShake.Shake(0.1f, magnitude));
+        StartCoroutine(cameraShake.Shake(0.15f, magnitude));
     }
 
     public void Jump()
@@ -277,19 +278,25 @@ public class BossCntr : MonoBehaviour
 
     public void JumpAttack()
     {
+        AttackParticleActive(true);
         if (Physics2D.Raycast(attackPoints[1].transform.position, new Vector3(direction, 0, 0), attackRange[0], playerLayerMask))
         {
             int damage = GetComponent<EnemyManager>().damage;
+            
             if (PlayerManager.state != PlayerManager.StateCode.takingHit)
+                
                 PlayerManager.TakeDamage(damage);
         }
     }
     public void Attack0()
     {
+        AttackParticleActive(true);
         if (Physics2D.Raycast(attackPoints[0].transform.position, new Vector3(direction,0,0), attackRange[0], playerLayerMask))
         {
             int damage = GetComponent<EnemyManager>().damage;
+            
             if (PlayerManager.state != PlayerManager.StateCode.takingHit)
+                AttackParticleActive(true);
                 PlayerManager.TakeDamage(damage);
         }
     }
@@ -297,6 +304,7 @@ public class BossCntr : MonoBehaviour
     public void Snipe()
     {
         rig.AddForce(new Vector2(snipeForce * direction, 0));
+        AttackParticleActive(true);
         snipeable = true;
     }
 
