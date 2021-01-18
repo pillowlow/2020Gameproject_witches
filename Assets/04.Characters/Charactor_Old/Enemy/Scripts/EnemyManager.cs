@@ -9,9 +9,9 @@ public class EnemyManager : MonoBehaviour
     public int damage;
     public int exp;
     public bool isDie = false;
-    public StateCode state = StateCode.idel;
+    public StateCode state = StateCode.idle;
 
-    public enum StateCode {idel, jumping, moving, die};
+    public enum StateCode {idle, jumping, moving, die};
 
     public void Damaged(int damageInput)
     {

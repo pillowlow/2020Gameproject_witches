@@ -29,8 +29,6 @@ public class BossCntr : MonoBehaviour
 
     [Header("Testing")]
     public bool testing;
-
-    int state;
     int originHp;
     float counter, timer;
     float distanceP;
@@ -42,6 +40,13 @@ public class BossCntr : MonoBehaviour
     Animator anim;
     EnemyManager eManager;
 
+    enum BossMode
+    {
+        Idle,CalWaiting,FacePlayer,AttackSwitch,WalkToPlayer,
+        ReachToPlayer,Attack0,Jump,JumpAttack,TriggerSnipe,Snipe
+    }
+    BossMode state;
+    
     void Start()
     {
         rig = GetComponent<Rigidbody2D>();
@@ -51,7 +56,7 @@ public class BossCntr : MonoBehaviour
         player_ = PlayerManager.instance.player;
         player_T = PlayerManager.instance.player_transform;
 
-        state = 1;
+        state = BossMode.CalWaiting;
         counter = 0;
         timer = 0;
         snipeable = false;        
@@ -85,20 +90,19 @@ public class BossCntr : MonoBehaviour
     void BossAI()
     {
         distanceP = CheckDistance(transform.position, player.transform.position);
-
         switch (state)
         {
-            case 0:
-                if (anim.GetCurrentAnimatorStateInfo(0).IsName("idel"))
+            case BossMode.Idle:
+                if (anim.GetCurrentAnimatorStateInfo(0).IsName("idle"))
                 {
                     timer = 0;
-                    state = 1;
+                    state = BossMode.CalWaiting;
                     counter = 0;
                     AttackParticleActive(false);
                 }
                 break;
 
-            case 1:
+            case BossMode.CalWaiting:
                 float bossWaitingTime_ = bossWaitingTime;
                 float hpEff = GetComponent<EnemyManager>().GetHp() / originHp;
                 AttackParticleActive(false);
@@ -107,45 +111,45 @@ public class BossCntr : MonoBehaviour
 
                 if (timer > bossWaitingTime_)
                 {
-                    state = 2;
+                    state = BossMode.FacePlayer;
                 }
                 break;
 
-            case 2:
+            case BossMode.FacePlayer:
                 FacePlayer();
-                state = 3;
+                state = BossMode.AttackSwitch;
                 AttackParticleActive(false);
                 break;
 
-            case 3:
+            case BossMode.AttackSwitch:
                 AttackSwitch();
                 AttackParticleActive(false);
                 break;
 
-            case 4:
+            case BossMode.WalkToPlayer:
                 WalkToPlayer();
                 AttackParticleActive(false);
                 break;
 
-            case 5:
+            case BossMode.ReachToPlayer:
                 ReachToPlayer();
                 AttackParticleActive(false);
                 break;
 
-            case 6:
+            case BossMode.Attack0:
                 anim.SetTrigger("attack0");
-                state = 0;
+                state = BossMode.Idle;
                 AttackParticleActive(true);
                 break;
 
-            case 7:
+            case BossMode.Jump:
                 anim.SetTrigger("Jump");
-                state = 8;
+                state = BossMode.JumpAttack;
                 AttackParticleActive(false);
                 break;
                 
 
-            case 8:
+            case BossMode.JumpAttack:
                 if (anim.GetCurrentAnimatorStateInfo(0).IsName("jump_mid") &&
                     Physics2D.Raycast(transform.position, new Vector3(0, 1, 0), 0.1f) &&
                     rig.velocity.y < 0.01f)
@@ -154,19 +158,19 @@ public class BossCntr : MonoBehaviour
                     CameraShake_(0.4f);
                     JumpAttack();
                     AttackParticleActive(false);
-                    state = 0;
+                    state = BossMode.Idle;
                 }
                 break;
 
-            case 9:
+            case BossMode.TriggerSnipe:
                 anim.SetTrigger("Snipe");
-                state = 10;
+                state = BossMode.Snipe;
                 AttackParticleActive(true);
                 snipeable = false;
                 break;
                
 
-            case 10:
+            case BossMode.Snipe:
                 if (snipeable == true)
                 {
                     Attack0();
@@ -203,14 +207,14 @@ public class BossCntr : MonoBehaviour
         float rand = Random.Range(0f,1f);
         if(distanceP < 6.5f)
         {
-            if (rand < 0.4f) state = 9;
-            else state = 4;
+            if (rand < 0.4f) state = BossMode.TriggerSnipe;
+            else state = BossMode.WalkToPlayer;
         }
         else
         {
-            if (rand < 0.3f) state = 4;
-            else if (rand < 0.43f) state = 9;
-            else state = 7;
+            if (rand < 0.3f) state = BossMode.WalkToPlayer;
+            else if (rand < 0.43f) state = BossMode.TriggerSnipe;
+            else state = BossMode.Jump;
         }
     }
 
@@ -220,11 +224,11 @@ public class BossCntr : MonoBehaviour
         {
             counter = timer;
             anim.SetTrigger("Walk");
-            state = 5;
+            state = BossMode.ReachToPlayer;
         }
         else
         {
-            state = 6;
+            state = BossMode.Attack0;
         }
     } 
     void AttackParticleActive(bool b = true)
@@ -237,13 +241,13 @@ public class BossCntr : MonoBehaviour
         if (distanceP <= stopRange)
         {
             anim.SetTrigger("SWalk");
-            state = 6;
+            state = BossMode.Attack0;
         }
         else if (counter + 3.5 < timer)
         {
             anim.SetTrigger("SWalk");
             FacePlayer();
-            state = 7;
+            state = BossMode.Jump;
         }
     }
     
@@ -310,7 +314,7 @@ public class BossCntr : MonoBehaviour
 
     public void SnipeEnd()
     {
-        state = 0;
+        state = BossMode.Idle;
         rig.velocity = Vector2.zero;
     }
 

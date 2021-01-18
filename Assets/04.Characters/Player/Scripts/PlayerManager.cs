@@ -32,13 +32,13 @@ public class PlayerManager : MonoBehaviour
     public static int talk_man;
 
     public static ModeCode mode = ModeCode.normal;
-    public static StateCode state = StateCode.idel;
+    public static StateCode state = StateCode.idle;
     public static int hp = 100;
     public static int damage = 5;
     public static int sanityValue = 100;
 
     public enum StateCode {
-        idel, die, moving, jumping, falling, flying, takingHit, attack1, 
+        idle, die, moving, jumping, falling, flying, takingHit, attack1, 
         attack1_connection , attack2 , attack2_connection, flyAttack1,
         flyAttack1_connection
     };
