@@ -93,7 +93,7 @@ public class P_Attack : MonoBehaviour
     bool CheckAttackable()
     {
         bool attackable = false;
-        if (PlayerManager.state == PlayerManager.StateCode.idel) attackable = true;
+        if (PlayerManager.state == PlayerManager.StateCode.idle) attackable = true;
         else if (PlayerManager.state == PlayerManager.StateCode.moving) attackable = true;
 
         if(PlayerManager.mode == PlayerManager.ModeCode.transform)
@@ -149,7 +149,7 @@ public class P_Attack : MonoBehaviour
 
         if (changeState)
         {
-            PlayerManager.state = PlayerManager.StateCode.idel;
+            PlayerManager.state = PlayerManager.StateCode.idle;
         }
         if(PlayerManager.mode == PlayerManager.ModeCode.normal)
             AttackParticleActive(false);

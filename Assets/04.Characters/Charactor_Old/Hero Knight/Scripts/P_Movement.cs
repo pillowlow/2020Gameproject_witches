@@ -70,13 +70,13 @@ public class P_Movement : MonoBehaviour
 
             rig.velocity = new Vector2(x * walkSpeed, rig.velocity.y);
 
-            if (PlayerManager.state == PlayerManager.StateCode.idel)
+            if (PlayerManager.state == PlayerManager.StateCode.idle)
                 PlayerManager.state = PlayerManager.StateCode.moving;
         }
         else
         {
             if (PlayerManager.state == PlayerManager.StateCode.moving)
-                PlayerManager.state = PlayerManager.StateCode.idel;
+                PlayerManager.state = PlayerManager.StateCode.idle;
             
             rig.velocity = new Vector2(0, rig.velocity.y);
         }
@@ -104,7 +104,7 @@ public class P_Movement : MonoBehaviour
 
         if(PlayerManager.state == PlayerManager.StateCode.falling && PlayerManager.onGround)
         {
-            PlayerManager.state = PlayerManager.StateCode.idel;
+            PlayerManager.state = PlayerManager.StateCode.idle;
         }
     }
 
