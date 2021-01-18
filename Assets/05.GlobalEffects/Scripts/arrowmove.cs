@@ -4,35 +4,32 @@ using UnityEngine;
 
 public class arrowmove : MonoBehaviour
 {
-    public float effectstrength;
-    private float startposx, startposy;
+    public double effectstrength = 10;
+    private float container;
     private int counter;
-    private bool direction;
+    private int direction;
+    [SerializeField]private float speed ;
     // Start is called before the first frame update
     void Start()
     {
-        startposx = transform.position.x;
-        startposy = transform.position.y;
+        
         counter = 0;
-        direction = true;
+        direction =1;
+        
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (counter < effectstrength && counter > 0 && direction == true)
+        
+        if (counter%(2*effectstrength)==effectstrength)
         {
-            transform.position = new Vector3(startposx + counter, y: startposy + counter, transform.position.z);
-            counter++;
+            direction *= -1;
         }
-        else if (counter == effectstrength)
-        {
-            direction = false;
-        }
-        else if (counter < effectstrength && counter > 0 && direction == false)
-        {
-            transform.position = new Vector3(startposx + counter, y: startposy + counter, transform.position.z);
-            counter--;
-        }
+        print(direction);
+        container = speed * direction;
+        transform.Translate(container,0,0);
+
+        counter++;
     }
 }
