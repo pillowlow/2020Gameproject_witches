@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class viewmove : MonoBehaviour
 {
-   private float  camstartposx, camstartposy,startposx,startposy; 
+       private float  camstartposx, camstartposy,startposx,startposy; 
        public GameObject cam;
        public float parllaxEffectX;
        public float parllaxEffectY;
@@ -21,7 +21,7 @@ public class viewmove : MonoBehaviour
         void Update()
         { 
             
-            var temp= ParllaxCount(cam.transform.position.x,cam.transform.position.y);
+            var temp = ParllaxCount(cam.transform.position.x,cam.transform.position.y);
             
             transform.position=new Vector3(startposx+temp.Item1, y: startposy+temp.Item2,transform.position.z);
 
