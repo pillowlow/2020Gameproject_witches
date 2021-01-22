@@ -195,7 +195,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &128202027
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -211,7 +211,7 @@ MonoBehaviour:
   isGlobal: 1
   priority: 0
   blendDistance: 0
-  weight: 0.2
+  weight: 0.79
   sharedProfile: {fileID: 11400000, guid: a617954ca42ce0b4ca544b650727e22d, type: 2}
 --- !u!4 &128202028
 Transform:
@@ -2893,12 +2893,12 @@ PrefabInstance:
     - target: {fileID: 5471910697189928781, guid: 1757e85b65a93154f859a5d0111f3554,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: -7.48
+      value: -5.1
       objectReference: {fileID: 0}
     - target: {fileID: 5471910697189928781, guid: 1757e85b65a93154f859a5d0111f3554,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.95
+      value: -0.43
       objectReference: {fileID: 0}
     - target: {fileID: 5471910697189928781, guid: 1757e85b65a93154f859a5d0111f3554,
         type: 3}
@@ -22075,11 +22075,6 @@ PrefabInstance:
       propertyPath: attackParticle
       value: 
       objectReference: {fileID: 1989435013}
-    - target: {fileID: 191961083972843414, guid: 899611d4d2a462041b2dbf432040ecc5,
-        type: 3}
-      propertyPath: slashEffect
-      value: 
-      objectReference: {fileID: 0}
     - target: {fileID: 433394542344343616, guid: 899611d4d2a462041b2dbf432040ecc5,
         type: 3}
       propertyPath: m_SortingLayerID

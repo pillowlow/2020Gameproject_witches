@@ -16,10 +16,13 @@ public class P_Movement : MonoBehaviour
     public LayerMask groundLayer;
     public Transform groundCheck;
 
+    [Header("Fly")]
+    public int flyCost = 1;
+
     Rigidbody2D rig;
     Animator anim;
 
-    float onGroundRadius = .05f;
+    public float onGroundRadius = .4f;
 
     void Start()
     {
@@ -115,6 +118,7 @@ public class P_Movement : MonoBehaviour
             rig.velocity = new Vector2(rig.velocity.x, 0);
             rig.AddForce(new Vector2(0, flyForce));
             PlayerManager.state = PlayerManager.StateCode.flying;
+            PlayerManager.AssignSanityValue(-flyCost);
          }
 
     }
@@ -128,22 +132,16 @@ public class P_Movement : MonoBehaviour
         if (PlayerManager.state == PlayerManager.StateCode.attack1_connection) moveable = false;
         if (PlayerManager.state == PlayerManager.StateCode.attack2) moveable = false;
         if (PlayerManager.state == PlayerManager.StateCode.attack2_connection) moveable = false;
-
         PlayerManager.moveable = moveable;
     }
 
     void CheckOnGround()
     {
-        PlayerManager.onGround = false;
-
         Collider2D[] colliders = Physics2D.OverlapCircleAll(groundCheck.position, onGroundRadius, groundLayer);
-        for (int i = 0; i < colliders.Length; i++)
-        {
-            if (colliders[i].gameObject != gameObject)
-            {
-                PlayerManager.onGround = true;
-            }
-        }
+        if (colliders.Length > 0)
+            PlayerManager.onGround = true;
+        else
+            PlayerManager.onGround = false;
     }
 
     void AnimationControl()

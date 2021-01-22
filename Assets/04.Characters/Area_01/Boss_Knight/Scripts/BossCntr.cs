@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Random = UnityEngine.Random;
 
 public class BossCntr : MonoBehaviour
 {
-    
     public GameObject attackParticle;
-    public GameObject slashEffect;
     [Header("Movement")]
     public GameObject walkParticle;
     public Transform walkPos;
@@ -30,8 +26,7 @@ public class BossCntr : MonoBehaviour
     public GameObject[] attackPoints;
     public float[] attackRange;
     public float snipeForce;
-    
-    
+
     [Header("Testing")]
     public bool testing;
     int originHp;
@@ -180,7 +175,6 @@ public class BossCntr : MonoBehaviour
                 {
                     Attack0();
                     AttackParticleActive(true);
-                    Instantiate(slashEffect, (transform.position), transform.rotation);
                 }
                 break;
 

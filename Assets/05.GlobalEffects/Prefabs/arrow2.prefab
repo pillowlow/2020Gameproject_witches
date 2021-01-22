@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 1016257597595068429}
   - component: {fileID: 1016257597595068428}
   - component: {fileID: 1016257597595068427}
-  - component: {fileID: 1844123176}
   m_Layer: 0
   m_Name: arrow2
   m_TagString: Untagged
@@ -26,7 +25,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1016257597595068426}
-  m_LocalRotation: {x: 0, y: 0, z: -0.01915374, w: 0.99981654}
+  m_LocalRotation: {x: -0, y: -0, z: -0.019153498, w: 0.99981654}
   m_LocalPosition: {x: -0.299, y: -4.096, z: 0}
   m_LocalScale: {x: 0.10900899, y: 0.11177346, z: 1}
   m_Children:
@@ -101,20 +100,6 @@ Animation:
   m_PlayAutomatically: 0
   m_AnimatePhysics: 0
   m_CullingType: 0
---- !u!114 &1844123176
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1016257597595068426}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d15f9f36906f4eb4c89a23b49b16eb48, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  effectstrength: 1
-  speed: 0.05
 --- !u!1 &7651109045809966689
 GameObject:
   m_ObjectHideFlags: 0
@@ -160,9 +145,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_LightType: 3
   m_BlendStyleIndex: 0
-  m_FalloffIntensity: 0.7
+  m_FalloffIntensity: 0.5
   m_Color: {r: 0.42239228, g: 0.7924528, b: 0.76025337, a: 1}
-  m_Intensity: 0.3
+  m_Intensity: 0.63
   m_LightVolumeOpacity: 0.47
   m_ApplyToSortingLayers: 000000003f1bed9299618b6f836e90b6ebb22e9dd3630719b1a2bac2e58aaa0e5d74848a85ca98b6
   m_LightCookieSprite: {fileID: 0}
