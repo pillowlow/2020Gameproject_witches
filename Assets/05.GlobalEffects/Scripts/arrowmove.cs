@@ -9,10 +9,13 @@ public class arrowmove : MonoBehaviour
     private int counter;
     private int direction;
     [SerializeField]private float speed ;
+    private float startposx, startposy;
+    
     // Start is called before the first frame update
     void Start()
     {
-        
+        startposx = transform.position.x;
+        startposy = transform.position.y;
         counter = 0;
         direction =1;
         
@@ -22,14 +25,14 @@ public class arrowmove : MonoBehaviour
     void Update()
     {
         
-        if (counter%(2*effectstrength)==effectstrength)
+        if ((counter*1000)%(2*(effectstrength*1000))==10*effectstrength)
         {
             direction *= -1;
         }
         print(direction);
         container = speed * direction;
-        transform.Translate(container,0,0);
-
+        //transform.Translate(container,0,0);
+        transform.position = new Vector3(x:startposx + container, y:transform.position.y, z :transform.position.z);
         counter++;
     }
 }
