@@ -48,14 +48,14 @@ public class BossCntr : MonoBehaviour
         anim = GetComponent<Animator>();
         //Physics2D.IgnoreCollision(player.GetComponent<Collider2D>(), GetComponent<Collider2D>());
 
-        player_ = PlayerManager.instance.player;
-        player_T = PlayerManager.instance.player_transform;
+        player_ = PlayerManager.instance.player;                        // PlayerManager is a static instance of PlayerManager(Behaviour)
+        player_T = PlayerManager.instance.player_transform;             // with global object player.
 
         state = 1;
         counter = 0;
         timer = 0;
         snipeable = false;        
-        eManager = GetComponent<EnemyManager>();
+        eManager = GetComponent<EnemyManager>();                        // eManager is a Behaviour.
         originHp = eManager.GetHp();
         AttackParticleActive(true);
     }
@@ -63,11 +63,11 @@ public class BossCntr : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (PlayerManager.mode == PlayerManager.ModeCode.normal) player = player_;
+        if (PlayerManager.mode == PlayerManager.ModeCode.normal) player = player_;      // it changes the player mode.
         else player = player_T;
 
-        Timer();
-        if(eManager.GetHp() <= 0)
+        Timer();                                                                        // seting time.
+        if(eManager.GetHp() <= 0)                                                       // seting boss states.
         {
             if(eManager.isDie != true)
             {
@@ -100,7 +100,7 @@ public class BossCntr : MonoBehaviour
 
             case 1:
                 float bossWaitingTime_ = bossWaitingTime;
-                float hpEff = GetComponent<EnemyManager>().GetHp() / originHp;
+                float hpEff = GetComponent<EnemyManager>().GetHp() / originHp;      // hpEff use for setting states of boss.
                 AttackParticleActive(false);
                 if (hpEff <= 0.3) bossWaitingTime_ = 1;
                 else if (hpEff <= 0.5) bossWaitingTime = 2;
@@ -110,8 +110,7 @@ public class BossCntr : MonoBehaviour
                     state = 2;
                 }
                 break;
-
-            case 2:
+            case 2:                                                                
                 FacePlayer();
                 state = 3;
                 AttackParticleActive(false);
@@ -188,6 +187,10 @@ public class BossCntr : MonoBehaviour
         timer += Time.deltaTime;
     }
 
+    /*
+        states 2.
+        it changes boss to face player.
+    */
     void FacePlayer()
     {
         if (transform.position.x > player.transform.position.x) direction = -1;
@@ -197,14 +200,17 @@ public class BossCntr : MonoBehaviour
             transform.rotation = Quaternion.Euler(new Vector3(0, 180, 0));
         else transform.rotation = Quaternion.Euler(Vector3.zero);
     }
-
+    /*
+        states 3.
+        Randomly change boss attack mode.
+    */
     void AttackSwitch()
     {
         float rand = Random.Range(0f,1f);
         if(distanceP < 6.5f)
         {
             if (rand < 0.4f) state = 9;
-            else state = 4;
+            else state = 4;                     // walk to player.
         }
         else
         {
@@ -213,7 +219,11 @@ public class BossCntr : MonoBehaviour
             else state = 7;
         }
     }
-
+    /*
+        states 4.
+        if distence to player > attack range ; walk to player ;
+        else attack ;
+    */
     void WalkToPlayer()
     {
         if(distanceP > stopRange)
@@ -232,6 +242,10 @@ public class BossCntr : MonoBehaviour
         if (b) attackParticle.gameObject.SetActive(b);
         else attackParticle.gameObject.SetActive(b);
     }
+    /*
+        states 5.
+        Reach to player until it could attack.
+    */
     void ReachToPlayer()
     {
         if (distanceP <= stopRange)
