@@ -10,7 +10,9 @@ public class Viewmove : MonoBehaviour
        public float parllaxEffectY;
        
        void Start()
-       {
+       {    
+           if(cam == null)
+               return;
            camstartposx = cam.transform.position.x;
            camstartposy = cam.transform.position.y;
            startposx = transform.position.x;
