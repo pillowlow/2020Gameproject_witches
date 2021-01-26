@@ -26,7 +26,6 @@ public class arrowmove : MonoBehaviour
         {
             direction *= -1;
         }
-        print(direction);
         container = speed * direction;
         transform.Translate(container,0,0);
 
