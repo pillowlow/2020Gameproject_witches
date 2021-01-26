@@ -1001,6 +1001,11 @@ PrefabInstance:
       propertyPath: m_LocalRotation.w
       value: 0.99908984
       objectReference: {fileID: 0}
+    - target: {fileID: 5827636526736615729, guid: 7646bcfbe20088c4e95cd80ae5f8cd5f,
+        type: 3}
+      propertyPath: groundLayer.m_Bits
+      value: 27446
+      objectReference: {fileID: 0}
     - target: {fileID: 6126003157177442077, guid: 7646bcfbe20088c4e95cd80ae5f8cd5f,
         type: 3}
       propertyPath: m_LocalRotation.z
@@ -1299,7 +1304,7 @@ GameObject:
   - component: {fileID: 199399138}
   - component: {fileID: 199399140}
   - component: {fileID: 199399139}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: coliderdeco
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -9312,7 +9317,7 @@ GameObject:
   - component: {fileID: 493663639}
   - component: {fileID: 493663641}
   - component: {fileID: 493663640}
-  m_Layer: 13
+  m_Layer: 9
   m_Name: Point Light 2D (17)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -17063,7 +17068,7 @@ GameObject:
   - component: {fileID: 1010851680}
   - component: {fileID: 1010851682}
   - component: {fileID: 1010851681}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: coliderdecoemi
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -51548,7 +51553,7 @@ GameObject:
   - component: {fileID: 1600492051}
   - component: {fileID: 1600492053}
   - component: {fileID: 1600492052}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Coliders
   m_TagString: Untagged
   m_Icon: {fileID: 0}
