@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class viewmove : MonoBehaviour
+public class Viewmove : MonoBehaviour
 {
    private float  camstartposx, camstartposy,startposx,startposy; 
        public GameObject cam;
@@ -20,9 +20,9 @@ public class viewmove : MonoBehaviour
        // Update is called once per frame
         void Update()
         { 
-            
+            if(cam == null)
+                return;
             var temp= ParllaxCount(cam.transform.position.x,cam.transform.position.y);
-            
             transform.position=new Vector3(startposx+temp.Item1, y: startposy+temp.Item2,transform.position.z);
 
        }
