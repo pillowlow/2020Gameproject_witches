@@ -2010,6 +2010,7 @@ GameObject:
   - component: {fileID: 340913580381970110}
   - component: {fileID: 340913580381970109}
   - component: {fileID: 340913580381970108}
+  - component: {fileID: -4716318463133385472}
   m_Layer: 0
   m_Name: Main _Character
   m_TagString: Untagged
@@ -2080,7 +2081,7 @@ Animator:
   m_GameObject: {fileID: 5745949818360261425}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: e614d9ea78b26ae458c9821391d16de8, type: 2}
+  m_Controller: {fileID: 0}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -2200,9 +2201,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b5dd2cf113b006e46a4085f221ae4768, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  attackParticle: {fileID: 0}
   attackWaitingTime: 0
   attackPoints: []
   attackRange: []
+--- !u!114 &-4716318463133385472
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5745949818360261425}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4642a39d24184180b60c0c26dff9eae5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  player: {fileID: 5745949818360261425}
 --- !u!1 &5905842529793464834
 GameObject:
   m_ObjectHideFlags: 0
