@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-public class OnDialouge : MonoBehaviour
+public class OnDialogue : MonoBehaviour
 { 
     public String LoadPath;
     public objectTextUI UI;
