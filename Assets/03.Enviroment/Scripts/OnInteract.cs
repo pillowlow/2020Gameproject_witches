@@ -1,8 +1,6 @@
 ﻿using System;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.UIElements;
-using static objectTextUI;
 
 public class OnInteract : MonoBehaviour
 {
@@ -18,15 +16,17 @@ public class OnInteract : MonoBehaviour
     public Actions ObjectAction;
     public String TextPath;
     public float offset=4.0f;
+    public String PopupText = "按F互動";
     private Text popup;
     private void OnTriggerEnter2D(Collider2D col)
     {
         if (col.gameObject.tag.Equals("Player"))
         {
+            //When Player enter then show floating text on the object
             popup = TextUI.transform.Find("PopUpText").GetComponent<Text>();
             Vector2 pos = gameObject.transform.position;
             TextUI.transform.position = new Vector2(pos.x, pos.y + offset);
-            popup.text = "按F互動";
+            popup.text = PopupText;
             active = true;
         }
     }
@@ -37,11 +37,12 @@ public class OnInteract : MonoBehaviour
         {
             Vector2 pos = gameObject.transform.position;
             TextUI.transform.position = new Vector2(pos.x, pos.y + offset);
-            popup.text = "按F互動";
+            popup.text = PopupText;
             if (!active)
             {
                 popup.text = "";
             }
+            //If Player press F then call DoAction
             if (active && Input.GetKeyDown(KeyCode.F) )
             {
                 active = false;
@@ -54,17 +55,21 @@ public class OnInteract : MonoBehaviour
     {
         if (col.gameObject.tag.Equals("Player"))
         {
+            //When Player exit then disable floating text
             active = false;
             popup.text = "";
         }
     }
     
+    
     public void DoAction()
-    {
+    {   
+        //Different Actions
+        //Maybe I will make an event factory later
         switch (ObjectAction)
             {
                 case Actions.Story:
-                    TextUI.GetComponent<objectTextUI>().LoadText(TextPath,this);
+                    TextUI.GetComponent<TextUIScript>().LoadText(TextPath,this);
                     break;
                 case Actions.Item:
                     break;

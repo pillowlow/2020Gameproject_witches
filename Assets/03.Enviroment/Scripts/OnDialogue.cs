@@ -3,13 +3,14 @@ using UnityEngine;
 
 public class OnDialogue : MonoBehaviour
 { 
-    public String LoadPath;
-    public objectTextUI UI;
+    public String TextPath;
+    public TextUIScript TextUI;
     private void OnTriggerEnter2D(Collider2D col)
     {
         if (col.gameObject.tag.Equals("Player"))
         {
-            UI.LoadText(LoadPath);
+            //Load Text then destroy the trigger object.
+            TextUI.LoadText(TextPath);
             Destroy(this);
         }
     }

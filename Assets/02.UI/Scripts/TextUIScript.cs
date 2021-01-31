@@ -5,8 +5,9 @@ using Pathfinding.Serialization;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class objectTextUI : MonoBehaviour
+public class TextUIScript : MonoBehaviour
 {
+    
     private OnInteract Instance;
     public GameObject UI;
     private Text TextUI;
@@ -17,6 +18,7 @@ public class objectTextUI : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        //Get the Text and Image component and disable them
         TextUI = UI.transform.Find("Text").GetComponent<Text>();
         Image = UI.transform.GetComponentInChildren<Image>();
         active = false;
@@ -29,6 +31,7 @@ public class objectTextUI : MonoBehaviour
     {
         if (active)
         {
+            //If index bigger than lines then close the TextUI
             if (index >= Text.Count)
             {
                 active = false;
@@ -42,7 +45,9 @@ public class objectTextUI : MonoBehaviour
                 }
             }
             else
+            //Press H to get the next line.
             {
+                
                 TextUI.text = Text[index];
                 if (Input.GetKeyDown(KeyCode.H))
                 {
@@ -53,6 +58,7 @@ public class objectTextUI : MonoBehaviour
         }
     }
 
+    //For OnInteract Script to load Json file
     public void LoadText(String path,OnInteract instance)
     {
         Instance = instance;
@@ -66,6 +72,7 @@ public class objectTextUI : MonoBehaviour
             Image.gameObject.SetActive(true);
         }
     }
+    //For OnDialogue Script to load Json file
     public void LoadText(String path)
     {
         using (StreamReader r = new StreamReader(Application.dataPath+"/02.UI/StoryScripts/"+path))
