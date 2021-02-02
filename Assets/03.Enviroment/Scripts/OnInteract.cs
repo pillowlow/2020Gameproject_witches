@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,10 +13,15 @@ public class OnInteract : MonoBehaviour
         Story,Item,Event        
     }
     
-    public GameObject TextUI; 
-    public bool active = false;
-    public Actions ObjectAction;
-    public String TextPath;
+    public GameObject ObjectTextUI;
+
+    public List<Actions> ActionsList;
+    private Queue<Actions> ActionsQueue=new Queue<Actions>();
+    private bool ActionDone=true;
+    
+    public List<String> TextPaths;
+    private int TextIndex=0;
+    
     public float offset=4.0f;
     public String PopupText = "按F互動";
     private Text popup;
@@ -23,11 +30,10 @@ public class OnInteract : MonoBehaviour
         if (col.gameObject.tag.Equals("Player"))
         {
             //When Player enter then show floating text on the object
-            popup = TextUI.transform.Find("PopUpText").GetComponent<Text>();
+            popup = ObjectTextUI.transform.Find("PopUpText").GetComponent<Text>();
             Vector2 pos = gameObject.transform.position;
-            TextUI.transform.position = new Vector2(pos.x, pos.y + offset);
+            ObjectTextUI.transform.position = new Vector2(pos.x, pos.y + offset);
             popup.text = PopupText;
-            active = true;
         }
     }
 
@@ -36,16 +42,21 @@ public class OnInteract : MonoBehaviour
         if (col.gameObject.tag.Equals("Player"))
         {
             Vector2 pos = gameObject.transform.position;
-            TextUI.transform.position = new Vector2(pos.x, pos.y + offset);
+            ObjectTextUI.transform.position = new Vector2(pos.x, pos.y + offset);
             popup.text = PopupText;
-            if (!active)
+            //If Player press F then Enqueue all action to the queue
+            if (ActionsQueue.Count==0 && Input.GetKeyDown(KeyCode.F) )
+            {
+                TextIndex = 0;
+                foreach (Actions action in ActionsList)
+                {
+                    ActionsQueue.Enqueue(action);
+                }
+            }
+            //DoAction
+            if (ActionsQueue.Count!=0)
             {
                 popup.text = "";
-            }
-            //If Player press F then call DoAction
-            if (active && Input.GetKeyDown(KeyCode.F) )
-            {
-                active = false;
                 DoAction();
             }
         }
@@ -56,7 +67,6 @@ public class OnInteract : MonoBehaviour
         if (col.gameObject.tag.Equals("Player"))
         {
             //When Player exit then disable floating text
-            active = false;
             popup.text = "";
         }
     }
@@ -66,17 +76,40 @@ public class OnInteract : MonoBehaviour
     {   
         //Different Actions
         //Maybe I will make an event factory later
-        switch (ObjectAction)
+        if(!ActionDone) return;
+        ActionDone = false;
+        switch (ActionsQueue.Peek())
             {
                 case Actions.Story:
-                    TextUI.GetComponent<TextUIScript>().LoadText(TextPath,this);
+                    ObjectTextUI
+                        .GetComponent<TextUIScript>()
+                        .LoadText(TextPaths[TextIndex],this);
+                    TextIndex++;
                     break;
                 case Actions.Item:
                     break;
                 case Actions.Event:
                     break;
             }
+    }
 
+    public void SetActionDone()
+    {
+        ActionsQueue.Dequeue();
+        ActionDone = true;
+    }
+
+    public OnInteract AddAction(Actions action,String path)
+    {
+        ActionsList.Add(action);
+        TextPaths.Add(path);
+        return this;
+    }
+    public OnInteract ClearAction()
+    {
+        ActionsList.Clear();
+        TextPaths.Clear();
+        return this;
     }
 
 }

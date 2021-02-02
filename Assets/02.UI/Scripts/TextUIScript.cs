@@ -40,7 +40,7 @@ public class TextUIScript : MonoBehaviour
                 index = 0;
                 if (Instance)
                 {
-                    Instance.active = true;
+                    Instance.SetActionDone();
                     Instance = null;
                 }
             }
@@ -62,7 +62,7 @@ public class TextUIScript : MonoBehaviour
     public void LoadText(String path,OnInteract instance)
     {
         Instance = instance;
-        using (StreamReader r = new StreamReader(Application.dataPath+"/02.UI/StoryScripts/"+path))
+        using (StreamReader r = new StreamReader(Application.dataPath+"/06.Data/StoryScripts/"+path+".json"))
         {
             string json = r.ReadToEnd();
             Text = (List<String>)TinyJsonDeserializer.Deserialize(json,typeof(List<String>));
@@ -75,7 +75,7 @@ public class TextUIScript : MonoBehaviour
     //For OnDialogue Script to load Json file
     public void LoadText(String path)
     {
-        using (StreamReader r = new StreamReader(Application.dataPath+"/02.UI/StoryScripts/"+path))
+        using (StreamReader r = new StreamReader(Application.dataPath+"/06.Data/StoryScripts/"+path+".json"))
         {
             string json = r.ReadToEnd();
             Text = (List<String>)TinyJsonDeserializer.Deserialize(json,typeof(List<String>));

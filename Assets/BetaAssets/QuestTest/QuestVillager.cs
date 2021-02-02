@@ -15,7 +15,7 @@ public class QuestVillager : MonoBehaviour
     private void OnTriggerEnter2D(Collider2D collision)
     {
         //if (!Input.GetKeyDown(KeyCode.F)) { return; }
-        
+        OnInteract script = GetComponent<OnInteract>();
         switch(this.name)
         {
             case "Villager":
@@ -23,12 +23,14 @@ public class QuestVillager : MonoBehaviour
                 if (Quest.flag(FlagID.Visit_0_0) == 1)
                 {
                     Debug.Log("ConversationB with the villager");
-                    GetComponent<OnInteract>().TextPath = "test.json";
+                    script.ClearAction()
+                        .AddAction(OnInteract.Actions.Story, "villagerB");
                 }
                 else
                 {
                     Debug.Log("ConversationA with the villager");
-                    GetComponent<OnInteract>().TextPath = "rock.json";
+                    script.ClearAction()
+                        .AddAction(OnInteract.Actions.Story, "villagerA");
                     Quest.SetFlag(FlagID.Dialog_0_0);
                 }
                 break;
@@ -37,6 +39,8 @@ public class QuestVillager : MonoBehaviour
             {
                 if(Quest.flag(FlagID.Dialog_0_0)==1)
                 {
+                    script.ClearAction()
+                        .AddAction(OnInteract.Actions.Story, "crystalball");
                     Debug.Log("You Found a Mysterious Crystal Ball...");
                     Quest.SetFlag(FlagID.Visit_0_0);
                 }
