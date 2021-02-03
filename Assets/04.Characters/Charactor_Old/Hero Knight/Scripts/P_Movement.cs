@@ -24,7 +24,8 @@ public class P_Movement : MonoBehaviour
 
     public event Action OnJump;
     public event Action OnLanding;
-    
+
+    private bool _isMoveAble = true;
     void Start()
     {
         rig = GetComponent<Rigidbody2D>();
@@ -57,7 +58,7 @@ public class P_Movement : MonoBehaviour
     {
         float x = Input.GetAxis("Horizontal");
 
-        if (PlayerManager.moveable && Mathf.Abs(x) > 0.1f)
+        if (_isMoveAble && Mathf.Abs(x) > 0.1f)
         {
             Vector3 theScale = transform.localScale;
 
@@ -88,7 +89,7 @@ public class P_Movement : MonoBehaviour
 
     void Jump()
     {
-        if (PlayerManager.moveable && PlayerManager.onGround && Input.GetButtonDown("Jump"))
+        if (_isMoveAble && PlayerManager.onGround && Input.GetButtonDown("Jump"))
         {    
             OnJump?.Invoke();
             rig.AddForce(new Vector2(0f, jumpForce));
@@ -116,7 +117,7 @@ public class P_Movement : MonoBehaviour
 
     void Fly()
     {
-        if (PlayerManager.moveable && Input.GetButtonDown("Jump"))
+        if (_isMoveAble && Input.GetButtonDown("Jump"))
          {
             rig.velocity = new Vector2(rig.velocity.x, 0);
             rig.AddForce(new Vector2(0, flyForce));
@@ -127,15 +128,13 @@ public class P_Movement : MonoBehaviour
 
     void CheckMoveable()
     {
-        bool moveable = true;
-        if (PlayerManager.state == PlayerManager.StateCode.takingHit) moveable = false;
-        if (PlayerManager.state == PlayerManager.StateCode.die) moveable = false;
-        if (PlayerManager.state == PlayerManager.StateCode.attack1) moveable = false;
-        if (PlayerManager.state == PlayerManager.StateCode.attack1_connection) moveable = false;
-        if (PlayerManager.state == PlayerManager.StateCode.attack2) moveable = false;
-        if (PlayerManager.state == PlayerManager.StateCode.attack2_connection) moveable = false;
-
-        PlayerManager.moveable = moveable;
+        _isMoveAble = PlayerManager.moveable;
+        if (PlayerManager.state == PlayerManager.StateCode.takingHit) _isMoveAble = false;
+        if (PlayerManager.state == PlayerManager.StateCode.die) _isMoveAble = false;
+        if (PlayerManager.state == PlayerManager.StateCode.attack1) _isMoveAble = false;
+        if (PlayerManager.state == PlayerManager.StateCode.attack1_connection) _isMoveAble = false;
+        if (PlayerManager.state == PlayerManager.StateCode.attack2) _isMoveAble = false;
+        if (PlayerManager.state == PlayerManager.StateCode.attack2_connection) _isMoveAble = false;
     }
 
     void CheckOnGround()

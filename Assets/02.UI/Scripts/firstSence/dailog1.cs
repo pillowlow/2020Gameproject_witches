@@ -13,21 +13,15 @@ public class dailog1 : MonoBehaviour
      void OnTriggerEnter2D(Collider2D coll)
      {
          if(coll.tag == "Player" && !talked){
-            Destroy(block,2);
-            dai["對話框"].time = 0;
-            dai["對話框"].speed = 1;
-            dai.Play("對話框");
+             Dialog.Instance.ShowTextArea("test");
          }
      }
 
     void OnTriggerExit2D(Collider2D coll)
      {
-         if(coll.tag == "Player" && !talked){
-            talked = true;
-            dai["對話框"].time = dai["對話框"].length;
-            dai["對話框"].speed = -1;
-            dai.Play("對話框");
-            text1.SetActive(false);
+         if(coll.tag == "Player"){
+            Destroy(gameObject);
+            Dialog.Instance.HideTextArea();
          }
      }
 }

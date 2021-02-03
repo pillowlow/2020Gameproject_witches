@@ -14,7 +14,7 @@ public class PlayerManager : MonoBehaviour
     private void Awake()
     {
         instance = this;
-        rig = instance.player.GetComponent<Rigidbody2D>();
+        _rigidbody2D = instance.player.GetComponent<Rigidbody2D>();
         anim = instance.player.GetComponent<Animator>();
         anim_t = instance.player_transform.GetComponent<Animator>();
         
@@ -46,7 +46,11 @@ public class PlayerManager : MonoBehaviour
     public GameObject player_transform;
     public LayerMask enemyLayer;
 
-    Rigidbody2D rig;
+    private Rigidbody2D _rigidbody2D;
+    public Rigidbody2D CurrentRigidbody2D
+    {
+        get => _rigidbody2D;
+    }
     Animator anim, anim_t;
 
     public static bool isTalking = false;
