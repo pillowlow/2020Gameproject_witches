@@ -11,10 +11,9 @@ public class CameraSystem : MonoBehaviour
 
     private void Start()
     {
-        GameObject instancePlayer = PlayerManager.instance.player;
         if (_virtualCamera != null)
-        {
-            _virtualCamera.Follow = instancePlayer.transform;
+        {    
+            PlayerManager.instance.SetPlayerCamera(_virtualCamera);
         }
     }
 }

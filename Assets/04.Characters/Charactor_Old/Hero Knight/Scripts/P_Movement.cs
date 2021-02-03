@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -21,6 +22,9 @@ public class P_Movement : MonoBehaviour
 
     float onGroundRadius = .05f;
 
+    public event Action OnJump;
+    public event Action OnLanding;
+    
     void Start()
     {
         rig = GetComponent<Rigidbody2D>();
@@ -85,7 +89,8 @@ public class P_Movement : MonoBehaviour
     void Jump()
     {
         if (PlayerManager.moveable && PlayerManager.onGround && Input.GetButtonDown("Jump"))
-        {
+        {    
+            OnJump?.Invoke();
             rig.AddForce(new Vector2(0f, jumpForce));
             PlayerManager.state = PlayerManager.StateCode.jumping;
         }
@@ -105,6 +110,7 @@ public class P_Movement : MonoBehaviour
         if(PlayerManager.state == PlayerManager.StateCode.falling && PlayerManager.onGround)
         {
             PlayerManager.state = PlayerManager.StateCode.idle;
+            OnLanding?.Invoke();
         }
     }
 

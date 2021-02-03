@@ -1,19 +1,45 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using Cinemachine;
 using UnityEngine;
 
 public class PlayerManager : MonoBehaviour
 {
     #region Singleton
     public static PlayerManager instance;
-
+    
+    private CinemachineVirtualCamera _VirtualCamera = null;
+    private CinemachineFramingTransposer _cinemachineComposer = null;
     private void Awake()
     {
         instance = this;
         rig = instance.player.GetComponent<Rigidbody2D>();
         anim = instance.player.GetComponent<Animator>();
         anim_t = instance.player_transform.GetComponent<Animator>();
+        
+        
     }
+
+    private void Start()
+    {
+        var pMovement = player.GetComponent<P_Movement>();
+        pMovement.OnJump += () =>
+        {
+             if (_cinemachineComposer != null)
+            {
+                _cinemachineComposer.m_DeadZoneHeight = 1.0f;
+            }
+        };
+        pMovement.OnLanding += () =>
+        {
+            if (_cinemachineComposer != null)
+            {
+                _cinemachineComposer.m_DeadZoneHeight = 0f;
+            }
+        };
+    }
+
     #endregion
 
     public GameObject player;
@@ -36,6 +62,7 @@ public class PlayerManager : MonoBehaviour
     public static int hp = 100;
     public static int damage = 5;
     public static int sanityValue = 100;
+
 
     public enum StateCode {
         idle, die, moving, jumping, falling, flying, takingHit, attack1, 
@@ -129,7 +156,19 @@ public class PlayerManager : MonoBehaviour
     {
         sanityValue += value;
     }
+    
+    
+    public void SetPlayerCamera(CinemachineVirtualCamera camera)
+    {
+        _VirtualCamera = camera;
+        //TODO need check player gameObject status is transform or not
+        _VirtualCamera.Follow = player.transform;
+        _cinemachineComposer = camera.GetCinemachineComponent<CinemachineFramingTransposer>();
+    }
 
-
+    public void OnTransformFinish(GameObject player)
+    {
+        _VirtualCamera.Follow = player.transform;
+    }
 }
 
