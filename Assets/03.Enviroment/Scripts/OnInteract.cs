@@ -10,17 +10,19 @@ public class OnInteract : MonoBehaviour
     
     public enum Actions
     {
-        Story,Item,Event        
+        Story,Item,Quest,Event        
     }
     
     public GameObject ObjectTextUI;
 
     public List<Actions> ActionsList;
-    private Queue<Actions> ActionsQueue=new Queue<Actions>();
+    public Queue<Actions> ActionsQueue=new Queue<Actions>();
     private bool ActionDone=true;
     
     public List<String> TextPaths;
     private int TextIndex=0;
+
+    public List<String> FlagIds;
     
     public float offset=4.0f;
     public String PopupText = "按F互動";
@@ -78,15 +80,22 @@ public class OnInteract : MonoBehaviour
         //Maybe I will make an event factory later
         if(!ActionDone) return;
         ActionDone = false;
+        String path = TextPaths[TextIndex];
         switch (ActionsQueue.Peek())
             {
                 case Actions.Story:
-                    ObjectTextUI
-                        .GetComponent<TextUIScript>()
-                        .LoadText(TextPaths[TextIndex],this);
+                    CustomEventFactory
+                        .GetEvent<LoadTextEvent, TextUIScript>(ObjectTextUI.GetComponent<TextUIScript>(), path)
+                        .StartEvent(this);
                     TextIndex++;
                     break;
                 case Actions.Item:
+                    break;
+                case Actions.Quest:
+                    CustomEventFactory
+                        .GetEvent<AcceptQuestEvent, QuestDetailProto>(null, path)
+                        .StartEvent(this);
+                    TextIndex++;
                     break;
                 case Actions.Event:
                     break;
