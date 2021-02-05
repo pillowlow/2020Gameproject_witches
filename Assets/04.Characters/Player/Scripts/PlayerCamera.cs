@@ -13,6 +13,6 @@ public class PlayerCamera : MonoBehaviour
 
     void Update()
     {
-        cam.transform.position = new Vector3(transform.position.x + offset.x, transform.position.y + offset.y, -10 + offset.z);
+        //cam.transform.position = new Vector3(transform.position.x + offset.x, transform.position.y + offset.y, -10 + offset.z);
     }
 }

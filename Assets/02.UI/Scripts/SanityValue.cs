@@ -5,19 +5,11 @@ using UnityEngine.UI;
 
 public class SanityValue : MonoBehaviour
 {
-    public Image im_san;
     public bool inoil = false;
     // Start is called before the first frame update
     void Start()
     {
         InvokeRepeating("check",0,1);
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        //print(PlayerManager.sanityValue);
-        im_san.fillAmount = PlayerManager.sanityValue/100.0f;
     }
 
     void OnTriggerEnter2D(Collider2D coll)

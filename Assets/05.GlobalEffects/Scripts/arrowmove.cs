@@ -19,17 +19,16 @@ public class arrowmove : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
-    {
-        
-        if (counter%(2*effectstrength)==effectstrength)
-        {
-            direction *= -1;
-        }
-        print(direction);
-        container = speed * direction;
-        transform.Translate(container,0,0);
-
-        counter++;
-    }
+    // void Update()
+    // {
+    //     
+    //     if (counter%(2*effectstrength)==effectstrength)
+    //     {
+    //         direction *= -1;
+    //     }
+    //     container = speed * direction;
+    //     transform.Translate(container,0,0);
+    //
+    //     counter++;
+    // }
 }

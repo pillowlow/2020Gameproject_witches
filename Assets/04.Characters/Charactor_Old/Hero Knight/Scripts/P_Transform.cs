@@ -7,11 +7,6 @@ public class P_Transform : MonoBehaviour
 
     public ParticleSystem eff;
     
-    void Start()
-    {
-        
-    }
-
 
     void Update()
     {
@@ -22,7 +17,7 @@ public class P_Transform : MonoBehaviour
                 Transform(PlayerManager.ModeCode.normal);
         }
     }
-
+    
     public void Transform(PlayerManager.ModeCode targatMode)
     {
         if(PlayerManager.mode != targatMode)
@@ -49,12 +44,8 @@ public class P_Transform : MonoBehaviour
             eff_.GetComponent<ParticleSystem>().Play();
 
             PlayerManager.state = PlayerManager.StateCode.idle;
-
-            
-
-
-
-            this.gameObject.SetActive(false);
+            gameObject.SetActive(false);
+            PlayerManager.instance.OnTransformFinish(targetPlayer);
         }
     }
 }
