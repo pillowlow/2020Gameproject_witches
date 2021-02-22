@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using Cinemachine;
+﻿using Cinemachine;
 using UnityEngine;
 
 public class PlayerManager : MonoBehaviour
@@ -23,7 +20,7 @@ public class PlayerManager : MonoBehaviour
 
     private void Start()
     {
-        var pMovement = player.GetComponent<P_Movement>();
+        var pMovement = player.GetComponent<PlayerMovement>();
         pMovement.OnJump += () =>
         {
              if (_cinemachineComposer != null)
@@ -69,9 +66,7 @@ public class PlayerManager : MonoBehaviour
 
 
     public enum StateCode {
-        idle, die, moving, jumping, falling, flying, takingHit, attack1, 
-        attack1_connection , attack2 , attack2_connection, flyAttack1,
-        flyAttack1_connection
+        idle, die, moving, jumping, falling, flying, takingHit
     };
 
     public enum ModeCode{
@@ -146,7 +141,7 @@ public class PlayerManager : MonoBehaviour
         {
             if(mode != ModeCode.normal)
             {
-                instance.player_transform.GetComponent<P_Transform>().Transform(ModeCode.normal);
+                instance.player_transform.GetComponent<PlayerTransform>().Transform(ModeCode.normal);
             }
 
             instance.anim.SetBool("Die", true);

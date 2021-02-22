@@ -1,15 +1,22 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Cinemachine;
 using UnityEngine;
 [RequireComponent(typeof (BoxCollider2D))]
-public class CameraEventTrigger : MonoBehaviour
+public class CameraEventTrigger : MonoBehaviour,CustomEvent
 {
     [SerializeField] private string _showText = "";
 
     [SerializeField] private CinemachineVirtualCamera _camera = null;
 
     [SerializeField] public float hightLightTime { get; set; } = 3.0f;
+
+    public CameraEventTrigger(CinemachineVirtualCamera camera,String text)
+    {
+        _camera = camera;
+        _showText = text;
+    }
     private void Awake()
     {
         _camera.enabled = false;
@@ -37,5 +44,19 @@ public class CameraEventTrigger : MonoBehaviour
         PlayerManager.moveable = true;
         Destroy(gameObject);
     }
+    void ResetEventCamera()
+    {
+        _camera.enabled = false;
+        Dialog.Instance.HideTextArea();
+        PlayerManager.moveable = true;
+    }
     
+
+    public void StartEvent(OnInteract action)
+    {
+        PlayerManager.moveable = false;
+        _camera.enabled = true;
+        Invoke(nameof(ShowDialog), 2.0f);
+        Invoke(nameof(ResetEventCamera),hightLightTime);
+    }
 }

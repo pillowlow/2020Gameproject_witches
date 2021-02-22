@@ -1,37 +1,56 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
+    [Header("Mode")]
+    public PlayerManager.ModeCode initialMode;
+
     [Header("Movement")]
     public float walkSpeed;
     public float flyForce;
 
-    [Header("Attack")]
-    public float attackWaitingTime;
-
-    CharacterController2D controller;
+    [Header("Jump")]
+    public float jumpForce;
+    public LayerMask groundLayer;
+    public Transform groundCheck;
 
     Rigidbody2D rig;
     Animator anim;
 
-    bool jump;
-    bool fly = false;
+    float onGroundRadius = .05f;
 
-    float lastAttactTime;
+    public event Action OnJump;
+    public event Action OnLanding;
+
+    private bool _isMoveAble = true;
     void Start()
     {
         rig = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
-        controller = GetComponent<CharacterController2D>();
+        PlayerManager.mode = initialMode;
     }
-
 
     void Update()
     {
+        CheckOnGround();
+        CheckMoveable();
+
         Movement();
-        Attack0();
+        Debug.Log(PlayerManager.state);
+        if(PlayerManager.mode == PlayerManager.ModeCode.normal)
+        {
+            Jump();
+        }
+        else if(PlayerManager.mode == PlayerManager.ModeCode.transform)
+        {
+            Fly();
+        }
+
+        Fall();
+
         AnimationControl();
     }
 
@@ -39,54 +58,107 @@ public class PlayerMovement : MonoBehaviour
     {
         float x = Input.GetAxis("Horizontal");
 
-        jump = false;
-
-        if (Input.GetButtonDown("Jump"))
+        if (_isMoveAble && Mathf.Abs(x) > 0.1f)
         {
-            if (PlayerManager.state == 0)
+            Vector3 theScale = transform.localScale;
+
+            if (x > 0 && theScale.x < 0)
             {
-                jump = true;
-                if (controller.GetOnGround()) anim.SetTrigger("Jump");
+                theScale.x *= -1;
+                transform.localScale = theScale;
             }
-            else fly = true;
-            //fly = true;
+            else if (x < 0 && theScale.x > 0)
+            {
+                theScale.x *= -1;
+                transform.localScale = theScale;
+            }
+
+            rig.velocity = new Vector2(x * walkSpeed, rig.velocity.y);
+
+            if (PlayerManager.state == PlayerManager.StateCode.idle)
+                PlayerManager.state = PlayerManager.StateCode.moving;
+        }
+        else
+        {
+            if (PlayerManager.state == PlayerManager.StateCode.moving)
+                PlayerManager.state = PlayerManager.StateCode.idle;
+            
+            rig.velocity = new Vector2(0, rig.velocity.y);
+        }
+    }
+
+    void Jump()
+    {
+        if (_isMoveAble && PlayerManager.onGround && Input.GetButtonDown("Jump"))
+        {    
+            OnJump?.Invoke();
+            rig.AddForce(new Vector2(0f, jumpForce));
+            PlayerManager.state = PlayerManager.StateCode.jumping;
+        }
+    }
+
+    void Fall()
+    {
+        if (PlayerManager.state == PlayerManager.StateCode.jumping || PlayerManager.state == PlayerManager.StateCode.flying)
+        {
+            if (rig.velocity.y < 0) PlayerManager.state = PlayerManager.StateCode.falling;
+        }
+        else if (!PlayerManager.onGround && rig.velocity.y <= 0)
+        {
+            PlayerManager.state = PlayerManager.StateCode.falling;
         }
 
-        controller.Jump(jump);
+        if(PlayerManager.state == PlayerManager.StateCode.falling && PlayerManager.onGround)
+        {
+            PlayerManager.state = PlayerManager.StateCode.idle;
+            OnLanding?.Invoke();
+        }
+    }
+
+    void Fly()
+    {
+        if (_isMoveAble && Input.GetButtonDown("Jump"))
+         {
+            rig.velocity = new Vector2(rig.velocity.x, 0);
+            rig.AddForce(new Vector2(0, flyForce));
+            PlayerManager.state = PlayerManager.StateCode.flying;
+         }
 
     }
 
-    void Attack0()
+    void CheckMoveable()
     {
-        if (Input.GetButtonDown("Fire1"))
+        _isMoveAble = PlayerManager.moveable;
+        switch (PlayerManager.state)
         {
-            if(Time.time - lastAttactTime > attackWaitingTime)
+            case PlayerManager.StateCode.takingHit:
+            case PlayerManager.StateCode.die:
+                _isMoveAble = false;
+                break;
+            default:
+                _isMoveAble = true;
+                break;
+        }
+    }
+
+    void CheckOnGround()
+    {
+        PlayerManager.onGround = false;
+
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(groundCheck.position, onGroundRadius, groundLayer);
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            if (colliders[i].gameObject != gameObject)
             {
-                anim.SetTrigger("Attack0");
-                lastAttactTime = Time.time;
+                PlayerManager.onGround = true;
             }
-            
         }
     }
 
     void AnimationControl()
     {
-        anim.SetFloat("RunSpeed", Mathf.Abs(rig.velocity.x));
-        anim.SetFloat("JumpVelocity", rig.velocity.y);
-        anim.SetBool("OnGround", controller.GetOnGround());
-
-        if (fly)
-        {
-            anim.SetTrigger("Fly");
-            fly = false;
-            Fly();
-        }
-
-    }
-
-    public void Fly()
-    {
-        rig.velocity = new Vector2(rig.velocity.x, 0);
-        rig.AddForce(new Vector2(0, flyForce));
+        anim.SetFloat("SpeedX", Mathf.Abs(rig.velocity.x));
+        anim.SetFloat("SpeedY", rig.velocity.y);
+        anim.SetBool("OnGround", PlayerManager.onGround);
     }
 }

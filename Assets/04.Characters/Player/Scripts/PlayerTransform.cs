@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class P_Transform : MonoBehaviour
+public class PlayerTransform : MonoBehaviour
 {
 
     public ParticleSystem eff;

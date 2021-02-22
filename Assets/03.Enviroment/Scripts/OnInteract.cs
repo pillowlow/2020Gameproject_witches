@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using Cinemachine;
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.UI;
+
+[RequireComponent(typeof(Collider2D))]
 
 public class OnInteract : MonoBehaviour
 {
@@ -10,9 +13,9 @@ public class OnInteract : MonoBehaviour
     
     public enum Actions
     {
-        Story,Item,Quest,Event        
+        Story,Item,Quest,Camera,Event        
     }
-    
+
     public GameObject ObjectTextUI;
 
     public List<Actions> ActionsList;
@@ -29,7 +32,7 @@ public class OnInteract : MonoBehaviour
     private Text popup;
     private void OnTriggerEnter2D(Collider2D col)
     {
-        if (col.gameObject.tag.Equals("Player"))
+        if (col.CompareTag("Player"))
         {
             //When Player enter then show floating text on the object
             popup = ObjectTextUI.transform.Find("PopUpText").GetComponent<Text>();
@@ -41,7 +44,7 @@ public class OnInteract : MonoBehaviour
 
     void OnTriggerStay2D(Collider2D col)
     {
-        if (col.gameObject.tag.Equals("Player"))
+        if (col.CompareTag("Player"))
         {
             Vector2 pos = gameObject.transform.position;
             ObjectTextUI.transform.position = new Vector2(pos.x, pos.y + offset);
@@ -66,7 +69,7 @@ public class OnInteract : MonoBehaviour
     }
     private void OnTriggerExit2D(Collider2D col)
     {
-        if (col.gameObject.tag.Equals("Player"))
+        if (col.CompareTag("Player"))
         {
             //When Player exit then disable floating text
             popup.text = "";
@@ -94,6 +97,13 @@ public class OnInteract : MonoBehaviour
                 case Actions.Quest:
                     CustomEventFactory
                         .GetEvent<AcceptQuestEvent, QuestDetailProto>(null, path)
+                        .StartEvent(this);
+                    TextIndex++;
+                    break;
+                case Actions.Camera:
+                    CinemachineVirtualCamera camera = GameObject.Find("CM vcam2").GetComponent<CinemachineVirtualCamera>();
+                    CustomEventFactory
+                        .GetEvent<CameraEventTrigger, CinemachineVirtualCamera>(camera, path)
                         .StartEvent(this);
                     TextIndex++;
                     break;
