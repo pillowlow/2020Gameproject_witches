@@ -67,7 +67,7 @@ public static class SaveLoad
         Quest.flags = Data.Flags;
         Vector2 Pos = GetSpawnPosition(Data.CurrentScene);        
         Player.transform.position = new Vector3(Pos.x, Pos.y, 0.0f);
-        PlayerManager.state = PlayerManager.StateCode.idle; //Idk why but it fixs sth
+        PlayerManager.state = PlayerManager.StateCode.Idle; //Idk why but it fixs sth
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 }

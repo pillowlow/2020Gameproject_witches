@@ -26,7 +26,7 @@ public class CameraEventTrigger : MonoBehaviour,CustomEvent
     {
         if(coll.CompareTag("Player")&&!string.IsNullOrEmpty(_showText))
         {
-            PlayerManager.moveable = false;
+            PlayerManager.state = PlayerManager.StateCode.Stop;
             _camera.enabled = true;
             Invoke(nameof(ShowDialog), 2.0f);
             Invoke(nameof(ResetCamera),hightLightTime);
@@ -41,20 +41,20 @@ public class CameraEventTrigger : MonoBehaviour,CustomEvent
     {
         _camera.enabled = false;
         Dialog.Instance.HideTextArea();
-        PlayerManager.moveable = true;
+        PlayerManager.state = PlayerManager.StateCode.Idle;
         Destroy(gameObject);
     }
     void ResetEventCamera()
     {
         _camera.enabled = false;
         Dialog.Instance.HideTextArea();
-        PlayerManager.moveable = true;
+        PlayerManager.state = PlayerManager.StateCode.Idle;
     }
     
 
     public void StartEvent(OnInteract action)
     {
-        PlayerManager.moveable = false;
+        PlayerManager.state = PlayerManager.StateCode.Stop;
         _camera.enabled = true;
         Invoke(nameof(ShowDialog), 2.0f);
         Invoke(nameof(ResetEventCamera),hightLightTime);

@@ -28,7 +28,7 @@ public class SanityValue : MonoBehaviour
 
     void check()
     {
-        if(PlayerManager.isTalking == false){
+        if(PlayerManager.state != PlayerManager.StateCode.Stop){
             if(inoil && PlayerManager.sanityValue>=10) PlayerManager.AssignSanityValue(-10);
             else if(inoil && PlayerManager.sanityValue < 10) PlayerManager.sanityValue = 0;
             else if(PlayerManager.sanityValue < 100) PlayerManager.AssignSanityValue(1);

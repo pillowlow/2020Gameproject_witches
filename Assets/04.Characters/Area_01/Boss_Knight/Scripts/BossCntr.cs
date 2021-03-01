@@ -293,9 +293,9 @@ public class BossCntr : MonoBehaviour
         {
             int damage = GetComponent<EnemyManager>().damage;
             
-            if (PlayerManager.state != PlayerManager.StateCode.takingHit)
+            if (PlayerManager.state != PlayerManager.StateCode.TakingHit)
                 
-                PlayerManager.TakeDamage(damage);
+                PlayerManager.TakeDamage(damage,transform);
         }
     }
     public void Attack0()
@@ -304,10 +304,8 @@ public class BossCntr : MonoBehaviour
         if (Physics2D.Raycast(attackPoints[0].transform.position, new Vector3(direction,0,0), attackRange[0], playerLayerMask))
         {
             int damage = GetComponent<EnemyManager>().damage;
-            
-            if (PlayerManager.state != PlayerManager.StateCode.takingHit)
-                AttackParticleActive(true);
-                PlayerManager.TakeDamage(damage);
+            AttackParticleActive(true);
+            PlayerManager.TakeDamage(damage,transform);
         }
     }
 

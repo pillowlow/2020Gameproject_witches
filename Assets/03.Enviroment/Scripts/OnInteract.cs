@@ -80,10 +80,10 @@ public class OnInteract : MonoBehaviour
     public void DoAction()
     {   
         //Different Actions
-        //Maybe I will make an event factory later
         if(!ActionDone) return;
         ActionDone = false;
         String path = TextPaths[TextIndex];
+        PlayerManager.state = PlayerManager.StateCode.Stop;
         switch (ActionsQueue.Peek())
             {
                 case Actions.Story:
@@ -116,6 +116,7 @@ public class OnInteract : MonoBehaviour
     {
         ActionsQueue.Dequeue();
         ActionDone = true;
+        if(ActionsQueue.Count==0) PlayerManager.state = PlayerManager.StateCode.Idle;
     }
 
     public OnInteract AddAction(Actions action,String path)

@@ -43,7 +43,7 @@ public class PlayerTransform : MonoBehaviour
             eff_.gameObject.transform.position = pos;
             eff_.GetComponent<ParticleSystem>().Play();
 
-            PlayerManager.state = PlayerManager.StateCode.idle;
+            PlayerManager.state = PlayerManager.StateCode.Idle;
             gameObject.SetActive(false);
             PlayerManager.instance.OnTransformFinish(targetPlayer);
         }

@@ -1,4 +1,5 @@
-﻿using Cinemachine;
+﻿using System.Collections;
+using Cinemachine;
 using UnityEngine;
 
 public class PlayerManager : MonoBehaviour
@@ -49,24 +50,17 @@ public class PlayerManager : MonoBehaviour
         get => _rigidbody2D;
     }
     Animator anim, anim_t;
-
-    public static bool isTalking = false;
-    public static bool talkable = false;
-    public static bool isFlying = false;
-    public static bool isJumping = false;
-    public static bool moveable = true;
+    
     public static bool onGround = false;
-    public static int talk_man;
-
     public static ModeCode mode = ModeCode.normal;
-    public static StateCode state = StateCode.idle;
+    public static StateCode state = StateCode.Idle;
     public static int hp = 100;
     public static int damage = 5;
     public static int sanityValue = 100;
 
 
     public enum StateCode {
-        idle, die, moving, jumping, falling, flying, takingHit
+        Idle, Die, Moving, Jumping, Falling, Flying, TakingHit,Stop
     };
 
     public enum ModeCode{
@@ -98,8 +92,8 @@ public class PlayerManager : MonoBehaviour
 
     public static class Damage
     {
-        static int lvDamage;
-        static int equipDamage;
+        static int lvDamage=5;
+        static int equipDamage=5;
 
         public static int GetDamage()
         {
@@ -123,34 +117,47 @@ public class PlayerManager : MonoBehaviour
         }
     }
 
-    public static void TakeDamage(int damage)
+    public static void TakeDamage(int damage,Transform enemy)
     {
         int hp_ = hp;
 
-        if (state != StateCode.takingHit && state != StateCode.die)
+        if (state != StateCode.TakingHit && state != StateCode.Die)
         {
             hp_ = (hp_ - damage > 0) ? hp_ - damage : 0;
-            state = PlayerManager.StateCode.takingHit;
+            state = StateCode.TakingHit;
 
             if (mode == ModeCode.normal) instance.anim.SetTrigger("TakeHit");
             else instance.anim_t.SetTrigger("TakeHit");
 
-        }
-
-        if(hp_ == 0 && state != StateCode.die)
-        {
-            if(mode != ModeCode.normal)
+            if (hp_ == 0)
             {
-                instance.player_transform.GetComponent<PlayerTransform>().Transform(ModeCode.normal);
+                if(mode != ModeCode.normal)
+                {
+                    instance.player_transform.GetComponent<PlayerTransform>().Transform(ModeCode.normal);
+                }
+                instance.anim.SetBool("Die", true);
+                instance.anim.SetTrigger("DieT");
+                state = StateCode.Die;
+                instance._rigidbody2D.velocity = Vector2.zero;
             }
-
-            instance.anim.SetBool("Die", true);
-            instance.anim.SetTrigger("DieT");
-            state = StateCode.die;
+            else
+            {
+                Vector2 dir = (instance.player.transform.position - enemy.position).normalized;
+                instance._rigidbody2D.AddForce(dir*100f);
+                instance.StartCoroutine(TakeHit());
+            }
+            
         }
-
+        
         hp = hp_;
     }
+
+    static IEnumerator TakeHit()
+    {
+        yield return new WaitForSeconds(1);
+        state = StateCode.Idle;
+    }
+    
     public static void AssignSanityValue(int value)
     {
         sanityValue += value;

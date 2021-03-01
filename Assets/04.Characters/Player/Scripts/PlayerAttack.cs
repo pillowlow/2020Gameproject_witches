@@ -5,11 +5,10 @@ using UnityEngine;
 public class PlayerAttack : MonoBehaviour
 {
     [Header("Attack")]
-    public GameObject attackParticle;
-    public float attackWaitingTime;
-    public Transform[] attackPoints;
-    public float[] attackRange;
-
+    public GameObject AttackParticle;
+    public float AttackWaitingTime;
+    public GameObject HorizontalAttackBox;
+    public GameObject VerticalAttackBox;
     float lastAttackTime;
 
     Rigidbody2D rig;
@@ -17,101 +16,119 @@ public class PlayerAttack : MonoBehaviour
   
     public enum AttackMode
     {
-        idle, attack1, attack1_connection, attack2,
-        attack2_connection, flyAttack1, flyAttack1_connection
+        idle, attack1, attack2,upAttack,
+         flyAttack1, flyAttack1_connection
     }
 
     private AttackMode _attackMode;
-    void Start()
+    private void Start()
     {
         rig = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
+        HorizontalAttackBox.SetActive(false);
+        VerticalAttackBox.SetActive(false);
         _attackMode = AttackMode.idle;
         AttackParticleActive(false);
     }
 
     //Need to implement actual attack function
-    void Update()
+    private void Update()
     {
         if (PlayerManager.mode == PlayerManager.ModeCode.normal)
             NormalUpdate();
         else if (PlayerManager.mode == PlayerManager.ModeCode.transform)
             TransformUpdate();
-
-        TureOffAttackParticle();
-
+        TurnOffAttackParticle();
     }
+    
 
-    void TureOffAttackParticle()
-    {
-        if(PlayerManager.state == PlayerManager.StateCode.takingHit)
-            AttackParticleActive(false);
-    }
-
-    void NormalUpdate()
+    private void NormalUpdate()
     {
         Attack_Input();
     }
 
-    void TransformUpdate()
+    private void TransformUpdate()
     {
         Attack_Transform_Input();
     }
 
     //Player Attack
-    void Attack_Input()
+    private  void Attack_Input()
     {
-        if (Input.GetButtonDown("Fire1"))
+        if (Input.GetButtonDown("Fire1") && CheckAttackable())
         {
-            float dtime = Time.time - lastAttackTime;
-            if (dtime<attackWaitingTime) return;
-            if (CheckAttackable())
-            {
-                anim.SetTrigger("Attack1");
-                AttackParticleActive();
-                rig.velocity = new Vector2(0, rig.velocity.y);
-                lastAttackTime = Time.time;
-                _attackMode = AttackMode.attack1;
-            }
-            if (_attackMode == AttackMode.attack1_connection)
-            {
-                anim.SetTrigger("Attack2");
-                lastAttackTime = Time.time;
-                _attackMode = AttackMode.attack2;
-            }
-
+            AttackModeSelector();
+            AttackParticleActive();
+            rig.velocity = new Vector2(0, rig.velocity.y);
+            lastAttackTime = Time.time;
+            StartCoroutine(SwingTime());
         }
     }
 
-    void Attack_Transform_Input()
+    private IEnumerator SwingTime()
     {
-        if (Input.GetButtonDown("Fire1"))
-        {
-            float dtime = Time.time - lastAttackTime;
-            if (dtime<attackWaitingTime) return;
-            if (CheckAttackable())
-            {
-                anim.SetTrigger("Attack1");
-                lastAttackTime = Time.time;
+        yield return new WaitForSeconds(0.2f);
+        HorizontalAttackBox.SetActive(false);
+        VerticalAttackBox.SetActive(false);
+    }
 
-                if (PlayerManager.state == PlayerManager.StateCode.flying || PlayerManager.state == PlayerManager.StateCode.falling)
-                    _attackMode = AttackMode.flyAttack1;
-                else
-                    _attackMode = AttackMode.attack1;
-            }
+    private void AttackModeSelector()
+    {
+        if (Input.GetAxis("Vertical")>0)
+        {
+            _attackMode = AttackMode.upAttack;
+            VerticalAttackBox.SetActive(true);
+        }
+        else
+        {
+            HorizontalAttackBox.SetActive(true);
+        }
+        switch (_attackMode)
+        {
+            case AttackMode.attack1:
+                anim.SetTrigger("Attack2");
+                _attackMode = AttackMode.attack2;
+                break;
+            case AttackMode.attack2:
+                anim.SetTrigger("Attack1");
+                _attackMode = AttackMode.attack1;
+                break;
+            case AttackMode.upAttack:
+                anim.SetTrigger("Attack1");
+                _attackMode = AttackMode.idle;
+                break;
+            default:
+                anim.SetTrigger("Attack1");
+                _attackMode = AttackMode.attack1;
+                break;
+        }
+    }
+
+    private void Attack_Transform_Input()
+    {
+        if (Input.GetButtonDown("Fire1") && CheckAttackable())
+        {
+            anim.SetTrigger("Attack1");
+            lastAttackTime = Time.time;
+            if (PlayerManager.state == PlayerManager.StateCode.Flying || PlayerManager.state == PlayerManager.StateCode.Falling)
+                _attackMode = AttackMode.flyAttack1;
+            else
+                _attackMode = AttackMode.attack1;
         }
     }
 
     //Check if Player is able to attack
-    bool CheckAttackable()
+    private bool CheckAttackable()
     {
+        float dtime = Time.time - lastAttackTime;
+        if (dtime<AttackWaitingTime) return false;
         switch (PlayerManager.state)
         {
-            case PlayerManager.StateCode.idle:
-            case PlayerManager.StateCode.moving:
-            case PlayerManager.StateCode.jumping:
-            case PlayerManager.StateCode.flying:
-            case PlayerManager.StateCode.falling:
+            case PlayerManager.StateCode.Idle:
+            case PlayerManager.StateCode.Moving:
+            case PlayerManager.StateCode.Jumping:
+            case PlayerManager.StateCode.Flying:
+            case PlayerManager.StateCode.Falling:
                 return true;
             default:
                 return false;
@@ -122,45 +139,24 @@ public class PlayerAttack : MonoBehaviour
     //Animation things
     public void Attack(int type)
     {
-        if (type == 1)
-            _attackMode = AttackMode.attack1_connection;
-        else if (type == 2)
-            _attackMode = AttackMode.attack2_connection;
-        else if (type == 3)
-            _attackMode = AttackMode.flyAttack1_connection;
+        
     }
 
     public void AttackEnd()
     {
-        bool changeState = false;
-        if (_attackMode == AttackMode.attack1_connection) changeState = true;
-        else if (_attackMode == AttackMode.attack2_connection) changeState = true;
-        else if (_attackMode == AttackMode.flyAttack1_connection) changeState = true;
-
-        if (changeState)
-        {
-            PlayerManager.state = PlayerManager.StateCode.idle;
-            _attackMode = AttackMode.idle;
-        }
-        if(PlayerManager.mode == PlayerManager.ModeCode.normal)
-            AttackParticleActive(false);
-
+        
     }
 
     public void AttackParticleActive(bool b = true)
     {
-        if (attackParticle == null)
+        if (AttackParticle == null)
             return;
-        if (b) attackParticle.gameObject.SetActive(b);
-        else attackParticle.gameObject.SetActive(b);
+        if (b) AttackParticle.gameObject.SetActive(b);
+        else AttackParticle.gameObject.SetActive(b);
     }
-
-    private void OnDrawGizmos()
+    void TurnOffAttackParticle()
     {
-        for (int i = 0; i < attackPoints.Length; i++)
-        {
-            Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(attackPoints[i].position, attackRange[i]);
-        }
+        if(PlayerManager.state == PlayerManager.StateCode.TakingHit)
+            AttackParticleActive(false);
     }
 }

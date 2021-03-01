@@ -15,9 +15,4 @@ public class LoadTextEvent : CustomEvent
         {
                 TextScript.LoadText(TextPath,action);
         }
-
-        public void Deserialize(String str)
-        {
-                
-        }
 }

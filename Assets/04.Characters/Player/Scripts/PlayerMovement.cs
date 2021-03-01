@@ -37,9 +37,9 @@ public class PlayerMovement : MonoBehaviour
     {
         CheckOnGround();
         CheckMoveable();
-
-        Movement();
         Debug.Log(PlayerManager.state);
+        Fall();
+        Movement();
         if(PlayerManager.mode == PlayerManager.ModeCode.normal)
         {
             Jump();
@@ -49,7 +49,7 @@ public class PlayerMovement : MonoBehaviour
             Fly();
         }
 
-        Fall();
+        
 
         AnimationControl();
     }
@@ -62,12 +62,7 @@ public class PlayerMovement : MonoBehaviour
         {
             Vector3 theScale = transform.localScale;
 
-            if (x > 0 && theScale.x < 0)
-            {
-                theScale.x *= -1;
-                transform.localScale = theScale;
-            }
-            else if (x < 0 && theScale.x > 0)
+            if (x > 0 && theScale.x < 0 || x < 0 && theScale.x > 0)
             {
                 theScale.x *= -1;
                 transform.localScale = theScale;
@@ -75,13 +70,13 @@ public class PlayerMovement : MonoBehaviour
 
             rig.velocity = new Vector2(x * walkSpeed, rig.velocity.y);
 
-            if (PlayerManager.state == PlayerManager.StateCode.idle)
-                PlayerManager.state = PlayerManager.StateCode.moving;
+            if (PlayerManager.state == PlayerManager.StateCode.Idle)
+                PlayerManager.state = PlayerManager.StateCode.Moving;
         }
         else
         {
-            if (PlayerManager.state == PlayerManager.StateCode.moving)
-                PlayerManager.state = PlayerManager.StateCode.idle;
+            if (PlayerManager.state == PlayerManager.StateCode.Moving)
+                PlayerManager.state = PlayerManager.StateCode.Idle;
             
             rig.velocity = new Vector2(0, rig.velocity.y);
         }
@@ -93,24 +88,24 @@ public class PlayerMovement : MonoBehaviour
         {    
             OnJump?.Invoke();
             rig.AddForce(new Vector2(0f, jumpForce));
-            PlayerManager.state = PlayerManager.StateCode.jumping;
+            PlayerManager.state = PlayerManager.StateCode.Jumping;
         }
     }
 
     void Fall()
     {
-        if (PlayerManager.state == PlayerManager.StateCode.jumping || PlayerManager.state == PlayerManager.StateCode.flying)
+        if (PlayerManager.state == PlayerManager.StateCode.Jumping || PlayerManager.state == PlayerManager.StateCode.Flying)
         {
-            if (rig.velocity.y < 0) PlayerManager.state = PlayerManager.StateCode.falling;
+            if (rig.velocity.y < 0) PlayerManager.state = PlayerManager.StateCode.Falling;
         }
-        else if (!PlayerManager.onGround && rig.velocity.y <= 0)
+        else if (!PlayerManager.onGround && rig.velocity.y <= 0 && PlayerManager.state!=PlayerManager.StateCode.Die)
         {
-            PlayerManager.state = PlayerManager.StateCode.falling;
+            PlayerManager.state = PlayerManager.StateCode.Falling;
         }
 
-        if(PlayerManager.state == PlayerManager.StateCode.falling && PlayerManager.onGround)
+        if(PlayerManager.state == PlayerManager.StateCode.Falling && PlayerManager.onGround)
         {
-            PlayerManager.state = PlayerManager.StateCode.idle;
+            PlayerManager.state = PlayerManager.StateCode.Idle;
             OnLanding?.Invoke();
         }
     }
@@ -121,18 +116,17 @@ public class PlayerMovement : MonoBehaviour
          {
             rig.velocity = new Vector2(rig.velocity.x, 0);
             rig.AddForce(new Vector2(0, flyForce));
-            PlayerManager.state = PlayerManager.StateCode.flying;
+            PlayerManager.state = PlayerManager.StateCode.Flying;
          }
 
     }
 
     void CheckMoveable()
     {
-        _isMoveAble = PlayerManager.moveable;
         switch (PlayerManager.state)
         {
-            case PlayerManager.StateCode.takingHit:
-            case PlayerManager.StateCode.die:
+            case PlayerManager.StateCode.Die:
+            case PlayerManager.StateCode.Stop:
                 _isMoveAble = false;
                 break;
             default:
@@ -154,7 +148,10 @@ public class PlayerMovement : MonoBehaviour
             }
         }
     }
-
+    void TakeHitEnd(){
+        
+    }
+    
     void AnimationControl()
     {
         anim.SetFloat("SpeedX", Mathf.Abs(rig.velocity.x));
