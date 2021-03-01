@@ -94,6 +94,7 @@ public class PlayerMovement : MonoBehaviour
 
     void Fall()
     {
+        if(PlayerManager.state == PlayerManager.StateCode.Stop) return;
         if (PlayerManager.state == PlayerManager.StateCode.Jumping || PlayerManager.state == PlayerManager.StateCode.Flying)
         {
             if (rig.velocity.y < 0) PlayerManager.state = PlayerManager.StateCode.Falling;

@@ -50,8 +50,9 @@ public class OnInteract : MonoBehaviour
             ObjectTextUI.transform.position = new Vector2(pos.x, pos.y + offset);
             popup.text = PopupText;
             //If Player press F then Enqueue all action to the queue
-            if (ActionsQueue.Count==0 && Input.GetKeyDown(KeyCode.F) )
+            if (ActionsQueue.Count==0 && Input.GetKeyDown(KeyCode.F))
             {
+                if(PlayerManager.state==PlayerManager.StateCode.Stop) return;
                 TextIndex = 0;
                 foreach (Actions action in ActionsList)
                 {

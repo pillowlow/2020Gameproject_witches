@@ -34,7 +34,7 @@ public class InventoryUI : MonoBehaviour
             {
                 CloseInventory();
             }
-            else
+            else if(PlayerManager.state != PlayerManager.StateCode.Stop)
             {
                 OpenInventory();
             }
@@ -45,12 +45,14 @@ public class InventoryUI : MonoBehaviour
         IsOpen = true;
         Inventory.Current = Inventory.ItemType.Props;
         UI.SetActive(true);
+        PlayerManager.state = PlayerManager.StateCode.Stop;
         //Enable UI
     }
     private void CloseInventory()
     {
         IsOpen = false;
         UI.SetActive(false);
+        PlayerManager.state = PlayerManager.StateCode.Idle;
         //Disable UI
     }
 
