@@ -37,7 +37,6 @@ public class PlayerMovement : MonoBehaviour
     {
         CheckOnGround();
         CheckMoveable();
-        Debug.Log(PlayerManager.state);
         Fall();
         Movement();
         if(PlayerManager.mode == PlayerManager.ModeCode.normal)
