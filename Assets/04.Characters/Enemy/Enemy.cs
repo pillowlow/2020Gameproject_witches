@@ -1,27 +1,28 @@
 ﻿using System;
+using DragonBones;
 using UnityEngine;
+using Transform = UnityEngine.Transform;
 
 public class Enemy : MonoBehaviour
 {
     [Header("Info")]
     public int hp ;
-    public int damage;
-    private bool isDie = false;
-    
-    private StateCode state = StateCode.Idle;
+    public int Damage;
 
-    enum StateCode
+    protected StateCode state = StateCode.Idle;
+
+    protected enum StateCode
     {
         Idle, Jumping, Moving, Die
     }
     
 
-    private void OnCollisionEnter2D(Collision2D col)
+    private void OnCollisionStay2D(Collision2D col)
     {
         if(state==StateCode.Die) return;
         if (col.gameObject.CompareTag("Player"))
         {
-            PlayerManager.TakeDamage(damage,transform);
+            PlayerManager.TakeDamage(Damage,transform);
         }
     }
     
@@ -54,14 +55,10 @@ public class Enemy : MonoBehaviour
         
     }
 
-    private void Die()
+    protected virtual void Die()
     {
         state = StateCode.Die;
+        Physics2D.IgnoreCollision(PlayerManager.instance.player.GetComponent<Collider2D>(),GetComponent<Collider2D>());
         gameObject.transform.Rotate(Vector3.forward * -90);
-    }
-
-    public int GetHp()
-    {
-        return hp;
     }
 }
