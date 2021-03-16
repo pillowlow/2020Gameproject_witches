@@ -60,7 +60,7 @@ public class PlayerManager : MonoBehaviour
 
 
     public enum StateCode {
-        Idle, Die, Moving, Jumping, Falling, Flying, TakingHit,Stop
+        Idle, Die, Moving, Jumping, Falling, Flying, TakingHit,Stop,Reborn
     };
 
     public enum ModeCode{
