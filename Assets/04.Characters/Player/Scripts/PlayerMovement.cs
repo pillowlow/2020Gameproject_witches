@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Mode")]
@@ -12,32 +11,72 @@ public class PlayerMovement : MonoBehaviour
     public float walkSpeed;
     public float flyForce;
 
+
     [Header("Jump")]
     public float jumpForce;
     public LayerMask groundLayer;
-    public Transform groundCheck;
 
+    [Header("AnimationConfiguration")]
+    [Range(0.0f, 5.0f)]
+    public float BeginToWalk_Delay = 0.2f;      //The amount of time for starting to walk
+    [Range(0.0f, 5.0f)]
+    public float BeginToWalk_TimeScale = 1.6f;  //The time scale at the beginning of starting to walk
+    [Range(0.0f, 5.0f)]
+    public float Walking = 1.0f;                //The time scale among walking
+    [Range(0.0f, 5.0f)]
+    public float Jumping = 1.0f;                //The time scale of jumping animation
+    [Range(0.0f, 5.0f)]
+    public float RunJumping = 1.0f;             //The time scale of run-jumping animation
+    [Range(0.0f, 5.0f)]
+    public float JumpEnd = 0.5f;                //The end of the repeating (seconds)
+    [Range(0.0f, 1.0f)]
+    public float JumpRepeatSpeed = 0.5f;        //The time scale among repeating
+    [Range(0.0f, 5.0f)]
+    public float JumpRepeatTime = 0.3f;         //The amount of repeating time (seconds)
+    [Range(0.0f, 5.0f)]
+    public float RunJumpEnd = 0.5f;             //same thing but for run-jump
+    [Range(0.0f, 1.0f)]
+    public float RunJumpRepeatSpeed = 0.5f;     //same thing but for run-jump
+    [Range(0.0f, 5.0f)]
+    public float RunJumpTime = 0.3f;            //same thing but for run-jump
+    public float p = 0.4f;                      //The constant to predict whether to play animation or not when falling (It's for optimization.It's needed because playing two animation in a short period will cause lag)
+    
+    AnimationControl ac;                        //Handling everything about DragonBones
     Rigidbody2D rig;
-    Animator anim;
 
-    float onGroundRadius = .05f;
 
     public event Action OnJump;
     public event Action OnLanding;
 
     private bool _isMoveAble = true;
+
+    
+    int IdleCounter = 0;                        //When player doesn't move for 30 frames, we play idle animation. (same reason as p variable. it's for optimization.)
+    bool orient = false;                        //True means the player is facing right.False means the player is facing left.
+    Vector3 Scale;                              //The scale of the main character.
+    PlayerAttack playerAttack;
+    bool BeginningOfWalking = false;            //True means now is the beginning of starting to walk.
+    float WalkVelocityScaler(float x)           //It's the math function to describe the relationship between the horizontal input and x-velocity. (It can be replaced by a better function.)
+    {
+        float sign = 1;
+        if (x < 0) { sign = -1; x = -x; }
+        x = Mathf.Pow(x, 1.4f);
+        return x * sign;
+    }
     void Start()
     {
         rig = GetComponent<Rigidbody2D>();
-        anim = GetComponent<Animator>();
         PlayerManager.mode = initialMode;
+        Scale = transform.localScale;
+        ac = new AnimationControl(GetComponent<DragonBones.UnityArmatureComponent>());
+        playerAttack = GetComponent<PlayerAttack>();
     }
+
+
 
     void Update()
     {
-        CheckOnGround();
         CheckMoveable();
-        Debug.Log(PlayerManager.state);
         Fall();
         Movement();
         if(PlayerManager.mode == PlayerManager.ModeCode.normal)
@@ -48,65 +87,70 @@ public class PlayerMovement : MonoBehaviour
         {
             Fly();
         }
-
-        
-
         AnimationControl();
     }
 
     void Movement()
     {
         float x = Input.GetAxis("Horizontal");
-
-        if (_isMoveAble && Mathf.Abs(x) > 0.1f)
+        if (Controlable())
         {
-            Vector3 theScale = transform.localScale;
-
-            if (x > 0 && theScale.x < 0 || x < 0 && theScale.x > 0)
+            if (Mathf.Abs(x) > 0.1 && _isMoveAble)
             {
-                theScale.x *= -1;
-                transform.localScale = theScale;
+                rig.velocity = new Vector2(WalkVelocityScaler(x) * walkSpeed, rig.velocity.y);
             }
-
-            rig.velocity = new Vector2(x * walkSpeed, rig.velocity.y);
-
-            if (PlayerManager.state == PlayerManager.StateCode.Idle)
-                PlayerManager.state = PlayerManager.StateCode.Moving;
-        }
-        else
-        {
-            if (PlayerManager.state == PlayerManager.StateCode.Moving)
-                PlayerManager.state = PlayerManager.StateCode.Idle;
-            
-            rig.velocity = new Vector2(0, rig.velocity.y);
+            else
+            {
+                rig.velocity = new Vector2(0, rig.velocity.y);
+            }
         }
     }
+    
 
     void Jump()
     {
         if (_isMoveAble && PlayerManager.onGround && Input.GetButtonDown("Jump"))
         {    
             OnJump?.Invoke();
-            rig.AddForce(new Vector2(0f, jumpForce));
+            if (PlayerManager.state == PlayerManager.StateCode.Idle)
+            {
+                ac.jump.SetTimeScale(Jumping);
+                ac.jump.Play(-1,false,0.2f, () => { rig.AddForce(new Vector2(0f, jumpForce)); },this);
+            }
+            else
+            {
+                ac.runjump.SetTimeScale(RunJumping);
+                ac.runjump.Play(-1, false, 0.2f, () => { rig.AddForce(new Vector2(0f, jumpForce)); }, this);
+            }
             PlayerManager.state = PlayerManager.StateCode.Jumping;
         }
     }
 
     void Fall()
     {
-        if(PlayerManager.state == PlayerManager.StateCode.Stop) return;
-        if (PlayerManager.state == PlayerManager.StateCode.Jumping || PlayerManager.state == PlayerManager.StateCode.Flying)
-        {
-            if (rig.velocity.y < 0) PlayerManager.state = PlayerManager.StateCode.Falling;
-        }
-        else if (!PlayerManager.onGround && rig.velocity.y <= 0 && PlayerManager.state!=PlayerManager.StateCode.Die)
+        if(rig.velocity.y < 0 && !PlayerManager.onGround )
         {
             PlayerManager.state = PlayerManager.StateCode.Falling;
+            if(rig.velocity.y < -1.5f && ac.Playing()!=ac.falling)
+            {
+                /*Animation Parameter Setting*/
+                ac.falling.JumpEnd = JumpEnd;
+                ac.falling.JumpRepeatSpeed = JumpRepeatSpeed;
+                ac.falling.JumpRepeatTime = JumpRepeatTime;
+                ac.falling.RunJumpEnd = RunJumpEnd;
+                ac.falling.RunJumpRepeatSpeed = RunJumpRepeatSpeed;
+                ac.falling.RunJumpTime = RunJumpTime;
+                /*Animation Parameter Setting*/
+                Collider2D overlap =  Physics2D.OverlapPoint(new Vector2(transform.position.x + p * rig.velocity.x, (transform.position.y - 1) + p * rig.velocity.y + 0.5f * Physics2D.gravity.y * p*p), groundLayer);
+                if(overlap == null)
+                {
+                    ac.falling.fall(this);
+                }
+            }
+            
         }
-
-        if(PlayerManager.state == PlayerManager.StateCode.Falling && PlayerManager.onGround)
+        else if(PlayerManager.state == PlayerManager.StateCode.Falling && PlayerManager.onGround)
         {
-            PlayerManager.state = PlayerManager.StateCode.Idle;
             OnLanding?.Invoke();
         }
     }
@@ -136,17 +180,19 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    void CheckOnGround()
+    private void OnCollisionEnter2D(Collision2D collision)
     {
-        PlayerManager.onGround = false;
-
-        Collider2D[] colliders = Physics2D.OverlapCircleAll(groundCheck.position, onGroundRadius, groundLayer);
-        for (int i = 0; i < colliders.Length; i++)
+        if (((1 << collision.gameObject.layer) & groundLayer) != 0)
         {
-            if (colliders[i].gameObject != gameObject)
-            {
-                PlayerManager.onGround = true;
-            }
+            PlayerManager.onGround = true;
+        }
+    }
+
+    private void OnCollisionExit2D(Collision2D collision)
+    {
+        if (((1 << collision.gameObject.layer) & groundLayer) != 0)
+        {
+            PlayerManager.onGround = false;
         }
     }
     void TakeHitEnd(){
@@ -155,8 +201,121 @@ public class PlayerMovement : MonoBehaviour
     
     void AnimationControl()
     {
-        anim.SetFloat("SpeedX", Mathf.Abs(rig.velocity.x));
-        anim.SetFloat("SpeedY", rig.velocity.y);
-        anim.SetBool("OnGround", PlayerManager.onGround);
+        float vx = rig.velocity.x;              //x of velocity
+        float ix = Input.GetAxis("Horizontal"); //x of input
+        //Character orientation check
+        if (Controlable())
+        {
+            if (vx > 0 && (!orient))
+            {
+                gameObject.transform.localScale = new Vector3(-Scale.x, Scale.y, Scale.z);
+                orient = true;
+            }
+            else if (vx < 0 && orient)
+            {
+                gameObject.transform.localScale = new Vector3(Scale.x, Scale.y, Scale.z);
+                orient = false;
+            }
+        }
+        //Horizontal movement animation
+        //Movement animation played if character state is "idle" or "moving"
+        if (PlayerManager.state == PlayerManager.StateCode.Idle || PlayerManager.state == PlayerManager.StateCode.Moving)
+        {
+            if (Mathf.Abs(vx) > 0.5f)
+            {
+                //If it is the first frame of running animation, then play "walk(run)start"
+                if (ac.Playing()!=ac.run && ac.Playing()!=ac.walk)
+                {
+                    BeginningOfWalking = true;
+                    ac.walk.StartWalking(this,BeginToWalk_Delay, () => { BeginningOfWalking = false; });
+                }
+                if (BeginningOfWalking)
+                {
+                    ac.walk.SetTimeScale(walkSpeed * BeginToWalk_TimeScale);
+                }
+                else
+                {
+                    ac.run.SetTimeScale(Mathf.Abs(vx)*Walking);
+                }
+
+                PlayerManager.state = PlayerManager.StateCode.Moving;
+            }
+            //If character stopped running, then start to count up "IdleCounter"
+            else if (ac.Playing()==ac.walk || ac.Playing()==ac.run)
+            {
+                IdleCounter++;
+                //If "IdleCounter" counts up to 30, then we assume player stopped to idle
+                if (IdleCounter > 30)
+                {
+                    ac.idle.Play(0.1f,true);
+                    IdleCounter = 0;
+                    PlayerManager.state = PlayerManager.StateCode.Idle;
+                }
+            }
+            else
+            {
+                IdleCounter = 0;
+            }
+        }
+        //Do some check for optimizing performance
+        if (AnimationContCheck())
+        {
+            //If character is not moving
+            if (Mathf.Abs(ix) < 0.2f)
+            {
+                PlayerManager.state = PlayerManager.StateCode.Idle;
+                ac.idle.Play(0.2f,true);
+            }
+            //If character is still moving
+            else
+            {
+                PlayerManager.state = PlayerManager.StateCode.Moving;
+            }
+        }
     }
+
+    bool AnimationContCheck()
+    {
+        switch (PlayerManager.state)
+        {
+            case PlayerManager.StateCode.Falling: { if (PlayerManager.onGround) { return true; } break; }
+            case PlayerManager.StateCode.TakingHit:
+            case PlayerManager.StateCode.Reborn:
+            {
+                if (ac.isCompleted()) { return true; } break; 
+            }
+            case PlayerManager.StateCode.Jumping:
+            {
+                if((ac.Playing()==ac.jump||ac.Playing()==ac.runjump)&&ac.isCompleted())
+                {
+                    return true;
+                }
+                break;
+            }
+        }
+
+        switch(playerAttack._attackMode)
+        {
+            case PlayerAttack.AttackMode.attack1:
+            case PlayerAttack.AttackMode.attack2:
+            {
+                if (ac.isCompleted()) { return true; }
+                break;
+            }
+        }
+        return false;
+    }
+    bool Controlable()
+    {
+        if (
+            PlayerManager.state == PlayerManager.StateCode.TakingHit ||
+            PlayerManager.state == PlayerManager.StateCode.Die
+            )
+        {
+            return false;
+        }
+        return true;
+    }
+
+    
 }

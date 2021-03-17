@@ -60,7 +60,7 @@ public class PlayerManager : MonoBehaviour
 
 
     public enum StateCode {
-        Idle, Die, Moving, Jumping, Falling, Flying, TakingHit,Stop
+        Idle, Die, Moving, Jumping, Falling, Flying, TakingHit,Stop,Reborn
     };
 
     public enum ModeCode{
@@ -119,8 +119,9 @@ public class PlayerManager : MonoBehaviour
 
     public static void TakeDamage(int damage,Transform enemy)
     {
+        if(damage==0) return;
         int hp_ = hp;
-
+        
         if (state != StateCode.TakingHit && state != StateCode.Die)
         {
             hp_ = (hp_ - damage > 0) ? hp_ - damage : 0;
@@ -143,7 +144,6 @@ public class PlayerManager : MonoBehaviour
             else
             {
                 Vector2 dir = (instance.player.transform.position - enemy.position).normalized;
-                instance._rigidbody2D.AddForce(dir*100f);
                 instance.StartCoroutine(TakeHit());
             }
             

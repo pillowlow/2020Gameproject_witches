@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
 public class PlayerAttack : MonoBehaviour
 {
     [Header("Attack")]
@@ -9,22 +8,19 @@ public class PlayerAttack : MonoBehaviour
     public float AttackWaitingTime;
     public GameObject HorizontalAttackBox;
     public GameObject VerticalAttackBox;
-    float lastAttackTime;
-
+    float lastAttackTime = -1;
+    float lastHitTime = -1;
     Rigidbody2D rig;
-    Animator anim;
-  
     public enum AttackMode
     {
         idle, attack1, attack2,upAttack,
          flyAttack1, flyAttack1_connection
     }
 
-    private AttackMode _attackMode;
+    public AttackMode _attackMode;
     private void Start()
     {
         rig = GetComponent<Rigidbody2D>();
-        anim = GetComponent<Animator>();
         HorizontalAttackBox.SetActive(false);
         VerticalAttackBox.SetActive(false);
         _attackMode = AttackMode.idle;
@@ -86,19 +82,19 @@ public class PlayerAttack : MonoBehaviour
         switch (_attackMode)
         {
             case AttackMode.attack1:
-                anim.SetTrigger("Attack2");
+                Attack2();
                 _attackMode = AttackMode.attack2;
                 break;
             case AttackMode.attack2:
-                anim.SetTrigger("Attack1");
+                Attack1();
                 _attackMode = AttackMode.attack1;
                 break;
             case AttackMode.upAttack:
-                anim.SetTrigger("Attack1");
+                Attack1();
                 _attackMode = AttackMode.idle;
                 break;
             default:
-                anim.SetTrigger("Attack1");
+                Attack1();
                 _attackMode = AttackMode.attack1;
                 break;
         }
@@ -108,7 +104,7 @@ public class PlayerAttack : MonoBehaviour
     {
         if (Input.GetButtonDown("Fire1") && CheckAttackable())
         {
-            anim.SetTrigger("Attack1");
+            Attack1();
             lastAttackTime = Time.time;
             if (PlayerManager.state == PlayerManager.StateCode.Flying || PlayerManager.state == PlayerManager.StateCode.Falling)
                 _attackMode = AttackMode.flyAttack1;
@@ -158,5 +154,21 @@ public class PlayerAttack : MonoBehaviour
     {
         if(PlayerManager.state == PlayerManager.StateCode.TakingHit)
             AttackParticleActive(false);
+    }
+
+    void Attack1()
+    {
+        //DB.animation.FadeIn(anim[(int)attack1], 0.2f, 1);
+        AnimationControl.instance.attack1.Play(0.2f,false);
+        _attackMode = AttackMode.attack1;
+    }
+
+    void Attack2()
+    {
+
+        //DB.animation.FadeIn(anim[(int)attack2], 0.2f, 1);
+        AnimationControl.instance.attack2.Play(0.2f, false);
+        _attackMode = AttackMode.attack2;
+
     }
 }
