@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Viewmove : MonoBehaviour
+public class viewmove : MonoBehaviour
 {
    private float  camstartposx, camstartposy,startposx,startposy; 
        public GameObject cam;
