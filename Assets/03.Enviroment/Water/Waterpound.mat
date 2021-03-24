@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: waterdrop02
-  m_Shader: {fileID: -6465566751694194690, guid: 2019f9ee8b2d25e448a93341ff092e0b,
+  m_Name: Waterpound
+  m_Shader: {fileID: -6465566751694194690, guid: e6450a722ea131e479cc081f66b23d4b,
     type: 3}
   m_ShaderKeywords: ETC1_EXTERNAL_ALPHA
   m_LightmapFlags: 4
@@ -20,20 +20,20 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
-    - Texture2D_BA31EED9:
-        m_Texture: {fileID: 0}
+    - Texture2D_412F43D6:
+        m_Texture: {fileID: 2800000, guid: 9319f152cfdb4de4e800a48f123e6cd8, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _AlphaTex:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - _Emission:
-        m_Texture: {fileID: 0}
+    - _MainTex:
+        m_Texture: {fileID: 2800000, guid: a80f36c15de10634b846a51b9d2cff8e, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - _MainTex:
-        m_Texture: {fileID: 2800000, guid: ec561f45cfe571e4da71b69b62a4384d, type: 3}
+    - _MainTexn:
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MaskTex:
@@ -45,11 +45,12 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
-    - Vector1_985690A9: 3
-    - Vector1_F63F90A7: 1
+    - Vector1_47E14F3A: 1
+    - Vector1_8FD8BAB8: 0.02
+    - Vector1_DE9A9ED0: 0.41
     - _EnableExternalAlpha: 0
     m_Colors:
-    - Color_A9136978: {r: 0.8006959, g: 0.98666394, b: 0.9814982, a: 0}
+    - Color_7F99EDD5: {r: 0.6363475, g: 0.9433962, b: 0.8799985, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _Flip: {r: 1, g: 1, b: 1, a: 1}
     - _RendererColor: {r: 1, g: 1, b: 1, a: 1}

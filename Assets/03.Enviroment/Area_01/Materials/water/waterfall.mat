@@ -10,7 +10,7 @@ Material:
   m_Name: waterfall
   m_Shader: {fileID: -6465566751694194690, guid: 2019f9ee8b2d25e448a93341ff092e0b,
     type: 3}
-  m_ShaderKeywords: 
+  m_ShaderKeywords: ETC1_EXTERNAL_ALPHA
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -20,6 +20,10 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
+    - Texture2D_BA31EED9:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _AlphaTex:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -41,6 +45,8 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
+    - Vector1_985690A9: 3
+    - Vector1_F63F90A7: 1
     - _EnableExternalAlpha: 0
     m_Colors:
     - Color_A9136978: {r: 0.6711427, g: 0.8901962, b: 0.88087475, a: 0}
