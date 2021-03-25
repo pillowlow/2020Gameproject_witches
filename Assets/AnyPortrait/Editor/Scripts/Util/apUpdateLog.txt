@@ -1,0 +1,533 @@
+﻿(영어)
+<size=16>AnyPortrait Update Log v1.2.5/v1.2.6</size>
+(Build November 7, 2020)
+
+<size=13>Improvements</size>
+
+- <color=blue>Non-Uniform Scale</color>
+    Added option to express Non-Uniform Scale by changing the scale of a Child Mesh Group
+    Switch between the original method and the new Non-Uniform method in the setting dialog or Bake dialog
+    <color=red>(For more information, please visit our homepage)</color>
+
+- <color=blue>Improved Process for Rigged Meshes</color>
+    Depending on the option, the Rigged Meshes are flipped when is rendered according to the reversed scale of bones
+    Improved update code
+    <color=red>(For more information, please visit our homepage)</color>
+
+- <color=blue>Improved supporting Prefab</color>
+    In the legacy prefab system and the new prefab system introduced in Unity 2018.3, it has been improved to be able to run "Apply" to characters created with AnyPortrait
+    Added functions to control integration with prefabs in the Inspector UI
+    <color=red>(For more information, please visit our homepage)</color>
+
+- When recovering from an abnormally stored backup file due to an unknown cause, it has been improved to recover at least to the extent that editing is possible.
+- The maximum value of the brush size of the Soft Selection range, Blur brush, and Rigging modifier's brush is increased by 3 times
+- A button and shortcut key to delete mesh group's meshes, child mesh groups, and bones at once are added
+- Some words that were awkward in the Japanese UI are fixed
+- When opening a character with the editor, the default value ​​of the control parameters is changed to be automatically corrected if it is out of range (v1.2.6)
+- When rotating an object in the editor or changing the size of an object, the position value is corrected so that it does not move (v1.2.6)
+- When doing Bake, a message indicating that there is a "Mesh without image" is added (v1.2.6)
+
+
+
+<size=13>Fixed issues</size>
+
+- An issue is fixed that rigged meshes moved strangely when the child mesh group moved
+- An issue is fixed that bones could not be controlled immediately after undoing when using the Rigging modifier's Pose Test function
+- An issue is fixed that the length of the "Animation Event Dialog" was short in the editor of Unity 2019.3 or later
+- An issue is fixed that editing would not work normally when selecting all vertices by pressing Ctrl+A after selecting some vertices when Soft Selection is on
+- An issue is fixed that Jiggle Bones behave abnormally depending on the angle to the camera when placing a character in a 3D world and rendering it in a billboard method
+- An issue is fixed that an object was not selected when clicking on the last location where the gizmo has been shown
+- An issue is fixed that the gizmo was not activated when a mesh was duplicated or a different mesh was selected while the Edit tab of Make Mesh was turned on
+- An issue is fixed that the gizmo did not disappear when selecting a vertex and selecting another mesh immediately while the Edit tab of Make Mesh was turned on
+- An issue is fixed that meshes with a negative default size could not be edited by the gizmo. (v1.2.6)
+- An issue is fixed that meshes, which is applied Rigging or Transform modifiers, with a negative default size did not work properly. (v1.2.6)
+
+
+
+
+-----------------------------------------
+(한국어)
+<size=16>AnyPortrait 업데이트 로그 v1.2.5/v1.2.6</size>
+(2020년 11월 7일 빌드)
+
+<size=13>개선된 사항</size>
+
+- <color=blue>Non-Uniform 스케일 설정</color>
+    자식 메시 그룹의 크기를 변경하여 "납작해지는" 표현이 가능한 새로운 스케일 옵션이 추가
+    설정 다이얼로그나 Bake 다이얼로그에서 기존 방식과 새로운 Non-Uniform 방식을 변경 가능
+    <color=red>(자세한 설명은 홈페이지를 확인하세요)</color>
+
+- <color=blue>리깅된 메시의 처리 개선</color>
+    옵션에 따라서 리깅된 메시가 본의 크기 반전에 맞추어서 같이 플립되어 렌더링
+    본을 포함한 업데이트 코드를 개선
+    <color=red>(자세한 설명은 홈페이지를 확인하세요)</color>
+
+- <color=blue>프리팹 연동 개선</color>
+    레거시 프리팹과 동일하게 Unity 2018.3에 도입된 새로운 프리팹 시스템에서도 Apply가 가능하도록 개선
+    Inspector UI에서 프리팹과의 연동을 제어하는 기능 추가
+    <color=red>(자세한 설명은 홈페이지를 확인하세요)</color>
+
+- 알 수 없는 원인에 의해서 비정상적으로 저장된 백업 파일로부터 복구시, 최소한 작업이 가능한 수준으로 복원되도록 개선됨
+- Soft Selection 범위, Blur 브러시, Rigging 모디파이어의 브러시의 크기의 최대값이 기존의 3배로 증가
+- 메시 그룹의 메시들이나 자식 메시 그룹들, 본들을 일괄적으로 삭제하는 버튼과 단축키가 추가
+- 에디터 언어를 일본어로 선택할 때, 어색했던 일부 단어들을 수정
+- 에디터로 캐릭터를 열 때, 컨트롤 파라미터들의 기본값이 범위를 벗어나면 자동으로 보정하도록 변경 (v1.2.6)
+- 에디터에서 대상을 회전하거나 대상의 크기를 변경할 때, 위치값을 보정하여 이동하지 않도록 개선 (v1.2.6)
+- Bake를 할 때, "이미지가 설정되지 않는 메시"가 있음을 알려주는 메시지가 추가됨 (v1.2.6)
+
+
+
+<size=13>수정된 문제점</size>
+
+- 자식 메시 그룹이 움직이면, 리깅이 적용된 메시들이 이상하게 움직이던 문제가 수정됨
+- Rigging 모디파이어의 Pose Test 기능을 사용할 때 실행 취소를 하면 본을 바로 제어하지 못했던 문제가 수정됨
+- Unity 2019.3 및 이후 버전의 에디터에서 "애니메이션 이벤트 다이얼로그"의 길이가 짧았던 문제가 수정됨
+- Soft Selection를 켠 상태에서 일부 버텍스들을 선택한 후, Ctrl+A 키를 눌러서 모든 버텍스를 선택하면 편집이 정상적으로 되지 않는 문제가 수정됨
+- 3D 월드에 캐릭터를 배치하고 빌보드 방식으로 렌더링을 하는 경우, 지글본이 카메라와의 각도에 따라 비정상적으로 동작하는 문제가 수정됨 (단, Physics 모디파이어에서도 동일한 현상이 있지만 성능상의 문제로 개선 작업에서 제외됨)
+- 마지막으로 기즈모가 보여졌던 곳을 클릭하면 해당 위치의 객체가 선택되지 않는 문제가 수정됨
+- Make Mesh의 Edit 탭이 켜진 상태에서 메시를 복제하거나 다른 메시를 선택하면 기즈모가 활성화되지 않던 문제가 수정됨
+- Make Mesh의 Edit 탭이 켜진 상태에서 버텍스를 선택하고 바로 다른 메시를 선택하면, 기즈모가 사라지지 않던 문제가 수정됨
+- 기본 크기가 음수인 메시를 기즈모로 편집할 수 없었던 문제가 수정됨 (v1.2.6)
+- 기본 크기가 음수인 메시에 Rigging 또는 Transform 모디파이어가 적용된 경우 정상적으로 동작하지 않는 문제가 수정됨 (v1.2.6)
+
+
+
+
+-----------------------------------------
+(프랑스어)
+<size=16>Fichier de mise à jour AnyPortrait v1.2.5/v1.2.6</size>
+(Construit le 7 novembre 2020)
+
+<size=13>Améliorations</size>
+
+- <color=blue>Échelle non uniforme</color>
+    Ajout d'une option pour exprimer l'échelle non uniforme en modifiant l'échelle d'un groupe de maillage enfant
+    Basculer entre la méthode d'origine et la nouvelle méthode non uniforme dans la boîte de dialogue de réglage ou la boîte de dialogue Bake
+    <color=red>(Pour plus d'informations, veuillez visiter notre page d'accueil)</color>
+
+- <color=blue>Processus amélioré pour les maillages rigides</color>
+    Selon l'option, les maillages rigged sont retournés lorsqu'ils sont rendus en fonction de l'inversion de l'échelle osseuse
+    Code de mise à jour amélioré
+    <color=red>(Pour plus d'informations, veuillez visiter notre page d'accueil)</color>
+
+- <color=blue>Amélioration du support "Prefab"</color>
+    Dans l'ancien système "Prefab" et le nouveau système "Prefab" introduit dans Unity 2018.3, il a été amélioré pour pouvoir exécuter "Apply" aux personnages créés avec AnyPortrait
+    Ajout de fonctions pour contrôler l'intégration avec les "Prefabs" dans l'interface utilisateur de l'inspecteur
+    <color=red>(Pour plus d'informations, veuillez visiter notre page d'accueil)</color>
+
+- Lors de la restauration à partir d'un fichier de sauvegarde stocké anormalement en raison d'une cause inconnue, il a été amélioré pour récupérer au moins dans la mesure où l'édition est possible.
+- La valeur maximale de la taille du pinceau de la plage Soft Selection, du pinceau Flou et du pinceau du modificateur Rigging est multipliée par 3
+- Un bouton et une touche de raccourci pour supprimer les maillages du groupe de mailles, les groupes de mailles enfants et les os à la fois sont ajoutés
+- Certains mots gênants dans l'interface utilisateur japonaise sont corrigés
+- Lors de l'ouverture d'un caractère avec l'éditeur, la valeur par défaut des paramètres de contrôle est modifiée pour être automatiquement corrigée si elle est hors limites (v1.2.6)
+- Lors de la rotation d'un objet dans l'éditeur ou de la modification de la taille d'un objet, la valeur de position est corrigée pour qu'elle ne bouge pas (v1.2.6)
+- Lors de l'exécution de Bake, un message indiquant qu'il y a un "Maillage sans image" est ajouté (v1.2.6)
+
+
+
+<size=13>Problème résolu</size>
+
+- Un problème est résolu: les maillages truqués se déplaçaient étrangement lorsque le groupe de maillages enfant se déplaçait
+- Un problème est résolu: les os ne pouvaient pas être contrôlés immédiatement après l'annulation lors de l'utilisation de la fonction Pose Test du modificateur Rigging
+- Un problème est résolu où la longueur de la "Boîte de dialogue d'événement d'animation" était courte dans l'éditeur de Unity 2019.3 ou version ultérieure
+- Un problème est résolu où l'édition ne fonctionnait pas normalement lors de la sélection de tous les sommets en appuyant sur Ctrl + A après avoir sélectionné certains sommets lorsque la sélection adoucie est activée
+- Un problème est résolu dans lequel Jiggle Bones se comporte anormalement en fonction de l'angle de la caméra lors du placement d'un personnage dans un monde 3D et du rendu dans une méthode de panneau d'affichage
+- Un problème est résolu, car un objet n'a pas été sélectionné en cliquant sur le dernier emplacement où le gizmo a été affiché
+- Un problème est résolu: le gizmo n'était pas activé lorsqu'un maillage était dupliqué ou qu'un maillage différent était sélectionné alors que l'onglet Modifier de Créer un maillage était activé
+- Un problème est résolu: le gizmo ne disparaissait pas lors de la sélection d'un sommet et de la sélection d'un autre maillage immédiatement alors que l'onglet Modifier de Créer un maillage était activé
+- Un problème est résolu: les maillages avec une taille par défaut négative ne pouvaient pas être modifiés par le gizmo. (v1.2.6)
+- Un problème est résolu en raison du fait que les maillages, qui sont appliqués aux modificateurs Rigging ou Transform, avec une taille par défaut négative ne fonctionnaient pas correctement. (v1.2.6)
+
+
+
+
+-----------------------------------------
+(독일어)
+<size=16>AnyPortrait-Aktualisierungsprotokoll v1.2.5/v1.2.6</size>
+(Build 7. November 2020)
+
+
+<size=13>Verbesserungen</size>
+
+- <color=blue>Ungleichmäßige Skala</color>
+    Option zum Ausdrücken einer ungleichmäßigen Skalierung durch Ändern der Skalierung einer untergeordneten Netzgruppe hinzugefügt
+    Wechseln Sie im Einstellungsdialog oder im Backdialog zwischen der ursprünglichen Methode und der neuen uneinheitlichen Methode
+    <color=red>(Weitere Informationen finden Sie auf unserer Homepage)</color>
+
+- <color=blue>Verbesserter Prozess für manipulierte Netze</color>
+    Abhängig von der Option werden die manipulierten Netze umgedreht, wenn sie gemäß der Umkehrung der Knochenskala gerendert werden
+    Verbesserter Update-Code
+    <color=red>(Weitere Informationen finden Sie auf unserer Homepage)</color>
+
+- <color=blue>Verbesserte Unterstützung für Prefab</color>
+    Im älteren Fertighaussystem und im neuen Fertighaussystem, das in Unity 2018.3 eingeführt wurde, wurde es verbessert, um "Anwenden" auf mit AnyPortrait erstellte Zeichen ausführen zu können
+    Funktionen zur Steuerung der Integration mit Fertighäusern in der Inspector-Benutzeroberfläche hinzugefügt
+    <color=red>(Weitere Informationen finden Sie auf unserer Homepage)</color>
+
+- Bei der Wiederherstellung aus einer abnormal gespeicherten Sicherungsdatei aufgrund einer unbekannten Ursache wurde die Wiederherstellung zumindest so weit verbessert, dass eine Bearbeitung möglich ist.
+- Der Maximalwert der Pinselgröße des Pinsels "Weiche Auswahl", "Weichzeichnen" und "Rigging" wird um das Dreifache erhöht
+- Eine Schaltfläche und eine Tastenkombination zum gleichzeitigen Löschen der Netze, untergeordneten Netzgruppen und Knochen der Netzgruppe werden hinzugefügt
+- Einige Wörter, die in der japanischen Benutzeroberfläche unangenehm waren, wurden behoben
+- Beim Öffnen eines Zeichens mit dem Editor wird der Standardwert der Steuerparameter so geändert, dass er automatisch korrigiert wird, wenn er außerhalb des Bereichs liegt (v1.2.6).
+- Wenn Sie ein Objekt im Editor drehen oder die Größe eines Objekts ändern, wird der Positionswert so korrigiert, dass er sich nicht bewegt (v1.2.6).
+- Beim Backen wird eine Meldung hinzugefügt, die angibt, dass ein "Netz ohne Bild" vorhanden ist (v1.2.6).
+
+
+
+<size=13>Problem behoben</size>
+
+- Es wurde ein Problem behoben, durch das manipulierte Netze beim Verschieben der untergeordneten Netzgruppe merkwürdig verschoben wurden
+- Es wurde ein Problem behoben, durch das Knochen nicht sofort nach dem Rückgängigmachen kontrolliert werden konnten, wenn die Pose-Test-Funktion des Rigging-Modifikators verwendet wurde
+- Es wurde ein Problem behoben, bei dem die Länge des "Dialogfelds für Animationsereignisse" im Editor von Unity 2019.3 oder höher kurz war
+- Es wurde ein Problem behoben, bei dem die Bearbeitung bei Auswahl aller Scheitelpunkte nicht normal funktioniert, indem Sie Strg + A drücken, nachdem Sie einige Scheitelpunkte ausgewählt haben, wenn die weiche Auswahl aktiviert ist
+- Es wurde ein Problem behoben, bei dem sich Wackelknochen je nach Winkel zur Kamera ungewöhnlich verhalten, wenn ein Charakter in einer 3D-Welt platziert und in einer Plakatmethode gerendert wird
+- Es wurde ein Problem behoben, dass beim Klicken auf die letzte Stelle, an der das Gizmo angezeigt wurde, kein Objekt ausgewählt wurde
+- Es wurde ein Problem behoben, bei dem das Gizmo nicht aktiviert wurde, als ein Netz dupliziert oder ein anderes Netz ausgewählt wurde, während die Registerkarte Bearbeiten von Netz erstellen aktiviert war
+- Es wurde ein Problem behoben, bei dem das Gizmo nicht verschwand, wenn ein Scheitelpunkt ausgewählt und sofort ein anderes Netz ausgewählt wurde, während die Registerkarte Bearbeiten von Netz erstellen aktiviert war
+- Es wurde ein Problem behoben, durch das Netze mit einer negativen Standardgröße vom Gizmo nicht bearbeitet werden konnten. (v1.2.6)
+- Es wurde ein Problem behoben, bei dem Netze, auf die Rigging- oder Transformationsmodifikatoren mit einer negativen Standardgröße angewendet wurden, nicht ordnungsgemäß funktionierten. (v1.2.6)
+
+
+
+
+-----------------------------------------
+(스페인어)
+<size=16>AnyPortrait Update Log v1.2.5/v1.2.6</size>
+(Construido el 7 de noviembre de 2020)
+
+
+<size=13>Mejoras</size>
+
+- <color=blue>Escala no uniforme</color>
+    Se agregó la opción para expresar la escala no uniforme cambiando la escala de un grupo de malla secundario
+    Cambie entre el método original y el nuevo método no uniforme en el cuadro de diálogo de configuración o en el cuadro de diálogo Hornear
+    <color=red>(Para obtener más información, visite nuestra página de inicio)</color>
+
+- <color=blue>Proceso mejorado para mallas aparejadas</color>
+    Dependiendo de la opción, las mallas aparejadas se invierten cuando se renderizan de acuerdo con la inversión de la escala ósea
+    Código de actualización mejorado
+    <color=red>(Para obtener más información, visite nuestra página de inicio)</color>
+
+- <color=blue>Prefab de apoyo mejorado</color>
+    En el sistema prefabricado heredado y el nuevo sistema prefabricado introducido en Unity 2018.3, se ha mejorado para poder ejecutar "Aplicar" a los personajes creados con AnyPortrait.
+    Se agregaron funciones para controlar la integración con prefabricados en la interfaz de usuario del Inspector
+    <color=red>(Para obtener más información, visite nuestra página de inicio)</color>
+
+- Al recuperarse de un archivo de copia de seguridad almacenado de forma anormal debido a una causa desconocida, se ha mejorado para recuperar al menos en la medida en que sea posible editarlo.
+- El valor máximo del tamaño del pincel del rango de selección suave, el pincel de desenfoque y el pincel del modificador de aparejo aumenta 3 veces
+- Se agregan un botón y una tecla de acceso directo para eliminar las mallas del grupo de malla, los grupos de malla secundaria y los huesos a la vez
+- Se corrigieron algunas palabras que eran incómodas en la interfaz de usuario japonesa
+- Al abrir un personaje con el editor, el valor predeterminado de los parámetros de control se cambia para ser corregido automáticamente si está fuera de rango (v1.2.6)
+- Al rotar un objeto en el editor o cambiar el tamaño de un objeto, el valor de posición se corrige para que no se mueva (v1.2.6)
+- Al hacer Bake, se agrega un mensaje que indica que hay una "Malla sin imagen" (v1.2.6)
+
+
+
+<size=13>Problema solucionado</size>
+
+- Se solucionó un problema por el que las mallas manipuladas se movían de manera extraña cuando se movía el grupo de mallas secundarias
+- Se solucionó el problema de que los huesos no se podían controlar inmediatamente después de deshacerlos cuando se usaba la función de prueba de pose del modificador de aparejos.
+- Se solucionó el problema de que la duración del "Diálogo de eventos de animación" era corta en el editor de Unity 2019.3 o posterior.
+- Se solucionó el problema de que la edición no funcionaría normalmente al seleccionar todos los vértices presionando Ctrl + A después de seleccionar algunos vértices cuando la Selección suave está activada
+- Se solucionó un problema por el cual Jiggle Bones se comportaba de manera anormal según el ángulo de la cámara al colocar un personaje en un mundo 3D y representarlo en un método de valla publicitaria
+- Se solucionó el problema de que no se seleccionaba un objeto al hacer clic en la última ubicación donde se mostró el gizmo
+- Se solucionó el problema de que el gizmo no se activaba cuando se duplicaba una malla o se seleccionaba una malla diferente mientras la pestaña Editar de Crear malla estaba activada
+- Se solucionó el problema de que el gizmo no desaparecía al seleccionar un vértice y seleccionar otra malla inmediatamente mientras la pestaña Editar de Crear malla estaba activada
+- Se solucionó un problema por el cual el gizmo no podía editar las mallas con un tamaño predeterminado negativo. (v1.2.6)
+- Se solucionó un problema que provocaba que las mallas, que se aplicaban a los modificadores Aparejo o Transformación, con un tamaño predeterminado negativo no funcionaran correctamente. (v1.2.6)
+
+
+
+
+-----------------------------------------
+(이탈리아어)
+<size=16>Registro aggiornamenti AnyPortrait v1.2.5/v1.2.6</size>
+(Build 7 novembre 2020)
+
+
+<size=13>Miglioramenti</size>
+
+- <color=blue>Scala non uniforme</color>
+    Aggiunta opzione per esprimere Scala non uniforme modificando la scala di un gruppo mesh figlio
+    Passa dal metodo originale al nuovo metodo Non uniforme nella finestra di dialogo delle impostazioni o nella finestra di dialogo Bake
+    <color=red>(Per maggiori informazioni, visita la nostra homepage)</color>
+
+- <color=blue>Processo migliorato per trame rigate</color>
+    A seconda dell'opzione, le reti rigate vengono capovolte quando viene renderizzato in base all'inversione della scala ossea
+    Codice di aggiornamento migliorato
+    <color=red>(Per maggiori informazioni, visita la nostra homepage)</color>
+
+- <color=blue>Supporto prefabbricato migliorato</color>
+    Nel sistema prefabbricato legacy e nel nuovo sistema prefabbricato introdotto in Unity 2018.3, è stato migliorato per poter eseguire "Applica" ai personaggi creati con AnyPortrait
+    Aggiunte funzioni per controllare l'integrazione con i prefabbricati nell'interfaccia utente di Inspector
+    <color=red>(Per maggiori informazioni, visita la nostra homepage)</color>
+
+- Durante il ripristino da un file di backup archiviato in modo anomalo a causa di una causa sconosciuta, è stato migliorato per ripristinare almeno nella misura in cui è possibile la modifica.
+- Il valore massimo della dimensione del pennello della gamma Selezione morbida, del pennello Sfocatura e del pennello del modificatore Rigging è aumentato di 3 volte
+- Vengono aggiunti un pulsante e un tasto di scelta rapida per eliminare le mesh del gruppo di mesh, i gruppi di mesh secondari e le ossa contemporaneamente
+- Alcune parole che erano scomode nell'interfaccia utente giapponese sono state corrette
+- Quando si apre un carattere con l'editor, il valore predefinito dei parametri di controllo viene modificato per essere corretto automaticamente se è fuori intervallo (v1.2.6)
+- Quando si ruota un oggetto nell'editor o si cambia la dimensione di un oggetto, il valore di posizione viene corretto in modo che non si muova (v1.2.6)
+- Quando si esegue Bake, viene aggiunto un messaggio che indica che è presente una "Mesh senza immagine" (v1.2.6)
+
+
+
+<size=13>Risolto il problema</size>
+
+- È stato risolto un problema per cui le mesh truccate si muovevano in modo strano quando il gruppo di mesh figlio si spostava
+- È stato risolto un problema per il quale le ossa non potevano essere controllate immediatamente dopo l'annullamento quando si utilizzava la funzione Pose Test del modificatore Rigging
+- È stato risolto un problema per cui la lunghezza della "finestra di dialogo evento di animazione" era breve nell'editor di Unity 2019.3 o versioni successive
+- È stato risolto un problema per cui la modifica non funzionava normalmente quando si selezionavano tutti i vertici premendo Ctrl + A dopo aver selezionato alcuni vertici quando la selezione morbida è attiva
+- È stato risolto un problema per cui Jiggle Bones si comportava in modo anomalo a seconda dell'angolazione della telecamera quando si posiziona un personaggio in un mondo 3D e lo si rende in un metodo di cartellone
+- È stato risolto un problema per cui un oggetto non era selezionato quando si faceva clic sull'ultima posizione in cui è stato mostrato il gizmo
+- È stato risolto un problema per il quale il gizmo non veniva attivato quando una mesh veniva duplicata o veniva selezionata una mesh diversa mentre era attiva la scheda Modifica di Crea mesh
+- È stato risolto un problema per il quale il gizmo non scompariva quando si selezionava un vertice e si selezionava immediatamente un'altra mesh mentre la scheda Modifica di Crea mesh era attiva
+- È stato risolto un problema per cui le mesh con una dimensione predefinita negativa non potevano essere modificate dal gizmo. (v1.2.6)
+- È stato risolto un problema per cui le mesh, a cui vengono applicati i modificatori Rigging o Transform, con una dimensione predefinita negativa non funzionavano correttamente. (v1.2.6)
+
+
+
+
+-----------------------------------------
+(덴마크어)
+<size=16>AnyPortrait Update Log v1.2.5/v1.2.6</size>
+(Byg 7. november 2020)
+
+
+<size=13>Forbedringer</size>
+
+- <color=blue>Ikke-ensartet skala</color>
+    Tilføjet mulighed for at udtrykke ikke-ensartet skala ved at ændre skalaen for en Child Mesh Group
+    Skift mellem den oprindelige metode og den nye ikke-ensartede metode i indstillingsdialogen eller Bage-dialogen
+    <color=red>(For mere information, se venligst vores hjemmeside)</color>
+
+- <color=blue>Forbedret proces til Rigged Meshes</color>
+    Afhængigt af indstillingen vendes Rigged Meshes, når de gengives i henhold til vending af knogleskalaen
+    Forbedret opdateringskode
+    <color=red>(For mere information, se venligst vores hjemmeside)</color>
+
+- <color=blue>Forbedret understøttende præfabrik</color>
+    I det ældre præfabrikerede system og det nye præfabrikerede system introduceret i Unity 2018.3 er det blevet forbedret for at kunne køre "Anvend" på tegn oprettet med AnyPortrait
+    Tilføjede funktioner til styring af integration med præfabrikker i Inspector UI
+    <color=red>(For mere information, se venligst vores hjemmeside)</color>
+
+- Når du gendanner fra en unormalt gemt sikkerhedskopifil på grund af en ukendt årsag, er det blevet forbedret for at gendanne i det mindste i det omfang, det er muligt at redigere.
+- Den maksimale værdi af penselstørrelsen i Soft Selection-området, Blur-børsten og Rigging-modifikatorens børste øges med 3 gange
+- En knap og genvejstast til at slette maskeringsgruppens masker, barnemaskegrupper og knogler på én gang tilføjes
+- Nogle ord, der var akavet i det japanske brugergrænseflade, er rettet
+- Når du åbner et tegn med editoren, ændres standardværdien af kontrolparametrene for at blive korrigeret automatisk, hvis den er uden for rækkevidde (v1.2.6)
+- Når du roterer et objekt i editoren eller ændrer størrelsen på et objekt, korrigeres positionsværdien, så den ikke bevæger sig (v1.2.6)
+- Når du laver Bage, tilføjes en besked, der angiver, at der er et "Mesh uden billede" (v1.2.6)
+
+
+
+<size=13>Faste problem</size>
+
+- Et problem er løst, at rigede masker bevægede sig underligt, da barnegruppegruppen bevægede sig
+- Et problem er løst, at knogler ikke kunne kontrolleres straks efter fortrydelse, når du bruger Rigging-modifikatorens Pose Test-funktion
+- Et problem er løst, at længden af ​​"Animation Event Dialog" var kort i redaktøren for Unity 2019.3 eller senere
+- Et problem er løst, at redigering ikke fungerer normalt, når du vælger alle hjørner ved at trykke på Ctrl + A efter at have valgt nogle hjørner, når Soft Selection er aktiveret
+- Et problem er løst, at Jiggle Bones opfører sig unormalt afhængigt af vinklen til kameraet, når man placerer et tegn i en 3D-verden og gengiver det i en billboard-metode
+- Et problem er løst, at et objekt ikke blev valgt, når du klikker på det sidste sted, hvor gizmo er blevet vist
+- Et problem er løst, at gizmo ikke blev aktiveret, når et mesh blev duplikeret, eller et andet mesh blev valgt, mens fanen Rediger i Make Mesh blev slået til
+- Et problem er løst, at gizmo ikke forsvandt, når du valgte et toppunkt og valgte et andet maske med det samme, mens fanen Rediger i Make Mesh var slået til
+- Et problem er løst, at masker med en negativ standardstørrelse ikke kunne redigeres af gizmo. (v1.2.6)
+- Et problem er løst, at masker, som anvendes Rigging eller Transform modifikatorer, med en negativ standardstørrelse ikke fungerede korrekt. (v1.2.6)
+
+
+
+
+-----------------------------------------
+(일본어)
+<size=16> AnyPortrait更新ログv1.2.5/v1.2.6</size>
+（2020年11月7日ビルド）
+
+<size=13>改善点</size>
+
+- <color=blue>Non-Uniformスケール設定</color>
+    子メッシュグループのサイズを変更して、「長めになる」表現が可能な新しいスケールオプションが追加さ
+    「設定ダイアログ」や「Bakeダイアログ」で、既存の方式で、新しい「Non-Uniform方式」に変更可能
+    <color=red>（詳細はホームページを確認してください）</color>
+
+- <color=blue>リギングされたメッシュの処理が改善</color>
+    オプションに応じて、ボーンのサイズが反転されると、リギングされたメッシュもフリップされ、レンダリング
+    ボーンの処理を含むアップデートコードを改善
+    <color=red>（詳細はホームページを確認してください）</color>
+
+- <color=blue>「Prefab」の連動が改善</color>
+    キャラクターをアセットとして「Apply」ができるように、「既存のPrefabシステム」とUnity 2018.3に導入された「新しいPrefabシステム」を支援
+    Inspector UIで「Prefab」との連動を制御する機能を追加
+    <color=red>（詳細はホームページを確認してください）</color>
+
+- 未知の原因によって異常に保存されたバックアップファイルから復元時は、少なくとも作業が可能なレベルに復元されるように改善さ
+- 「Soft Selection範囲」、「Blurブラシ」、「Riggingモディファイヤのブラシ」の大きさの最大値が、既存の3倍に増加
+- メッシュグループのメッシュや子メッシュグループ、ボーンを一括的に削除するためのボタンとショートカットが追加
+- 「日本語」エディターで  ぎこちなかったいくつかの単語を修正
+- エディタでキャラクターを開いたときに、制御パラメータのデフォルト値が範囲外の場合、自動的に補正するように変更（v1.2.6）
+- エディタで対象を回転させたり、ターゲットの大きさを変更するときに、位置の値を補正して移動しないように改善（v1.2.6）
+- Bakeをするとき、「イメージが設定されていないメッシュ」があることを示すメッセージが追加（v1.2.6）
+
+
+
+<size=13>修正された問題</size>
+
+- 子メッシュグループが動けば、リギングが適用されたメッシュが異常に動いだった問題が修正されまし
+- 「Riggingモディファイヤ」の「Pose Test」機能を使用する場合、元に戻すをするボーンすぐ制御していなかった問題が修正されまし
+- Unity 2019.3およびそれ以降のバージョンのエディタで "アニメイベントダイアログ」の長さが短かった問題が修正されまし
+- 「Soft Selection」をオンにした状態で、いくつかの頂点を選択した後、「Ctrl + A」キーを押して、すべての頂点を選択すると、編集が正常にされない問題が修正されまし
+- 3Dワールドにキャラクターを配置して、「ビルボード」方式でレンダリングをする場合には、「Jiggle Bone」がカメラとの角度に応じて、異常に動作する問題が修正されまし（ただし、「Physicsモディファイヤ」も同じ現象があるが、パフォーマンスの低下により改善作業から除外）
+- 最後に、ギズモが表示れたところをクリックすると、オブジェクトが選択されていない問題が修正されまし
+- 「Make MeshのE​​ditタブ」がオンの状態では、メッシュを複製したり、他のメッシュを選択すると、ギズモが有効化されなかった問題が修正されまし
+- 「Make MeshのE​​ditタブ」がオンの状態では、頂点を選択して、すぐに他のメッシュを選択すれば、ギズモが消えなかった問題が修正されまし
+- 基本的なサイズが負の値であるメッシュをGizmoに編集することができなかった問題が修正されまし （v1.2.6）
+- 基本的なサイズが負の値であるメッシュにRiggingまたはTransformモディファイヤが適用された場合には、正常に動作しない問題が修正されまし （v1.2.6）
+​
+
+
+
+-----------------------------------------
+(중국어-번체)
+<size=16>AnyPortrait更新日誌v1.2.5/v1.2.6</size>
+（2020年11月7日）
+
+
+<size=13>改進</size>
+
+- <color=blue>“Non-Uniform”比例</color>
+    添加了通過更改子網格組的比例來表達“Non-Uniform”比例的選項
+    在設置對話框或“烘焙”對話框中，在原始方法和新的“Non-Uniform”方法之間切換
+    <color=red>（有關更多信息，請訪問我們的主頁）</color>
+
+- <color=blue>改進了裝配網格的過程</color>
+    根據選項，在根據骨骼比例反轉渲染時，將翻轉已綁定的網格
+    改進的更新代碼
+    <color=red>（有關更多信息，請訪問我們的主頁）</color>
+
+- <color=blue>改進了對“Prefab”的支持</color>
+    在Unity 2018.3中引入的舊版“Prefab”系統和新的“Prefab”系統中，已對其進行了改進，可以對使用AnyPortrait創建的角色運行“應用”
+    添加了用於控制與Inspector UI中的預製件集成的功能
+    <color=red>（有關更多信息，請訪問我們的主頁）</color>
+
+- 當由於未知原因從異常存儲的備份文件中恢復時，至少已恢復到可以編輯的程度。
+- “軟選擇”範圍，“模糊”畫筆和“索具”修改器的畫筆的畫筆大小的最大值增加了3倍
+- 添加了一次刪除網格組的網格，子網格組和骨骼的按鈕和快捷鍵
+- 修復了日語界面中有些尷尬的單詞
+- 使用編輯器打開字符時，如果控制參數的默認值超出範圍，則將其更改為自動更正 （v1.2.6）
+- 在編輯器中旋轉對像或更改對象的大小時，位置值將被校正以使其不移動 （v1.2.6）
+- 進行烘焙時，將添加一條消息，指出“沒有圖像的網格” （v1.2.6）
+
+
+
+<size=13>修復了問題</size>
+
+- 修復了當子網格組移動時裝配的網格移動異常的問題
+- 修復了使用“索具”修改器的“姿勢測試”功能在撤消後無法立即控制骨骼的問題已修復
+- 已修復在Unity 2019.3或更高版本的編輯器中“動畫事件對話框”的長度較短的問題
+- 解決了以下問題：當“軟選擇”處於啟用狀態時，在選擇了某些頂點後按Ctrl + A來選擇所有頂點時，編輯將無法正常進行
+- 修復了將角色放置在3D世界中並以佈告欄方法渲染角色時，抖動骨骼會根據與攝影機角度而異常行為的問題
+- 修復了單擊顯示小控件的最後一個位置時未選擇對象的問題
+- 已修復以下問題：複製網格或在“設置網格”的“編輯”選項卡處於打開狀態時選擇了其他網格時，未激活Gizmo。
+- 已修復以下問題：在啟用“使網格物體”的“編輯”選項卡時，選擇頂點並立即選擇另一個網格物體時，小控件沒有消失
+- 修復了Gizmo無法編輯默認大小為負的網格的問題。（v1.2.6）
+- 修復了一個問題：使用負值默認大小的“套索”或“變形”修改器應用的網格無法正常工作。（v1.2.6）
+
+
+
+-----------------------------------------
+(중국어-간체)
+<size=16>AnyPortrait更新日志v1.2.5/v1.2.6</size>
+（2020年11月7日）
+
+
+<size=13>改进</size>
+
+- <color=blue>“Non-Uniform”比例</color>
+    添加了通过更改子网格组的比例来表达“Non-Uniform”比例的选项
+    在设置对话框或“烘焙”对话框中，在原始方法和新的“Non-Uniform”方法之间切换
+    <color=red>（有关更多信息，请访问我们的主页）</color>
+
+- <color=blue>改进了装配网格的过程</color>
+    根据选项，在根据骨骼比例反转渲染时，将翻转已绑定的网格
+    改进的更新代码
+    <color=red>（有关更多信息，请访问我们的主页）</color>
+
+- <color=blue>改进了对“Prefab”的支持</color>
+    在Unity 2018.3中引入的旧版“Prefab”系统和新的“Prefab”系统中，已对其进行了改进，可以对使用AnyPortrait创建的角色运行“应用”
+    添加了用于控制与Inspector UI中的预制件集成的功能
+    <color=red>（有关更多信息，请访问我们的主页）</color>
+
+- 当由于未知原因从异常存储的备份文件中恢复时，至少已恢复到可以编辑的程度。
+- “软选择”范围，“模糊”画笔和“索具”修改器的画笔的画笔大小的最大值增加了3倍
+- 添加了一次删除网格组的网格，子网格组和骨骼的按钮和快捷键
+- 修复了日语界面中有些尴尬的单词
+- 使用编辑器打开字符时，如果控制参数的默认值超出范围，则将其更改为自动更正 （v1.2.6）
+- 在编辑器中旋转对象或更改对象的大小时，位置值将被校正以使其不移动 （v1.2.6）
+- 进行烘焙时，将添加一条消息，指出“没有图像的网格” （v1.2.6）
+
+
+
+<size=13>修复了问题</size>
+
+- 修复了当子网格组移动时装配的网格移动异常的问题
+- 修复了使用“索具”修改器的“姿势测试”功能在撤消后无法立即控制骨骼的问题已修复
+- 已修复在Unity 2019.3或更高版本的编辑器中“动画事件对话框”的长度较短的问题
+- 解决了以下问题：当“软选择”处于启用状态时，在选择了某些顶点后按Ctrl + A来选择所有顶点时，编辑将无法正常进行
+- 修复了将角色放置在3D世界中并以布告栏方法渲染角色时，抖动骨骼会根据与摄影机角度而异常行为的问题
+- 修复了单击显示小控件的最后一个位置时未选择对象的问题
+- 已修复以下问题：复制网格或在“设置网格”的“编辑”选项卡处于打开状态时选择了其他网格时，未激活Gizmo。
+- 已修复以下问题：在启用“使网格物体”的“编辑”选项卡时，选择顶点并立即选择另一个网格物体时，小控件没有消失
+- 修复了Gizmo无法编辑具有负默认大小的网格的问题。（v1.2.6）
+- 修复了一个问题：使用负值默认大小的“套索”或“变形”修改器应用的网格无法正常工作。（v1.2.6）
+
+
+
+-----------------------------------------
+(폴란드어)
+<size=16>Dziennik aktualizacji AnyPortret v1.2.5/v1.2.6</size>
+(Zbuduj 7 listopada 2020 r.)
+
+
+<size=13>Ulepszenia</size>
+
+- <color=blue>Niejednorodna skala</color>
+     Dodano opcję wyrażania niejednorodnej skali poprzez zmianę skali podrzędnej grupy siatki
+     Przełącz się między oryginalną metodą a nową metodą niejednorodną w oknie dialogowym ustawień lub w oknie dialogowym Pieczenie
+    <color=red>(Aby uzyskać więcej informacji, odwiedź naszą stronę główną)</color>
+
+- <color=blue>Ulepszony proces dla wzmocnionych siatek</color>
+     W zależności od opcji, Siatki Rigged są odwracane, gdy są renderowane zgodnie z odwróceniem skali kości
+     Ulepszony kod aktualizacji
+    <color=red>(Aby uzyskać więcej informacji, odwiedź naszą stronę główną)</color>
+
+- <color=blue>Ulepszona obsługa prefabrykatów</color>
+     W starszym systemie prefabrykatów i nowym systemie prefabrykatów wprowadzonym w Unity 2018.3 ulepszono, aby można było uruchomić „Zastosuj” do postaci utworzonych za pomocą AnyPortrait
+     Dodano funkcje kontrolujące integrację z prefabrykatami w interfejsie inspektora
+    <color=red>(Aby uzyskać więcej informacji, odwiedź naszą stronę główną)</color>
+
+- W przypadku odzyskiwania z nieprawidłowo zapisanego pliku kopii zapasowej z nieznanej przyczyny poprawiono odzyskiwanie przynajmniej w takim zakresie, w jakim jest możliwa edycja.
+- Maksymalna wartość rozmiaru pędzla z zakresu Soft Selection, Blur brush i pędzla modyfikatora Rigging zostaje zwiększona 3 razy
+- Dodano przycisk i klawisz skrótu do jednoczesnego usuwania siatek grup siatki, podrzędnych grup siatki i kości
+- Naprawiono niektóre słowa, które były niewygodne w japońskim interfejsie użytkownika
+- Podczas otwierania znaku w edytorze, domyślna wartość parametrów kontrolnych jest zmieniana, aby była automatycznie korygowana, jeśli jest poza zakresem. (v1.2.6)
+- Podczas obracania obiektu w edytorze lub zmiany rozmiaru obiektu wartość pozycji jest korygowana, aby się nie poruszał. (v1.2.6)
+- Podczas pieczenia pojawia się komunikat informujący o istnieniu „Siatki bez obrazu”. (v1.2.6)
+
+
+
+<size=13>Naprawiono problem</size>
+
+- An issue is fixed that rigged meshes moved strangely when the child mesh group moved
+- An issue is fixed that bones could not be controlled immediately after undoing when using the Rigging modifier's Pose Test function
+- An issue is fixed that the length of the "Animation Event Dialog" was short in the editor of Unity 2019.3 or later
+- An issue is fixed that editing would not work normally when selecting all vertices by pressing Ctrl+A after selecting some vertices when Soft Selection is on
+- An issue is fixed that Jiggle Bones behave abnormally depending on the angle to the camera when placing a character in a 3D world and rendering it in a billboard method
+- An issue is fixed that an object was not selected when clicking on the last location where the gizmo has been shown
+- An issue is fixed that the gizmo was not activated when a mesh was duplicated or a different mesh was selected while the Edit tab of Make Mesh was turned on
+- An issue is fixed that the gizmo did not disappear when selecting a vertex and selecting another mesh immediately while the Edit tab of Make Mesh was turned on
+- Naprawiono problem polegający na tym, że siatki o ujemnym rozmiarze domyślnym nie mogły być edytowane przez metauchwyt. (v1.2.6)
+- Naprawiono błąd polegający na tym, że siatki, do których zastosowano modyfikatory Rigging lub Transform, z ujemnym rozmiarem domyślnym, nie działały poprawnie. (v1.2.6)
+
+
+
+
+-----------------------------------------
