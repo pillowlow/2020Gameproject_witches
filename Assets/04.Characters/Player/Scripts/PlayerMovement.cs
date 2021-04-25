@@ -49,6 +49,7 @@ public class PlayerMovement : MonoBehaviour
     public event Action OnLanding;
 
     private bool _isMoveAble = true;
+    private bool _isJumpAble = true;
 
     
     int IdleCounter = 0;                        //When player doesn't move for 30 frames, we play idle animation. (same reason as p variable. it's for optimization.)
@@ -58,10 +59,7 @@ public class PlayerMovement : MonoBehaviour
     bool BeginningOfWalking = false;            //True means now is the beginning of starting to walk.
     float WalkVelocityScaler(float x)           //It's the math function to describe the relationship between the horizontal input and x-velocity. (It can be replaced by a better function.)
     {
-        float sign = 1;
-        if (x < 0) { sign = -1; x = -x; }
-        x = Mathf.Pow(x, 1.4f);
-        return x * sign;
+        return (x < 0) ? -Mathf.Pow(-x, 1.4f) : Mathf.Pow(x, 1.4f);
     }
     void Start()
     {
@@ -109,7 +107,7 @@ public class PlayerMovement : MonoBehaviour
 
     void Jump()
     {
-        if (_isMoveAble && PlayerManager.onGround && Input.GetButtonDown("Jump"))
+        if (_isMoveAble && PlayerManager.onGround && Input.GetButtonDown("Jump") && _isJumpAble)
         {    
             OnJump?.Invoke();
             if (PlayerManager.state == PlayerManager.StateCode.Idle)
@@ -195,10 +193,11 @@ public class PlayerMovement : MonoBehaviour
             PlayerManager.onGround = false;
         }
     }
-    void TakeHitEnd(){
-        
+
+    public void SetJump(bool jumpAble)
+    {
+        _isJumpAble = jumpAble;
     }
-    
     void AnimationControl()
     {
         float vx = rig.velocity.x;              //x of velocity
