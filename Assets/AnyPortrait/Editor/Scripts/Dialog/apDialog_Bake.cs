@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -458,6 +457,22 @@ namespace AnyPortrait
 					{
 						apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Portrait_SettingChanged, _editor, _targetPortrait, null, false);
 						_editor._portrait._sortingOrder = nextOrder;
+					}
+				}
+				else if(_editor._portrait._sortingOrderOption == apPortrait.SORTING_ORDER_OPTION.DepthToOrder 
+					|| _editor._portrait._sortingOrderOption == apPortrait.SORTING_ORDER_OPTION.ReverseDepthToOrder)
+				{
+					//추가 21.1.31 : Depth To Order일때, 1씩만 증가하는게 아닌 더 큰값으로 증가할 수도 있게 만들자
+					int nextOrderPerDepth = EditorGUILayout.IntField(_editor.GetText(TEXT.OrderPerDepth), _editor._portrait._sortingOrderPerDepth);
+					if(nextOrderPerDepth != _editor._portrait._sortingOrderPerDepth)
+					{
+						if(nextOrderPerDepth < 1)
+						{
+							nextOrderPerDepth = 1;
+						}
+
+						apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Portrait_SettingChanged, _editor, _targetPortrait, null, false);
+						_editor._portrait._sortingOrderPerDepth = nextOrderPerDepth;
 					}
 				}
 

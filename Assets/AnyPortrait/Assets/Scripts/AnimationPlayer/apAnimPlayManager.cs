@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -99,11 +98,11 @@ namespace AnyPortrait
 		// 각 애니메이션 클립은 루트 유닛에 연결된다.
 		// "같은 루트 유닛"에서는 Queue, Layer가 정상적으로 작동을 한다.
 		// "다른 루트 유닛"에서는, 가장 마지막에 호출된 루트 유닛을 기준으로 재생되며, 그 외에는 바로 Stop되며 무시된다.
-		/// <summary>
-		/// Currently playing Root Unit
-		/// </summary>
-		[NonSerialized]
-		public apOptRootUnit _curPlayedRootUnit = null;
+		///// <summary>
+		///// Currently playing Root Unit
+		///// </summary>
+		//[NonSerialized]
+		//public apOptRootUnit _curPlayedRootUnit = null;
 		private bool _isInitAndLink = false;
 
 
@@ -328,7 +327,7 @@ namespace AnyPortrait
 		{
 			if (!_isInitAndLink)
 			{
-				Debug.LogError("AnyPortrait : Not Initialized AnimPlayManager");
+				//Debug.LogError("AnyPortrait : Not Initialized AnimPlayManager");
 				return;
 			}
 
@@ -949,6 +948,50 @@ namespace AnyPortrait
 
 
 
+		//----------------------------------------------------------------
+		//추가 21.4.3 : Hide를 하면 Stop요청을 하더라도 업데이트가 안되서 PlayUnit이 종료되지 않고 "동면"에 빠진다.
+		//Portrait가 종료될 때 강제로 모든 PlayUnit들이 End에 넘어가서 종료되는걸 만들자.
+		/// <summary>
+		/// [Do not use this function]
+		/// </summary>
+		public void ReleaseAllPlayUnitAndQueues()
+		{
+			if (!_isInitAndLink)
+			{
+				//Debug.LogError("AnyPortrait : Not Initialized AnimPlayManager");
+				return;
+			}
+
+			//컨트롤러 초기화 먼저
+			_portrait._controller.ReadyToLayerUpdate();
+
+
+			//변경 : 메카님 여부에 따라 업데이트 방식이 다르다
+			//> 1. 기본 방식 : AnimQueue를 업데이트 한다.
+			//> 2. 메카님 : 메카님을 업데이트 한다.
+			if (!_isMecanim)
+			{
+				for (int i = MIN_LAYER_INDEX; i <= MAX_LAYER_INDEX; i++)
+				{
+					//Play Queue 업데이트
+					_animPlayQueues[i].SetAllPlayUnitEnd();//중요 > Ended 상태로 만든다.
+					_animPlayQueues[i].Update(0.0f);
+				}
+			}
+			else
+			{
+				//메카님을 업데이트한다.
+				_mecanim.Update();
+			}
+			
+
+			//컨트롤러 적용
+			_portrait._controller.CompleteLayerUpdate();
+		}
+
+
+
+		//----------------------------------------------------------------
 		/// <summary>
 		/// Get Animation Data in runtime
 		/// </summary>
@@ -1047,17 +1090,29 @@ namespace AnyPortrait
 		public void SetOptRootUnit(apOptRootUnit rootUnit)
 		{
 			//Debug.LogError("SetOptRootUnit [" + rootUnit.transform.name + "]");
-			if (_curPlayedRootUnit != rootUnit)
+			//Debug.Log("기존 [" + (_portrait._curPlayingOptRootUnit != null ? _portrait._curPlayingOptRootUnit.transform.name : "None") + "]");
+			
+			//if (_curPlayedRootUnit != rootUnit)//이전
+			if (_portrait._curPlayingOptRootUnit != rootUnit)//변경 21.4.3 : CurPlayedRootUnit 삭제 후 Portrait의 변수를 직접 이용
 			{
-				_curPlayedRootUnit = rootUnit;
-				_portrait.ShowRootUnit(_curPlayedRootUnit);
+				//삭제 21.4.3
+				//_curPlayedRootUnit = rootUnit;
+				//_portrait.ShowRootUnit(_curPlayedRootUnit);
+
+				//변경 21.4.3
+				_portrait.ShowRootUnit(rootUnit);
 
 				//AnimQueue를 돌면서 해당 RootUnit이 아닌 PlayUnit은 강제 종료한다.
 				for (int i = 0; i < _animPlayQueues.Count; i++)
 				{
-					_animPlayQueues[i].StopWithInvalidRootUnit(_curPlayedRootUnit);
+					_animPlayQueues[i].StopWithInvalidRootUnit(_portrait._curPlayingOptRootUnit);
 				}
 			}
+			//else if(_portrait._curPlayingOptRootUnit != null && !_portrait._curPlayingOptRootUnit._isVisible)
+			//{
+			//	//동일한데 보이지 않는 경우
+			//	Debug.LogError("에러");
+			//}
 		}
 
 

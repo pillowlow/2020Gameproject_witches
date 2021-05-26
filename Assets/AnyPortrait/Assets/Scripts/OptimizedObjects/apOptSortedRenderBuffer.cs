@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -175,6 +174,10 @@ namespace AnyPortrait
 		[SerializeField]
 		private apPortrait.SORTING_ORDER_OPTION _sortingOrderOption = apPortrait.SORTING_ORDER_OPTION.SetOrder;
 
+		//추가 21.1.31
+		[SerializeField]
+		private int _sortingOrderPerDepth = 1;
+
 		[NonSerialized]
 		private bool _isAutoSortingOrderEnabled = true;//_sortingOrderOption에 따라서 Sorting Order를 자동을 변경하는 것을 외부에서 막을 수 있다.
 		[NonSerialized]
@@ -220,6 +223,14 @@ namespace AnyPortrait
 			_ZPerDepth = portrait._bakeZSize;
 
 			_sortingOrderOption = portrait._sortingOrderOption;//추가 19.8.19
+
+			//추가 21.1.31
+			_sortingOrderPerDepth = portrait._sortingOrderPerDepth;
+			if(_sortingOrderPerDepth < 1)
+			{
+				_sortingOrderPerDepth = 1;
+			}
+
 			SetSortingOrderChangedAutomatically(true);
 		}
 
@@ -279,12 +290,12 @@ namespace AnyPortrait
 						{
 							if (_sortingOrderOption == apPortrait.SORTING_ORDER_OPTION.DepthToOrder)
 							{
-								curBuff._optTransform._childMesh.SetSortingOrder(curBuff._indexOriginal);
+								curBuff._optTransform._childMesh.SetSortingOrder(curBuff._indexOriginal * _sortingOrderPerDepth);
 								//Debug.Log("[" + i + "] : " + curBuff._optTransform._childMesh.name + " >> " + curBuff._indexOriginal);
 							}
 							else if (_sortingOrderOption == apPortrait.SORTING_ORDER_OPTION.ReverseDepthToOrder)
 							{
-								curBuff._optTransform._childMesh.SetSortingOrder(-curBuff._indexOriginal);
+								curBuff._optTransform._childMesh.SetSortingOrder(-curBuff._indexOriginal * _sortingOrderPerDepth);
 								//Debug.Log("[" + i + "] : " + curBuff._optTransform._childMesh.name + " >> " + (-curBuff._indexOriginal));
 							}
 						}
@@ -376,6 +387,10 @@ namespace AnyPortrait
 			_isDepthChanged = false;
 			_isDepthChanged_Prev = false;//<<에디터와 다르게 이 변수에 따라서 "다시 초기화"라는 이벤트를 만들어야 한다.
 
+			if(_sortingOrderPerDepth < 1)
+			{
+				_sortingOrderPerDepth = 1;
+			}
 			//옵션에 따라 자동으로 Mesh의 Sorting Order를 설정해야한다.
 			SetSortingOrderChangedAutomatically(true);
 		}
@@ -525,12 +540,12 @@ namespace AnyPortrait
 						{
 							if (_sortingOrderOption == apPortrait.SORTING_ORDER_OPTION.DepthToOrder)
 							{
-								curBuff._optTransform._childMesh.SetSortingOrder(curBuff._indexOriginal);
+								curBuff._optTransform._childMesh.SetSortingOrder(curBuff._indexOriginal * _sortingOrderPerDepth);
 								//Debug.Log("[" + i + "] : " + curBuff._optTransform._childMesh.name + " >> " + curBuff._indexOriginal);
 							}
 							else if (_sortingOrderOption == apPortrait.SORTING_ORDER_OPTION.ReverseDepthToOrder)
 							{
-								curBuff._optTransform._childMesh.SetSortingOrder(-curBuff._indexOriginal);
+								curBuff._optTransform._childMesh.SetSortingOrder(-curBuff._indexOriginal * _sortingOrderPerDepth);
 								//Debug.Log("[" + i + "] : " + curBuff._optTransform._childMesh.name + " >> " + (-curBuff._indexOriginal));
 							}
 						}
@@ -548,9 +563,10 @@ namespace AnyPortrait
 			return false;
 		}
 
-		public void SetSortingOrderOption(apPortrait.SORTING_ORDER_OPTION sortingOrderOption)
+		public void SetSortingOrderOption(apPortrait.SORTING_ORDER_OPTION sortingOrderOption, int sortingOrderPerDepth)
 		{
 			_sortingOrderOption = sortingOrderOption;
+			_sortingOrderPerDepth = sortingOrderPerDepth;
 		}
 
 		// Functions
@@ -921,11 +937,11 @@ namespace AnyPortrait
 						{
 							if(_sortingOrderOption == apPortrait.SORTING_ORDER_OPTION.DepthToOrder)
 							{
-								curBuff._optTransform._childMesh.SetSortingOrder(curBuff._indexChanged);
+								curBuff._optTransform._childMesh.SetSortingOrder(curBuff._indexChanged * _sortingOrderPerDepth);
 							}
 							else if(_sortingOrderOption == apPortrait.SORTING_ORDER_OPTION.ReverseDepthToOrder)
 							{
-								curBuff._optTransform._childMesh.SetSortingOrder(-curBuff._indexChanged);
+								curBuff._optTransform._childMesh.SetSortingOrder(-curBuff._indexChanged * _sortingOrderPerDepth);
 							}
 						}
 						
@@ -972,11 +988,11 @@ namespace AnyPortrait
 					{
 						if(_sortingOrderOption == apPortrait.SORTING_ORDER_OPTION.DepthToOrder)
 						{
-							curBuff._optTransform._childMesh.SetSortingOrder(curBuff._indexOriginal);
+							curBuff._optTransform._childMesh.SetSortingOrder(curBuff._indexOriginal * _sortingOrderPerDepth);
 						}
 						else if(_sortingOrderOption == apPortrait.SORTING_ORDER_OPTION.ReverseDepthToOrder)
 						{
-							curBuff._optTransform._childMesh.SetSortingOrder(-curBuff._indexOriginal);
+							curBuff._optTransform._childMesh.SetSortingOrder(-curBuff._indexOriginal * _sortingOrderPerDepth);
 						}
 					}
 				}

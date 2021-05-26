@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -96,11 +95,24 @@ namespace AnyPortrait
 		[NonSerialized]
 		public bool _isVisibleCalculated = true;//Color값에 의해 렌더링 여부를 결정한다.
 
-		[NonSerialized]
-		public bool _isVisibleWorkToggle_Hide2Show = false;//Hide 상태일때 작업을 위해 Show로 만든다.
+
+		//이전 : TmpWork만 있다.
+		//[NonSerialized]
+		//public bool _isVisibleWorkToggle_Hide2Show = false;//Hide 상태일때 작업을 위해 Show로 만든다.
+
+		//[NonSerialized]
+		//public bool _isVisibleWorkToggle_Show2Hide = false;//Show 상태일때 작업을 위해 Hide로 만든다.
+
+		//변경 21.1.28 : Tmp Visibilie을 두개의 Bool이 아닌 하나의 enum으로 변경한다
+		//추가로 Visibility Preset Rule에 의해서도 제어받을 수 있게 변수를 추가한다.
+		public enum WORK_VISIBLE_TYPE { None, ToShow, ToHide }
 
 		[NonSerialized]
-		public bool _isVisibleWorkToggle_Show2Hide = false;//Show 상태일때 작업을 위해 Hide로 만든다.
+		public WORK_VISIBLE_TYPE _workVisible_Tmp = WORK_VISIBLE_TYPE.None;
+
+		[NonSerialized]
+		public WORK_VISIBLE_TYPE _workVisible_Rule = WORK_VISIBLE_TYPE.None;//규칙에 의한 것
+
 
 
 
@@ -113,16 +125,30 @@ namespace AnyPortrait
 		//Mod Lock 실행 여부를 저장한다.
 		public enum EX_CALCULATE
 		{
-			/// <summary>기본 상태</summary>
-			Normal,
-			/// <summary>Ex Edit 상태 중 "선택된 Modifier"에 포함된 상태</summary>
-			ExAdded,
-			/// <summary>Ex Edit 상태 중, "선택된 Modifier"에 포함되지 않은 상태</summary>
-			ExNotAdded
+			//이전
+			///// <summary>기본 상태</summary>
+			//Normal,
+			///// <summary>Ex Edit 상태 중 "선택된 Modifier"에 포함된 상태</summary>
+			//ExAdded,
+			///// <summary>Ex Edit 상태 중, "선택된 Modifier"에 포함되지 않은 상태</summary>
+			//ExNotAdded
+
+			//변경 21.2.14
+			/// <summary>활성화되어 있다. (편집 모드 아닐때)</summary>
+			Enabled_Run,
+			/// <summary>편집 모드에서 활성 상태이다.</summary>
+			Enabled_Edit,
+			/// <summary>편집 모드에서 비활성 상태</summary>
+			Disabled_NotEdit,
+			/// <summary>
+			/// 추가된 상태 : 편집 모드에서 선택되지 않았지만, 옵션에 의해 다른 모디파이어가 적용된다.
+			/// </summary>
+			Disabled_ExRun,
+
 		}
 
 		[NonSerialized]
-		public EX_CALCULATE _exCalculateMode = EX_CALCULATE.Normal;
+		public EX_CALCULATE _exCalculateMode = EX_CALCULATE.Enabled_Run;
 
 
 		//추가 11.30 : Extra 옵션
@@ -286,7 +312,7 @@ namespace AnyPortrait
 		public apRenderUnit(apPortrait portrait, string nameKeyword)
 		{
 			_isSelectedInEditor = false;
-			_exCalculateMode = EX_CALCULATE.Normal;
+			_exCalculateMode = EX_CALCULATE.Enabled_Run;
 			_portrait = portrait;
 
 			_tmpName = "RenderUnit_" + nameKeyword + "_" + UnityEngine.Random.Range(0, 1000);
@@ -298,6 +324,8 @@ namespace AnyPortrait
 			_debugID = UnityEngine.Random.Range(0, 1000);
 		}
 
+
+		
 
 
 		public void SetGroup(apMeshGroup meshGroup, apTransform_MeshGroup meshGroupTransform, apRenderUnit parentRenderUnit)
@@ -425,6 +453,43 @@ namespace AnyPortrait
 			}
 		}
 
+
+		/// <summary>
+		/// 추가 21.3.20 : 새로 생성하지 않고 재활용해서 RenderUnit을 구성하는 경우
+		/// </summary>
+		/// <param name="meshGroup"></param>
+		/// <param name="meshGroupTransform"></param>
+		/// <param name="parentRenderUnit"></param>
+		public void ResetReuse()
+		{
+			_isSelectedInEditor = false;
+			_exCalculateMode = EX_CALCULATE.Enabled_Run;
+			
+			//CalculatedStack을 새로 만들자 또는 리셋
+			if(_calculatedStack == null)
+			{
+				_calculatedStack = new apCalculatedResultStack(this);
+			}
+			else
+			{
+				_calculatedStack.ClearResultParams();
+				_calculatedStack.ResetRenderVerts();
+			}
+
+			_parentRenderUnit = null;
+			if(_childRenderUnits == null)
+			{
+				_childRenderUnits = new List<apRenderUnit>();
+			}
+			else
+			{
+				_childRenderUnits.Clear();
+			}
+		}
+
+
+
+
 		/// <summary>
 		/// Mesh의 Vertex가 바뀌면 이 함수를 호출하자. Vertex Buffer를 다시 리셋할 수 있게 만든다.
 		/// </summary>
@@ -436,10 +501,20 @@ namespace AnyPortrait
 		/// <summary>
 		/// 작업용 TmpWork Visible 변수를 초기화한다.
 		/// </summary>
-		public void ResetTmpWorkVisible()
+		public void ResetTmpWorkVisible(bool isResetWithRules)
 		{
-			_isVisibleWorkToggle_Hide2Show = false;//Hide 상태일때 작업을 위해 Show로 만든다.	
-			_isVisibleWorkToggle_Show2Hide = false;//Show 상태일때 작업을 위해 Hide로 만든다.
+			//이전
+			//_isVisibleWorkToggle_Hide2Show = false;//Hide 상태일때 작업을 위해 Show로 만든다.	
+			//_isVisibleWorkToggle_Show2Hide = false;//Show 상태일때 작업을 위해 Hide로 만든다.
+
+			//변경 21.1.28
+			_workVisible_Tmp = WORK_VISIBLE_TYPE.None;
+
+			if(isResetWithRules)
+			{
+				//Debug.LogError("RenderUnit : ResetTmpWorkVisible > Rule");
+				_workVisible_Rule = WORK_VISIBLE_TYPE.None;
+			}
 		}
 
 
@@ -734,16 +809,48 @@ namespace AnyPortrait
 
 			
 
-			if (_isVisibleCalculated && _isVisibleWorkToggle_Show2Hide)
+			//이전 : Modifier > Tmp
+			//if (_isVisibleCalculated && _isVisibleWorkToggle_Show2Hide)
+			//{
+			//	_isVisible = false;//<<강제로 Hide로 만든다.
+			//	_meshColor2X.a = 0.0f;
+			//}
+			//else if (!_isVisibleCalculated && _isVisibleWorkToggle_Hide2Show)
+			//{
+			//	_isVisible = true;//<<강제로 Show로 만든다.
+			//	_meshColor2X.a = 1.0f;//강제로 Alpha도 1로 만든다.
+			//}
+
+			//변경 21.1.28 : Modifier > Rule > Tmp (실제론 우선순위가 Tmp이므로, 거꾸로 조건을 체크해야한다.)
+			if (_isVisibleCalculated)
 			{
-				_isVisible = false;//<<강제로 Hide로 만든다.
-				_meshColor2X.a = 0.0f;
+				//Hide로 강제할지 체크
+				if(_workVisible_Tmp == WORK_VISIBLE_TYPE.ToHide
+					|| (_workVisible_Tmp == WORK_VISIBLE_TYPE.None && _workVisible_Rule == WORK_VISIBLE_TYPE.ToHide))
+				{
+					//Tmp가 Hide이거나
+					//Rule이 Hide이고, Tmp에서 처리하지 않을 때 강제로 Hide로 만든다.
+					_isVisible = false;
+					_meshColor2X.a = 0.0f;
+				}
+				
 			}
-			else if (!_isVisibleCalculated && _isVisibleWorkToggle_Hide2Show)
+			else if (!_isVisibleCalculated)
 			{
-				_isVisible = true;//<<강제로 Show로 만든다.
-				_meshColor2X.a = 1.0f;//강제로 Alpha도 1로 만든다.
+				//Show로 강제할지 체크
+				if(_workVisible_Tmp == WORK_VISIBLE_TYPE.ToShow
+					|| (_workVisible_Tmp == WORK_VISIBLE_TYPE.None && _workVisible_Rule == WORK_VISIBLE_TYPE.ToShow))
+				{
+					//Tmp가 Show이거나
+					//Rule이 Show이고, Tmp에서 처리하지 않을 때 강제로 Hide로 만든다.
+					_isVisible = true;//<<강제로 Show로 만든다.
+					_meshColor2X.a = 1.0f;//강제로 Alpha도 1로 만든다.
+				}
 			}
+
+
+
+
 
 			//아직 Parent RenderUnit의 값을 
 			_isVisible_WithoutParent = _isVisible;

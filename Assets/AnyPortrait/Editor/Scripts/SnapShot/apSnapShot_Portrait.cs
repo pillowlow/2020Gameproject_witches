@@ -1,49 +1,48 @@
-﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
-*	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
-*
-*	This file is part of [AnyPortrait].
-*
-*	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
-*
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
-*/
+﻿///*
+//*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
+//*	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
+//*
+//*	This file is part of [AnyPortrait].
+//*
+//*	AnyPortrait can not be copied and/or distributed without
+//*	the express perission of [Seungjik Lee] of [RainyRizzle team].
+//*
+//*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+//*	In that case, the act could be subject to legal sanctions.
+//*/
 
-using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
-using System;
+//using UnityEngine;
+//using System.Collections;
+//using System.Collections.Generic;
+//using System;
 
-using AnyPortrait;
+//using AnyPortrait;
 
-namespace AnyPortrait
-{
-	public class apSnapShot_Portrait : apSnapShotBase
-	{
-		// Members
-		//--------------------------------------------
-
-
-
-		// Init
-		//--------------------------------------------
-		public apSnapShot_Portrait() : base()
-		{
-
-		}
+//namespace AnyPortrait
+//{
+//	public class apSnapShot_Portrait : apSnapShotBase
+//	{
+//		// Members
+//		//--------------------------------------------
 
 
 
-		// Functions
-		//--------------------------------------------
+//		// Init
+//		//--------------------------------------------
+//		public apSnapShot_Portrait() : base()
+//		{
+
+//		}
+
+
+
+//		// Functions
+//		//--------------------------------------------
 
 
 
 
-		// Get / Set
-		//--------------------------------------------
-	}
-}
+//		// Get / Set
+//		//--------------------------------------------
+//	}
+//}

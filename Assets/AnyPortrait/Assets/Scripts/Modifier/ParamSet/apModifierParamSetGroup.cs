@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -103,8 +102,8 @@ namespace AnyPortrait
 			Disabled,
 			/// <summary>Mod 계산이 허용</summary>
 			Enabled,
-			/// <summary>선택된 "다른 Mod"에 속한 "객체"가 "아닌!" 경우에만 계산이 허용</summary>
-			SubExEnabled,
+			///// <summary>선택된 "다른 Mod"에 속한 "객체"가 "아닌!" 경우에만 계산이 허용</summary>
+			//SubExEnabled,//삭제 21.2.15 : 구조상 이게 불가
 		}
 
 		//[NonSerialized]
@@ -308,17 +307,39 @@ namespace AnyPortrait
 			{
 				apModifierParamSet paramSet = _paramSetList[i];
 
+				
+				//int nRemoveModMesh = paramSet._meshData.RemoveAll(delegate (apModifiedMesh a)
 				paramSet._meshData.RemoveAll(delegate (apModifiedMesh a)
 				{
-					if (a._meshGroupOfModifier == null) { return true; }
-					if (a._meshGroupOfTransform == null) { return true; }
-					if (a._transform_Mesh == null && a._transform_MeshGroup == null) { return true; }
+					if (a._meshGroupOfModifier == null)
+					{
+						//Debug.LogError("_meshGroupOfModifier > null");
+						return true;
+					}
+					if (a._meshGroupOfTransform == null)
+					{
+						//Debug.LogError("_meshGroupOfTransform > null");
+						return true;
+					}
+					if (a._transform_Mesh == null && a._transform_MeshGroup == null)
+					{
+						//Debug.LogError("_transform_Mesh + _transform_MeshGroup > null");
+						return true;
+					}
 					return false;
 				});
 
 				//if (nRemoveModMesh > 0)
 				//{
-				//	//Debug.LogError("RemoveInvalidParamSet ModMesh 삭제됨 : " + nRemoveModMesh);
+				//	//테스트
+				//	if (_keyAnimClip != null)
+				//	{
+				//		Debug.LogError("<" + _keyAnimClip._name + "> RemoveInvalidParamSet ModMesh 삭제됨 : " + nRemoveModMesh);
+				//	}
+				//	else
+				//	{
+				//		Debug.LogError("<애니메이션 아님> RemoveInvalidParamSet ModMesh 삭제됨 : " + nRemoveModMesh);
+				//	}
 				//}
 
 				//Debug.LogError("TODO : RemoveInvalidParamSet : 유효하지 않는 Bone을 결정해야한다.");
@@ -335,17 +356,6 @@ namespace AnyPortrait
 			}
 		}
 
-		//public void ClearParamSet()
-		//{
-		//	_paramSetList.Clear();
-		//}
-
-		//public void AddParamSet(apModifierParamSet paramSet)
-		//{
-		//	_paramSetList.Add(paramSet);
-
-		//	RefreshSync();
-		//}
 
 		public void SortParamSet()
 		{
@@ -1013,6 +1023,12 @@ namespace AnyPortrait
 				{
 					return a.IsContains_MeshTransform(_parentModifier._meshGroup, meshTransform, meshTransform._mesh);
 				});
+
+				//if(nRemoved > 0)
+				//{
+				//	//테스트
+				//	Debug.LogError("Mesh Data 삭제");
+				//}
 			}
 
 
@@ -1033,6 +1049,11 @@ namespace AnyPortrait
 				{
 					return a.IsContains_MeshGroupTransform(_parentModifier._meshGroup, meshGroupTransform);
 				});
+
+				//if(nRemoved > 0)
+				//{
+				//	Debug.LogError("테스트 : MeshData 삭제");
+				//}
 			}
 		}
 

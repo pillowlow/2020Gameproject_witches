@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -46,6 +45,9 @@ namespace AnyPortrait
 
 		[SerializeField]
 		private int _nModifiers = 0;
+
+		[NonSerialized]
+		private apOptModifierUnitBase _ca_CurModifier = null;
 
 		// Init
 		//--------------------------------------------
@@ -175,7 +177,7 @@ namespace AnyPortrait
 
 		//Link가 모두 끝난 후 실행시켜준다.
 		//Modifier -> Target Tranform (=RenderUnit)을 CalculatedParam을 이용해 연결해준다.
-		public void LinkModifierStackToRenderUnitCalculateStack(bool isRoot, apOptTransform rootOptTransform, bool isRecursive)
+		public void LinkModifierStackToRenderUnitCalculateStack(bool isRoot, apOptTransform rootOptTransform, bool isRecursive, apAnimPlayMapping animPlayMapping)
 		{
 			//RenderUnit => OptTransform
 			//전체 Modifier중에서 RenderUnit을 포함한 Modifer를 찾는다.
@@ -257,7 +259,8 @@ namespace AnyPortrait
 											modMeshSet._targetTransform,
 											modMeshSet._targetTransform,
 											modMeshSet._targetMesh,
-											null
+											null,
+											animPlayMapping
 											//weightedVertexData//<<사용 안함 19.5.20
 											);
 
@@ -315,7 +318,8 @@ namespace AnyPortrait
 											modMesh._targetTransform,
 											modMesh._targetTransform,
 											modMesh._targetMesh,
-											null
+											null,
+											animPlayMapping
 											//weightedVertexData//<<사용 안함 19.5.20
 											);
 
@@ -384,7 +388,8 @@ namespace AnyPortrait
 									rootOptTransform,//<<변경
 									modBone._meshGroup_Bone,//추가
 									modBone._meshGroup_Bone._childMesh,
-									modBone._bone
+									modBone._bone,
+									animPlayMapping
 									//null//WeightedVertex > 19.5.20 : 삭제
 									);
 
@@ -433,7 +438,7 @@ namespace AnyPortrait
 								{
 									//<<여기서도 같이 수행
 									
-									childTransform._modifierStack.LinkModifierStackToRenderUnitCalculateStack(false, rootOptTransform, true);
+									childTransform._modifierStack.LinkModifierStackToRenderUnitCalculateStack(false, rootOptTransform, true, animPlayMapping);
 								}
 							}
 						}
@@ -462,7 +467,7 @@ namespace AnyPortrait
 			}
 
 
-			parentTransform.CalculatedStack.Sort();
+			parentTransform.CalculatedStack.SortAndMakeMetaData();
 			apOptTransform childTransform = null;
 
 			if (parentTransform._childTransforms != null && parentTransform._childTransforms.Length > 0)
@@ -470,6 +475,8 @@ namespace AnyPortrait
 				for (int i = 0; i < parentTransform._childTransforms.Length; i++)
 				{
 					childTransform = parentTransform._childTransforms[i];
+					
+					childTransform.CalculatedStack.SortAndMakeMetaData();
 
 					if (childTransform._unitType == apOptTransform.UNIT_TYPE.Group && childTransform != parentTransform)
 					{
@@ -486,19 +493,21 @@ namespace AnyPortrait
 			//Debug.Log("Pre >>");
 			for (int i = 0; i < _nModifiers; i++)
 			{
-				if (!_modifiers[i].IsPreUpdate)
+				_ca_CurModifier = _modifiers[i];
+
+				if (!_ca_CurModifier.IsPreUpdate)
 				{
 					//Post-Update라면 패스
 					continue;
 				}
-				if (_modifiers[i]._isActive)
+				if (_ca_CurModifier._isActive)
 				{
 					//Debug.Log("[" + i + "] Pre Update - " + _modifiers[i]._modifierType + " (IsPre:" + _modifiers[i].IsPreUpdate + ")");
-					_modifiers[i].Calculate(tDelta);//<<
+					_ca_CurModifier.Calculate(tDelta);//<<
 				}
 				else
 				{
-					_modifiers[i].InitCalcualte(tDelta);
+					_ca_CurModifier.InitCalcualte(tDelta);
 				}
 			}
 			//Debug.Log(">> Pre");
@@ -510,23 +519,28 @@ namespace AnyPortrait
 			//Debug.Log("Post >>");
 			for (int i = 0; i < _nModifiers; i++)
 			{
-				if (_modifiers[i].IsPreUpdate)
+				_ca_CurModifier = _modifiers[i];
+
+				if (_ca_CurModifier.IsPreUpdate)
 				{
 					//Pre-Update라면 패스
 					continue;
 				}
 
-				if (_modifiers[i]._isActive)
+				if (_ca_CurModifier._isActive)
 				{
-					_modifiers[i].Calculate(tDelta);//<<
+					_ca_CurModifier.Calculate(tDelta);//<<
 				}
 				else
 				{
-					_modifiers[i].InitCalcualte(tDelta);
+					_ca_CurModifier.InitCalcualte(tDelta);
 				}
 			}
 			//Debug.Log(">> Post");
 		}
+
+
+
 
 
 		// Get / Set

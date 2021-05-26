@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -1395,12 +1394,12 @@ namespace AnyPortrait
 							Vector2 start2End_Prev = _calJig_EndPos_Prev - _calJig_Tmp_WorldMatrix.Pos;
 							Vector2 start2End_Expected = endPos_Excepted - _calJig_Tmp_WorldMatrix.Pos;
 							angle_Exp2Prev = (Mathf.Atan2(start2End_Prev.y, start2End_Prev.x) - Mathf.Atan2(start2End_Expected.y, start2End_Expected.x)) * Mathf.Rad2Deg;
-							if(angle_Exp2Prev < -180.0f)
+							if (angle_Exp2Prev < -180.0f)
 							{
 								//Debug.Log("[" + _name + "] 각도 제한 넘어감 : " + angle_Exp2Prev);
 								angle_Exp2Prev += 360.0f;
 							}
-							else if(angle_Exp2Prev > 180.0f)
+							else if (angle_Exp2Prev > 180.0f)
 							{
 								//Debug.Log("[" + _name + "] 각도 제한 넘어감 : " + angle_Exp2Prev);
 								angle_Exp2Prev -= 360.0f;
@@ -1410,8 +1409,29 @@ namespace AnyPortrait
 							//[본 위치 -> 본 Exp 끝점]와 [본 Prev 끝점 -> 본 Exp 끝점]의 각도를 구하고, Abs(Sin) 값으로 Ratio를 계산한다.
 							normalDeltaRatio = Mathf.Abs(Mathf.Sin(Vector2.Angle(start2End_Expected, endPos_Excepted - _calJig_EndPos_Prev) * Mathf.Deg2Rad));
 
-							//Debug.Log("[" + _name + "] Delta Angle : " + angle_Exp2Prev);
+							
 						}
+
+
+						//추가 21.3.9 : 외부 힘의 적용을 받는 지글본
+						if (_parentOptTransform._portrait.IsAnyForceEvent)
+						{
+							//이전 프레임에서의 힘을 이용한다.
+							//끝점(World)에서의 힘을 구하자
+							Vector2 F_extW = _parentOptTransform._portrait.GetForce(_calJig_EndPosW_Prev);
+							float powerSize = F_extW.magnitude;
+							Vector2 Acc_extL = _parentOptTransform._rootUnit._transform.InverseTransformVector(F_extW).normalized;
+							Acc_extL /= _jiggle_Mass;
+
+							Vector2 prevDir = _calJig_EndPos_Prev - _worldMatrix.Pos_IKSpace;
+							//F = ma
+							//a = F/m
+							//V += at
+							float angularAcc = Mathf.Sin((float)Mathf.Atan2(Acc_extL.y, Acc_extL.x) - (float)Math.Atan2(prevDir.y, prevDir.x)) * powerSize;
+							_calJig_Velocity += angularAcc * tDelta;
+							//Debug.Log("Jiggle 본 힘 적용 : " + angularAcc);
+						}
+
 
 						//Drag를 곱하여 계산 + Prev를 더한다.
 						//공기 저항이 클 수록 이전 위치에 있으려고 한다.
@@ -1434,6 +1454,11 @@ namespace AnyPortrait
 
 						//2. dAngle_woJiggle 바탕으로 복원력(-kx)을 계산하고 속력에 더하기 (방향은 > Cur)
 						_calJig_Velocity += (-1.0f * (_jiggle_K / _jiggle_Mass) * dAngle_woJiggle) * tDelta;
+
+
+						//추가 21.3.8 외부 힘
+						
+						
 
 						//3. 속력의 Damping를 더해서 감속하기
 						//이동 각도의 반대 방향으로 계속 가해진다.

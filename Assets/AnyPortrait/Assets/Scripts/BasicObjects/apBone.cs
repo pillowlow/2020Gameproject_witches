@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -356,8 +355,34 @@ namespace AnyPortrait
 		#endregion
 
 
+		//이전
+		//[NonSerialized]
+		//private bool _isBoneGUIVisible = true;//<<화면상에 숨길 수 있다. 어디까지나 임시. 메뉴를 열면 다시 True가 된다.
+
+		//변경 21.1.28 : 본을 보이거나 숨기게 만들때, Rule과 Tmp 두가지로 나눈다. (Tmp가 우선순위 높음)
+		//None 타입이 있다. 둘다 None이면 Show와 같다.
+		public enum GUI_VISIBLE_TYPE { None, Show, Hide }
+		
 		[NonSerialized]
-		private bool _isBoneGUIVisible = true;//<<화면상에 숨길 수 있다. 어디까지나 임시. 메뉴를 열면 다시 True가 된다.
+		private GUI_VISIBLE_TYPE _visibleType_Rule = GUI_VISIBLE_TYPE.None;//<<화면상에 숨길 수 있다. 어디까지나 임시. 메뉴를 열면 다시 True가 된다.
+
+		[NonSerialized]
+		private GUI_VISIBLE_TYPE _visibleType_Tmp = GUI_VISIBLE_TYPE.None;//<<화면상에 숨길 수 있다. 어디까지나 임시. 메뉴를 열면 다시 True가 된다.
+
+		//Hierarchy에 어떤 아이콘으로 보이는지 여부
+		//  (Rule)      :  (Tmp)
+		//- Show/None   >  Show/None	: Current_Visible (Show)
+		//- Show/None   >  Hide			: TmpWork_NonVisible (Hide)
+		//- Hide        >  None         : Rule_NonVisible (Hide)
+		//- Hide        >  Show         : TmpWork_Visible (Show)
+		//- Hide        >  Hide         : Rule_NonVisible (Hide)
+		public enum VISIBLE_COMBINATION_ICON
+		{
+			Visible_Default, Visible_Tmp, NonVisible_Tmp, NonVisible_Rule
+		}
+
+
+
 
 		// 본 옵션
 		/// <summary>
@@ -478,16 +503,28 @@ namespace AnyPortrait
 		//Mod Lock 실행 여부를 저장한다.
 		public enum EX_CALCULATE
 		{
-			/// <summary>기본 상태</summary>
-			Normal,
-			/// <summary>Ex Edit 상태 중 "선택된 Modifier"에 포함된 상태</summary>
-			ExAdded,
-			/// <summary>Ex Edit 상태 중, "선택된 Modifier"에 포함되지 않은 상태</summary>
-			ExNotAdded
+			///// <summary>기본 상태</summary>
+			//Normal,
+			///// <summary>Ex Edit 상태 중 "선택된 Modifier"에 포함된 상태</summary>
+			//ExAdded,
+			///// <summary>Ex Edit 상태 중, "선택된 Modifier"에 포함되지 않은 상태</summary>
+			//ExNotAdded
+
+			//변경 21.2.14
+			/// <summary>활성화되어 있다. (편집 모드 아닐때)</summary>
+			Enabled_Run,
+			/// <summary>편집 모드에서 활성 상태이다.</summary>
+			Enabled_Edit,
+			/// <summary>편집 모드에서 비활성 상태</summary>
+			Disabled_NotEdit,
+			/// <summary>
+			/// 추가된 상태 : 편집 모드에서 선택되지 않았지만, 옵션에 의해 다른 모디파이어가 적용된다.
+			/// </summary>
+			Disabled_ExRun,
 		}
 
 		[NonSerialized]
-		public EX_CALCULATE _exCalculateMode = EX_CALCULATE.Normal;
+		public EX_CALCULATE _exCalculateMode = EX_CALCULATE.Enabled_Run;
 
 
 		//추가 5.8
@@ -2928,12 +2965,79 @@ namespace AnyPortrait
 		}
 
 		//--------------------------------------------------------------------------------------------------
-		public bool IsGUIVisible
+		//public bool IsGUIVisible //이전
+		//변경 21.1.28 : Tmp와 Rule을 별개로 나눈다. + 타입 바꿈
+		public GUI_VISIBLE_TYPE VisibleType_Tmp
 		{
 			get
 			{
-				//return _isBoneGUIVisible && _isBoneGUIVisible_Parent;
-				return _isBoneGUIVisible;
+				//return _isBoneGUIVisible;//이전
+				return _visibleType_Tmp;
+			}
+		}
+
+		public GUI_VISIBLE_TYPE VisibleType_Rule
+		{
+			get { return _visibleType_Rule; }
+		}
+
+		//Hierarchy에 어떤 아이콘으로 보이는지 여부
+		//  (Rule)      :  (Tmp)
+		//- Show/None   >  Show/None	: Current_Visible (Show)
+		//- Show/None   >  Hide			: TmpWork_NonVisible (Hide)
+		//- Hide        >  None         : Rule_NonVisible (Hide)
+		//- Hide        >  Show         : TmpWork_Visible (Show)
+		//- Hide        >  Hide         : Rule_NonVisible (Hide)
+		public VISIBLE_COMBINATION_ICON VisibleIconType
+		{
+			get
+			{
+				if(_visibleType_Rule != GUI_VISIBLE_TYPE.Hide)
+				{
+					if(_visibleType_Tmp != GUI_VISIBLE_TYPE.Hide)
+					{
+						//- Show/None > Show/None : Current_Visible (Show)
+						return VISIBLE_COMBINATION_ICON.Visible_Default;
+					}
+					else
+					{
+						//- Show/None > Hide : TmpWork_NonVisible (Hide)
+						return VISIBLE_COMBINATION_ICON.NonVisible_Tmp;
+					}
+				}
+				else
+				{
+					switch (_visibleType_Tmp)
+					{
+						case GUI_VISIBLE_TYPE.None:
+							//- Hide > None : Rule_NonVisible (Hide)
+							return VISIBLE_COMBINATION_ICON.NonVisible_Rule;
+
+						case GUI_VISIBLE_TYPE.Show:
+							//- Hide > Show : TmpWork_Visible (Show)
+							return VISIBLE_COMBINATION_ICON.Visible_Tmp;
+
+						case GUI_VISIBLE_TYPE.Hide:
+							//- Hide > Hide : Rule_NonVisible (Hide)
+							return VISIBLE_COMBINATION_ICON.NonVisible_Rule;
+
+					}
+				}
+				return VISIBLE_COMBINATION_ICON.Visible_Default;
+			}
+			
+			//Visible_Default, Visible_Tmp, NonVisible_Tmp, NonVisible_Rule
+				
+		}
+
+		//IsGUIVisible에 해당하는 변수. Tmp와 Rule의 조합으로 완성된다.
+		//코드 확인을 위해 이름을 바꾼다.
+		public bool IsVisibleInGUI
+		{
+			get
+			{
+				return _visibleType_Tmp == GUI_VISIBLE_TYPE.Show
+					|| (_visibleType_Tmp == GUI_VISIBLE_TYPE.None && _visibleType_Rule != GUI_VISIBLE_TYPE.Hide);
 			}
 		}
 
@@ -2942,39 +3046,136 @@ namespace AnyPortrait
 		/// <summary>
 		/// Bone의 GUI상의 Visible을 리셋한다. 숨겨진 모든 본을 보이게 한다.
 		/// </summary>
-		public void ResetGUIVisibleRecursive()
+		public void ResetGUIVisibleRecursive(bool isWithRule)
 		{
-			_isBoneGUIVisible = true;
+			//이전
+			//_isBoneGUIVisible = true;
+
+			//변경 21.1.28
+			if(isWithRule)
+			{
+				//Debug.LogError("Bone : ResetGUIVisibleRecursive > Rule");
+				_visibleType_Rule = GUI_VISIBLE_TYPE.None;
+			}
+			_visibleType_Tmp = GUI_VISIBLE_TYPE.None;
 
 			if(_childBones.Count > 0)
 			{
 				for (int i = 0; i < _childBones.Count; i++)
 				{
-					_childBones[i].ResetGUIVisibleRecursive();
+					_childBones[i].ResetGUIVisibleRecursive(isWithRule);
 				}
 			}
 		}
 		
+		/// <summary>Bone의 GUI Visible을 지정한다.</summary>
+		//public void SetGUIVisible(bool isVisible)//이전
+		public void SetGUIVisible_Tmp(GUI_VISIBLE_TYPE visibleType)
+		{
+			//_isBoneGUIVisible = isVisible;
+			_visibleType_Tmp = visibleType;
+		}
+
 		/// <summary>
-		/// Bone의 GUI Visible을 지정한다.
+		/// Rule의 값을 체크하면서 Visible의 타입을 결정한다.
 		/// </summary>
 		/// <param name="isVisible"></param>
-		/// <param name="isRecursive"></param>
-		public void SetGUIVisible(bool isVisible)
+		public void SetGUIVisible_Tmp_ByCheckRule(bool isVisible)
 		{
-			_isBoneGUIVisible = isVisible;
+			//_isBoneGUIVisible = isVisible;
+			if(isVisible)
+			{
+				//Hide > Show 또는 None
+				if(_visibleType_Rule == GUI_VISIBLE_TYPE.Hide)
+				{
+					//Hide > Show로 강제
+					_visibleType_Tmp = GUI_VISIBLE_TYPE.Show;
+				}
+				else
+				{
+					//그 외에는 None으로 리셋
+					_visibleType_Tmp = GUI_VISIBLE_TYPE.None;
+				}
+			}
+			else
+			{
+				//Show > Hide 또는 None
+				if(_visibleType_Rule == GUI_VISIBLE_TYPE.Hide)
+				{
+					//Hide > None
+					_visibleType_Tmp = GUI_VISIBLE_TYPE.None;
+				}
+				else
+				{
+					//그 외에는 Hide로 강제
+					_visibleType_Tmp = GUI_VISIBLE_TYPE.Hide;
+				}
+			}
+		}
+
+		public void SetGUIVisible_Rule(GUI_VISIBLE_TYPE visibleType)
+		{
+			_visibleType_Rule = visibleType;
 		}
 
 		public void SetGUIVisibleWithExceptBone(bool isVisible, bool isRecursive, apBone exceptBone)
 		{
+			bool isRequestVisible = isVisible;//요청값을 일단 그대로 적용
 			if(exceptBone == this)
 			{
-				_isBoneGUIVisible = !isVisible;//<<반대로 적용
+				//반대로 적용
+				//이전
+				//_isBoneGUIVisible = !isVisible;
+
+				//변경 21.1.28 : Tmp를 변경하기 위해 별도의 Request 변수를 만들어서 값 전환
+				isRequestVisible = !isVisible;
+			}
+			//else
+			//{
+			//	_isBoneGUIVisible = isVisible;
+			//}
+
+			//변경 21.1.28 : Tmp를 변경
+			//여기서는 전체 처리라서 유지하는 값도 있어야 한다.
+			if(isRequestVisible)
+			{
+				//> Show
+				if(_visibleType_Rule == GUI_VISIBLE_TYPE.Hide)
+				{
+					//전단계인 Rule이 Hide면 강제로 Show
+					_visibleType_Tmp = GUI_VISIBLE_TYPE.Show;
+				}
+				else
+				{
+					//그 외의 경우는 None (Show인 경우는 유지)
+					if(_visibleType_Tmp != GUI_VISIBLE_TYPE.Show)
+					{
+						_visibleType_Tmp = GUI_VISIBLE_TYPE.None;
+					}
+					
+				}
 			}
 			else
 			{
-				_isBoneGUIVisible = isVisible;
+				//> Hide
+				if(_visibleType_Rule == GUI_VISIBLE_TYPE.Hide)
+				{
+					//전단계인 Rule이 Hide면 강제로 Show/None > None 또는 Hide 유지
+					//Hide면 유지
+					if(_visibleType_Tmp != GUI_VISIBLE_TYPE.Hide)
+					{
+						_visibleType_Tmp = GUI_VISIBLE_TYPE.None;
+					}
+				}
+				else
+				{
+					//그 외의 경우는 Hide
+					_visibleType_Tmp = GUI_VISIBLE_TYPE.Hide;
+				}
 			}
+
+
+
 
 			//if(_parentBone != null)
 			//{

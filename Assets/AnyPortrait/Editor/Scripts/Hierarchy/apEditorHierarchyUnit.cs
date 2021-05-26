@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEditor;
@@ -59,7 +58,9 @@ namespace AnyPortrait
 			ModKey_Visible,
 			ModKey_NonVisible,
 			Default_Visible,
-			Default_NonVisible
+			Default_NonVisible,
+			Rule_Visible,//추가 21.1.27
+			Rule_NonVisible
 
 		}
 		public VISIBLE_TYPE _visibleType_Prefix = VISIBLE_TYPE.None;//Visible 속성이 붙은 경우는 이것도 세팅해야한다.
@@ -173,7 +174,8 @@ namespace AnyPortrait
 			Current,
 			TmpWork,
 			Default,
-			ModKey
+			ModKey,
+			Rule//추가 21.1.27
 		}
 		//이전
 		//private GUIContent _guiContent_NoKey = null;
@@ -187,8 +189,8 @@ namespace AnyPortrait
 
 		//변경 19.11.16
 		private apGUIContentWrapper _guiContent_NoKey = null;
-		private apGUIContentWrapper[] _guiContent_Visible = new apGUIContentWrapper[4];
-		private apGUIContentWrapper[] _guiContent_Nonvisible = new apGUIContentWrapper[4];
+		private apGUIContentWrapper[] _guiContent_Visible = new apGUIContentWrapper[5];
+		private apGUIContentWrapper[] _guiContent_Nonvisible = new apGUIContentWrapper[5];
 
 		private apGUIContentWrapper _guiContent_ModRegisted = new apGUIContentWrapper();
 
@@ -478,28 +480,31 @@ namespace AnyPortrait
 											apGUIContentWrapper guiVisible_TmpWork, apGUIContentWrapper guiNonVisible_TmpWork,
 											apGUIContentWrapper guiVisible_Default, apGUIContentWrapper guiNonVisible_Default,
 											apGUIContentWrapper guiVisible_ModKey, apGUIContentWrapper guiNonVisible_ModKey,
+											apGUIContentWrapper guiVisible_Rule, apGUIContentWrapper guiNonVisible_Rule,
 											apGUIContentWrapper gui_NoKey,
 											FUNC_REFRESH_VISIBLE_PREFIX funcVisiblePrePostFix
 											)
 		{
 			if (_guiContent_Visible == null)
 			{
-				_guiContent_Visible = new apGUIContentWrapper[4];
+				_guiContent_Visible = new apGUIContentWrapper[5];
 			}
 			if (_guiContent_Nonvisible == null)
 			{
-				_guiContent_Nonvisible = new apGUIContentWrapper[4];
+				_guiContent_Nonvisible = new apGUIContentWrapper[5];
 			}
 
 			_guiContent_Visible[(int)VISIBLE_ICON.Current] = guiVisible_Current;
 			_guiContent_Visible[(int)VISIBLE_ICON.TmpWork] = guiVisible_TmpWork;
 			_guiContent_Visible[(int)VISIBLE_ICON.Default] = guiVisible_Default;
 			_guiContent_Visible[(int)VISIBLE_ICON.ModKey] = guiVisible_ModKey;
+			_guiContent_Visible[(int)VISIBLE_ICON.Rule] = guiVisible_Rule;
 
 			_guiContent_Nonvisible[(int)VISIBLE_ICON.Current] = guiNonVisible_Current;
 			_guiContent_Nonvisible[(int)VISIBLE_ICON.TmpWork] = guiNonVisible_TmpWork;
 			_guiContent_Nonvisible[(int)VISIBLE_ICON.Default] = guiNonVisible_Default;
 			_guiContent_Nonvisible[(int)VISIBLE_ICON.ModKey] = guiNonVisible_ModKey;
+			_guiContent_Nonvisible[(int)VISIBLE_ICON.Rule] = guiNonVisible_Rule;
 
 			_guiContent_NoKey = gui_NoKey;
 
@@ -972,7 +977,10 @@ namespace AnyPortrait
 						case VISIBLE_TYPE.Default_NonVisible:	visibleGUIContent = _guiContent_Nonvisible[(int)VISIBLE_ICON.Default]; break;
 						case VISIBLE_TYPE.ModKey_Visible:		visibleGUIContent = _guiContent_Visible[(int)VISIBLE_ICON.ModKey]; break;
 						case VISIBLE_TYPE.ModKey_NonVisible:	visibleGUIContent = _guiContent_Nonvisible[(int)VISIBLE_ICON.ModKey]; break;
+						case VISIBLE_TYPE.Rule_Visible:			visibleGUIContent = _guiContent_Visible[(int)VISIBLE_ICON.Rule]; break;
+						case VISIBLE_TYPE.Rule_NonVisible:		visibleGUIContent = _guiContent_Nonvisible[(int)VISIBLE_ICON.Rule]; break;
 						case VISIBLE_TYPE.NoKey:				visibleGUIContent = _guiContent_NoKey; break;
+						
 
 					}
 				}
@@ -1295,6 +1303,8 @@ namespace AnyPortrait
 								case VISIBLE_TYPE.Default_NonVisible:	visibleGUIContent = _guiContent_Nonvisible[(int)VISIBLE_ICON.Default]; break;
 								case VISIBLE_TYPE.ModKey_Visible:		visibleGUIContent = _guiContent_Visible[(int)VISIBLE_ICON.ModKey]; break;
 								case VISIBLE_TYPE.ModKey_NonVisible:	visibleGUIContent = _guiContent_Nonvisible[(int)VISIBLE_ICON.ModKey]; break;
+								case VISIBLE_TYPE.Rule_Visible:			visibleGUIContent = _guiContent_Visible[(int)VISIBLE_ICON.Rule]; break;
+								case VISIBLE_TYPE.Rule_NonVisible:		visibleGUIContent = _guiContent_Nonvisible[(int)VISIBLE_ICON.Rule]; break;
 								case VISIBLE_TYPE.NoKey:				visibleGUIContent = _guiContent_NoKey; break;
 
 							}

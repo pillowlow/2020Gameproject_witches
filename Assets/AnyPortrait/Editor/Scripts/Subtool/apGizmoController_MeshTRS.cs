@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -126,7 +125,7 @@ namespace AnyPortrait
 			{
 				return null;
 			}
-			if(Editor._meshEditeMode_MakeMesh != apEditor.MESH_EDIT_MODE_MAKEMESH.TRS)
+			if(Editor._meshEditeMode_MakeMesh_Tab != apEditor.MESH_EDIT_MODE_MAKEMESH_TAB.TRS)
 			{
 				return null;
 			}
@@ -143,7 +142,7 @@ namespace AnyPortrait
 				|| Editor.Select.Mesh.LinkedTextureData == null
 				|| Editor.Select.Mesh.LinkedTextureData._image == null
 				|| Editor._meshEditMode != apEditor.MESH_EDIT_MODE.MakeMesh
-				|| Editor._meshEditeMode_MakeMesh != apEditor.MESH_EDIT_MODE_MAKEMESH.TRS)
+				|| Editor._meshEditeMode_MakeMesh_Tab != apEditor.MESH_EDIT_MODE_MAKEMESH_TAB.TRS)
 			{
 				Debug.LogWarning("Select Failed");
 				return null;
@@ -207,7 +206,7 @@ namespace AnyPortrait
 				|| Editor.Select.Mesh.LinkedTextureData == null
 				|| Editor.Select.Mesh.LinkedTextureData._image == null
 				|| Editor._meshEditMode != apEditor.MESH_EDIT_MODE.MakeMesh
-				|| Editor._meshEditeMode_MakeMesh != apEditor.MESH_EDIT_MODE_MAKEMESH.TRS)
+				|| Editor._meshEditeMode_MakeMesh_Tab != apEditor.MESH_EDIT_MODE_MAKEMESH_TAB.TRS)
 			{
 				return;
 			}
@@ -226,20 +225,21 @@ namespace AnyPortrait
 		//---------------------------------------------------------------------------------------------
 		public void AddHotKeys__MeshTRS(bool isGizmoRenderable, apGizmos.CONTROL_TYPE controlType, bool isFFDMode)
 		{
-			Editor.AddHotKeyEvent(OnHotKeyEvent__MeshTRS__Ctrl_A, apHotKey.LabelText.SelectAllVertices, KeyCode.A, false, false, true, null);
+			//Editor.AddHotKeyEvent(OnHotKeyEvent__MeshTRS__Ctrl_A, apHotKey.LabelText.SelectAllVertices, KeyCode.A, false, false, true, null);
+			Editor.AddHotKeyEvent(OnHotKeyEvent__MeshTRS__Ctrl_A, apHotKeyMapping.KEY_TYPE.MakeMesh_SelectAllVertices, null);//변경 20.12.3
 		}
 
 		// 단축키 : 버텍스 전체 선택
-		private void OnHotKeyEvent__MeshTRS__Ctrl_A(object paramObject)
+		private apHotKey.HotKeyResult OnHotKeyEvent__MeshTRS__Ctrl_A(object paramObject)
 		{
 			if(Editor.Select.SelectionType != apSelection.SELECTION_TYPE.Mesh
 				|| Editor.Select.Mesh == null
 				|| Editor.Select.Mesh.LinkedTextureData == null
 				|| Editor.Select.Mesh.LinkedTextureData._image == null
 				|| Editor._meshEditMode != apEditor.MESH_EDIT_MODE.MakeMesh
-				|| Editor._meshEditeMode_MakeMesh != apEditor.MESH_EDIT_MODE_MAKEMESH.TRS)
+				|| Editor._meshEditeMode_MakeMesh_Tab != apEditor.MESH_EDIT_MODE_MAKEMESH_TAB.TRS)
 			{
-				return;
+				return null;
 			}
 
 			apMesh mesh = Editor.Select.Mesh;
@@ -247,13 +247,15 @@ namespace AnyPortrait
 			List<apVertex> vertices = mesh._vertexData;
 			if(vertices.Count == 0)
 			{
-				return;
+				return null;
 			}
 			//전체 선택
 			Editor.VertController.SelectVertices(vertices, apGizmos.SELECT_TYPE.Add);
 			Editor.SetRepaint();
 
 			Editor.Gizmos.SetSelectResultForce_Multiple<apVertex>(Editor.VertController.Vertices);
+
+			return apHotKey.HotKeyResult.MakeResult();
 		}
 
 
@@ -267,7 +269,7 @@ namespace AnyPortrait
 				|| Editor.Select.Mesh.LinkedTextureData == null
 				|| Editor.Select.Mesh.LinkedTextureData._image == null
 				|| Editor._meshEditMode != apEditor.MESH_EDIT_MODE.MakeMesh
-				|| Editor._meshEditeMode_MakeMesh != apEditor.MESH_EDIT_MODE_MAKEMESH.TRS)
+				|| Editor._meshEditeMode_MakeMesh_Tab != apEditor.MESH_EDIT_MODE_MAKEMESH_TAB.TRS)
 			{
 				return false;
 			}
@@ -314,7 +316,7 @@ namespace AnyPortrait
 				|| Editor.Select.Mesh.LinkedTextureData == null
 				|| Editor.Select.Mesh.LinkedTextureData._image == null
 				|| Editor._meshEditMode != apEditor.MESH_EDIT_MODE.MakeMesh
-				|| Editor._meshEditeMode_MakeMesh != apEditor.MESH_EDIT_MODE_MAKEMESH.TRS)
+				|| Editor._meshEditeMode_MakeMesh_Tab != apEditor.MESH_EDIT_MODE_MAKEMESH_TAB.TRS)
 			{
 				return false;
 			}
@@ -378,7 +380,7 @@ namespace AnyPortrait
 				|| Editor.Select.Mesh.LinkedTextureData == null
 				|| Editor.Select.Mesh.LinkedTextureData._image == null
 				|| Editor._meshEditMode != apEditor.MESH_EDIT_MODE.MakeMesh
-				|| Editor._meshEditeMode_MakeMesh != apEditor.MESH_EDIT_MODE_MAKEMESH.TRS)
+				|| Editor._meshEditeMode_MakeMesh_Tab != apEditor.MESH_EDIT_MODE_MAKEMESH_TAB.TRS)
 			{
 				return false;
 			}
@@ -440,7 +442,7 @@ namespace AnyPortrait
 				|| Editor.Select.Mesh.LinkedTextureData == null
 				|| Editor.Select.Mesh.LinkedTextureData._image == null
 				|| Editor._meshEditMode != apEditor.MESH_EDIT_MODE.MakeMesh
-				|| Editor._meshEditeMode_MakeMesh != apEditor.MESH_EDIT_MODE_MAKEMESH.TRS)
+				|| Editor._meshEditeMode_MakeMesh_Tab != apEditor.MESH_EDIT_MODE_MAKEMESH_TAB.TRS)
 			{
 				return null;
 			}
@@ -502,7 +504,7 @@ namespace AnyPortrait
 				|| Editor.Select.Mesh.LinkedTextureData == null
 				|| Editor.Select.Mesh.LinkedTextureData._image == null
 				|| Editor._meshEditMode != apEditor.MESH_EDIT_MODE.MakeMesh
-				|| Editor._meshEditeMode_MakeMesh != apEditor.MESH_EDIT_MODE_MAKEMESH.TRS)
+				|| Editor._meshEditeMode_MakeMesh_Tab != apEditor.MESH_EDIT_MODE_MAKEMESH_TAB.TRS)
 			{
 				return;
 			}
@@ -565,7 +567,7 @@ namespace AnyPortrait
 				|| Editor.Select.Mesh.LinkedTextureData == null
 				|| Editor.Select.Mesh.LinkedTextureData._image == null
 				|| Editor._meshEditMode != apEditor.MESH_EDIT_MODE.MakeMesh
-				|| Editor._meshEditeMode_MakeMesh != apEditor.MESH_EDIT_MODE_MAKEMESH.TRS)
+				|| Editor._meshEditeMode_MakeMesh_Tab != apEditor.MESH_EDIT_MODE_MAKEMESH_TAB.TRS)
 			{
 				return;
 			}
@@ -632,7 +634,7 @@ namespace AnyPortrait
 				|| Editor.Select.Mesh.LinkedTextureData == null
 				|| Editor.Select.Mesh.LinkedTextureData._image == null
 				|| Editor._meshEditMode != apEditor.MESH_EDIT_MODE.MakeMesh
-				|| Editor._meshEditeMode_MakeMesh != apEditor.MESH_EDIT_MODE_MAKEMESH.TRS)
+				|| Editor._meshEditeMode_MakeMesh_Tab != apEditor.MESH_EDIT_MODE_MAKEMESH_TAB.TRS)
 			{
 				return;
 			}
@@ -694,7 +696,7 @@ namespace AnyPortrait
 				|| Editor.Select.Mesh.LinkedTextureData == null
 				|| Editor.Select.Mesh.LinkedTextureData._image == null
 				|| Editor._meshEditMode != apEditor.MESH_EDIT_MODE.MakeMesh
-				|| Editor._meshEditeMode_MakeMesh != apEditor.MESH_EDIT_MODE_MAKEMESH.TRS)
+				|| Editor._meshEditeMode_MakeMesh_Tab != apEditor.MESH_EDIT_MODE_MAKEMESH_TAB.TRS)
 			{
 				return;
 			}
@@ -753,7 +755,7 @@ namespace AnyPortrait
 				|| Editor.Select.Mesh.LinkedTextureData == null
 				|| Editor.Select.Mesh.LinkedTextureData._image == null
 				|| Editor._meshEditMode != apEditor.MESH_EDIT_MODE.MakeMesh
-				|| Editor._meshEditeMode_MakeMesh != apEditor.MESH_EDIT_MODE_MAKEMESH.TRS)
+				|| Editor._meshEditeMode_MakeMesh_Tab != apEditor.MESH_EDIT_MODE_MAKEMESH_TAB.TRS)
 			{
 				return null;
 			}
@@ -811,7 +813,7 @@ namespace AnyPortrait
 				|| Editor.Select.Mesh.LinkedTextureData == null
 				|| Editor.Select.Mesh.LinkedTextureData._image == null
 				|| Editor._meshEditMode != apEditor.MESH_EDIT_MODE.MakeMesh
-				|| Editor._meshEditeMode_MakeMesh != apEditor.MESH_EDIT_MODE_MAKEMESH.TRS)
+				|| Editor._meshEditeMode_MakeMesh_Tab != apEditor.MESH_EDIT_MODE_MAKEMESH_TAB.TRS)
 			{
 				return false;
 			}
@@ -852,7 +854,7 @@ namespace AnyPortrait
 				|| Editor.Select.Mesh.LinkedTextureData == null
 				|| Editor.Select.Mesh.LinkedTextureData._image == null
 				|| Editor._meshEditMode != apEditor.MESH_EDIT_MODE.MakeMesh
-				|| Editor._meshEditeMode_MakeMesh != apEditor.MESH_EDIT_MODE_MAKEMESH.TRS)
+				|| Editor._meshEditeMode_MakeMesh_Tab != apEditor.MESH_EDIT_MODE_MAKEMESH_TAB.TRS)
 				{
 					return false;
 				}

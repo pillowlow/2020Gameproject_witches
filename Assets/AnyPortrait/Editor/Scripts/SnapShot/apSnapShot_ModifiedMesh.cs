@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -78,6 +77,21 @@ namespace AnyPortrait
 				_weightCutout_AnimPrev = srcValue._weightCutout_AnimPrev;
 				_weightCutout_AnimNext = srcValue._weightCutout_AnimNext;
 			}
+
+			public ExtraDummyValue(ExtraDummyValue srcValue)
+			{
+				_isDepthChanged = srcValue._isDepthChanged;
+				_deltaDepth = srcValue._deltaDepth;
+
+				_isTextureChanged = srcValue._isTextureChanged;
+				_linkedTextureData = srcValue._linkedTextureData;
+
+				_textureDataID = srcValue._textureDataID;
+
+				_weightCutout = srcValue._weightCutout;
+				_weightCutout_AnimPrev = srcValue._weightCutout_AnimPrev;
+				_weightCutout_AnimNext = srcValue._weightCutout_AnimNext;
+			}
 		}
 
 		private bool _isExtraValueEnabled = false;
@@ -94,6 +108,33 @@ namespace AnyPortrait
 
 		// Functions
 		//--------------------------------------------
+		public override void Clear()
+		{
+			base.Clear();
+
+			_key_MeshGroupOfMod = null;
+			_key_MeshGroupOfTransform = null;
+			_key_MeshTransform = null;
+			_key_MeshGroupTransform = null;
+			_key_RenderUnit = null;
+			if(_vertices == null)
+			{
+				_vertices = new List<VertData>();
+			}
+			_vertices.Clear();
+
+			if (_transformMatrix == null)
+			{
+				_transformMatrix = new apMatrix();
+			}
+			_transformMatrix.SetIdentity();
+			_meshColor = new Color(0.5f, 0.5f, 0.5f, 1.0f);
+			_isVisible = true;
+
+			_isExtraValueEnabled = false;
+			_extraValue = null;
+		}
+
 		public override bool IsKeySyncable(object target)
 		{
 			//return base.IsKeySyncable(target);
@@ -140,6 +181,81 @@ namespace AnyPortrait
 
 			return true;
 		}
+
+
+		//추가 21.3.19 : Morph에서는 메시만 맞으면 된다.
+		public override bool IsKeySyncable_MorphMod(object target)
+		{
+			if (!(target is apModifiedMesh))
+			{
+				return false;
+			}
+
+			apModifiedMesh targetModMesh = target as apModifiedMesh;
+			if (targetModMesh == null)
+			{
+				return false;
+			}
+
+			//Key들이 모두 같아야 한다. > 메시만 맞으면 된다.
+			//단, 메시가 있어야 한다.
+			//메시 그룹 타입이면 그냥 복사 가능
+			if(_key_MeshTransform != null && targetModMesh._transform_Mesh != null)
+			{
+				//메시인 경우, apMesh가 같아야 한다.
+				if(_key_MeshTransform._mesh != null
+					&& targetModMesh._transform_Mesh._mesh != null
+					&& _key_MeshTransform._mesh == targetModMesh._transform_Mesh._mesh)
+				{
+					return true;
+				}
+			}
+			else if(_key_MeshGroupTransform != null && targetModMesh._transform_MeshGroup != null)
+			{
+				//둘다 MeshGroupTF라면 복사 가능
+				return true;
+			}
+
+			//그 외에는 복사 불가
+			return false;
+		}
+
+
+		//추가 21.3.19 : TF에서는 그냥 메시 타입이면 아무렇게나 복사할 수 있다. 조건이 많이 완화됨
+		public override bool IsKeySyncable_TFMod(object target)
+		{
+			//return base.IsKeySyncable(target);
+			if (!(target is apModifiedMesh))
+			{
+				return false;
+			}
+
+			apModifiedMesh targetModMesh = target as apModifiedMesh;
+			if (targetModMesh == null)
+			{
+				return false;
+			}
+
+			//키, 타겟 둘다 MeshTF / MeshGroupTF 중 하나라도 있으면 된다.
+			if(
+				(_key_MeshTransform != null || _key_MeshGroupTransform != null)
+				&& (targetModMesh._transform_Mesh != null || targetModMesh._transform_MeshGroup != null)
+				)
+			{
+				return true;
+			}
+
+			//그 외에는 안됨
+			return false;
+		}
+
+
+
+
+
+
+
+
 
 		public override bool Save(object target, string strParam)
 		{
@@ -294,6 +410,129 @@ namespace AnyPortrait
 			return true;
 		}
 
+
+
+
+		//다중 모드 메시 복사-붙여넣기용
+		//-------------------------------------------------------
+		/// <summary>
+		/// 여러개의 스냅샷을 누적하기 전에 이 함수를 호출하자
+		/// </summary>
+		public void ReadyToAddMultipleSnapShots(bool isReadyToSum)
+		{
+			if(_vertices == null)
+			{
+				_vertices = new List<VertData>();
+				_vertices.Clear();
+			}
+
+			if(_transformMatrix == null)
+			{
+				_transformMatrix = new apMatrix();
+			}
+			if(isReadyToSum)
+			{
+				//Sum 방식이라면 > Scale을 곱할 것이므로 Vector2.One이어야 한다.
+				_transformMatrix.SetIdentity();
+			}
+			else
+			{
+				//Average 방식이라면 > 모두 더해서 나눌 것이므로 Vector2.Zero여야 한다.
+				_transformMatrix.SetZero();//누적시켜야 하므로 Zero
+			}
+			
+			_isVisible = false;
+
+			_meshColor = new Color(0.0f, 0.0f, 0.0f, 0.0f);
+
+			_isExtraValueEnabled = false;
+			_extraValue = null;
+		}
+
+		/// <summary>
+		/// 다른 SnapShot의 데이터를 누적시키자 (다중 복붙용)
+		/// </summary>
+		/// <param name="target"></param>
+		/// <param name="strParam"></param>
+		/// <returns></returns>
+		public void AddSnapShot(apSnapShot_ModifiedMesh otherSnapShot, float weight, bool isSumMethod)
+		{	
+			if(otherSnapShot == null)
+			{
+				return;
+			}
+			if(_vertices == null)
+			{
+				_vertices = new List<VertData>();
+				_vertices.Clear();
+			}
+			
+			//1. 버텍스 데이터
+			int nVert = otherSnapShot._vertices != null ? otherSnapShot._vertices.Count : 0;
+
+			if(nVert > 0)
+			{
+				//누적이기 때문에 순서가 맞지 않을 수도 있다.
+				VertData srcVert = null;
+				VertData dstVert = null;
+				for (int i = 0; i < nVert; i++)
+				{
+					srcVert = otherSnapShot._vertices[i];
+					//dst는 찾아야 한다. 없으면 만듬
+					dstVert = _vertices.Find(delegate(VertData a)
+					{
+						return a._key_Vert == srcVert._key_Vert;
+					});
+					if(dstVert == null)
+					{
+						//없으면 추가
+						dstVert = new VertData(srcVert._key_Vert, Vector2.zero);
+						_vertices.Add(dstVert);
+					}
+
+					//값을 누적시키자
+					dstVert._deltaPos += srcVert._deltaPos * weight;
+
+				}
+			}
+
+			//2. 기본 TF 정보들
+			if(otherSnapShot._transformMatrix != null)
+			{
+				_transformMatrix._pos += otherSnapShot._transformMatrix._pos * weight;
+				_transformMatrix._angleDeg += otherSnapShot._transformMatrix._angleDeg * weight;
+				if(isSumMethod)
+				{
+					//Sum 방식이면 : 1 > 모두 곱하기 (가중치 없음)
+					_transformMatrix._scale.x *= otherSnapShot._transformMatrix._scale.x;
+					_transformMatrix._scale.y *= otherSnapShot._transformMatrix._scale.y;
+				}
+				else
+				{
+					//Average 방식이면 : 0 > 가중치 더하기
+					_transformMatrix._scale += otherSnapShot._transformMatrix._scale * weight;
+				}
+				
+			}
+			
+			_meshColor += otherSnapShot._meshColor * weight;
+			//하나만 Visible이면 그냥 Visible인 걸로?
+			if(otherSnapShot._isVisible)
+			{
+				_isVisible = true;
+			}
+			
+			//Extravalue는 마지막 값으로 갱신한다.
+			_isExtraValueEnabled = false;
+			_extraValue = null;
+
+			//추가 3.29 : ExtraValue도 복사
+			if(otherSnapShot._isExtraValueEnabled)
+			{
+				_isExtraValueEnabled = true;
+				_extraValue = new ExtraDummyValue(otherSnapShot._extraValue);
+			}
+		}
 
 
 		// Get / Set

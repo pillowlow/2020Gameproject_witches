@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -73,7 +72,8 @@ namespace AnyPortrait
 									Shader shader_Alpha2White,
 									Shader shader_BoneV2,
 									Shader shader_TextureVColorMul,
-									Shader shader_RigCircleV2)
+									Shader shader_RigCircleV2,
+									Shader shader_Gray_Normal, Shader shader_Gray_Clipped)
 		{
 			_matBatch.SetShader(	shader_Color, 
 									shader_Texture_Normal_Set, 
@@ -86,7 +86,8 @@ namespace AnyPortrait
 									shader_Alpha2White,
 									shader_BoneV2, null,
 									shader_TextureVColorMul,
-									shader_RigCircleV2, null);
+									shader_RigCircleV2, null,
+									shader_Gray_Normal, shader_Gray_Clipped);
 
 			if(_textStyle == null)
 			{

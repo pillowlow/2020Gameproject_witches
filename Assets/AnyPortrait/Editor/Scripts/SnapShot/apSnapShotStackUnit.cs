@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -26,64 +25,126 @@ namespace AnyPortrait
 	{
 		// Members
 		//-------------------------------------------
-		public string _unitName = "";
-		public bool _isCurrentSnapShot = false;
-
+		private apStringWrapper _str_Name = null;
+		
 		public apSnapShotBase _snapShot = null;
+		public bool _isDataSaved = false;
 
+		public string Name
+		{
+			get
+			{
+				return _str_Name.ToString();
+			}
+		}
 
 		// Init
 		//-------------------------------------------
-		public apSnapShotStackUnit(string unitName)
+		public apSnapShotStackUnit()
 		{
-			_unitName = unitName;
-			_isCurrentSnapShot = false;
+			_str_Name = new apStringWrapper(128);
+			_str_Name.Clear();
+			_isDataSaved = false;
+			_snapShot = null;
 		}
 
+		public void Clear()
+		{
+			if(_snapShot != null)
+			{
+				_snapShot.Clear();
+			}
+			_isDataSaved = false;
+			_str_Name.Clear();
+		}
 
+		public void SetName(string unitName)
+		{
+			_str_Name.SetText(unitName);
+		}
+
+		
 
 		// Set Snapshot
 		//---------------------------------------------------------------------------
-		public bool SetSnapShot_Mesh(apMesh mesh, string strParam)
-		{
-			_snapShot = new apSnapShot_Mesh();
-			return _snapShot.Save(mesh, strParam);
-		}
+		//삭제 21.3.19 : 안쓰는 복붙 함수들과 클래스는 삭제
+		//public bool SetSnapShot_Mesh(apMesh mesh, string strParam)
+		//{
+		//	_snapShot = new apSnapShot_Mesh();
+		//	return _snapShot.Save(mesh, strParam);
+		//}
 
-		public bool SetSnapShot_MeshGroup(apMeshGroup meshGroup, string strParam)
-		{
-			_snapShot = new apSnapShot_MeshGroup();
-			return _snapShot.Save(meshGroup, strParam);
-		}
+		//public bool SetSnapShot_MeshGroup(apMeshGroup meshGroup, string strParam)
+		//{
+		//	_snapShot = new apSnapShot_MeshGroup();
+		//	return _snapShot.Save(meshGroup, strParam);
+		//}
 
-		public bool SetSnapShot_Portrait(apPortrait portrait, string strParam)
-		{
-			_snapShot = new apSnapShot_Portrait();
-			return _snapShot.Save(portrait, strParam);
-		}
+		//public bool SetSnapShot_Portrait(apPortrait portrait, string strParam)
+		//{
+		//	_snapShot = new apSnapShot_Portrait();
+		//	return _snapShot.Save(portrait, strParam);
+		//}
 
 		public bool SetSnapShot_ModMesh(apModifiedMesh modMesh, string strParam)
 		{
-			_snapShot = new apSnapShot_ModifiedMesh();
-			return _snapShot.Save(modMesh, strParam);
+			//변경 21.3.19 : 매번 생성하는 코드에서 Clear로 재활용
+			if(_snapShot == null)
+			{
+				_snapShot = new apSnapShot_ModifiedMesh();
+			}
+			else
+			{
+				_snapShot.Clear();
+			}
+			
+			_isDataSaved = _snapShot.Save(modMesh, strParam);
+			return _isDataSaved;
 		}
 
 		public bool SetSnapShot_Keyframe(apAnimKeyframe keyframe, string strParam)
 		{
-			_snapShot = new apSnapShot_Keyframe();
-			return _snapShot.Save(keyframe, strParam);
+			if(_snapShot == null)
+			{
+				_snapShot = new apSnapShot_Keyframe();
+			}
+			else
+			{
+				_snapShot.Clear();
+			}
+			
+			_isDataSaved = _snapShot.Save(keyframe, strParam);
+			return _isDataSaved;
 		}
 
 		public bool SetSnapShot_VertRig(apModifiedVertexRig vertRig, string strParam)
 		{
-			_snapShot = new apSnapShot_VertRig();
-			return _snapShot.Save(vertRig, strParam);
+			if(_snapShot == null)
+			{
+				_snapShot = new apSnapShot_VertRig();
+			}
+			else
+			{
+				_snapShot.Clear();
+			}
+			
+			_isDataSaved = _snapShot.Save(vertRig, strParam);
+			return _isDataSaved;
 		}
 
 		public bool SetSnapShot_ModBone(apModifiedBone modBone, string strParam)
 		{
-			_snapShot = new apSnapShot_ModifiedBone();
-			return _snapShot.Save(modBone, strParam);
+			if(_snapShot == null)
+			{
+				_snapShot = new apSnapShot_ModifiedBone();
+			}
+			else
+			{
+				_snapShot.Clear();
+			}
+			
+			_isDataSaved = _snapShot.Save(modBone, strParam);
+			return _isDataSaved;
 		}
 
 		// Functions
@@ -95,24 +156,44 @@ namespace AnyPortrait
 		/// <returns></returns>
 		public bool IsKeySyncable(object target)
 		{
-			if (_snapShot != null)
+			if (_snapShot == null || !_isDataSaved)
 			{
-				return _snapShot.IsKeySyncable(target);
+				return false;
 			}
-			return false;
-		}
-		public bool Load(object targetObj)
-		{
-			if (_snapShot != null)
-			{
-				return _snapShot.Load(targetObj);
-			}
-			return false;
+
+			return _snapShot.IsKeySyncable(target);
 		}
 
-		public void Unload()
+		public bool IsKeySyncable_MorphMod(object target)
 		{
-			_isCurrentSnapShot = false;
+			if (_snapShot == null || !_isDataSaved)
+			{
+				return false;
+			}
+
+			return _snapShot.IsKeySyncable_MorphMod(target);
+		}
+
+		public bool IsKeySyncable_TFMod(object target)
+		{
+			if (_snapShot == null || !_isDataSaved)
+			{
+				return false;
+			}
+
+			return _snapShot.IsKeySyncable_TFMod(target);
+		}
+
+
+
+
+		public bool Load(object targetObj)
+		{
+			if(_snapShot == null || !_isDataSaved)
+			{
+				return false;
+			}
+			return _snapShot.Load(targetObj);
 		}
 
 

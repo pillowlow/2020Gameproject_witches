@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -121,355 +120,363 @@ namespace AnyPortrait
 		//------------------------------------------------------------------------
 		void OnGUI()
 		{
-			int width = (int)position.width;
-			int height = (int)position.height;
-			if (_editor == null || _funcResult == null || _targetModMesh == null)
+			try
 			{
-				CloseDialog();
-				return;
-			}
-
-			Texture2D iconImageCategory = _editor.ImageSet.Get(apImageSet.PRESET.Hierarchy_FoldDown);
-
-			int height_List = height - 480;
-			Color prevColor = GUI.backgroundColor;
-			GUI.backgroundColor = new Color(0.9f, 0.9f, 0.9f);
-			GUI.Box(new Rect(0, 156, width, height_List), "");
-			GUI.backgroundColor = prevColor;
-
-			EditorGUILayout.BeginVertical();
-
-			EditorGUILayout.LabelField(_editor.GetText(TEXT.DLG_SelectedPhysicsSetting));//"Selected Physics Setting"
-			
-			//현재 선택한 Physics Param을 등록하는 UI
-
-			GUIStyle boxGUIStyle = new GUIStyle(GUI.skin.box);
-			boxGUIStyle.alignment = TextAnchor.MiddleCenter;
-			boxGUIStyle.normal.textColor = apEditorUtil.BoxTextColor;
-
-			GUILayout.Box(_targetModMesh._renderUnit.Name, boxGUIStyle, GUILayout.Width(width - 8), GUILayout.Height(20));
-
-			GUILayout.Space(5);
-			int width_Left = 90;
-			int width_Right = width - 110;
-
-			//Icon 이미지		|	이름	Icon 타입
-			//					|	(저장)
-			EditorGUILayout.BeginHorizontal(GUILayout.Width(width), GUILayout.Height(70));
-			GUILayout.Space(5);
-			EditorGUILayout.BeginVertical(GUILayout.Width(width_Left), GUILayout.Height(70));
-			//Icon을 출력하자
-			Texture2D addParamIcon = _editor.ImageSet.Get(apEditorUtil.GetPhysicsPresetIconType(_addParamIcon));
-			GUILayout.Box(addParamIcon, boxGUIStyle, GUILayout.Width(65), GUILayout.Height(65));
-			EditorGUILayout.EndVertical();
-
-			EditorGUILayout.BeginVertical(GUILayout.Width(width_Right), GUILayout.Height(70));
-			//이름, Icon 및 등록 버튼
-
-			EditorGUILayout.BeginHorizontal(GUILayout.Width(width_Right));
-			EditorGUILayout.LabelField(_editor.GetText(TEXT.DLG_Name), GUILayout.Width(80));//"Name"
-			_strAddParamName = EditorGUILayout.TextField(_strAddParamName, GUILayout.Width(width_Right - 88));
-			EditorGUILayout.EndHorizontal();
-
-			EditorGUILayout.BeginHorizontal(GUILayout.Width(width_Right));
-			EditorGUILayout.LabelField(_editor.GetText(TEXT.DLG_Icon), GUILayout.Width(80));//"Icon"
-			_addParamIcon = (apPhysicsPresetUnit.ICON)EditorGUILayout.EnumPopup(_addParamIcon, GUILayout.Width(width_Right - 88));
-			EditorGUILayout.EndHorizontal();
-			GUILayout.Space(5);
-			EditorGUILayout.BeginHorizontal(GUILayout.Width(width_Right));
-			if (GUILayout.Button(_editor.GetText(TEXT.DLG_RegistToPreset), GUILayout.Width(150)))//"Regist To Preset"
-			{
-				//TODO
-				if (_targetModMesh.PhysicParam != null)
+				int width = (int)position.width;
+				int height = (int)position.height;
+				if (_editor == null || _funcResult == null || _targetModMesh == null)
 				{
-					//bool result = EditorUtility.DisplayDialog("Regist to Preset", "Regist Preset [" + _strAddParamName + "] ?", "Regist", "Cancel");
-					bool result = EditorUtility.DisplayDialog(_editor.GetText(TEXT.PhysicPreset_Regist_Title),
-																_editor.GetTextFormat(TEXT.PhysicPreset_Regist_Body, _strAddParamName),
-																_editor.GetText(TEXT.PhysicPreset_Regist_Okay),
-																_editor.GetText(TEXT.Cancel));
-
-					if (result)
-					{
-						_editor.PhysicsPreset.AddNewPreset(_targetModMesh.PhysicParam, _strAddParamName, _addParamIcon);
-					}
+					CloseDialog();
+					return;
 				}
-			}
-			EditorGUILayout.EndHorizontal();
 
-			EditorGUILayout.EndVertical();
+				Texture2D iconImageCategory = _editor.ImageSet.Get(apImageSet.PRESET.Hierarchy_FoldDown);
 
-			EditorGUILayout.EndHorizontal();
+				int height_List = height - 480;
+				Color prevColor = GUI.backgroundColor;
+				GUI.backgroundColor = new Color(0.9f, 0.9f, 0.9f);
+				GUI.Box(new Rect(0, 156, width, height_List), "");
+				GUI.backgroundColor = prevColor;
 
-			GUILayout.Space(5);
-			apEditorUtil.GUI_DelimeterBoxH(width);
-			GUILayout.Space(5);
+				EditorGUILayout.BeginVertical();
 
+				EditorGUILayout.LabelField(_editor.GetText(TEXT.DLG_SelectedPhysicsSetting));//"Selected Physics Setting"
 
-			GUIStyle guiStyle = new GUIStyle(GUIStyle.none);
-			guiStyle.normal.textColor = GUI.skin.label.normal.textColor;
-			guiStyle.alignment = TextAnchor.MiddleLeft;
+				//현재 선택한 Physics Param을 등록하는 UI
 
-			GUIStyle guiStyle_NotSelectable = new GUIStyle(GUIStyle.none);
-			guiStyle_NotSelectable.normal.textColor = Color.red;
-			guiStyle_NotSelectable.alignment = TextAnchor.MiddleLeft;
+				GUIStyle boxGUIStyle = new GUIStyle(GUI.skin.box);
+				boxGUIStyle.alignment = TextAnchor.MiddleCenter;
+				boxGUIStyle.normal.textColor = apEditorUtil.BoxTextColor;
 
+				GUILayout.Box(_targetModMesh._renderUnit.Name, boxGUIStyle, GUILayout.Width(width - 8), GUILayout.Height(20));
 
-			GUIStyle guiStyle_Center = new GUIStyle(GUIStyle.none);
-			guiStyle_Center.normal.textColor = GUI.skin.label.normal.textColor;
-			guiStyle_Center.alignment = TextAnchor.MiddleCenter;
+				GUILayout.Space(5);
+				int width_Left = 90;
+				int width_Right = width - 110;
 
-			//GUIContent guiContent_Bone = new GUIContent(iconBone);
+				//Icon 이미지		|	이름	Icon 타입
+				//					|	(저장)
+				EditorGUILayout.BeginHorizontal(GUILayout.Width(width), GUILayout.Height(70));
+				GUILayout.Space(5);
+				EditorGUILayout.BeginVertical(GUILayout.Width(width_Left), GUILayout.Height(70));
+				//Icon을 출력하자
+				Texture2D addParamIcon = _editor.ImageSet.Get(apEditorUtil.GetPhysicsPresetIconType(_addParamIcon));
+				GUILayout.Box(addParamIcon, boxGUIStyle, GUILayout.Width(65), GUILayout.Height(65));
+				EditorGUILayout.EndVertical();
 
-			GUILayout.Space(10);
-			//GUILayout.Button("Select a Physics Preset", guiStyle_Center, GUILayout.Width(width), GUILayout.Height(15));//<투명 버튼
+				EditorGUILayout.BeginVertical(GUILayout.Width(width_Right), GUILayout.Height(70));
+				//이름, Icon 및 등록 버튼
 
-
-			_scrollList = EditorGUILayout.BeginScrollView(_scrollList, GUILayout.Width(width), GUILayout.Height(height_List));
-
-			//"Presets"
-			GUILayout.Button(new GUIContent(_editor.GetText(TEXT.DLG_Presets), iconImageCategory), guiStyle, GUILayout.Height(20));//<투명 버튼
-
-			for (int i = 0; i < _editor.PhysicsPreset.Presets.Count; i++)
-			{
-				//DrawBoneUnit(_boneUnits_Root[i], 0, width, iconImage_FoldDown, iconImage_FoldRight, guiContent_Bone, guiStyle, guiStyle_NotSelectable, _scrollList.x);
-				DrawPresetUnit(_editor.PhysicsPreset.Presets[i], i, width - 18, _scrollList.x);
-			}
-
-			GUILayout.Space(310);
-
-			EditorGUILayout.EndScrollView();
-
-			EditorGUILayout.EndVertical();
-
-			GUILayout.Space(10);
-
-
-
-			//선택한 정보를 보여주자
-			//string curName = "<Not Selected>";
-			string curName = "<" + _editor.GetText(TEXT.DLG_NotSelected) + ">";
-			Texture2D curIcon = null;
-
-			float curMoveRange = 0.0f;
-			//float curStretchRange_Min = 0.0f;
-			float curStretchRange_Max = 0.0f;
-			float curStretchK = 0.0f;
-			float curInertiaK = 0.0f;
-			float curDamping = 0.0f;
-			float curMass = 100.0f;
-			bool curIsRestrictMoveRange = false;
-			bool curIsRestrictStretchRange = false;
-
-
-			Vector2 curGravityConstValue = Vector2.zero;
-			Vector2 curWindConstValue = Vector2.zero;
-			Vector2 curWindRandomRange = Vector2.zero;
-
-			float curAirDrag = 0.0f;
-			float curViscosity = 0.0f;
-			float curRestoring = 1.0f;
-
-			if (_selectedUnit != null)
-			{
-				curName = _selectedUnit._name;
-				curIcon = _editor.ImageSet.Get(apEditorUtil.GetPhysicsPresetIconType(_selectedUnit._icon));
-				//curStretchRange_Min = _selectedUnit._stretchRange_Min;
-				curStretchRange_Max = _selectedUnit._stretchRange_Max;
-
-				curIsRestrictMoveRange = _selectedUnit._isRestrictMoveRange;
-				curIsRestrictStretchRange = _selectedUnit._isRestrictStretchRange;
-
-				curMoveRange = _selectedUnit._moveRange;
-				curStretchK = _selectedUnit._stretchK;
-				curInertiaK = _selectedUnit._inertiaK;
-				curDamping = _selectedUnit._damping;
-				curMass = _selectedUnit._mass;
-
-
-				curGravityConstValue = _selectedUnit._gravityConstValue;
-				curWindConstValue = _selectedUnit._windConstValue;
-				curWindRandomRange = _selectedUnit._windRandomRange;
-
-				curAirDrag = _selectedUnit._airDrag;
-				curViscosity = _selectedUnit._viscosity;
-				curRestoring = _selectedUnit._restoring;
-			}
-
-			Texture2D imgIcon_Stretch = _editor.ImageSet.Get(apImageSet.PRESET.Physic_Stretch);
-			Texture2D imgIcon_Inertia = _editor.ImageSet.Get(apImageSet.PRESET.Physic_Inertia);
-			Texture2D imgIcon_Restoring = _editor.ImageSet.Get(apImageSet.PRESET.Physic_Recover);
-			Texture2D imgIcon_Viscosity = _editor.ImageSet.Get(apImageSet.PRESET.Physic_Viscosity);
-			Texture2D imgIcon_Gravity = _editor.ImageSet.Get(apImageSet.PRESET.Physic_Gravity);
-			Texture2D imgIcon_Wind = _editor.ImageSet.Get(apImageSet.PRESET.Physic_Wind);
-			//반반 나눠서 그려주자
-			int width_Info = ((width - 10) / 2) - 10;
-			int height_Info = 270;
-			int width_InfoLabel = 120;
-			int width_InfoValue = (width_Info - width_InfoLabel) - 4;
-
-			EditorGUILayout.BeginHorizontal(GUILayout.Width(width), GUILayout.Height(height_Info));
-			GUILayout.Space(5);
-			EditorGUILayout.BeginVertical(GUILayout.Width(width_Info), GUILayout.Height(height_Info));
-			//Icon, Name, Basic Setting, Gravity, Wind를 보여주자
-			if (curIcon == null)
-			{
-				EditorGUILayout.LabelField(curName, GUILayout.Width(width_Info), GUILayout.Height(26));
-			}
-			else
-			{
-				EditorGUILayout.LabelField(new GUIContent("  " + curName, curIcon), GUILayout.Width(width_Info), GUILayout.Height(26));
-			}
-			GUILayout.Space(5);
-			EditorGUILayout.BeginHorizontal(GUILayout.Width(width_Info));
-			EditorGUILayout.LabelField(_editor.GetUIWord(UIWORD.Mass), GUILayout.Width(width_InfoLabel));//"Mass"
-			EditorGUILayout.FloatField(curMass, GUILayout.Width(width_InfoValue));
-			EditorGUILayout.EndHorizontal();
-
-			EditorGUILayout.BeginHorizontal(GUILayout.Width(width_Info));
-			EditorGUILayout.LabelField(_editor.GetUIWord(UIWORD.Damping), GUILayout.Width(width_InfoLabel));//"Damping"
-			EditorGUILayout.FloatField(curDamping, GUILayout.Width(width_InfoValue));
-			EditorGUILayout.EndHorizontal();
-
-			EditorGUILayout.BeginHorizontal(GUILayout.Width(width_Info));
-			EditorGUILayout.LabelField(_editor.GetUIWord(UIWORD.AirDrag), GUILayout.Width(width_InfoLabel));//"Air Drag"
-			EditorGUILayout.FloatField(curAirDrag, GUILayout.Width(width_InfoValue));
-			EditorGUILayout.EndHorizontal();
-
-
-			if (curIsRestrictMoveRange)
-			{
-				EditorGUILayout.BeginHorizontal(GUILayout.Width(width_Info));
-				EditorGUILayout.LabelField(_editor.GetUIWord(UIWORD.MoveRange), GUILayout.Width(width_InfoLabel));//"Move Range"
-				EditorGUILayout.FloatField(curMoveRange, GUILayout.Width(width_InfoValue));
+				EditorGUILayout.BeginHorizontal(GUILayout.Width(width_Right));
+				EditorGUILayout.LabelField(_editor.GetText(TEXT.DLG_Name), GUILayout.Width(80));//"Name"
+				_strAddParamName = EditorGUILayout.TextField(_strAddParamName, GUILayout.Width(width_Right - 88));
 				EditorGUILayout.EndHorizontal();
-			}
-			else
-			{
-				EditorGUILayout.BeginHorizontal(GUILayout.Width(width_Info));
-				EditorGUILayout.LabelField(_editor.GetUIWord(UIWORD.MoveRangeUnlimited), GUILayout.Width(width_Info));//"Move Range : (Unlimited)"
+
+				EditorGUILayout.BeginHorizontal(GUILayout.Width(width_Right));
+				EditorGUILayout.LabelField(_editor.GetText(TEXT.DLG_Icon), GUILayout.Width(80));//"Icon"
+				_addParamIcon = (apPhysicsPresetUnit.ICON)EditorGUILayout.EnumPopup(_addParamIcon, GUILayout.Width(width_Right - 88));
 				EditorGUILayout.EndHorizontal();
-			}
-
-
-
-
-			GUILayout.Space(5);
-
-			//"  Gravity"
-			EditorGUILayout.LabelField(new GUIContent("  " + _editor.GetUIWord(UIWORD.Gravity), imgIcon_Gravity), GUILayout.Width(width_Info), GUILayout.Height(25));
-			apEditorUtil.DelayedVector2Field(curGravityConstValue, width_Info - 4);
-
-			GUILayout.Space(5);
-			//"  Wind"
-			EditorGUILayout.LabelField(new GUIContent("  " + _editor.GetUIWord(UIWORD.Wind), imgIcon_Wind), GUILayout.Width(width_Info), GUILayout.Height(25));
-			apEditorUtil.DelayedVector2Field(curWindConstValue, width_Info - 4);
-			EditorGUILayout.LabelField(_editor.GetUIWord(UIWORD.WindRandomRangeSize), GUILayout.Width(width_Info));//"Wind Random Size"
-			apEditorUtil.DelayedVector2Field(curWindRandomRange, width_Info - 4);
-
-			EditorGUILayout.EndVertical();
-
-			GUILayout.Space(4);
-
-			EditorGUILayout.BeginVertical(GUILayout.Width(width_Info), GUILayout.Height(height_Info));
-			//Stretchiness, Inertia, Restoring, Viscosity를 보여주고, 삭제 버튼(또는 Reserved) 표시
-
-			//"  Stretchiness"
-			EditorGUILayout.LabelField(new GUIContent("  " + _editor.GetUIWord(UIWORD.Stretchiness), imgIcon_Stretch), GUILayout.Width(width_Info), GUILayout.Height(25));
-			EditorGUILayout.BeginHorizontal(GUILayout.Width(width_Info));
-			EditorGUILayout.LabelField(_editor.GetUIWord(UIWORD.K_Value), GUILayout.Width(width_InfoLabel));//"K-Value"
-			EditorGUILayout.FloatField(curStretchK, GUILayout.Width(width_InfoValue));
-			EditorGUILayout.EndHorizontal();
-
-			if (curIsRestrictStretchRange)
-			{
-				//EditorGUILayout.BeginHorizontal(GUILayout.Width(width_Info));
-				//EditorGUILayout.LabelField("Shorten Range", GUILayout.Width(width_InfoLabel));
-				//EditorGUILayout.FloatField(curStretchRange_Min, GUILayout.Width(width_InfoValue));
-				//EditorGUILayout.EndHorizontal();
-
-				EditorGUILayout.BeginHorizontal(GUILayout.Width(width_Info));
-				EditorGUILayout.LabelField(_editor.GetUIWord(UIWORD.LengthenRatio), GUILayout.Width(width_InfoLabel));//"Lengthen Range"
-				EditorGUILayout.FloatField(curStretchRange_Max, GUILayout.Width(width_InfoValue));
-				EditorGUILayout.EndHorizontal();
-			}
-			else
-			{
-				//EditorGUILayout.LabelField("Shorten Range : (Unlimited)", GUILayout.Width(width_Info));
-				EditorGUILayout.BeginHorizontal(GUILayout.Width(width_Info));
-				EditorGUILayout.LabelField(_editor.GetUIWord(UIWORD.LengthenRatioUnlimited), GUILayout.Width(width_Info));//"Lengthen Range : (Unlimited)"
-				EditorGUILayout.EndHorizontal();
-			}
-
-
-			GUILayout.Space(5);
-
-			EditorGUILayout.BeginHorizontal(GUILayout.Width(width_Info));
-			//"  Inertia"
-			EditorGUILayout.LabelField(new GUIContent("  " + _editor.GetUIWord(UIWORD.Inertia), imgIcon_Inertia), GUILayout.Width(width_InfoLabel), GUILayout.Height(25));
-			EditorGUILayout.FloatField(curInertiaK, GUILayout.Width(width_InfoValue));
-			EditorGUILayout.EndHorizontal();
-
-			EditorGUILayout.BeginHorizontal(GUILayout.Width(width_Info));
-			//"  Restoring"
-			EditorGUILayout.LabelField(new GUIContent("  " + _editor.GetUIWord(UIWORD.Restoring), imgIcon_Restoring), GUILayout.Width(width_InfoLabel), GUILayout.Height(25));
-			EditorGUILayout.FloatField(curRestoring, GUILayout.Width(width_InfoValue));
-			EditorGUILayout.EndHorizontal();
-
-			EditorGUILayout.BeginHorizontal(GUILayout.Width(width_Info));
-			//"  Viscosity"
-			EditorGUILayout.LabelField(new GUIContent("  " + _editor.GetUIWord(UIWORD.Viscosity), imgIcon_Viscosity), GUILayout.Width(width_InfoLabel), GUILayout.Height(25));
-			EditorGUILayout.FloatField(curViscosity, GUILayout.Width(width_InfoValue));
-			EditorGUILayout.EndHorizontal();
-
-			GUILayout.Space(10);
-			if (_selectedUnit != null)
-			{
-				//삭제 가능한지 체크
-				if (!_selectedUnit._isReserved)
+				GUILayout.Space(5);
+				EditorGUILayout.BeginHorizontal(GUILayout.Width(width_Right));
+				if (GUILayout.Button(_editor.GetText(TEXT.DLG_RegistToPreset), GUILayout.Width(150)))//"Regist To Preset"
 				{
-					//"Remove Preset"
-					if (GUILayout.Button(_editor.GetText(TEXT.DLG_RemovePreset), GUILayout.Width(width_Info - 4)))
+					//TODO
+					if (_targetModMesh.PhysicParam != null)
 					{
-						//bool result = EditorUtility.DisplayDialog("Remove Preset", "Remove Preset [" + _selectedUnit._name + "] ?", "Remove", "Cancel");
-						bool result = EditorUtility.DisplayDialog(_editor.GetText(TEXT.PhysicPreset_Remove_Title),
-																	_editor.GetTextFormat(TEXT.PhysicPreset_Remove_Body, _selectedUnit._name),
-																	_editor.GetText(TEXT.Remove),
+						//bool result = EditorUtility.DisplayDialog("Regist to Preset", "Regist Preset [" + _strAddParamName + "] ?", "Regist", "Cancel");
+						bool result = EditorUtility.DisplayDialog(_editor.GetText(TEXT.PhysicPreset_Regist_Title),
+																	_editor.GetTextFormat(TEXT.PhysicPreset_Regist_Body, _strAddParamName),
+																	_editor.GetText(TEXT.PhysicPreset_Regist_Okay),
 																	_editor.GetText(TEXT.Cancel));
 
 						if (result)
 						{
-							int targetID = _selectedUnit._uniqueID;
-							_selectedUnit = null;
-
-							_editor.PhysicsPreset.RemovePreset(targetID);
+							_editor.PhysicsPreset.AddNewPreset(_targetModMesh.PhysicParam, _strAddParamName, _addParamIcon);
 						}
 					}
 				}
+				EditorGUILayout.EndHorizontal();
+
+				EditorGUILayout.EndVertical();
+
+				EditorGUILayout.EndHorizontal();
+
+				GUILayout.Space(5);
+				apEditorUtil.GUI_DelimeterBoxH(width);
+				GUILayout.Space(5);
+
+
+				GUIStyle guiStyle = new GUIStyle(GUIStyle.none);
+				guiStyle.normal.textColor = GUI.skin.label.normal.textColor;
+				guiStyle.alignment = TextAnchor.MiddleLeft;
+
+				GUIStyle guiStyle_NotSelectable = new GUIStyle(GUIStyle.none);
+				guiStyle_NotSelectable.normal.textColor = Color.red;
+				guiStyle_NotSelectable.alignment = TextAnchor.MiddleLeft;
+
+
+				GUIStyle guiStyle_Center = new GUIStyle(GUIStyle.none);
+				guiStyle_Center.normal.textColor = GUI.skin.label.normal.textColor;
+				guiStyle_Center.alignment = TextAnchor.MiddleCenter;
+
+				//GUIContent guiContent_Bone = new GUIContent(iconBone);
+
+				GUILayout.Space(10);
+				//GUILayout.Button("Select a Physics Preset", guiStyle_Center, GUILayout.Width(width), GUILayout.Height(15));//<투명 버튼
+
+
+				_scrollList = EditorGUILayout.BeginScrollView(_scrollList, GUILayout.Width(width), GUILayout.Height(height_List));
+
+				//"Presets"
+				GUILayout.Button(new GUIContent(_editor.GetText(TEXT.DLG_Presets), iconImageCategory), guiStyle, GUILayout.Height(20));//<투명 버튼
+
+				for (int i = 0; i < _editor.PhysicsPreset.Presets.Count; i++)
+				{
+					//DrawBoneUnit(_boneUnits_Root[i], 0, width, iconImage_FoldDown, iconImage_FoldRight, guiContent_Bone, guiStyle, guiStyle_NotSelectable, _scrollList.x);
+					DrawPresetUnit(_editor.PhysicsPreset.Presets[i], i, width - 18, _scrollList.x);
+				}
+
+				GUILayout.Space(310);
+
+				EditorGUILayout.EndScrollView();
+
+				EditorGUILayout.EndVertical();
+
+				GUILayout.Space(10);
+
+
+
+				//선택한 정보를 보여주자
+				//string curName = "<Not Selected>";
+				string curName = "<" + _editor.GetText(TEXT.DLG_NotSelected) + ">";
+				Texture2D curIcon = null;
+
+				float curMoveRange = 0.0f;
+				//float curStretchRange_Min = 0.0f;
+				float curStretchRange_Max = 0.0f;
+				float curStretchK = 0.0f;
+				float curInertiaK = 0.0f;
+				float curDamping = 0.0f;
+				float curMass = 100.0f;
+				bool curIsRestrictMoveRange = false;
+				bool curIsRestrictStretchRange = false;
+
+
+				Vector2 curGravityConstValue = Vector2.zero;
+				Vector2 curWindConstValue = Vector2.zero;
+				Vector2 curWindRandomRange = Vector2.zero;
+
+				float curAirDrag = 0.0f;
+				float curViscosity = 0.0f;
+				float curRestoring = 1.0f;
+
+				if (_selectedUnit != null)
+				{
+					curName = _selectedUnit._name;
+					curIcon = _editor.ImageSet.Get(apEditorUtil.GetPhysicsPresetIconType(_selectedUnit._icon));
+					//curStretchRange_Min = _selectedUnit._stretchRange_Min;
+					curStretchRange_Max = _selectedUnit._stretchRange_Max;
+
+					curIsRestrictMoveRange = _selectedUnit._isRestrictMoveRange;
+					curIsRestrictStretchRange = _selectedUnit._isRestrictStretchRange;
+
+					curMoveRange = _selectedUnit._moveRange;
+					curStretchK = _selectedUnit._stretchK;
+					curInertiaK = _selectedUnit._inertiaK;
+					curDamping = _selectedUnit._damping;
+					curMass = _selectedUnit._mass;
+
+
+					curGravityConstValue = _selectedUnit._gravityConstValue;
+					curWindConstValue = _selectedUnit._windConstValue;
+					curWindRandomRange = _selectedUnit._windRandomRange;
+
+					curAirDrag = _selectedUnit._airDrag;
+					curViscosity = _selectedUnit._viscosity;
+					curRestoring = _selectedUnit._restoring;
+				}
+
+				Texture2D imgIcon_Stretch = _editor.ImageSet.Get(apImageSet.PRESET.Physic_Stretch);
+				Texture2D imgIcon_Inertia = _editor.ImageSet.Get(apImageSet.PRESET.Physic_Inertia);
+				Texture2D imgIcon_Restoring = _editor.ImageSet.Get(apImageSet.PRESET.Physic_Recover);
+				Texture2D imgIcon_Viscosity = _editor.ImageSet.Get(apImageSet.PRESET.Physic_Viscosity);
+				Texture2D imgIcon_Gravity = _editor.ImageSet.Get(apImageSet.PRESET.Physic_Gravity);
+				Texture2D imgIcon_Wind = _editor.ImageSet.Get(apImageSet.PRESET.Physic_Wind);
+				//반반 나눠서 그려주자
+				int width_Info = ((width - 10) / 2) - 10;
+				int height_Info = 270;
+				int width_InfoLabel = 120;
+				int width_InfoValue = (width_Info - width_InfoLabel) - 4;
+
+				EditorGUILayout.BeginHorizontal(GUILayout.Width(width), GUILayout.Height(height_Info));
+				GUILayout.Space(5);
+				EditorGUILayout.BeginVertical(GUILayout.Width(width_Info), GUILayout.Height(height_Info));
+				//Icon, Name, Basic Setting, Gravity, Wind를 보여주자
+				if (curIcon == null)
+				{
+					EditorGUILayout.LabelField(curName, GUILayout.Width(width_Info), GUILayout.Height(26));
+				}
+				else
+				{
+					EditorGUILayout.LabelField(new GUIContent("  " + curName, curIcon), GUILayout.Width(width_Info), GUILayout.Height(26));
+				}
+				GUILayout.Space(5);
+				EditorGUILayout.BeginHorizontal(GUILayout.Width(width_Info));
+				EditorGUILayout.LabelField(_editor.GetUIWord(UIWORD.Mass), GUILayout.Width(width_InfoLabel));//"Mass"
+				EditorGUILayout.FloatField(curMass, GUILayout.Width(width_InfoValue));
+				EditorGUILayout.EndHorizontal();
+
+				EditorGUILayout.BeginHorizontal(GUILayout.Width(width_Info));
+				EditorGUILayout.LabelField(_editor.GetUIWord(UIWORD.Damping), GUILayout.Width(width_InfoLabel));//"Damping"
+				EditorGUILayout.FloatField(curDamping, GUILayout.Width(width_InfoValue));
+				EditorGUILayout.EndHorizontal();
+
+				EditorGUILayout.BeginHorizontal(GUILayout.Width(width_Info));
+				EditorGUILayout.LabelField(_editor.GetUIWord(UIWORD.AirDrag), GUILayout.Width(width_InfoLabel));//"Air Drag"
+				EditorGUILayout.FloatField(curAirDrag, GUILayout.Width(width_InfoValue));
+				EditorGUILayout.EndHorizontal();
+
+
+				if (curIsRestrictMoveRange)
+				{
+					EditorGUILayout.BeginHorizontal(GUILayout.Width(width_Info));
+					EditorGUILayout.LabelField(_editor.GetUIWord(UIWORD.MoveRange), GUILayout.Width(width_InfoLabel));//"Move Range"
+					EditorGUILayout.FloatField(curMoveRange, GUILayout.Width(width_InfoValue));
+					EditorGUILayout.EndHorizontal();
+				}
+				else
+				{
+					EditorGUILayout.BeginHorizontal(GUILayout.Width(width_Info));
+					EditorGUILayout.LabelField(_editor.GetUIWord(UIWORD.MoveRangeUnlimited), GUILayout.Width(width_Info));//"Move Range : (Unlimited)"
+					EditorGUILayout.EndHorizontal();
+				}
+
+
+
+
+				GUILayout.Space(5);
+
+				//"  Gravity"
+				EditorGUILayout.LabelField(new GUIContent("  " + _editor.GetUIWord(UIWORD.Gravity), imgIcon_Gravity), GUILayout.Width(width_Info), GUILayout.Height(25));
+				apEditorUtil.DelayedVector2Field(curGravityConstValue, width_Info - 4);
+
+				GUILayout.Space(5);
+				//"  Wind"
+				EditorGUILayout.LabelField(new GUIContent("  " + _editor.GetUIWord(UIWORD.Wind), imgIcon_Wind), GUILayout.Width(width_Info), GUILayout.Height(25));
+				apEditorUtil.DelayedVector2Field(curWindConstValue, width_Info - 4);
+				EditorGUILayout.LabelField(_editor.GetUIWord(UIWORD.WindRandomRangeSize), GUILayout.Width(width_Info));//"Wind Random Size"
+				apEditorUtil.DelayedVector2Field(curWindRandomRange, width_Info - 4);
+
+				EditorGUILayout.EndVertical();
+
+				GUILayout.Space(4);
+
+				EditorGUILayout.BeginVertical(GUILayout.Width(width_Info), GUILayout.Height(height_Info));
+				//Stretchiness, Inertia, Restoring, Viscosity를 보여주고, 삭제 버튼(또는 Reserved) 표시
+
+				//"  Stretchiness"
+				EditorGUILayout.LabelField(new GUIContent("  " + _editor.GetUIWord(UIWORD.Stretchiness), imgIcon_Stretch), GUILayout.Width(width_Info), GUILayout.Height(25));
+				EditorGUILayout.BeginHorizontal(GUILayout.Width(width_Info));
+				EditorGUILayout.LabelField(_editor.GetUIWord(UIWORD.K_Value), GUILayout.Width(width_InfoLabel));//"K-Value"
+				EditorGUILayout.FloatField(curStretchK, GUILayout.Width(width_InfoValue));
+				EditorGUILayout.EndHorizontal();
+
+				if (curIsRestrictStretchRange)
+				{
+					//EditorGUILayout.BeginHorizontal(GUILayout.Width(width_Info));
+					//EditorGUILayout.LabelField("Shorten Range", GUILayout.Width(width_InfoLabel));
+					//EditorGUILayout.FloatField(curStretchRange_Min, GUILayout.Width(width_InfoValue));
+					//EditorGUILayout.EndHorizontal();
+
+					EditorGUILayout.BeginHorizontal(GUILayout.Width(width_Info));
+					EditorGUILayout.LabelField(_editor.GetUIWord(UIWORD.LengthenRatio), GUILayout.Width(width_InfoLabel));//"Lengthen Range"
+					EditorGUILayout.FloatField(curStretchRange_Max, GUILayout.Width(width_InfoValue));
+					EditorGUILayout.EndHorizontal();
+				}
+				else
+				{
+					//EditorGUILayout.LabelField("Shorten Range : (Unlimited)", GUILayout.Width(width_Info));
+					EditorGUILayout.BeginHorizontal(GUILayout.Width(width_Info));
+					EditorGUILayout.LabelField(_editor.GetUIWord(UIWORD.LengthenRatioUnlimited), GUILayout.Width(width_Info));//"Lengthen Range : (Unlimited)"
+					EditorGUILayout.EndHorizontal();
+				}
+
+
+				GUILayout.Space(5);
+
+				EditorGUILayout.BeginHorizontal(GUILayout.Width(width_Info));
+				//"  Inertia"
+				EditorGUILayout.LabelField(new GUIContent("  " + _editor.GetUIWord(UIWORD.Inertia), imgIcon_Inertia), GUILayout.Width(width_InfoLabel), GUILayout.Height(25));
+				EditorGUILayout.FloatField(curInertiaK, GUILayout.Width(width_InfoValue));
+				EditorGUILayout.EndHorizontal();
+
+				EditorGUILayout.BeginHorizontal(GUILayout.Width(width_Info));
+				//"  Restoring"
+				EditorGUILayout.LabelField(new GUIContent("  " + _editor.GetUIWord(UIWORD.Restoring), imgIcon_Restoring), GUILayout.Width(width_InfoLabel), GUILayout.Height(25));
+				EditorGUILayout.FloatField(curRestoring, GUILayout.Width(width_InfoValue));
+				EditorGUILayout.EndHorizontal();
+
+				EditorGUILayout.BeginHorizontal(GUILayout.Width(width_Info));
+				//"  Viscosity"
+				EditorGUILayout.LabelField(new GUIContent("  " + _editor.GetUIWord(UIWORD.Viscosity), imgIcon_Viscosity), GUILayout.Width(width_InfoLabel), GUILayout.Height(25));
+				EditorGUILayout.FloatField(curViscosity, GUILayout.Width(width_InfoValue));
+				EditorGUILayout.EndHorizontal();
+
+				GUILayout.Space(10);
+				if (_selectedUnit != null)
+				{
+					//삭제 가능한지 체크
+					if (!_selectedUnit._isReserved)
+					{
+						//"Remove Preset"
+						if (GUILayout.Button(_editor.GetText(TEXT.DLG_RemovePreset), GUILayout.Width(width_Info - 4)))
+						{
+							//bool result = EditorUtility.DisplayDialog("Remove Preset", "Remove Preset [" + _selectedUnit._name + "] ?", "Remove", "Cancel");
+							bool result = EditorUtility.DisplayDialog(_editor.GetText(TEXT.PhysicPreset_Remove_Title),
+																		_editor.GetTextFormat(TEXT.PhysicPreset_Remove_Body, _selectedUnit._name),
+																		_editor.GetText(TEXT.Remove),
+																		_editor.GetText(TEXT.Cancel));
+
+							if (result)
+							{
+								int targetID = _selectedUnit._uniqueID;
+								_selectedUnit = null;
+
+								_editor.PhysicsPreset.RemovePreset(targetID);
+							}
+						}
+					}
+				}
+
+				EditorGUILayout.EndVertical();
+
+				EditorGUILayout.EndHorizontal();
+
+				EditorGUILayout.BeginHorizontal();
+				bool isClose = false;
+				bool isSelectBtnAvailable = _selectedUnit != null;
+				if (apEditorUtil.ToggledButton(_editor.GetText(TEXT.DLG_Apply), false, isSelectBtnAvailable, (width / 2) - 8, 30))//"Apply"
+				{
+					_funcResult(true, _loadKey, _selectedUnit, _targetModMesh);
+					isClose = true;
+				}
+				if (apEditorUtil.ToggledButton(_editor.GetText(TEXT.DLG_Close), false, true, (width / 2) - 8, 30))//"Close"
+				{
+					//_funcResult(false, _loadKey, null, null);
+					_funcResult(false, _loadKey, null, _targetModMesh);
+					isClose = true;
+				}
+				EditorGUILayout.EndHorizontal();
+
+				if (isClose)
+				{
+					CloseDialog();
+				}
 			}
-
-			EditorGUILayout.EndVertical();
-
-			EditorGUILayout.EndHorizontal();
-
-			EditorGUILayout.BeginHorizontal();
-			bool isClose = false;
-			bool isSelectBtnAvailable = _selectedUnit != null;
-			if (apEditorUtil.ToggledButton(_editor.GetText(TEXT.DLG_Apply), false, isSelectBtnAvailable, (width / 2) - 8, 30))//"Apply"
+			catch(Exception ex)
 			{
-				_funcResult(true, _loadKey, _selectedUnit, _targetModMesh);
-				isClose = true;
-			}
-			if (apEditorUtil.ToggledButton(_editor.GetText(TEXT.DLG_Close), false, true, (width / 2) - 8, 30))//"Close"
-			{
-				//_funcResult(false, _loadKey, null, null);
-				_funcResult(false, _loadKey, null, _targetModMesh);
-				isClose = true;
-			}
-			EditorGUILayout.EndHorizontal();
-
-			if (isClose)
-			{
-				CloseDialog();
+				//추가 21.3.17 : Try-Catch 추가. Mac에서 에러가 발생하기 쉽다.
+				Debug.LogError("AnyPortrait : Exception occurs : " + ex);
 			}
 		}
 

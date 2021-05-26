@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -39,6 +38,12 @@ namespace AnyPortrait
 
 		// Functions
 		//-----------------------------------------
+		public virtual void Clear()
+		{
+
+		}
+
+
 		public virtual bool IsKeySyncable(object target)
 		{
 			return false;
@@ -55,6 +60,20 @@ namespace AnyPortrait
 		{
 			return false;
 		}
+
+		public virtual bool IsKeySyncable_MorphMod(object target)
+		{
+			return false;
+		}
+
+		public virtual bool IsKeySyncable_TFMod(object target)
+		{
+			return false;
+		}
+
+		
+
+
 
 
 		// Get / Set

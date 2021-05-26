@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -170,7 +169,8 @@ namespace AnyPortrait
 				}
 				if (_modifiers[i]._isActive
 #if UNITY_EDITOR
-				&& _modifiers[i]._editorExclusiveActiveMod != apModifierBase.MOD_EDITOR_ACTIVE.Disabled//<<이건 에디터에서만 작동한다.
+					//&& _modifiers[i]._editorExclusiveActiveMod != apModifierBase.MOD_EDITOR_ACTIVE.Disabled//<<이건 에디터에서만 작동한다.
+					&& _modifiers[i]._editorExclusiveActiveMod != apModifierBase.MOD_EDITOR_ACTIVE.Disabled_Force//변경 21.2.14 : 편집 모드에 의한 값 헤분화
 #endif
 				)
 
@@ -200,7 +200,8 @@ namespace AnyPortrait
 				}
 				if (_modifiers[i]._isActive
 #if UNITY_EDITOR
-				&& _modifiers[i]._editorExclusiveActiveMod != apModifierBase.MOD_EDITOR_ACTIVE.Disabled//<<이건 에디터에서만 작동한다.
+				//&& _modifiers[i]._editorExclusiveActiveMod != apModifierBase.MOD_EDITOR_ACTIVE.Disabled//<<이건 에디터에서만 작동한다.
+				&& _modifiers[i]._editorExclusiveActiveMod != apModifierBase.MOD_EDITOR_ACTIVE.Disabled_Force
 #endif
 				)
 
@@ -227,7 +228,8 @@ namespace AnyPortrait
 			for (int i = 0; i < _modifiers.Count; i++)
 			{
 				modifier = _modifiers[i];
-				modifier._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.Enabled;
+				//modifier._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.Enabled;//이전
+				modifier._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Run;//변경
 
 				for (int iP = 0; iP < modifier._paramSetGroup_controller.Count; iP++)
 				{
@@ -257,7 +259,44 @@ namespace AnyPortrait
 			}
 		}
 
+		/// <summary>
+		/// 모든 모디파이어를 강제로 비활성화 한다. 편집용은 아니다.
+		/// </summary>
+		public void SetDisableForceAllModifier()
+		{
+			apModifierBase curModifier = null;
+			apModifierParamSetGroup curParamSetGroup = null;
 
+			for (int i = 0; i < _modifiers.Count; i++)
+			{
+				curModifier = _modifiers[i];
+
+				curModifier._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.Disabled_Force;
+
+				for (int iP = 0; iP < curModifier._paramSetGroup_controller.Count; iP++)
+				{
+					curParamSetGroup = curModifier._paramSetGroup_controller[iP];
+					curParamSetGroup._modExType_Transform = apModifierParamSetGroup.MOD_EX_CALCULATE.Disabled;
+					curParamSetGroup._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Disabled;
+				}
+			}
+
+			//Child MeshGroup에도 모두 적용하자
+			if (_parentMeshGroup != null)
+			{
+				if (_parentMeshGroup._childMeshGroupTransforms != null)
+				{
+					for (int i = 0; i < _parentMeshGroup._childMeshGroupTransforms.Count; i++)
+					{
+						apTransform_MeshGroup meshGroupTransform = _parentMeshGroup._childMeshGroupTransforms[i];
+						if (meshGroupTransform._meshGroup != null && meshGroupTransform._meshGroup != _parentMeshGroup)
+						{
+							meshGroupTransform._meshGroup._modifierStack.SetDisableForceAllModifier();
+						}
+					}
+				}
+			}
+		}
 
 		/// <summary>
 		/// [선택한 Modifier]와 [선택한 ParamSetGroup]만 활성화하고 나머지는 비활성한다.
@@ -265,14 +304,15 @@ namespace AnyPortrait
 		/// </summary>
 		/// <param name="targetModifier"></param>
 		/// <param name="targetParamSetGroup"></param>
-		public void SetExclusiveModifierInEditing(apModifierBase targetModifier, apModifierParamSetGroup targetParamSetGroup, bool isColorCalculated)
+		public void SetExclusiveModifierInEditing(	apModifierBase targetModifier, apModifierParamSetGroup targetParamSetGroup, 
+													bool isAllowColorCalculated, 
+													bool isEnablePSGEvenIfDisabledModifier//추가 21.2.17 : 이게 True라면 선택되지 않은 모디파이어의 PSG도 일단 활성화
+													)
 		{
 			//apCalculatedResultParam.RESULT_TYPE targetResultType = modifier.CalculatedResultType;
 
 			//추가 : isColorCalculated가 추가되었다.
 			//isColorCalculated라면 Exclusive여서 처리가 안되는 경우라도 무조건 Color 계산은 할 수 있다.
-
-			
 
 			//추가
 			//요청한 Modifier가 BoneTransform을 지원하는 경우
@@ -297,8 +337,8 @@ namespace AnyPortrait
 					// ParamSetGroup이 같은 경우 무조건 활성
 					// 다를 경우 : Color 제외하고 무조건 비활성
 
-					//_modifiers[i]._isActive_InEditorExclusive = true;
-					curModifier._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.ExclusiveEnabled;
+					//curModifier._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.ExclusiveEnabled;//이전
+					curModifier._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Edit;//변경 21.2.14 : 편집 중인 모디파이어
 
 					
 					for (int iP = 0; iP < curModifier._paramSetGroup_controller.Count; iP++)
@@ -306,13 +346,15 @@ namespace AnyPortrait
 						curParamSetGroup = curModifier._paramSetGroup_controller[iP];
 						if (targetParamSetGroup == curParamSetGroup)
 						{
+							//편집 중인 PSG
 							curParamSetGroup._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Enabled;
 							curParamSetGroup._modExType_Transform = apModifierParamSetGroup.MOD_EX_CALCULATE.Enabled;
 						}
 						else
 						{
+							//
 							curParamSetGroup._modExType_Transform = apModifierParamSetGroup.MOD_EX_CALCULATE.Disabled;
-							if(isColorCalculated)
+							if(isAllowColorCalculated)
 							{
 								//색상은 분리해서 따로 Enable이 가능
 								curParamSetGroup._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Enabled;
@@ -327,7 +369,8 @@ namespace AnyPortrait
 				else if (isRiggingAvailable && curModifier.ModifierType == apModifierBase.MODIFIER_TYPE.Rigging)
 				{
 					//만약 Rigging 타입은 예외로 친다면..
-					curModifier._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.ExclusiveEnabled;
+					//curModifier._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.ExclusiveEnabled;//이전
+					curModifier._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Background;//변경 21.2.15
 
 					for (int iP = 0; iP < curModifier._paramSetGroup_controller.Count; iP++)
 					{
@@ -342,17 +385,19 @@ namespace AnyPortrait
 					//Exclusive에서 다른 것들은 무조건 제외한다.
 					//색상은 가능
 					//일단 다 빼보자
-					curModifier._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.Disabled;//<<음.. Color가 있는 경우 계산이 되긴 되어야 하는뎅..
+					//curModifier._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.Disabled;//<<음.. Color가 있는 경우 계산이 되긴 되어야 하는뎅..
+					curModifier._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.Disabled_NotEdit;//값 변경 21.2.15 : 편집 중이 아니다.
 
 					bool isAnyColorUpdate = false;
 					for (int iP = 0; iP < curModifier._paramSetGroup_controller.Count; iP++)
 					{
 						curParamSetGroup = curModifier._paramSetGroup_controller[iP];
 
-						if (targetParamSetGroup == curParamSetGroup)
+						if (!isEnablePSGEvenIfDisabledModifier)
 						{
+							//다 비활성화
 							curParamSetGroup._modExType_Transform = apModifierParamSetGroup.MOD_EX_CALCULATE.Disabled;
-							if(isColorCalculated)
+							if (isAllowColorCalculated)
 							{
 								curParamSetGroup._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Enabled;
 								isAnyColorUpdate = true;
@@ -362,12 +407,22 @@ namespace AnyPortrait
 								curParamSetGroup._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Disabled;
 							}
 						}
+						else
+						{
+							//추가 21.2.17 : 모디파이어는 비활성화해도 PSG는 켜자.
+							//옵션에 따라서 필요한 경우가 있다.
+							curParamSetGroup._modExType_Transform = apModifierParamSetGroup.MOD_EX_CALCULATE.Enabled;
+							curParamSetGroup._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Enabled;
+							isAnyColorUpdate = true;
+						}
+						
 					}
 
 					if(isAnyColorUpdate)
 					{
 						//Color만 업데이트 되는 ParamSetGroup이 존재한다.
-						curModifier._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.OnlyColorEnabled;
+						//curModifier._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.OnlyColorEnabled;
+						curModifier._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.Disabled_ExceptColor;//값 변경 21.2.15
 					}
 				}
 			}
@@ -383,7 +438,10 @@ namespace AnyPortrait
 						if (meshGroupTransform._meshGroup != null && meshGroupTransform._meshGroup != _parentMeshGroup)
 						{
 							//meshGroupTransform._meshGroup._modifierStack.SetExclusiveModifierInEditing(null, null, isColorCalculated);
-							meshGroupTransform._meshGroup._modifierStack.SetExclusiveModifierInEditing(targetModifier, null, isColorCalculated);//변경 20.9.2 : 자식 메시 그룹의 모디파이어에 적용할 때, 현재 타겟 정보를 넘기자.(Rigging 때문에)
+							meshGroupTransform._meshGroup._modifierStack.SetExclusiveModifierInEditing(
+																	targetModifier, null, 
+																	isAllowColorCalculated,
+																	isEnablePSGEvenIfDisabledModifier);//변경 20.9.2 : 자식 메시 그룹의 모디파이어에 적용할 때, 현재 타겟 정보를 넘기자.(Rigging 때문에)
 						}
 					}
 				}
@@ -391,10 +449,16 @@ namespace AnyPortrait
 		}
 
 
-
-		public void SetExclusiveModifierInEditing_MultipleParamSetGroup(apModifierBase modifier,
+		/// <summary>
+		/// TODO : 이거 애니메이션 용으로 고쳐야 한다.
+		/// </summary>
+		/// <param name="modifier"></param>
+		/// <param name="paramSetGroups"></param>
+		/// <param name="isColorCalculated"></param>
+		public void SetExclusiveModifierInEditing_Anim(apModifierBase modifier,
 																		List<apModifierParamSetGroup> paramSetGroups,
-																		bool isColorCalculated)
+																		bool isColorCalculated,
+																		bool isEnablePSGEvenIfDisabledModifier)
 		{
 			
 			//apCalculatedResultParam.RESULT_TYPE targetResultType = modifier.CalculatedResultType;
@@ -406,17 +470,24 @@ namespace AnyPortrait
 			{
 				isRiggingAvailable = true;//Rigging은 허용하자
 			}
-			
-			for (int i = 0; i < _modifiers.Count; i++)
-			{
-				if (_modifiers[i] == modifier && modifier != null && paramSetGroups != null && paramSetGroups.Count > 0)
-				{
-					//_modifiers[i]._isActive_InEditorExclusive = true;
-					_modifiers[i]._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.ExclusiveEnabled;
 
-					for (int iP = 0; iP < _modifiers[i]._paramSetGroup_controller.Count; iP++)
+			apModifierBase curModifier = null;
+			int nModifiers = _modifiers != null ? _modifiers.Count : 0;
+
+			for (int i = 0; i < nModifiers; i++)
+			{
+				curModifier = _modifiers[i];
+				if (curModifier == modifier && modifier != null && paramSetGroups != null && paramSetGroups.Count > 0)
+				{
+					//편집중인 모디파이어이다.
+					//허가된 PSG (TimelineLayer)는 Enable, 그렇지 않다면 Disable로 만들자
+
+					//_modifiers[i]._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.ExclusiveEnabled;
+					curModifier._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Edit;
+
+					for (int iP = 0; iP < curModifier._paramSetGroup_controller.Count; iP++)
 					{
-						apModifierParamSetGroup paramSetGroup = _modifiers[i]._paramSetGroup_controller[iP];
+						apModifierParamSetGroup paramSetGroup = curModifier._paramSetGroup_controller[iP];
 						if (paramSetGroups.Contains(paramSetGroup))
 						{
 							//허용되는 ParamSetGroup이다.
@@ -430,7 +501,7 @@ namespace AnyPortrait
 							//허용되지 않는 ParamSetGroup이다.
 							//색상은 따로 처리 가능하다.
 							//paramSetGroup._isEnabledExclusive = false;//<<이전
-							paramSetGroup._modExType_Transform = apModifierParamSetGroup.MOD_EX_CALCULATE.Enabled;
+							paramSetGroup._modExType_Transform = apModifierParamSetGroup.MOD_EX_CALCULATE.Disabled;//<<이게 왜 Enabled
 							if(isColorCalculated)
 							{
 								paramSetGroup._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Enabled;
@@ -439,37 +510,58 @@ namespace AnyPortrait
 							{
 								paramSetGroup._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Disabled;
 							}
-							
 						}
-
-
 					}
 				}
-				else if (isRiggingAvailable && _modifiers[i].ModifierType == apModifierBase.MODIFIER_TYPE.Rigging)
+				else if (isRiggingAvailable && curModifier.ModifierType == apModifierBase.MODIFIER_TYPE.Rigging)
 				{
 					//만약 Rigging 타입은 예외로 친다면..
-					_modifiers[i]._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.ExclusiveEnabled;
+					//_modifiers[i]._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.ExclusiveEnabled;
+					curModifier._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Background;
 
-					for (int iP = 0; iP < _modifiers[i]._paramSetGroup_controller.Count; iP++)
+					for (int iP = 0; iP < curModifier._paramSetGroup_controller.Count; iP++)
 					{
 						//_modifiers[i]._paramSetGroup_controller[iP]._isEnabledExclusive = true;
-						_modifiers[i]._paramSetGroup_controller[iP]._modExType_Transform = apModifierParamSetGroup.MOD_EX_CALCULATE.Enabled;
-						_modifiers[i]._paramSetGroup_controller[iP]._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Enabled;//<<Rigging은 상관 없는뎅..
+						curModifier._paramSetGroup_controller[iP]._modExType_Transform = apModifierParamSetGroup.MOD_EX_CALCULATE.Enabled;
+						curModifier._paramSetGroup_controller[iP]._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Enabled;//<<Rigging은 상관 없는뎅..
+					}
+				}
+				else if(!curModifier.IsAnimated && isEnablePSGEvenIfDisabledModifier)
+				{
+					//추가 21.2.17
+					//애니메이션이 아닌 모디파이어라면, 모디파이어는 Disabled이지만, PSG는 다 켜보자
+					//비활성 객체를 대상으로 적용될 수 있다.
+					curModifier._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.Disabled_NotEdit;
+
+					for (int iP = 0; iP < curModifier._paramSetGroup_controller.Count; iP++)
+					{
+						apModifierParamSetGroup paramSetGroup = curModifier._paramSetGroup_controller[iP];
+						paramSetGroup._modExType_Transform = apModifierParamSetGroup.MOD_EX_CALCULATE.Enabled;
+						paramSetGroup._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Enabled;
+					}
+
+					if(isColorCalculated)
+					{
+						//옵션에 따라선 선택된 모디파이어와 객체에서도 적용될 수 있게 만든다.
+						curModifier._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.Disabled_ExceptColor;
 					}
 				}
 				else
 				{
+					//선택되지 않은 모디파이어이다.
+
 					//일단 다 빼보자
 					//색상은 적용 가능
 					//_modifiers[i]._isActive_InEditorExclusive = false;
 
-					_modifiers[i]._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.Disabled;
+					//_modifiers[i]._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.Disabled;
+					curModifier._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.Disabled_NotEdit;
 
 					bool isAnyColorUpdate = false;
 
-					for (int iP = 0; iP < _modifiers[i]._paramSetGroup_controller.Count; iP++)
+					for (int iP = 0; iP < curModifier._paramSetGroup_controller.Count; iP++)
 					{
-						apModifierParamSetGroup paramSetGroup = _modifiers[i]._paramSetGroup_controller[iP];
+						apModifierParamSetGroup paramSetGroup = curModifier._paramSetGroup_controller[iP];
 						//paramSetGroup._isEnabledExclusive = false;
 						paramSetGroup._modExType_Transform = apModifierParamSetGroup.MOD_EX_CALCULATE.Disabled;
 						if(isColorCalculated)
@@ -483,19 +575,12 @@ namespace AnyPortrait
 						}
 					}
 
-
 					if(isAnyColorUpdate)
 					{
 						//Color 업데이트가 되는 ParamSetGroup이 존재한다.
-						_modifiers[i]._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.OnlyColorEnabled;
+						//_modifiers[i]._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.OnlyColorEnabled;
+						curModifier._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.Disabled_ExceptColor;
 					}
-
-					////Modifier를 False 했다면 CalculateParam은 True로 해도 된다.
-					//List<apCalculatedResultParam> calParamList = _modifiers[i]._calculatedResultParams;
-					//for (int iCal = 0; iCal < calParamList.Count; iCal++)
-					//{
-					//	calParamList[iCal].ActiveAllParamList();
-					//}
 				}
 			}
 
@@ -504,13 +589,14 @@ namespace AnyPortrait
 			{
 				if (_parentMeshGroup._childMeshGroupTransforms != null)
 				{
+					apTransform_MeshGroup childMeshGroupTF = null;
 					for (int i = 0; i < _parentMeshGroup._childMeshGroupTransforms.Count; i++)
 					{
-						apTransform_MeshGroup meshGroupTransform = _parentMeshGroup._childMeshGroupTransforms[i];
-						if (meshGroupTransform._meshGroup != null && meshGroupTransform._meshGroup != _parentMeshGroup)
+						childMeshGroupTF = _parentMeshGroup._childMeshGroupTransforms[i];
+						if (childMeshGroupTF._meshGroup != null && childMeshGroupTF._meshGroup != _parentMeshGroup)
 						{
 							//meshGroupTransform._meshGroup._modifierStack.SetExclusiveModifierInEditing(null, null, isColorCalculated);
-							meshGroupTransform._meshGroup._modifierStack.SetExclusiveModifierInEditing(modifier, null, isColorCalculated);
+							childMeshGroupTF._meshGroup._modifierStack.SetExclusiveModifierInEditing(modifier, null, isColorCalculated, isEnablePSGEvenIfDisabledModifier);
 						}
 					}
 				}
@@ -521,348 +607,353 @@ namespace AnyPortrait
 
 
 
-		/// <summary>
-		/// [선택한 Modifier] + [해당 Modifier가 허용하는 다른 Modifier]만 허용한다.
-		/// 모든 ParamSetGroup을 허용하므로 에디팅이 조금 다를 수는 있다.
-		/// Animation 버전은 따로 만들 것
-		/// Mod Unlock 모드이다.
-		/// </summary>
-		/// <param name="modifier"></param>
-		public void SetExclusiveModifierInEditingGeneral(apModifierBase modifier, bool isColorCalculated, bool isOtherModCalcualte)
-		{
-			//apCalculatedResultParam.RESULT_TYPE targetResultType = modifier.CalculatedResultType;
-			apModifierBase.MODIFIER_TYPE[] exGeneralTypes = modifier.GetGeneralExEditableModTypes();
-			if (exGeneralTypes == null)
-			{
-				exGeneralTypes = new apModifierBase.MODIFIER_TYPE[] { modifier.ModifierType };
-			}
+		#region [미사용 코드] General Edit는 삭제되었다. 다만 코드는 확인할 것
+		///// <summary>
+		///// [선택한 Modifier] + [해당 Modifier가 허용하는 다른 Modifier]만 허용한다.
+		///// 모든 ParamSetGroup을 허용하므로 에디팅이 조금 다를 수는 있다.
+		///// Animation 버전은 따로 만들 것
+		///// Mod Unlock 모드이다.
+		///// </summary>
+		///// <param name="modifier"></param>
+		//public void SetExclusiveModifierInEditingGeneral(apModifierBase modifier, bool isColorCalculated, bool isOtherModCalcualte)
+		//{
 
-			//추가
-			//요청한 Modifier가 BoneTransform을 지원하는 경우
-			//Rigging은 비활성화 되어서는 안된다.
-			for (int i = 0; i < _modifiers.Count; i++)
-			{
-				bool isValidType = false;
-				for (int iGT = 0; iGT < exGeneralTypes.Length; iGT++)
-				{
-					if (exGeneralTypes[iGT] == _modifiers[i].ModifierType)
-					{
-						isValidType = true;
-						break;
-					}
-				}
+		//	//TODO : 이 내용이 SetExclusiveModifierInEditing 함수에 같이 포함되어야 한다.
 
-				if (isValidType)
-				{
-					//_modifiers[i]._isActive_InEditorExclusive = true;
-					_modifiers[i]._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.ExclusiveEnabled;
+		//	//apCalculatedResultParam.RESULT_TYPE targetResultType = modifier.CalculatedResultType;
+		//	apModifierBase.MODIFIER_TYPE[] exGeneralTypes = modifier.GetGeneralExEditableModTypes();
+		//	if (exGeneralTypes == null)
+		//	{
+		//		exGeneralTypes = new apModifierBase.MODIFIER_TYPE[] { modifier.ModifierType };
+		//	}
 
-					for (int iP = 0; iP < _modifiers[i]._paramSetGroup_controller.Count; iP++)
-					{
-						//ParamSetGroup도 모두다 허용
-						//_modifiers[i]._paramSetGroup_controller[iP]._isEnabledExclusive = true;
-						_modifiers[i]._paramSetGroup_controller[iP]._modExType_Transform = apModifierParamSetGroup.MOD_EX_CALCULATE.Enabled;
-						_modifiers[i]._paramSetGroup_controller[iP]._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Enabled;
-					}
-				}
-				else
-				{
-					//불가
-					//다만, OtherMod 처리 가능시 실행할 수도 있다. < 추가 3.22
-					if(isOtherModCalcualte)
-					{
-						_modifiers[i]._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.SubExEnabled;
+		//	//추가
+		//	//요청한 Modifier가 BoneTransform을 지원하는 경우
+		//	//Rigging은 비활성화 되어서는 안된다.
+		//	for (int i = 0; i < _modifiers.Count; i++)
+		//	{
+		//		bool isValidType = false;
+		//		for (int iGT = 0; iGT < exGeneralTypes.Length; iGT++)
+		//		{
+		//			if (exGeneralTypes[iGT] == _modifiers[i].ModifierType)
+		//			{
+		//				isValidType = true;
+		//				break;
+		//			}
+		//		}
 
-						//여기선 완전히 Disabled가 아니라 SubExEnabled로 처리한다.
+		//		if (isValidType)
+		//		{
+		//			//_modifiers[i]._isActive_InEditorExclusive = true;
+		//			_modifiers[i]._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.ExclusiveEnabled;
 
-						for (int iP = 0; iP < _modifiers[i]._paramSetGroup_controller.Count; iP++)
-						{
-							//_modifiers[i]._paramSetGroup_controller[iP]._isEnabledExclusive = false;//<<
-							_modifiers[i]._paramSetGroup_controller[iP]._modExType_Transform = apModifierParamSetGroup.MOD_EX_CALCULATE.SubExEnabled;
-							if(isColorCalculated)
-							{
-								_modifiers[i]._paramSetGroup_controller[iP]._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Enabled;
-							}
-							else
-							{
-								_modifiers[i]._paramSetGroup_controller[iP]._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.SubExEnabled;
-							}
-						}
-					}
-					else
-					{
-						_modifiers[i]._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.Disabled;
+		//			for (int iP = 0; iP < _modifiers[i]._paramSetGroup_controller.Count; iP++)
+		//			{
+		//				//ParamSetGroup도 모두다 허용
+		//				//_modifiers[i]._paramSetGroup_controller[iP]._isEnabledExclusive = true;
+		//				_modifiers[i]._paramSetGroup_controller[iP]._modExType_Transform = apModifierParamSetGroup.MOD_EX_CALCULATE.Enabled;
+		//				_modifiers[i]._paramSetGroup_controller[iP]._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Enabled;
+		//			}
+		//		}
+		//		else
+		//		{
+		//			//불가
+		//			//다만, OtherMod 처리 가능시 실행할 수도 있다. < 추가 3.22
+		//			if(isOtherModCalcualte)
+		//			{
+		//				_modifiers[i]._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.SubExEnabled;
 
-						bool isAnyColorUpdate = false;
+		//				//여기선 완전히 Disabled가 아니라 SubExEnabled로 처리한다.
 
-						for (int iP = 0; iP < _modifiers[i]._paramSetGroup_controller.Count; iP++)
-						{
-							//_modifiers[i]._paramSetGroup_controller[iP]._isEnabledExclusive = false;//<<
-							_modifiers[i]._paramSetGroup_controller[iP]._modExType_Transform = apModifierParamSetGroup.MOD_EX_CALCULATE.Disabled;
-							if(isColorCalculated)
-							{
-								_modifiers[i]._paramSetGroup_controller[iP]._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Enabled;
-								isAnyColorUpdate = true;
-							}
-							else
-							{
-								_modifiers[i]._paramSetGroup_controller[iP]._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Disabled;
-							}
-						}
+		//				for (int iP = 0; iP < _modifiers[i]._paramSetGroup_controller.Count; iP++)
+		//				{
+		//					//_modifiers[i]._paramSetGroup_controller[iP]._isEnabledExclusive = false;//<<
+		//					_modifiers[i]._paramSetGroup_controller[iP]._modExType_Transform = apModifierParamSetGroup.MOD_EX_CALCULATE.SubExEnabled;
+		//					if(isColorCalculated)
+		//					{
+		//						_modifiers[i]._paramSetGroup_controller[iP]._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Enabled;
+		//					}
+		//					else
+		//					{
+		//						_modifiers[i]._paramSetGroup_controller[iP]._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.SubExEnabled;
+		//					}
+		//				}
+		//			}
+		//			else
+		//			{
+		//				_modifiers[i]._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.Disabled;
 
-						if(isAnyColorUpdate)
-						{
-							_modifiers[i]._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.OnlyColorEnabled;
-						}
-					}
-					
-					
+		//				bool isAnyColorUpdate = false;
 
-					
-				}
-			}
+		//				for (int iP = 0; iP < _modifiers[i]._paramSetGroup_controller.Count; iP++)
+		//				{
+		//					//_modifiers[i]._paramSetGroup_controller[iP]._isEnabledExclusive = false;//<<
+		//					_modifiers[i]._paramSetGroup_controller[iP]._modExType_Transform = apModifierParamSetGroup.MOD_EX_CALCULATE.Disabled;
+		//					if(isColorCalculated)
+		//					{
+		//						_modifiers[i]._paramSetGroup_controller[iP]._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Enabled;
+		//						isAnyColorUpdate = true;
+		//					}
+		//					else
+		//					{
+		//						_modifiers[i]._paramSetGroup_controller[iP]._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Disabled;
+		//					}
+		//				}
 
-			//Child MeshGroup에도 모두 적용하자
-			if (_parentMeshGroup != null)
-			{
-				if (_parentMeshGroup._childMeshGroupTransforms != null)
-				{
-					for (int i = 0; i < _parentMeshGroup._childMeshGroupTransforms.Count; i++)
-					{
-						apTransform_MeshGroup meshGroupTransform = _parentMeshGroup._childMeshGroupTransforms[i];
-						if (meshGroupTransform._meshGroup != null && meshGroupTransform._meshGroup != _parentMeshGroup)
-						{
-							meshGroupTransform._meshGroup._modifierStack.SetExclusiveModifierInEditingGeneral(modifier, isColorCalculated, isOtherModCalcualte);
-						}
-					}
-				}
-			}
-		}
+		//				if(isAnyColorUpdate)
+		//				{
+		//					_modifiers[i]._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.OnlyColorEnabled;
+		//				}
+		//			}
 
 
-		/// <summary>
-		/// AnimTimeline을 선택하고, 그 안의 AnimTimeLayer를 모두 활성화한다.
-		/// 일반적으로 [선택하지 않은 AnimTimeline]들을 모두 해제하는 반면에, 
-		/// 여기서는 해당 ParamSetGroup에 연동된 AnimTimeline이 AnimClip에 포함된다면 모두 포함시킨다.
-		/// </summary>
-		/// <param name="modifier"></param>
-		/// <param name="paramSetGroups"></param>
-		public void SetExclusiveModifierInEditing_MultipleParamSetGroup_General(apModifierBase modifier, apAnimClip targetAnimClip,
-																				bool isColorCalculated, bool isOtherModCalcualte)
-		{
-			//Debug.Log("---- SetExclusiveModifierInEditing_MultipleParamSetGroup_General (" + _parentMeshGroup.name + ")----");
 
-			//apCalculatedResultParam.RESULT_TYPE targetResultType = modifier.CalculatedResultType;
-			//추가
-			//요청한 Modifier가 BoneTransform을 지원하는 경우
-			//Rigging은 비활성화 되어서는 안된다.
-			apModifierBase.MODIFIER_TYPE[] exGeneralTypes = modifier.GetGeneralExEditableModTypes();
-			if (exGeneralTypes == null)
-			{
-				exGeneralTypes = new apModifierBase.MODIFIER_TYPE[] { modifier.ModifierType };
-			}
 
-			for (int i = 0; i < _modifiers.Count; i++)
-			{
-				bool isValidType = false;
-				for (int iGT = 0; iGT < exGeneralTypes.Length; iGT++)
-				{
-					if (exGeneralTypes[iGT] == _modifiers[i].ModifierType)
-					{
-						isValidType = true;
-						break;
-					}
-				}
+		//		}
+		//	}
 
-				if (isValidType)
-				{
-					//AnimClip을 포함하는 ParamSetGroup에 한해서 
-					_modifiers[i]._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.ExclusiveEnabled;
+		//	//Child MeshGroup에도 모두 적용하자
+		//	if (_parentMeshGroup != null)
+		//	{
+		//		if (_parentMeshGroup._childMeshGroupTransforms != null)
+		//		{
+		//			for (int i = 0; i < _parentMeshGroup._childMeshGroupTransforms.Count; i++)
+		//			{
+		//				apTransform_MeshGroup meshGroupTransform = _parentMeshGroup._childMeshGroupTransforms[i];
+		//				if (meshGroupTransform._meshGroup != null && meshGroupTransform._meshGroup != _parentMeshGroup)
+		//				{
+		//					meshGroupTransform._meshGroup._modifierStack.SetExclusiveModifierInEditingGeneral(modifier, isColorCalculated, isOtherModCalcualte);
+		//				}
+		//			}
+		//		}
+		//	}
+		//}
 
-					for (int iP = 0; iP < _modifiers[i]._paramSetGroup_controller.Count; iP++)
-					{
-						apModifierParamSetGroup paramSetGroup = _modifiers[i]._paramSetGroup_controller[iP];
-						if (paramSetGroup._keyAnimClip == targetAnimClip)
-						{
-							//무조건 활성
-							//paramSetGroup._isEnabledExclusive = true;
-							paramSetGroup._modExType_Transform = apModifierParamSetGroup.MOD_EX_CALCULATE.Enabled;
-							paramSetGroup._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Enabled;
-						}
-						else
-						{
-							//이건 완전히 불가 (Color, Other Mod 상관없다)
-							//다른 애니메이션이다.
-							//paramSetGroup._isEnabledExclusive = false;
-							paramSetGroup._modExType_Transform = apModifierParamSetGroup.MOD_EX_CALCULATE.Disabled;
-							paramSetGroup._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Disabled;
-						}
-					}
-				}
-				else
-				{
-					//지원하는 타입이 아니다.
-					//모두 Disabled한다.
-					//..> 변경
-					//지원하는 타입이 아닐때 Other Mod가 켜진 상태 또는 Color라면 업데이트를 해야한다.
-					//Color + Transform이 항상 Disabled인 경우
-					//-> Animation Type이며 ParamSetGroup의 AnimClip이 다른 경우
-					//그게 아니라면 Color까지 다 체크해봐야 한다.
 
-					//- Animation 타입이 아닌 경우
-					//- Animation 타입일 때, 지금 AnimClip에 해당하는 경우
+		///// <summary>
+		///// AnimTimeline을 선택하고, 그 안의 AnimTimeLayer를 모두 활성화한다.
+		///// 일반적으로 [선택하지 않은 AnimTimeline]들을 모두 해제하는 반면에, 
+		///// 여기서는 해당 ParamSetGroup에 연동된 AnimTimeline이 AnimClip에 포함된다면 모두 포함시킨다.
+		///// </summary>
+		///// <param name="modifier"></param>
+		///// <param name="paramSetGroups"></param>
+		//public void SetExclusiveModifierInEditing_MultipleParamSetGroup_General(apModifierBase modifier, apAnimClip targetAnimClip,
+		//																		bool isColorCalculated, bool isOtherModCalcualte)
+		//{
+		//	//Debug.Log("---- SetExclusiveModifierInEditing_MultipleParamSetGroup_General (" + _parentMeshGroup.name + ")----");
 
-					if(_modifiers[i].IsAnimated)
-					{
-						//애니메이션 타입이다.
-						//ParamSetGroup의 AnimClip이 다르면 무조건 Disabled이다.
-						if (isOtherModCalcualte)
-						{
-							//완전히 불가 -> SubEx
-							_modifiers[i]._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.SubExEnabled;
+		//	//apCalculatedResultParam.RESULT_TYPE targetResultType = modifier.CalculatedResultType;
+		//	//추가
+		//	//요청한 Modifier가 BoneTransform을 지원하는 경우
+		//	//Rigging은 비활성화 되어서는 안된다.
+		//	apModifierBase.MODIFIER_TYPE[] exGeneralTypes = modifier.GetGeneralExEditableModTypes();
+		//	if (exGeneralTypes == null)
+		//	{
+		//		exGeneralTypes = new apModifierBase.MODIFIER_TYPE[] { modifier.ModifierType };
+		//	}
 
-							for (int iP = 0; iP < _modifiers[i]._paramSetGroup_controller.Count; iP++)
-							{
-								apModifierParamSetGroup paramSetGroup = _modifiers[i]._paramSetGroup_controller[iP];
-								//paramSetGroup._isEnabledExclusive = false;
-								if (paramSetGroup._keyAnimClip == targetAnimClip)
-								{
-									paramSetGroup._modExType_Transform = apModifierParamSetGroup.MOD_EX_CALCULATE.SubExEnabled;
+		//	for (int i = 0; i < _modifiers.Count; i++)
+		//	{
+		//		bool isValidType = false;
+		//		for (int iGT = 0; iGT < exGeneralTypes.Length; iGT++)
+		//		{
+		//			if (exGeneralTypes[iGT] == _modifiers[i].ModifierType)
+		//			{
+		//				isValidType = true;
+		//				break;
+		//			}
+		//		}
 
-									if (isColorCalculated)
-									{
-										paramSetGroup._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Enabled;
-									}
-									else
-									{
-										paramSetGroup._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.SubExEnabled;
-									}
-								}
-								else
-								{
-									//AnimClip이 다르다면 얄짤없이 Disabled
-									paramSetGroup._modExType_Transform = apModifierParamSetGroup.MOD_EX_CALCULATE.Disabled;
-									paramSetGroup._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Disabled;
-								}
-							}
-						}
-						else
-						{
-							//애니메이션 타입인데 동시에 실행이 안되는 타입
-							_modifiers[i]._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.Disabled;
+		//		if (isValidType)
+		//		{
+		//			//AnimClip을 포함하는 ParamSetGroup에 한해서 
+		//			_modifiers[i]._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.ExclusiveEnabled;
 
-							bool isAnyColorUpdate = false;
+		//			for (int iP = 0; iP < _modifiers[i]._paramSetGroup_controller.Count; iP++)
+		//			{
+		//				apModifierParamSetGroup paramSetGroup = _modifiers[i]._paramSetGroup_controller[iP];
+		//				if (paramSetGroup._keyAnimClip == targetAnimClip)
+		//				{
+		//					//무조건 활성
+		//					//paramSetGroup._isEnabledExclusive = true;
+		//					paramSetGroup._modExType_Transform = apModifierParamSetGroup.MOD_EX_CALCULATE.Enabled;
+		//					paramSetGroup._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Enabled;
+		//				}
+		//				else
+		//				{
+		//					//이건 완전히 불가 (Color, Other Mod 상관없다)
+		//					//다른 애니메이션이다.
+		//					//paramSetGroup._isEnabledExclusive = false;
+		//					paramSetGroup._modExType_Transform = apModifierParamSetGroup.MOD_EX_CALCULATE.Disabled;
+		//					paramSetGroup._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Disabled;
+		//				}
+		//			}
+		//		}
+		//		else
+		//		{
+		//			//지원하는 타입이 아니다.
+		//			//모두 Disabled한다.
+		//			//..> 변경
+		//			//지원하는 타입이 아닐때 Other Mod가 켜진 상태 또는 Color라면 업데이트를 해야한다.
+		//			//Color + Transform이 항상 Disabled인 경우
+		//			//-> Animation Type이며 ParamSetGroup의 AnimClip이 다른 경우
+		//			//그게 아니라면 Color까지 다 체크해봐야 한다.
 
-							for (int iP = 0; iP < _modifiers[i]._paramSetGroup_controller.Count; iP++)
-							{
-								apModifierParamSetGroup paramSetGroup = _modifiers[i]._paramSetGroup_controller[iP];
-								//paramSetGroup._isEnabledExclusive = false;
-								if (paramSetGroup._keyAnimClip == targetAnimClip)
-								{
-									paramSetGroup._modExType_Transform = apModifierParamSetGroup.MOD_EX_CALCULATE.Disabled;
+		//			//- Animation 타입이 아닌 경우
+		//			//- Animation 타입일 때, 지금 AnimClip에 해당하는 경우
 
-									if (isColorCalculated)
-									{
-										paramSetGroup._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Enabled;
-										isAnyColorUpdate = true;
-									}
-									else
-									{
-										paramSetGroup._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Disabled;
-									}
-								}
-								else
-								{
-									//이건 얄짤없이 Disabled
-									paramSetGroup._modExType_Transform = apModifierParamSetGroup.MOD_EX_CALCULATE.Disabled;
-									paramSetGroup._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Disabled;
-								}
-							}
+		//			if(_modifiers[i].IsAnimated)
+		//			{
+		//				//애니메이션 타입이다.
+		//				//ParamSetGroup의 AnimClip이 다르면 무조건 Disabled이다.
+		//				if (isOtherModCalcualte)
+		//				{
+		//					//완전히 불가 -> SubEx
+		//					_modifiers[i]._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.SubExEnabled;
 
-							if(isAnyColorUpdate)
-							{
-								//Color 업데이트가 존재한다.
-								_modifiers[i]._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.OnlyColorEnabled;
-							}
-						}
-					}
-					else
-					{
-						//애니메이션 타입이 아니다.
-						//무조건 Disabled인 경우는 없다.
-						if (isOtherModCalcualte)
-						{
-							//완전히 불가 -> SubEx
-							_modifiers[i]._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.SubExEnabled;
+		//					for (int iP = 0; iP < _modifiers[i]._paramSetGroup_controller.Count; iP++)
+		//					{
+		//						apModifierParamSetGroup paramSetGroup = _modifiers[i]._paramSetGroup_controller[iP];
+		//						//paramSetGroup._isEnabledExclusive = false;
+		//						if (paramSetGroup._keyAnimClip == targetAnimClip)
+		//						{
+		//							paramSetGroup._modExType_Transform = apModifierParamSetGroup.MOD_EX_CALCULATE.SubExEnabled;
 
-							for (int iP = 0; iP < _modifiers[i]._paramSetGroup_controller.Count; iP++)
-							{
-								apModifierParamSetGroup paramSetGroup = _modifiers[i]._paramSetGroup_controller[iP];
-								//paramSetGroup._isEnabledExclusive = false;
-								paramSetGroup._modExType_Transform = apModifierParamSetGroup.MOD_EX_CALCULATE.SubExEnabled;
+		//							if (isColorCalculated)
+		//							{
+		//								paramSetGroup._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Enabled;
+		//							}
+		//							else
+		//							{
+		//								paramSetGroup._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.SubExEnabled;
+		//							}
+		//						}
+		//						else
+		//						{
+		//							//AnimClip이 다르다면 얄짤없이 Disabled
+		//							paramSetGroup._modExType_Transform = apModifierParamSetGroup.MOD_EX_CALCULATE.Disabled;
+		//							paramSetGroup._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Disabled;
+		//						}
+		//					}
+		//				}
+		//				else
+		//				{
+		//					//애니메이션 타입인데 동시에 실행이 안되는 타입
+		//					_modifiers[i]._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.Disabled;
 
-								if(isColorCalculated)
-								{
-									paramSetGroup._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Enabled;
-								}
-								else
-								{
-									paramSetGroup._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.SubExEnabled;
-								}
-							}
-						}
-						else
-						{
-							//완전히 불가
-							_modifiers[i]._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.Disabled;
+		//					bool isAnyColorUpdate = false;
 
-							bool isAnyColorUpdate = false;
+		//					for (int iP = 0; iP < _modifiers[i]._paramSetGroup_controller.Count; iP++)
+		//					{
+		//						apModifierParamSetGroup paramSetGroup = _modifiers[i]._paramSetGroup_controller[iP];
+		//						//paramSetGroup._isEnabledExclusive = false;
+		//						if (paramSetGroup._keyAnimClip == targetAnimClip)
+		//						{
+		//							paramSetGroup._modExType_Transform = apModifierParamSetGroup.MOD_EX_CALCULATE.Disabled;
 
-							for (int iP = 0; iP < _modifiers[i]._paramSetGroup_controller.Count; iP++)
-							{
-								apModifierParamSetGroup paramSetGroup = _modifiers[i]._paramSetGroup_controller[iP];
-								//paramSetGroup._isEnabledExclusive = false;
-								paramSetGroup._modExType_Transform = apModifierParamSetGroup.MOD_EX_CALCULATE.Disabled;
+		//							if (isColorCalculated)
+		//							{
+		//								paramSetGroup._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Enabled;
+		//								isAnyColorUpdate = true;
+		//							}
+		//							else
+		//							{
+		//								paramSetGroup._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Disabled;
+		//							}
+		//						}
+		//						else
+		//						{
+		//							//이건 얄짤없이 Disabled
+		//							paramSetGroup._modExType_Transform = apModifierParamSetGroup.MOD_EX_CALCULATE.Disabled;
+		//							paramSetGroup._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Disabled;
+		//						}
+		//					}
 
-								if(isColorCalculated)
-								{
-									paramSetGroup._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Enabled;
-									isAnyColorUpdate = true;
-								}
-								else
-								{
-									paramSetGroup._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Disabled;
-								}
-							}
+		//					if(isAnyColorUpdate)
+		//					{
+		//						//Color 업데이트가 존재한다.
+		//						_modifiers[i]._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.OnlyColorEnabled;
+		//					}
+		//				}
+		//			}
+		//			else
+		//			{
+		//				//애니메이션 타입이 아니다.
+		//				//무조건 Disabled인 경우는 없다.
+		//				if (isOtherModCalcualte)
+		//				{
+		//					//완전히 불가 -> SubEx
+		//					_modifiers[i]._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.SubExEnabled;
 
-							if(isAnyColorUpdate)
-							{
-								//Color 업데이트가 있다.
-								_modifiers[i]._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.OnlyColorEnabled;
-							}
-						}
-					}
+		//					for (int iP = 0; iP < _modifiers[i]._paramSetGroup_controller.Count; iP++)
+		//					{
+		//						apModifierParamSetGroup paramSetGroup = _modifiers[i]._paramSetGroup_controller[iP];
+		//						//paramSetGroup._isEnabledExclusive = false;
+		//						paramSetGroup._modExType_Transform = apModifierParamSetGroup.MOD_EX_CALCULATE.SubExEnabled;
 
-					
-				}
-			}
+		//						if(isColorCalculated)
+		//						{
+		//							paramSetGroup._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Enabled;
+		//						}
+		//						else
+		//						{
+		//							paramSetGroup._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.SubExEnabled;
+		//						}
+		//					}
+		//				}
+		//				else
+		//				{
+		//					//완전히 불가
+		//					_modifiers[i]._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.Disabled;
 
-			//Child MeshGroup에도 모두 적용하자
-			if (_parentMeshGroup != null)
-			{
-				if (_parentMeshGroup._childMeshGroupTransforms != null)
-				{
-					for (int i = 0; i < _parentMeshGroup._childMeshGroupTransforms.Count; i++)
-					{
-						apTransform_MeshGroup meshGroupTransform = _parentMeshGroup._childMeshGroupTransforms[i];
-						if (meshGroupTransform._meshGroup != null && meshGroupTransform._meshGroup != _parentMeshGroup)
-						{
-							meshGroupTransform._meshGroup._modifierStack.SetExclusiveModifierInEditing_MultipleParamSetGroup_General(modifier, targetAnimClip, isColorCalculated, isOtherModCalcualte);
-						}
-					}
-				}
-			}
-		}
+		//					bool isAnyColorUpdate = false;
+
+		//					for (int iP = 0; iP < _modifiers[i]._paramSetGroup_controller.Count; iP++)
+		//					{
+		//						apModifierParamSetGroup paramSetGroup = _modifiers[i]._paramSetGroup_controller[iP];
+		//						//paramSetGroup._isEnabledExclusive = false;
+		//						paramSetGroup._modExType_Transform = apModifierParamSetGroup.MOD_EX_CALCULATE.Disabled;
+
+		//						if(isColorCalculated)
+		//						{
+		//							paramSetGroup._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Enabled;
+		//							isAnyColorUpdate = true;
+		//						}
+		//						else
+		//						{
+		//							paramSetGroup._modExType_Color = apModifierParamSetGroup.MOD_EX_CALCULATE.Disabled;
+		//						}
+		//					}
+
+		//					if(isAnyColorUpdate)
+		//					{
+		//						//Color 업데이트가 있다.
+		//						_modifiers[i]._editorExclusiveActiveMod = apModifierBase.MOD_EDITOR_ACTIVE.OnlyColorEnabled;
+		//					}
+		//				}
+		//			}
+
+
+		//		}
+		//	}
+
+		//	//Child MeshGroup에도 모두 적용하자
+		//	if (_parentMeshGroup != null)
+		//	{
+		//		if (_parentMeshGroup._childMeshGroupTransforms != null)
+		//		{
+		//			for (int i = 0; i < _parentMeshGroup._childMeshGroupTransforms.Count; i++)
+		//			{
+		//				apTransform_MeshGroup meshGroupTransform = _parentMeshGroup._childMeshGroupTransforms[i];
+		//				if (meshGroupTransform._meshGroup != null && meshGroupTransform._meshGroup != _parentMeshGroup)
+		//				{
+		//					meshGroupTransform._meshGroup._modifierStack.SetExclusiveModifierInEditing_MultipleParamSetGroup_General(modifier, targetAnimClip, isColorCalculated, isOtherModCalcualte);
+		//				}
+		//			}
+		//		}
+		//	}
+		//} 
+		#endregion
 
 
 

@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -89,6 +88,7 @@ namespace AnyPortrait
 
 
 		public bool _isAnimModifier = false;
+		private apAnimPlayMapping _linkedAnimPlayMapping = null;//추가 20.11.23 : 빠른 처리를 위해 Portrait의 AnimPlayMapping을 미리 연결하자
 
 		public float _totalParamSetGroupWeight = 0.0f;
 
@@ -307,6 +307,7 @@ namespace AnyPortrait
 
 		public List<OptParamKeyValueSet> _paramKeyValues = new List<OptParamKeyValueSet>();
 		public List<apOptCalculatedResultParamSubList> _subParamKeyValueList = new List<apOptCalculatedResultParamSubList>();
+		public apOptCalculatedResultParamSubList[] _subParamKeyValueList_AnimSync = null;//추가 20.11.23 : 애니메이션 모디파이어는 이걸 사용하자. AnimClip의 순서와 동일하게 생성된 배열이다. (중요)
 
 		private bool _isVertexLocalMorph = false;
 		private bool _isVertexRigging = false;
@@ -319,7 +320,8 @@ namespace AnyPortrait
 											apOptTransform targetOptTranform,
 											apOptTransform ownerOptTranform,
 											apOptMesh targetOptMesh,
-											apOptBone targetBone
+											apOptBone targetBone,
+											apAnimPlayMapping linkedAnimPlayMapping//추가 20.11.23 : 빠른 애니메이션 처리를 위함
 											//,apOptParamSetGroupVertWeight weightedVertData //<< 사용안함 19.5.20
 											)
 		{
@@ -335,6 +337,7 @@ namespace AnyPortrait
 
 			_paramKeyValues.Clear();
 			_subParamKeyValueList.Clear();
+			_subParamKeyValueList_AnimSync = null;//애니메이션 리스트가 생기기 전까지는 null
 
 			//삭제 19.5.20 : 이 변수를 더이상 사용하지 않음
 			//_weightedVertexData = weightedVertData;
@@ -342,14 +345,27 @@ namespace AnyPortrait
 			_isVertexLocalMorph = false;
 			_isVertexRigging = false;
 
+			_linkedAnimPlayMapping = linkedAnimPlayMapping;
+
 			//Vertex 데이터가 들어간 경우 Vert 리스트를 만들어주자
 			if ((int)(_calculatedValueType & apCalculatedResultParam.CALCULATED_VALUE_TYPE.VertexPos) != 0)
 			{
 				int nPos = 0;
-				if (_targetOptMesh.LocalVertPositions != null)
+				//이전
+				//if (_targetOptMesh.LocalVertPositions != null)
+				//{
+				//	nPos = _targetOptMesh.LocalVertPositions.Length;
+				//}
+
+				//변경 21.3.11 : 양면인 경우, RenderVertices와 LocalVertPositions가 다를 수 있다.
+				if (_targetOptMesh.RenderVertices != null)
 				{
-					nPos = _targetOptMesh.LocalVertPositions.Length;
+					nPos = _targetOptMesh.RenderVertices.Length;
 				}
+				//if(_targetOptMesh.LocalVertPositions.Length != _targetOptMesh.RenderVertices.Length)
+				//{
+				//	Debug.LogError("양면 메시 발견 : Local Verts : " + _targetOptMesh.LocalVertPositions.Length + " / Render Verts : " + _targetOptMesh.RenderVertices.Length);
+				//}
 
 				_result_Positions = new Vector2[nPos];
 				_tmp_Positions = new Vector2[nPos];
@@ -416,6 +432,7 @@ namespace AnyPortrait
 												apOptModifiedMesh modifiedMesh,
 												apOptModifiedBone modifiedBone,
 												apOptModifiedMeshSet modifiedMeshSet//<<추가됨 19.5.24
+												
 												)
 		{
 			OptParamKeyValueSet existSet = GetParamKeyValue(paramSet);
@@ -426,6 +443,8 @@ namespace AnyPortrait
 				return;
 			}
 
+			
+
 			//새로운 KeyValueSet을 만들어서 리스트에 추가하자
 			//Mod Mesh 또는 Mod Bone 둘중 하나를 넣어서 ParamKeyValueSet을 구성하자
 			OptParamKeyValueSet newKeyValueSet = null;
@@ -433,7 +452,7 @@ namespace AnyPortrait
 			{
 				newKeyValueSet = new OptParamKeyValueSet(paramSetGroup, paramSet, modifiedMesh);
 			}
-			else if(modifiedMeshSet != null)
+			else if (modifiedMeshSet != null)
 			{
 				newKeyValueSet = new OptParamKeyValueSet(paramSetGroup, paramSet, modifiedMeshSet);
 			}
@@ -452,9 +471,9 @@ namespace AnyPortrait
 			apOptCalculatedResultParamSubList targetSubList = null;
 
 			apOptCalculatedResultParamSubList existSubList = _subParamKeyValueList.Find(delegate (apOptCalculatedResultParamSubList a)
-		   {
-			   return a._keyParamSetGroup == paramSetGroup;
-		   });
+			{
+				   return a._keyParamSetGroup == paramSetGroup;
+			});
 
 			//같이 묶여서 작업할 SubList가 있는가
 			if (existSubList != null)
@@ -469,10 +488,10 @@ namespace AnyPortrait
 
 				_subParamKeyValueList.Add(targetSubList);
 
-				if(_isVertexLocalMorph || _isVertexRigging)
+				if (_isVertexLocalMorph || _isVertexRigging)
 				{
 					//VertexRequest를 전체 리스트로 추가하여 관리하자
-					if(_result_VertLocalPairs == null)
+					if (_result_VertLocalPairs == null)
 					{
 						_result_VertLocalPairs = new List<apOptVertexRequest>();
 					}
@@ -488,8 +507,22 @@ namespace AnyPortrait
 			}
 
 			_isAnimModifier = (paramSetGroup._syncTarget == apModifierParamSetGroup.SYNC_TARGET.KeyFrame);
+
+			//추가 20.11.23 : 애니메이션 모디파이어라면 SubList를 AnimClip의 순서에 맞게 만들자.
+			//만약 없다면 null로 두더라도, 순서를 유지하여 고정 배열로 만들어야 한다.
+			//새로 생성하거나 추가될 SubList가 몇번째 Sync인지도 계산하자
 			
-			
+			if (_isAnimModifier)
+			{
+				if (_subParamKeyValueList_AnimSync == null)
+				{
+					_subParamKeyValueList_AnimSync = new apOptCalculatedResultParamSubList[_linkedAnimPlayMapping._nAnimClips];
+				}
+
+				//애니메이션 클립의 인덱스를 가져오자
+				int iAnimSync = _linkedAnimPlayMapping.GetAnimClipIndex(paramSetGroup._keyAnimClip);
+				_subParamKeyValueList_AnimSync[iAnimSync] = targetSubList;//적절한 슬롯의 인덱스에 SubList를 할당한다.
+			}
 		}
 
 
@@ -527,9 +560,15 @@ namespace AnyPortrait
 				int nResultMatrices = 0;
 
 
-				if (_targetOptMesh.LocalVertPositions != null)
+				//if (_targetOptMesh.LocalVertPositions != null)
+				//{
+				//	nMeshVerts = _targetOptMesh.LocalVertPositions.Length;
+				//}
+
+				//변경 21.3.11 : 양면 메시의 경우 RenderVertices를 이용해야한다.
+				if (_targetOptMesh.RenderVertices != null)
 				{
-					nMeshVerts = _targetOptMesh.LocalVertPositions.Length;
+					nMeshVerts = _targetOptMesh.RenderVertices.Length;
 				}
 
 				if (_result_Positions != null)
@@ -654,6 +693,91 @@ namespace AnyPortrait
 		}
 
 
+		//추가 20.11.13 : 애니메이션용 Calculate 함수 > 최적화 코드가 추가되어 로직이 많이 사라졌다.
+		public bool Calculate_AnimMod()
+		{
+			bool isUpdatable = false;
+
+			_totalParamSetGroupWeight = 0.0f;
+
+
+			bool isResult = false;
+
+			//중요! 애니메이션 최적화에서 이 코드를 삭제할 수 있어야 한다.
+			//if (_isAnimModifier)
+			//{
+			//	bool isNeedSort = false;
+			//	//추가
+			//	//애니메이션 타입인 경우
+			//	//재정렬이 필요한지 체크한다.
+			//	for (int i = 0; i < _subParamKeyValueList.Count; i++)
+			//	{
+			//		//여기서 애니메이션을 계산하고 UnitWeight를 LayerWeight로 저장한다.
+			//		if (_subParamKeyValueList[i].UpdateAnimLayer())
+			//		{
+			//			//Layer의 변화가 있었다.
+			//			//Sort를 하자
+			//			isNeedSort = true;
+			//		}
+			//	}
+			//	if (isNeedSort)
+			//	{
+			//		//Debug.Log("Reorder / AnimClip");
+			//		//정렬을 다시 하자
+			//		SortSubList();
+			//	}
+			//}
+
+
+			//이전 : 모든 SubList를 Calculate
+			//for (int i = 0; i < _subParamKeyValueList.Count; i++)
+			//{
+			//	isResult = _subParamKeyValueList[i].Calculate();
+			//	if (isResult)
+			//	{
+			//		isUpdatable = true;
+			//	}
+			//}
+
+			//변경 20.11.23
+			//_linkedAnimPlayMapping를 이용해서 "재생 중인 애니메이션의 SubList"만 계산
+			int iSubList = 0;
+			apAnimPlayMapping.LiveUnit curUnit = null;
+			
+			for (int i = 0; i < _linkedAnimPlayMapping._nAnimClips; i++)
+			{
+				curUnit = _linkedAnimPlayMapping._liveUnits_Sorted[i];
+				if(!curUnit._isLive)
+				{
+					//재생 종료
+					//이 뒤는 모두 재생이 안되는 애니메이션이다.
+					break;
+				}
+				iSubList = curUnit._animIndex;//현재 재생중인 AnimClip에 해당하는 SubList의 인덱스
+
+				if(_subParamKeyValueList_AnimSync[iSubList] == null)
+				{
+					//이게 Null이라는 것은, 이 AnimClip에 대한 TimelineLayer와 Mod는 없다는 것
+					continue;
+				}
+
+				//이제 SubList의 키프레임들을 계산하자. Anim전용 Calculate 함수를 이용할 것
+				isResult = _subParamKeyValueList_AnimSync[iSubList].Calculate_AnimMod();
+				
+
+				if(isResult)
+				{
+					isUpdatable = true;
+				}
+				
+			}
+			
+			
+
+			return isUpdatable;
+		}
+
+
 
 
 
@@ -671,6 +795,17 @@ namespace AnyPortrait
 				return Mathf.Clamp01(_linkedModifier._layerWeight * Mathf.Clamp01(_totalParamSetGroupWeight));
 			}
 		}
+
+		//추가 20.11.26 : Rigging 최적화를 위해 _totalParamSetGroupWeight를 계산하지 않는다. Modifier Weight만 계산할 것
+		public float ModifierWeightForRigging
+		{
+			get
+			{
+				return Mathf.Clamp01(_linkedModifier._layerWeight);
+			}
+		}
+
+
 		public bool IsModifierAvailable { get { return _isAvailable; } }
 
 		public OptParamKeyValueSet GetParamKeyValue(apOptParamSet paramSet)

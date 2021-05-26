@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEditor;
@@ -83,6 +82,9 @@ namespace AnyPortrait
 		private apGUIContentWrapper _guiContent_Visible_TmpWork = null;
 		private apGUIContentWrapper _guiContent_NonVisible_TmpWork = null;
 
+		private apGUIContentWrapper _guiContent_Visible_Rule = null;
+		private apGUIContentWrapper _guiContent_NonVisible_Rule = null;
+
 		private apGUIContentWrapper _guiContent_Visible_Default = null;
 		private apGUIContentWrapper _guiContent_NonVisible_Default = null;
 
@@ -123,6 +125,8 @@ namespace AnyPortrait
 			if (_guiContent_NonVisible_Current == null)		{ _guiContent_NonVisible_Current =	apGUIContentWrapper.Make(Editor.ImageSet.Get(apImageSet.PRESET.Hierarchy_NonVisible_Current)); }
 			if (_guiContent_Visible_TmpWork == null)		{ _guiContent_Visible_TmpWork =		apGUIContentWrapper.Make(Editor.ImageSet.Get(apImageSet.PRESET.Hierarchy_Visible_TmpWork)); }
 			if (_guiContent_NonVisible_TmpWork == null)		{ _guiContent_NonVisible_TmpWork =	apGUIContentWrapper.Make(Editor.ImageSet.Get(apImageSet.PRESET.Hierarchy_NonVisible_TmpWork)); }
+			if (_guiContent_Visible_Rule == null)			{ _guiContent_Visible_Rule =		apGUIContentWrapper.Make(Editor.ImageSet.Get(apImageSet.PRESET.Hierarchy_Visible_Rule)); }
+			if (_guiContent_NonVisible_Rule == null)		{ _guiContent_NonVisible_Rule =		apGUIContentWrapper.Make(Editor.ImageSet.Get(apImageSet.PRESET.Hierarchy_NonVisible_Rule)); }
 			if (_guiContent_Visible_Default == null)		{ _guiContent_Visible_Default =		apGUIContentWrapper.Make(Editor.ImageSet.Get(apImageSet.PRESET.Hierarchy_Visible_Default)); }
 			if (_guiContent_NonVisible_Default == null)		{ _guiContent_NonVisible_Default =	apGUIContentWrapper.Make(Editor.ImageSet.Get(apImageSet.PRESET.Hierarchy_NonVisible_Default)); }
 			if (_guiContent_Visible_ModKey == null)			{ _guiContent_Visible_ModKey =		apGUIContentWrapper.Make(Editor.ImageSet.Get(apImageSet.PRESET.Hierarchy_Visible_ModKey)); }
@@ -396,6 +400,7 @@ namespace AnyPortrait
 				_guiContent_Visible_TmpWork, _guiContent_NonVisible_TmpWork,
 				_guiContent_Visible_Default, _guiContent_NonVisible_Default,
 				_guiContent_Visible_ModKey, _guiContent_NonVisible_ModKey,
+				_guiContent_Visible_Rule, _guiContent_NonVisible_Rule,
 				_guiContent_NoKey,
 				funcRefreshVislbePrefix
 				);
@@ -611,11 +616,28 @@ namespace AnyPortrait
 			}
 
 			bool isModRegisted = IsModRegistered(bone);
+			
+			//이전
+			//apEditorHierarchyUnit.VISIBLE_TYPE visibleType = apEditorHierarchyUnit.VISIBLE_TYPE.TmpWork_NonVisible;
+			
+			//if(bone.IsGUIVisible)
+			//{
+			//	visibleType = apEditorHierarchyUnit.VISIBLE_TYPE.Current_Visible;
+			//}
+
+			//변경 21.1.28
+			//- 본의 보이기 타입이 많아졌다.
 			apEditorHierarchyUnit.VISIBLE_TYPE visibleType = apEditorHierarchyUnit.VISIBLE_TYPE.TmpWork_NonVisible;
-			if(bone.IsGUIVisible)
+
+			switch (bone.VisibleIconType)
 			{
-				visibleType = apEditorHierarchyUnit.VISIBLE_TYPE.Current_Visible;
+				case apBone.VISIBLE_COMBINATION_ICON.Visible_Default:	visibleType = apEditorHierarchyUnit.VISIBLE_TYPE.Current_Visible; break;
+				case apBone.VISIBLE_COMBINATION_ICON.Visible_Tmp:		visibleType = apEditorHierarchyUnit.VISIBLE_TYPE.TmpWork_Visible; break;
+				case apBone.VISIBLE_COMBINATION_ICON.NonVisible_Tmp:	visibleType = apEditorHierarchyUnit.VISIBLE_TYPE.TmpWork_NonVisible; break;
+				case apBone.VISIBLE_COMBINATION_ICON.NonVisible_Rule:	visibleType = apEditorHierarchyUnit.VISIBLE_TYPE.Rule_NonVisible; break;
 			}
+
+
 			apEditorHierarchyUnit addedUnit = AddUnit_ToggleButton_Visible(icon,
 														bone._name,
 														CATEGORY.Bone_Item,
@@ -788,6 +810,30 @@ namespace AnyPortrait
 			{
 				SortUnit_Recv(_units_Root_Meshes[i]);
 			}
+
+			//추가 21.2.9 : Sub List는 MeshGroupTF의 순서대로 표시해야한다.
+			_units_Root_Bones.Sort(delegate(apEditorHierarchyUnit a, apEditorHierarchyUnit b)
+			{
+				if ((CATEGORY)(a._savedKey) == CATEGORY.MainName_Bone)
+				{
+					return -1;
+				}
+				if ((CATEGORY)(b._savedKey) == CATEGORY.MainName_Bone)
+				{
+					return 1;
+				}
+				if ((CATEGORY)(a._savedKey) == CATEGORY.SubName_Bone && (CATEGORY)(b._savedKey) == CATEGORY.SubName_Bone)
+				{
+					//둘다 서브일 경우에 (추가 21.2.9)
+					apTransform_MeshGroup meshGroup_a = a._savedObj as apTransform_MeshGroup;
+					apTransform_MeshGroup meshGroup_b = b._savedObj as apTransform_MeshGroup;
+					if(meshGroup_a != null && meshGroup_b != null)
+					{
+						return meshGroup_b._depth - meshGroup_a._depth;
+					}
+				}
+				return 0;
+			});
 
 			for (int i = 0; i < _units_Root_Bones.Count; i++)
 			{
@@ -1102,10 +1148,23 @@ namespace AnyPortrait
 			bool isModRegisted = IsModRegistered(bone);
 			bool isAvailable = IsBoneAvailable(bone);
 
+			//이전
+			//apEditorHierarchyUnit.VISIBLE_TYPE boneVisible = apEditorHierarchyUnit.VISIBLE_TYPE.TmpWork_NonVisible;
+			//if(bone.IsGUIVisible)
+			//{
+			//	boneVisible = apEditorHierarchyUnit.VISIBLE_TYPE.Current_Visible;
+			//}
+
+			//변경 21.1.28
+			//- 본의 보이기 타입이 많아졌다.
 			apEditorHierarchyUnit.VISIBLE_TYPE boneVisible = apEditorHierarchyUnit.VISIBLE_TYPE.TmpWork_NonVisible;
-			if(bone.IsGUIVisible)
+
+			switch (bone.VisibleIconType)
 			{
-				boneVisible = apEditorHierarchyUnit.VISIBLE_TYPE.Current_Visible;
+				case apBone.VISIBLE_COMBINATION_ICON.Visible_Default:	boneVisible = apEditorHierarchyUnit.VISIBLE_TYPE.Current_Visible; break;
+				case apBone.VISIBLE_COMBINATION_ICON.Visible_Tmp:		boneVisible = apEditorHierarchyUnit.VISIBLE_TYPE.TmpWork_Visible; break;
+				case apBone.VISIBLE_COMBINATION_ICON.NonVisible_Tmp:	boneVisible = apEditorHierarchyUnit.VISIBLE_TYPE.TmpWork_NonVisible; break;
+				case apBone.VISIBLE_COMBINATION_ICON.NonVisible_Rule:	boneVisible = apEditorHierarchyUnit.VISIBLE_TYPE.Rule_NonVisible; break;
 			}
 
 			apEditorHierarchyUnit curUnit = RefreshUnit(CATEGORY.Bone_Item,
@@ -1269,6 +1328,18 @@ namespace AnyPortrait
 					{
 						return -1;
 					}
+
+					if ((CATEGORY)(a._savedKey) == CATEGORY.SubName_Bone && (CATEGORY)(b._savedKey) == CATEGORY.SubName_Bone)
+					{
+						//둘다 서브일 경우에 (추가 21.2.9)
+						apTransform_MeshGroup meshGroup_a = a._savedObj as apTransform_MeshGroup;
+						apTransform_MeshGroup meshGroup_b = b._savedObj as apTransform_MeshGroup;
+						if(meshGroup_a != null && meshGroup_b != null)
+						{
+							return meshGroup_b._depth - meshGroup_a._depth;
+						}
+					}
+
 
 					int depthA = -1;
 					int depthB = -1;
@@ -1893,7 +1964,7 @@ namespace AnyPortrait
 				case CATEGORY.Bone_Item:
 					{
 						bone = savedObj as apBone;
-						isVisibleDefault = bone.IsGUIVisible;
+						isVisibleDefault = bone.IsVisibleInGUI;
 					}
 					break;
 				default:
@@ -1932,17 +2003,29 @@ namespace AnyPortrait
 							//TmpWork가 꺼져있다. (실제 Visible과 값이 같다)
 							if (linkedRenderUnit._isVisible_WithoutParent)
 							{
+								//Debug.Log("Visible Type 1");
+
 								//Show -> Hide
-								linkedRenderUnit._isVisibleWorkToggle_Show2Hide = true;
-								linkedRenderUnit._isVisibleWorkToggle_Hide2Show = false;
+								//이전
+								//linkedRenderUnit._isVisibleWorkToggle_Show2Hide = true;
+								//linkedRenderUnit._isVisibleWorkToggle_Hide2Show = false;
+
+								//변경 21.1.28 : Show(None) -> Hide
+								linkedRenderUnit._workVisible_Tmp = apRenderUnit.WORK_VISIBLE_TYPE.ToHide;
 
 								isTmpWorkToShow = false;
 							}
 							else
 							{
+								//Debug.Log("Visible Type 2");
+
 								//Hide -> Show
-								linkedRenderUnit._isVisibleWorkToggle_Show2Hide = false;
-								linkedRenderUnit._isVisibleWorkToggle_Hide2Show = true;
+								//이전
+								//linkedRenderUnit._isVisibleWorkToggle_Show2Hide = false;
+								//linkedRenderUnit._isVisibleWorkToggle_Hide2Show = true;
+
+								//변경 21.1.28 : Hide(None) -> Show
+								linkedRenderUnit._workVisible_Tmp = apRenderUnit.WORK_VISIBLE_TYPE.ToShow;
 
 								isTmpWorkToShow = true;
 							}
@@ -1950,8 +2033,31 @@ namespace AnyPortrait
 						else
 						{
 							//TmpWork가 켜져있다. 꺼야한다. (같은 값으로 바꾼다)
-							linkedRenderUnit._isVisibleWorkToggle_Show2Hide = false;
-							linkedRenderUnit._isVisibleWorkToggle_Hide2Show = false;
+							//이전
+							//linkedRenderUnit._isVisibleWorkToggle_Show2Hide = false;
+							//linkedRenderUnit._isVisibleWorkToggle_Hide2Show = false;
+
+							//Debug.Log("Visible Type 3 : " + linkedRenderUnit._workVisible_Rule);
+
+							//변경 21.1.28 : Show/Hide -> None
+							if(linkedRenderUnit._workVisible_Rule == apRenderUnit.WORK_VISIBLE_TYPE.None)
+							{
+								linkedRenderUnit._workVisible_Tmp = apRenderUnit.WORK_VISIBLE_TYPE.None;
+							}
+							else
+							{
+								//만약 겉으로 보기엔 다르다 > 같게 만들어야 하는데, Rule이 None이 아니다.
+								//계산값과 같게 만들자
+								if(linkedRenderUnit._isVisibleCalculated)
+								{
+									linkedRenderUnit._workVisible_Tmp = apRenderUnit.WORK_VISIBLE_TYPE.ToShow;
+								}
+								else
+								{
+									linkedRenderUnit._workVisible_Tmp = apRenderUnit.WORK_VISIBLE_TYPE.ToHide;
+								}
+							}
+							
 
 							isTmpWorkToShow = !linkedRenderUnit._isVisible_WithoutParent;
 						}
@@ -2107,7 +2213,8 @@ namespace AnyPortrait
 					}
 					else
 					{
-						bone.SetGUIVisible(!isVisibleDefault);
+						//bone.SetGUIVisible(!isVisibleDefault);//이전
+						bone.SetGUIVisible_Tmp_ByCheckRule(!isVisibleDefault);
 
 						//Visible Controller에도 반영해야 한다. (20.4.13)
 						Editor.VisiblityController.Save_Bone(Editor.Select.MeshGroup, bone);
@@ -2307,8 +2414,26 @@ namespace AnyPortrait
 																		   //Calculate != WOParent 인 경우 (TmpWork의 영향을 받았다)
 				if (linkedRenderUnit._isVisibleCalculated != linkedRenderUnit._isVisible_WithoutParent)
 				{
-					if (isVisible)	{ return apEditorHierarchyUnit.VISIBLE_TYPE.TmpWork_Visible; }
-					else			{ return apEditorHierarchyUnit.VISIBLE_TYPE.TmpWork_NonVisible; }
+					//이전
+					//if (isVisible)	{ return apEditorHierarchyUnit.VISIBLE_TYPE.TmpWork_Visible; }
+					//else				{ return apEditorHierarchyUnit.VISIBLE_TYPE.TmpWork_NonVisible; }
+
+					//변경 21.1.29 : Tmp와 Rule이 따로 있다.
+					if(linkedRenderUnit._workVisible_Tmp != linkedRenderUnit._workVisible_Rule)
+					{
+						//Tmp와 다르다면, Tmp의 값을 따른다. 단, None인 경우 빼고
+						switch (linkedRenderUnit._workVisible_Tmp)
+						{
+							case apRenderUnit.WORK_VISIBLE_TYPE.None: return isVisible ? apEditorHierarchyUnit.VISIBLE_TYPE.Rule_Visible : apEditorHierarchyUnit.VISIBLE_TYPE.Rule_NonVisible;
+							case apRenderUnit.WORK_VISIBLE_TYPE.ToShow: return apEditorHierarchyUnit.VISIBLE_TYPE.TmpWork_Visible;
+							case apRenderUnit.WORK_VISIBLE_TYPE.ToHide: return apEditorHierarchyUnit.VISIBLE_TYPE.TmpWork_NonVisible;
+						}
+					}
+					else
+					{
+						//Tmp와 같다면, Rule을 따른다.
+						return isVisible ? apEditorHierarchyUnit.VISIBLE_TYPE.Rule_Visible : apEditorHierarchyUnit.VISIBLE_TYPE.Rule_NonVisible;
+					}
 				}
 				else
 				{
@@ -2435,31 +2560,68 @@ namespace AnyPortrait
 			//bool isVisible = linkedRenderUnit._isVisible;
 
 
+			//이전
+			//if (linkedRenderUnit._isVisibleCalculated != linkedRenderUnit._isVisible_WithoutParent)
+			//{
+			//	if (isVisible)
+			//	{
+			//		unit._visibleType_Prefix = apEditorHierarchyUnit.VISIBLE_TYPE.TmpWork_Visible;
+			//	}
+			//	else
+			//	{
+			//		unit._visibleType_Prefix = apEditorHierarchyUnit.VISIBLE_TYPE.TmpWork_NonVisible;
+			//	}
+			//}
+			//else
+			//{
+			//	//TmpWork의 영향을 받지 않았다.
+			//	if (isVisible)
+			//	{
+			//		unit._visibleType_Prefix = apEditorHierarchyUnit.VISIBLE_TYPE.Current_Visible;
+			//	}
+			//	else
+			//	{
+			//		unit._visibleType_Prefix = apEditorHierarchyUnit.VISIBLE_TYPE.Current_NonVisible;
+			//	}
 
+			//	//PostFix는 뭐 알아서 잘 하겠징
+			//}
+
+			//변경 21.1.31
 			if (linkedRenderUnit._isVisibleCalculated != linkedRenderUnit._isVisible_WithoutParent)
 			{
-				if (isVisible)
+				//이전
+				//if (isVisible)	{ return apEditorHierarchyUnit.VISIBLE_TYPE.TmpWork_Visible; }
+				//else				{ return apEditorHierarchyUnit.VISIBLE_TYPE.TmpWork_NonVisible; }
+
+				//변경 21.1.29 : Tmp와 Rule이 따로 있다.
+				if(linkedRenderUnit._workVisible_Tmp != linkedRenderUnit._workVisible_Rule)
 				{
-					unit._visibleType_Prefix = apEditorHierarchyUnit.VISIBLE_TYPE.TmpWork_Visible;
+					//Tmp와 다르다면, Tmp의 값을 따른다. 단, None인 경우 빼고
+					switch (linkedRenderUnit._workVisible_Tmp)
+					{
+						case apRenderUnit.WORK_VISIBLE_TYPE.None:
+							unit._visibleType_Prefix = isVisible ? apEditorHierarchyUnit.VISIBLE_TYPE.Rule_Visible : apEditorHierarchyUnit.VISIBLE_TYPE.Rule_NonVisible;
+							break;
+						case apRenderUnit.WORK_VISIBLE_TYPE.ToShow:
+							unit._visibleType_Prefix = apEditorHierarchyUnit.VISIBLE_TYPE.TmpWork_Visible;
+							break;
+						case apRenderUnit.WORK_VISIBLE_TYPE.ToHide:
+							unit._visibleType_Prefix = apEditorHierarchyUnit.VISIBLE_TYPE.TmpWork_NonVisible;
+							break;
+					}
 				}
 				else
 				{
-					unit._visibleType_Prefix = apEditorHierarchyUnit.VISIBLE_TYPE.TmpWork_NonVisible;
+					//Tmp와 같다면, Rule을 따른다.
+					unit._visibleType_Prefix = isVisible ? apEditorHierarchyUnit.VISIBLE_TYPE.Rule_Visible : apEditorHierarchyUnit.VISIBLE_TYPE.Rule_NonVisible;
 				}
 			}
 			else
 			{
 				//TmpWork의 영향을 받지 않았다.
-				if (isVisible)
-				{
-					unit._visibleType_Prefix = apEditorHierarchyUnit.VISIBLE_TYPE.Current_Visible;
-				}
-				else
-				{
-					unit._visibleType_Prefix = apEditorHierarchyUnit.VISIBLE_TYPE.Current_NonVisible;
-				}
-
-				//PostFix는 뭐 알아서 잘 하겠징
+				if (isVisible)	{ unit._visibleType_Prefix = apEditorHierarchyUnit.VISIBLE_TYPE.Current_Visible; }
+				else			{ unit._visibleType_Prefix = apEditorHierarchyUnit.VISIBLE_TYPE.Current_NonVisible; }
 			}
 		}
 

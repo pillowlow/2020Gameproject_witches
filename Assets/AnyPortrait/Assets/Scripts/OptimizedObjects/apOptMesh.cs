@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -1450,11 +1449,12 @@ namespace AnyPortrait
 			apOptRenderVertex rVert = null;
 
 //#if UNITY_EDITOR
-//				UnityEngine.Profiling.Profiler.BeginSample("Opt Mesh - Update calculate Render Vertices");
+//			UnityEngine.Profiling.Profiler.BeginSample("Opt Mesh - Update calculate Render Vertices");
 //#endif
-				
+
 
 			apOptCalculatedResultStack calculateStack = _parentTransform.CalculatedStack;
+
 
 			for (int i = 0; i < _nRenderVerts; i++)
 			{
@@ -1464,15 +1464,37 @@ namespace AnyPortrait
 				//리깅 추가
 				if (isRigging)
 				{
+
+					//TODO : 이 부분의 코드를 개선할 수 있을 것 같다!
+					//TODO : Rigging의 경우 Modifier에서 계산을 하지 말고, 여기서만 계산하자
+
 					//지연 코드 버전
 					//이전 버전
 					//rVert._matrix_Rigging.SetMatrixWithWeight(calculateStack.GetDeferredRiggingMatrix(i), calculateStack._result_RiggingWeight);
 
 					//개선된 버전 + 캐시
+					//이전..
+					//if (!_isUseRiggingCache)
+					//{
+					//	rVert._matrix_Rigging.SetMatrixWithWeight(
+					//		calculateStack.GetDeferredRiggingMatrix(i),
+					//		calculateStack._result_RiggingWeight * calculateStack.GetDeferredRiggingWeight(i)//<이 Weight는 런타임에서는 바뀌지 않는다.
+					//		);
+					//}
+					//else
+					//{
+					//	//캐시를 이용해서 Weight를 가져온다.
+					//	rVert._matrix_Rigging.SetMatrixWithWeight(
+					//		calculateStack.GetDeferredRiggingMatrix(i),
+					//		calculateStack._result_RiggingWeight * calculateStack.GetDeferredRiggingWeightCache(i)
+					//		);
+					//}
+
+					//변경 20.11.26 : 더 개선된 버전!
 					if (!_isUseRiggingCache)
 					{
 						rVert._matrix_Rigging.SetMatrixWithWeight(
-							calculateStack.GetDeferredRiggingMatrix(i),
+							calculateStack.GetDeferredRiggingMatrix_WithLUT(i),
 							calculateStack._result_RiggingWeight * calculateStack.GetDeferredRiggingWeight(i)//<이 Weight는 런타임에서는 바뀌지 않는다.
 							);
 					}
@@ -1480,17 +1502,12 @@ namespace AnyPortrait
 					{
 						//캐시를 이용해서 Weight를 가져온다.
 						rVert._matrix_Rigging.SetMatrixWithWeight(
-							calculateStack.GetDeferredRiggingMatrix(i),
+							calculateStack.GetDeferredRiggingMatrix_WithLUT(i),
 							calculateStack._result_RiggingWeight * calculateStack.GetDeferredRiggingWeightCache(i)
 							);
 					}
 
-					//테스트
-					//if (calculateStack.GetDeferredRiggingWeight(i) < 0.7f)
-					//{
-					//	Debug.Log("[" + name + "] Rigging Weight가 0인 Vert <" + i + "> (" + calculateStack.GetDeferredRiggingWeight(i) + ")");
-					//	Debug.Log(rVert._matrix_Rigging.ToString());
-					//}
+
 				}
 
 				if (isVertexLocal)
@@ -1541,7 +1558,7 @@ namespace AnyPortrait
 			}
 
 //#if UNITY_EDITOR
-//				UnityEngine.Profiling.Profiler.EndSample();
+//			UnityEngine.Profiling.Profiler.EndSample();
 //#endif
 
 

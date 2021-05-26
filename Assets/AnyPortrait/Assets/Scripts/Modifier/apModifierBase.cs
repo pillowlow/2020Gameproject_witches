@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -76,15 +75,30 @@ namespace AnyPortrait
 
 		public enum MOD_EDITOR_ACTIVE
 		{
-			Enabled = 0,
-			ExclusiveEnabled = 1,
-			Disabled = 2,
-			SubExEnabled = 3,//<<추가 : 기본적으로는 Disabled이다. 다만, 대상이 "선택한 Mod"에 "등록되지 않은 경우"에는 이 Modifier가 계산될 수 있다.
-			OnlyColorEnabled = 4,//<<추가 : 기본적으로는 Disabled이다. Color만 업데이트되는 ParamSetGroup이 한개 이상 존재하는 경우
+			//삭제 및 변경
+			//Enabled = 0,
+			//ExclusiveEnabled = 1,
+			//Disabled = 2,
+			//SubExEnabled = 3,//<<추가 : 기본적으로는 Disabled이다. 다만, 대상이 "선택한 Mod"에 "등록되지 않은 경우"에는 이 Modifier가 계산될 수 있다.
+			//OnlyColorEnabled = 4,//<<추가 : 기본적으로는 Disabled이다. Color만 업데이트되는 ParamSetGroup이 한개 이상 존재하는 경우
+
+			//변경 21.2.14 : 편집 모드에 대한 값이 바뀐다.
+			/// <summary>편집 모드가 아니다. isActive가 true라면 항상 실행</summary>
+			Enabled_Run = 0,
+			/// <summary>현재 편집중인 모디파이어/PSG/AnimTimeline이다.</summary>
+			Enabled_Edit = 1,
+			/// <summary>편집 중인 모디파이어는 아니지만, 등록 여부 상관없이 동작하는 Rigging과 Physics(제한적)이다.</summary>
+			Enabled_Background = 2,
+			/// <summary>편집 중이 아니어서 적용되지 않는다. 다만, 색상은 적용한다.</summary>
+			Disabled_ExceptColor = 3,
+			/// <summary>편집 중이 아니어서 적용되지 않는다. 옵션에 따라선 이 상태만 실행될 수 있다.</summary>
+			Disabled_NotEdit = 4,
+			/// <summary>편집 여부에 상관없이 무조건 실행되지 않는다. 이 값은 PSG가 아닌 Modifier에만 적용되며, 다른 옵션에 의해서도 동작하지 않는다.</summary>
+			Disabled_Force = 5,
 		}
 
 		[NonSerialized]
-		public MOD_EDITOR_ACTIVE _editorExclusiveActiveMod = MOD_EDITOR_ACTIVE.Enabled;//<<에디터에서만 적용되는 배제에 따른 적용 여부
+		public MOD_EDITOR_ACTIVE _editorExclusiveActiveMod = MOD_EDITOR_ACTIVE.Enabled_Run;//<<에디터에서만 적용되는 배제에 따른 적용 여부
 
 
 
@@ -214,6 +228,13 @@ namespace AnyPortrait
 			apAnimClip curSelectedAnimClip = null;
 			if(IsAnimated && linkRefreshRequest != null)
 			{
+				//Debug.LogWarning("애니메이션 Refresh : " + (linkRefreshRequest == null ? "Null Request" : "AnyRequest"));
+				//if(linkRefreshRequest != null)
+				//{
+				//	Debug.Log("Request MeshGroup : " + linkRefreshRequest.Request_MeshGroup);
+				//	Debug.Log("Request Modifier : " + linkRefreshRequest.Request_Modifier);
+				//	Debug.Log("Request PSG : " + linkRefreshRequest.Request_PSG);
+				//}
 				if(linkRefreshRequest.Request_Modifier == apUtil.LR_REQUEST__MODIFIER.AllModifiers_ExceptAnimMods)
 				{
 					//애니메이션 모디파이어는 처리하지 않는다.
@@ -224,6 +245,8 @@ namespace AnyPortrait
 					//선택된 AnimClip 외의 PSG는 생략할 수 있다.
 					isSkipUnselectedAnimPSGs = true;
 					curSelectedAnimClip = linkRefreshRequest.AnimClip;
+
+					//Debug.Log("대상 AnimClip : " + (curSelectedAnimClip != null ? curSelectedAnimClip._name : "(Unknown)"));
 				}
 			}
 				
@@ -245,7 +268,7 @@ namespace AnyPortrait
 			//		//	//선택된 AnimClip 외에는 스킵하자
 			//		//	continue;
 			//		//}
-					
+
 			//		curParamSetGroup.RemoveInvalidParamSet();
 			//	}
 			//}
@@ -258,11 +281,39 @@ namespace AnyPortrait
 			//	}
 			//}
 
-			for (int i = 0; i < _paramSetGroup_controller.Count; i++)
+			//여기서 문제가 발생함
+			//이전
+			//for (int i = 0; i < _paramSetGroup_controller.Count; i++)
+			//{
+			//	curParamSetGroup = _paramSetGroup_controller[i];
+			//	curParamSetGroup.RemoveInvalidParamSet();
+			//}
+
+			//변경 21.4.18 : 선택되지 않은 애니메이션에 대해서는 InvalidParamSet 체크를 하지 않는다.
+			if (isSkipUnselectedAnimPSGs)
 			{
-				curParamSetGroup = _paramSetGroup_controller[i];
-				curParamSetGroup.RemoveInvalidParamSet();
+				for (int i = 0; i < _paramSetGroup_controller.Count; i++)
+				{
+					curParamSetGroup = _paramSetGroup_controller[i];
+					//해당하지 않는 애니메이션 클립은 생략한다. 
+					if(curParamSetGroup._keyAnimClip != curSelectedAnimClip)
+					{
+						//Debug.LogWarning("해당되지 않는 애니메이션 클립 생략 : " + curParamSetGroup._keyAnimClip._name);
+						continue;
+					}
+					curParamSetGroup.RemoveInvalidParamSet();
+				}
 			}
+			else
+			{
+				//전체 체크
+				for (int i = 0; i < _paramSetGroup_controller.Count; i++)
+				{
+					curParamSetGroup = _paramSetGroup_controller[i];
+					curParamSetGroup.RemoveInvalidParamSet();
+				}
+			}
+			
 
 
 			//ParamSet이 없는 경우는 삭제. > 삭제된 데이터를 찾아서 삭제하는 것이므로 모두 해당
@@ -423,7 +474,6 @@ namespace AnyPortrait
 			{
 				SortParamSetGroups();
 			}
-			
 		}
 
 		public apModifierParamSetGroup GetParamSetGroup(apControlParam keyControlParam)
@@ -602,15 +652,16 @@ namespace AnyPortrait
 
 		public virtual bool IsUseParamSetWeight { get { return false; } }
 
-		/// <summary>
-		/// ExEdit 중 GeneralEdit 모드에서 "동시에 작업 가능하도록 허용 된 Modifier Type들"을 리턴한다.
-		/// 매번 만들지 말고 멤버 변수로 만들어서 넣자
-		/// </summary>
-		/// <returns></returns>
-		public virtual MODIFIER_TYPE[] GetGeneralExEditableModTypes()
-		{
-			return new MODIFIER_TYPE[] { ModifierType };
-		}
+		//삭제 21.2.17 : 모디파이어 잠금이 사라지면이 이 옵션은 필요없게 되었다.
+		///// <summary>
+		///// ExEdit 중 GeneralEdit 모드에서 "동시에 작업 가능하도록 허용 된 Modifier Type들"을 리턴한다.
+		///// 매번 만들지 말고 멤버 변수로 만들어서 넣자
+		///// </summary>
+		///// <returns></returns>
+		//public virtual MODIFIER_TYPE[] GetGeneralExEditableModTypes()
+		//{
+		//	return new MODIFIER_TYPE[] { ModifierType };
+		//}
 
 
 		// Find
@@ -809,15 +860,17 @@ namespace AnyPortrait
 			if (isExclusive)
 			{
 				//MeshTransform에 해당하지 않는 ModMesh는 아예 삭제한다.
-				int nRemoved = targetParamSet._meshData.RemoveAll(delegate (apModifiedMesh a)
+				//int nRemoved = targetParamSet._meshData.RemoveAll(delegate (apModifiedMesh a)
+				targetParamSet._meshData.RemoveAll(delegate (apModifiedMesh a)
 				{
 					return a._transform_Mesh != meshTransform;
 				});
 
-				if (nRemoved > 0)
-				{
-					//Debug.LogError("ModMesh Removed (Exclusive/MeshTransform) : " + nRemoved + "[" + DisplayName + "]");
-				}
+				//if (nRemoved > 0)
+				//{
+				//	//테스트
+				//	Debug.LogError("ModMesh Removed (Exclusive/MeshTransform) : " + nRemoved + "[" + DisplayName + "]");
+				//}
 			}
 
 			if (isRefreshLink)
@@ -930,15 +983,15 @@ namespace AnyPortrait
 			if (isExclusive)
 			{
 				//MeshTransform에 해당하지 않는 ModMesh는 아예 삭제한다.
-				int nRemoved = targetParamSet._meshData.RemoveAll(delegate (apModifiedMesh a)
+				targetParamSet._meshData.RemoveAll(delegate (apModifiedMesh a)
 				{
 					return a._transform_MeshGroup != meshGroupTransform;
 				});
 
-				if (nRemoved > 0)
-				{
-					//Debug.LogError("ModMesh Removed (Exclusive/MeshGroupTransform) : " + nRemoved + "[" + DisplayName + "]");
-				}
+				//if (nRemoved > 0)
+				//{
+				//	//Debug.LogError("ModMesh Removed (Exclusive/MeshGroupTransform) : " + nRemoved + "[" + DisplayName + "]");
+				//}
 			}
 
 			if (isRefreshLink)

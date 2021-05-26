@@ -1,19 +1,18 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
-//using UnityEngine.Profiling;
+using UnityEngine.Profiling;//테스트
 using System.Collections;
 using System.Collections.Generic;
 using System;
@@ -34,6 +33,8 @@ namespace AnyPortrait
 		//--------------------------------------------
 		[NonSerialized]
 		public apPortrait _portrait = null;
+
+		
 
 		[NonSerialized]
 		public apOptTransform _parentOptTransform = null;
@@ -252,6 +253,9 @@ namespace AnyPortrait
 		[SerializeField]
 		public bool _isUseModMeshSet = false;
 
+		//추가 20.11.23 : 빠른 애니메이션 처리를 위한 매핑 클래스 (Portrait에 속한걸 연결함)
+		[NonSerialized]
+		private apAnimPlayMapping _animPlayMapping = null;
 
 		// 추가 20.4.18
 		//애니메이션이 블렌딩될 때 (연속 또는 레이어로) 기존의 방식으로는 제대로 처리가 되지 않아서
@@ -370,6 +374,9 @@ namespace AnyPortrait
 		private float _layeredAnimWeightClamped = 0.0f;
 		private bool _isAnimAnyColorCalculated = false;
 		private bool _isAnimAnyExtraCalculated = false;
+
+		//계산을 위한 추가 변수 20.11.25
+
 		
 
 		// Init
@@ -387,6 +394,7 @@ namespace AnyPortrait
 		public void Link(apPortrait portrait, apOptTransform parentOptTransform)
 		{
 			_portrait = portrait;
+			_animPlayMapping = _portrait._animPlayMapping;
 			_parentOptTransform = parentOptTransform;
 
 			for (int i = 0; i < _paramSetGroupList.Count; i++)
@@ -403,6 +411,7 @@ namespace AnyPortrait
 		public IEnumerator LinkAsync(apPortrait portrait, apOptTransform parentOptTransform, apAsyncTimer asyncTimer)
 		{
 			_portrait = portrait;
+			_animPlayMapping = _portrait._animPlayMapping;
 			_parentOptTransform = parentOptTransform;
 
 			if(_isAnimated)
@@ -521,7 +530,7 @@ namespace AnyPortrait
 						break;
 
 					case apModifierBase.MODIFIER_TYPE.Rigging:
-						Calculate_Rigging_UseModMeshSet(tDelta);
+						//Calculate_Rigging_UseModMeshSet(tDelta);//이거 안해도 되지 않나??
 						break;
 
 					case apModifierBase.MODIFIER_TYPE.Physic:
@@ -3437,7 +3446,13 @@ namespace AnyPortrait
 
 				
 				//1. 계산 [중요]
-				isUpdatable = calParam.Calculate();
+				//isUpdatable = calParam.Calculate();//TODO : 최적화를 위해서 이 함수 자체가 사용되지 않아야 한다.
+
+				//변경 20.11.23 : 애니메이션 모디파이어용 최적화된 Calculate 함수
+				isUpdatable = calParam.Calculate_AnimMod();
+
+				
+
 				if (!isUpdatable)
 				{
 					calParam._isAvailable = false;
@@ -3460,8 +3475,10 @@ namespace AnyPortrait
 				//신버전
 				calParamVertRequestList = calParam._result_VertLocalPairs;
 
+				//초기화
+				//subParamGroupList = calParam._subParamKeyValueList;//삭제 20.11.25 : 사용되지 않는다.
 
-				subParamGroupList = calParam._subParamKeyValueList;
+
 				subParamKeyValueList = null;
 				layerWeight = 0.0f;
 				keyParamSetGroup = null;
@@ -3529,24 +3546,65 @@ namespace AnyPortrait
 
 				//SubList (ParamSetGroup을 키값으로 레이어화된 데이터)를 순회하면서 먼저 계산한다.
 				//레이어간 병합 과정에 신경 쓸것
-				for (int iSubList = 0; iSubList < subParamGroupList.Count; iSubList++)
-				{
-					curSubList = subParamGroupList[iSubList];
 
-					int nParamKeys = curSubList._subParamKeyValues.Count;//Sub Params
-					subParamKeyValueList = curSubList._subParamKeyValues;
+
+
+				//이전 : 모든 SubList를 순회
+				//for (int iSubList = 0; iSubList < subParamGroupList.Count; iSubList++)
+				//{
+				//	curSubList = subParamGroupList[iSubList];
+
+				//변경 20.11.23 : AnimPlayMapping을 이용하여 미리 정렬된 순서로 SubList를 호출
+				int iTargetSubList = 0;
+				apAnimPlayMapping.LiveUnit curUnit = null;
+				for (int iUnit = 0; iUnit < _animPlayMapping._nAnimClips; iUnit++)
+				{
+					curUnit = _animPlayMapping._liveUnits_Sorted[iUnit];
+					if(!curUnit._isLive)
+					{
+						//재생 종료
+						//이 뒤는 모두 재생이 안되는 애니메이션이다.
+						break;
+					}
+
+					iTargetSubList = curUnit._animIndex;
+					curSubList = calParam._subParamKeyValueList_AnimSync[iTargetSubList];
+					if(curSubList == null)
+					{
+						//이게 Null이라는 것은, 이 AnimClip에 대한 TimelineLayer와 Mod는 없다는 것
+						continue;
+					}
+					
+					//----------------------여기까지
+
+
+					//이전 방식
+					//int nParamKeys = curSubList._subParamKeyValues.Count;//Sub Params
+					//subParamKeyValueList = curSubList._subParamKeyValues;
+
+
+					//다른 방식 20.11.24 : 모든 ParamKeyValue가 아니라, 유효한 ParamKeyValue만 체크한다.
+					int nValidParamKeyValues = curSubList._nResultAnimKey;
+					if(nValidParamKeyValues == 0)
+					{
+						continue;
+					}
+
+
+
+
 
 					paramKeyValue = null;
 
 
 					keyParamSetGroup = curSubList._keyParamSetGroup;
 
-
-					//애니메이션 모디파이어에서 실행되지 않은 애니메이션에 대한 PSG는 생략한다.
-					if (!keyParamSetGroup.IsAnimEnabled)
-					{
-						continue;
-					}
+					//삭제 20.11.24 : 위에서 AnimPlayMapping의 LiveUnit에서 미리 결정된다.
+					////애니메이션 모디파이어에서 실행되지 않은 애니메이션에 대한 PSG는 생략한다.
+					//if (!keyParamSetGroup.IsAnimEnabled)
+					//{
+					//	continue;
+					//}
 
 
 					//이 로직이 추가된다. (20.4.18)
@@ -3627,11 +3685,25 @@ namespace AnyPortrait
 
 					//Param (MorphKey에 따라서)을 기준으로 데이터를 넣어준다.
 					//Dist에 따른 ParamWeight를 가중치로 적용한다.
-					for (int iPV = 0; iPV < nParamKeys; iPV++)
-					{
-						paramKeyValue = subParamKeyValueList[iPV];
 
-						if (!paramKeyValue._isCalculated)
+					//변경 20.11.24 모든 키프레임 순회 방식 제거
+					//이전 방식
+					//for (int iPV = 0; iPV < nParamKeys; iPV++)
+					//{
+					//	paramKeyValue = subParamKeyValueList[iPV];
+
+					//변경 20.11.24 : 전체 체크 > 이미 보간된 것만 체크
+					int iRealPKV = -1;
+					for (int iPV = 0; iPV < nValidParamKeyValues; iPV++)
+					{
+						paramKeyValue = curSubList._resultAnimKeyPKVs[iPV];//보간이 완료된 PKV만 가져온다.
+						iRealPKV = curSubList._resultAnimKeyPKVIndices[iPV];//실제 PKV의 인덱스는 따로 가져와야 한다.
+
+						//여기까지...
+
+						if (!paramKeyValue._isCalculated 
+							|| iRealPKV < 0//추가 20.11.25
+							)
 						{ continue; }
 
 						tmpTotalParamSetWeight += paramKeyValue._weight * paramKeyValue._paramSet._overlapWeight;
@@ -3649,7 +3721,9 @@ namespace AnyPortrait
 						////---------------------------- Pos List
 
 						//>> 최적화 코드)
-						vertRequest._modWeightPairs[iPV].SetWeight(paramKeyValue._weight);
+						//vertRequest._modWeightPairs[iPV].SetWeight(paramKeyValue._weight);//이전 : 이 인덱스를 사용하면 안된다.
+
+						vertRequest._modWeightPairs[iRealPKV].SetWeight(paramKeyValue._weight);//변경 20.11.25 : 별도의 인덱스를 사용
 
 
 
@@ -3821,11 +3895,13 @@ namespace AnyPortrait
 					//추가 : ParamSetWeight를 사용한다면 -> LayerWeight x ParamSetWeight(0~1)을 사용한다.
 					if (!_isUseParamSetWeight)
 					{
-						layerWeight = Mathf.Clamp01(keyParamSetGroup._layerWeight);
+						//layerWeight = Mathf.Clamp01(keyParamSetGroup._layerWeight);//이전
+						layerWeight = Mathf.Clamp01(curUnit._playWeight);//변경 20.11.23 : 일일이 계산된 KeyParamSetGroup의 Weight대신, 일괄 계산된 LiveUnit의 값을 이용
 					}
 					else
 					{
-						layerWeight = Mathf.Clamp01(keyParamSetGroup._layerWeight * Mathf.Clamp01(tmpTotalParamSetWeight));
+						//layerWeight = Mathf.Clamp01(keyParamSetGroup._layerWeight * Mathf.Clamp01(tmpTotalParamSetWeight));//이전
+						layerWeight = Mathf.Clamp01(curUnit._playWeight * Mathf.Clamp01(tmpTotalParamSetWeight));//변경 20.11.23 : 위와 동일
 					}
 
 
@@ -4793,7 +4869,10 @@ namespace AnyPortrait
 					isBoneTarget = false;
 				}
 				//1. 계산 [중요]
-				isUpdatable = calParam.Calculate();
+				//isUpdatable = calParam.Calculate();//이전 : 느림
+
+				//변경 20.11.23 : 애니메이션 모디파이어용 최적화된 Calculate 함수
+				isUpdatable = calParam.Calculate_AnimMod();
 
 				if (!isUpdatable)
 				{
@@ -4806,7 +4885,10 @@ namespace AnyPortrait
 				}
 
 				//초기화
-				subParamGroupList = calParam._subParamKeyValueList;
+				//subParamGroupList = calParam._subParamKeyValueList;//삭제 20.11.25 : 사용되지 않는다.
+
+				
+
 				subParamKeyValueList = null;
 				keyParamSetGroup = null;
 				_keyAnimClip = null;
@@ -4873,23 +4955,62 @@ namespace AnyPortrait
 				_isAnimAnyExtraCalculated = false;
 
 
-				for (int iSubList = 0; iSubList < subParamGroupList.Count; iSubList++)
-				{
-					curSubList = subParamGroupList[iSubList];
 
-					int nParamKeys = curSubList._subParamKeyValues.Count;//Sub Params
-					subParamKeyValueList = curSubList._subParamKeyValues;
+				//-------------------------------------
+				
+				//이전 : 모든 SubList를 순회
+				//for (int iSubList = 0; iSubList < subParamGroupList.Count; iSubList++)
+				//{
+				//	curSubList = subParamGroupList[iSubList];
+
+				//변경 20.11.23 : AnimPlayMapping을 이용하여 미리 정렬된 순서로 SubList를 호출
+				int iTargetSubList = 0;
+				apAnimPlayMapping.LiveUnit curUnit = null;
+				for (int iUnit = 0; iUnit < _animPlayMapping._nAnimClips; iUnit++)
+				{
+					curUnit = _animPlayMapping._liveUnits_Sorted[iUnit];
+					if(!curUnit._isLive)
+					{
+						//재생 종료
+						//이 뒤는 모두 재생이 안되는 애니메이션이다.
+						break;
+					}
+
+					iTargetSubList = curUnit._animIndex;
+					curSubList = calParam._subParamKeyValueList_AnimSync[iTargetSubList];
+					if(curSubList == null)
+					{
+						//이게 Null이라는 것은, 이 AnimClip에 대한 TimelineLayer와 Mod는 없다는 것
+						continue;
+					}
+					
+					//----------------------여기까지
+
+
+					//이전 방식
+					//int nParamKeys = curSubList._subParamKeyValues.Count;//Sub Params
+					//subParamKeyValueList = curSubList._subParamKeyValues;
+
+					//다른 방식 20.11.24 : 모든 ParamKeyValue가 아니라, 유효한 ParamKeyValue만 체크한다.
+					int nValidParamKeyValues = curSubList._nResultAnimKey;
+					if(nValidParamKeyValues == 0)
+					{
+						continue;
+					}
+					
+
 
 					paramKeyValue = null;
 
 					keyParamSetGroup = curSubList._keyParamSetGroup;
 
-					//애니메이션 모디파이어에서 실행되지 않은 애니메이션에 대한 PSG는 생략한다.
-					if (!keyParamSetGroup.IsAnimEnabled)
-					{
-						//(KeyParamSetGroup이 AnimClip > Timeline (Modifier) > TimelineLayer에 해당한다.)
-						continue;
-					}
+					//삭제 20.11.24 : 위에서 AnimPlayMapping의 LiveUnit에서 미리 결정된다.
+					////애니메이션 모디파이어에서 실행되지 않은 애니메이션에 대한 PSG는 생략한다.
+					//if (!keyParamSetGroup.IsAnimEnabled)
+					//{
+					//	//(KeyParamSetGroup이 AnimClip > Timeline (Modifier) > TimelineLayer에 해당한다.)
+					//	continue;
+					//}
 
 
 					//이 로직이 추가된다. (20.4.18)
@@ -4918,8 +5039,6 @@ namespace AnyPortrait
 						_curAnimLayer = _keyAnimPlayUnit._layer;
 						_nAnimLayeredParams++;//사용된 레이어 파라미터의 개수
 					}
-
-
 
 
 
@@ -4979,12 +5098,21 @@ namespace AnyPortrait
 						}
 
 
-						for (int iPV = 0; iPV < nParamKeys; iPV++)
-						{
-							paramKeyValue = subParamKeyValueList[iPV];
+						//변경 20.11.24 모든 키프레임 순회 방식 제거
+						//이전 방식
+						//for (int iPV = 0; iPV < nParamKeys; iPV++)//이건 또 모든 키프레임을 돌려보겠네..
+						//{
+						//	paramKeyValue = subParamKeyValueList[iPV];
 
-							if (!paramKeyValue._isCalculated)
-							{ continue; }
+						//변경 20.11.24 : 전체 체크 > 이미 보간된 것만 체크
+						for (int iPV = 0; iPV < nValidParamKeyValues; iPV++)
+						{
+							paramKeyValue = curSubList._resultAnimKeyPKVs[iPV];//보간이 완료된 PKV만 가져온다.
+
+							//여기까지...
+
+
+							if (!paramKeyValue._isCalculated) { continue; }
 
 							tmpSubModMesh_Transform = paramKeyValue._modifiedMeshSet.SubModMesh_Transform;
 
@@ -5176,9 +5304,16 @@ namespace AnyPortrait
 					else
 					{
 						//ModBone을 활용하는 타입인 경우
-						for (int iPV = 0; iPV < nParamKeys; iPV++)
+						//for (int iPV = 0; iPV < nParamKeys; iPV++)
+						//{
+						//	paramKeyValue = subParamKeyValueList[iPV];
+
+						//변경 20.11.24 : 전체 체크 > 이미 보간된 것만 체크
+						for (int iPV = 0; iPV < nValidParamKeyValues; iPV++)
 						{
-							paramKeyValue = subParamKeyValueList[iPV];
+							paramKeyValue = curSubList._resultAnimKeyPKVs[iPV];//보간이 완료된 PKV만 가져온다.
+
+							//여기까지...
 
 							if (!paramKeyValue._isCalculated)
 							{
@@ -5187,7 +5322,6 @@ namespace AnyPortrait
 
 							//ParamSetWeight를 추가
 							tmpTotalParamSetWeight += paramKeyValue._weight * paramKeyValue._paramSet._overlapWeight;
-							//nAddedWeight++;
 
 							//Weight에 맞게 Matrix를 만들자
 
@@ -5212,13 +5346,17 @@ namespace AnyPortrait
 
 					//추가 : ParamSetWeight를 사용한다면 -> LayerWeight x ParamSetWeight(0~1)을 사용한다.
 
+
+					
 					if (!_isUseParamSetWeight)
 					{
-						layerWeight = Mathf.Clamp01(keyParamSetGroup._layerWeight);
+						//layerWeight = Mathf.Clamp01(keyParamSetGroup._layerWeight);//이전
+						layerWeight = Mathf.Clamp01(curUnit._playWeight);//변경 20.11.23 : 일일이 계산된 KeyParamSetGroup의 Weight대신, 일괄 계산된 LiveUnit의 값을 이용
 					}
 					else
 					{
-						layerWeight = Mathf.Clamp01(keyParamSetGroup._layerWeight * Mathf.Clamp01(tmpTotalParamSetWeight));
+						//layerWeight = Mathf.Clamp01(keyParamSetGroup._layerWeight * Mathf.Clamp01(tmpTotalParamSetWeight));//이전
+						layerWeight = Mathf.Clamp01(curUnit._playWeight * Mathf.Clamp01(tmpTotalParamSetWeight));//변경 20.11.23 : 위와 동일
 					}
 
 					if (layerWeight < 0.001f)
@@ -5401,6 +5539,9 @@ namespace AnyPortrait
 					
 					iCalculatedSubParam++;
 				}
+				
+				
+				
 				//KeyParamSetGroup > 레이어 데이터로 누적 끝
 
 
@@ -5537,6 +5678,7 @@ namespace AnyPortrait
 		//----------------------------------------------------------------------
 		private void Calculate_Rigging_UseModMeshSet(float tDelta)
 		{
+
 			if (_calculatedResultParams.Count == 0)
 			{
 				//Debug.LogError("Result Param Count : 0");

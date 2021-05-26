@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -236,6 +235,7 @@ namespace AnyPortrait
 				int prevSortingLayerID = _targetPortrait._sortingLayerID;
 				apPortrait.SORTING_ORDER_OPTION prevSortingOrderOption = _targetPortrait._sortingOrderOption;
 				int prevSortingOrder = _targetPortrait._sortingOrder;
+				int prevOrderPerDepth = _targetPortrait._sortingOrderPerDepth;//추가 21.1.31
 
 				if (_isPrefabAsset)
 				{
@@ -375,6 +375,24 @@ namespace AnyPortrait
 						_targetPortrait.SetSortingOrder(nextLayerOrder);
 					}
 				}
+				else if(_targetPortrait._sortingOrderOption == apPortrait.SORTING_ORDER_OPTION.DepthToOrder 
+					|| _targetPortrait._sortingOrderOption == apPortrait.SORTING_ORDER_OPTION.ReverseDepthToOrder)
+				{
+					//추가 21.1.31 : Depth To Order일때, 1씩만 증가하는게 아닌 더 큰값으로 증가할 수도 있게 만들자
+					int nextOrderPerDepth = EditorGUILayout.IntField("Order Per Depth", _targetPortrait._sortingOrderPerDepth);
+					if(nextOrderPerDepth != _targetPortrait._sortingOrderPerDepth)
+					{
+						if(nextOrderPerDepth < 1)
+						{
+							nextOrderPerDepth = 1;
+						}
+
+						_targetPortrait._sortingOrderPerDepth = nextOrderPerDepth;
+
+						//변경된 Sorting Order Option에 따라서 바로 Sorting을 해야한다.
+						_targetPortrait.ApplySortingOptionToOptRootUnits();
+					}
+				}
 				
 
 				if (nextLayerIndex != layerIndex)
@@ -391,6 +409,7 @@ namespace AnyPortrait
 					_targetPortrait._sortingOrderOption = nextSortingOption;
 					//변경된 Sorting Order Option에 따라서 바로 Sorting을 해야한다.
 					_targetPortrait.ApplySortingOptionToOptRootUnits();
+
 					switch (_targetPortrait._sortingOrderOption)
 					{
 						case apPortrait.SORTING_ORDER_OPTION.SetOrder:
@@ -412,7 +431,8 @@ namespace AnyPortrait
 					prevAnimEventListener != _targetPortrait._optAnimEventListener ||
 					prevSortingLayerID != _targetPortrait._sortingLayerID ||
 					prevSortingOrderOption != _targetPortrait._sortingOrderOption ||
-					prevSortingOrder != _targetPortrait._sortingOrder)
+					prevSortingOrder != _targetPortrait._sortingOrder ||
+					prevOrderPerDepth != _targetPortrait._sortingOrderPerDepth)
 				{
 					apEditorUtil.SetEditorDirty();
 				}

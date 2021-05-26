@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -34,12 +33,24 @@ namespace AnyPortrait
 
 		private Vector2 _scroll = Vector2.zero;
 		private string _info = "";
+		private int _nUpdateImages = 0;
+		private List<Texture> _updateImages = new List<Texture>();
+		
 
 		private string _str_GotoHomepage = "";
 		private string _str_OpenAssetStore = "";
 		private string _str_Close = "";
 
+		private string _str_Next = "";
+
 		private GUIStyle _guiStyle_Text = null;
+		private GUIStyle _guiStyle_TextCenter = null;
+		private int _iPage = 0;
+		private int _nPages = 0;
+
+		private const int WIDTH_WINDOW = 800;
+		private const int HEIGHT_WINDOW_LOG = 700;
+		private const int HEIGHT_WINDOW_IMAGE = 480;
 
 
 		// Show Window
@@ -64,8 +75,8 @@ namespace AnyPortrait
 			//object loadKey = new object();
 			if (curTool != null && curTool != s_window)
 			{
-				int width = 800;
-				int height = 700;
+				int width = WIDTH_WINDOW;
+				int height = HEIGHT_WINDOW_IMAGE;
 				s_window = curTool;
 				if (editor != null)
 				{
@@ -104,6 +115,9 @@ namespace AnyPortrait
 		{
 			_language = (apEditor.LANGUAGE)EditorPrefs.GetInt("AnyPortrait_Language", (int)apEditor.LANGUAGE.English);
 
+			_guiStyle_Text = null;
+			_guiStyle_TextCenter = null;
+
 			GetText();
 		}
 
@@ -111,12 +125,66 @@ namespace AnyPortrait
 		//------------------------------------------------------------------
 		void OnGUI()
 		{
+			if(_iPage >= _nPages - 1)
+			{
+				//업데이트 로그 설명 페이지인 경우
+				position = new Rect(position.x, position.y, WIDTH_WINDOW, HEIGHT_WINDOW_LOG);
+				
+			}
+			else
+			{
+				//이미지 페이지인 경우
+				position = new Rect(position.x, position.y, WIDTH_WINDOW, HEIGHT_WINDOW_IMAGE);
+
+			}
+
 			int width = (int)position.width;
 			int height = (int)position.height;
 			width -= 10;
 
+			if(_guiStyle_TextCenter == null)
+			{
+				_guiStyle_TextCenter = new GUIStyle(GUI.skin.label);
+				_guiStyle_TextCenter.alignment = TextAnchor.MiddleCenter;
+			}
 
-			if(_guiStyle_Text == null)
+			
+			if(_iPage >= _nPages - 1)
+			{
+				//업데이트 로그 설명 페이지인 경우
+				DrawLogPage(width, height);
+				
+			}
+			else
+			{
+				//이미지 페이지인 경우
+				DrawImagePage(_iPage, width, height);
+			}
+		}
+
+		private void DrawImagePage(int iImage, int width, int height)
+		{	
+			int imageWidth = width;
+			int imageHeight = imageWidth / 2;//2:1 비율임
+
+			GUILayout.Space(10);
+
+			EditorGUILayout.LabelField(new GUIContent(_updateImages[iImage]), _guiStyle_TextCenter, GUILayout.Width(imageWidth), GUILayout.Height(imageHeight));
+
+			EditorGUILayout.LabelField(GetPageText(_iPage, _nPages), _guiStyle_TextCenter, GUILayout.Width(width));
+			
+			GUILayout.Space(10);
+
+			if(GUILayout.Button(_str_Next, GUILayout.Height(30)))
+			{
+				_iPage++;
+			}
+
+		}
+
+		private void DrawLogPage(int width, int height)
+		{
+			if (_guiStyle_Text == null)
 			{
 				_guiStyle_Text = new GUIStyle(GUI.skin.label);
 				_guiStyle_Text.richText = true;
@@ -124,8 +192,9 @@ namespace AnyPortrait
 				_guiStyle_Text.alignment = TextAnchor.UpperLeft;
 			}
 
+			int height_Log = height - 90;
 			EditorGUILayout.BeginVertical(GUILayout.Width(width), GUILayout.Height(height));
-			_scroll = EditorGUILayout.BeginScrollView(_scroll, GUILayout.Width(width + 10), GUILayout.Height(height - 85));
+			_scroll = EditorGUILayout.BeginScrollView(_scroll, GUILayout.Width(width + 10), GUILayout.Height(height_Log));
 			EditorGUILayout.BeginVertical(GUILayout.Width(width - 15));
 			
 			
@@ -134,7 +203,9 @@ namespace AnyPortrait
 			EditorGUILayout.EndVertical();
 			EditorGUILayout.EndScrollView();
 
+
 			bool isClose = false;
+			
 			if(GUILayout.Button(_str_GotoHomepage, GUILayout.Height(25)))
 			{
 				//홈페이지를 엽시다.
@@ -175,9 +246,32 @@ namespace AnyPortrait
 		}
 
 
+		private string GetPageText(int iPage, int nPage)
+		{
+			string resultText = "";
+			for (int i = 0; i < nPage; i++)
+			{
+				if(i == iPage)
+				{
+					resultText += "●";
+				}
+				else
+				{
+					resultText += "○";
+				}
+			}
+			return resultText;
+		}
+
 		private void GetText()
 		{
 			_info = "";
+			_nUpdateImages = 0;
+			if(_updateImages == null)
+			{
+				_updateImages = new List<Texture>();
+			}
+			_updateImages.Clear();
 
 			//TextAsset textAsset_Dialog = AssetDatabase.LoadAssetAtPath<TextAsset>(apEditorUtil.ResourcePath_Text + "apUpdateLog.txt");
 			TextAsset textAsset_Dialog = AssetDatabase.LoadAssetAtPath<TextAsset>(apEditorUtil.MakePath_Text("apUpdateLog.txt"));
@@ -191,7 +285,45 @@ namespace AnyPortrait
 				return;
 			}
 
-			_info = strInfoPerLanguages[(int)_language];
+			//첫줄은 이미지 개수
+			string strUpdateImages = strInfoPerLanguages[0];
+			strUpdateImages = strUpdateImages.Replace("\r\n", "\n");
+			string[] strUpdateImages_Arr = strUpdateImages.Split(new string[] {"\n"}, StringSplitOptions.None);
+			try
+			{
+				if(strUpdateImages_Arr.Length >= 2)
+				{
+					_nUpdateImages = int.Parse(strUpdateImages_Arr[1]);
+
+					if(_nUpdateImages > 0)
+					{
+						//이미지를 가져오자
+						for (int i = 0; i < _nUpdateImages; i++)
+						{
+							Texture updateImage = AssetDatabase.LoadAssetAtPath<Texture>(apEditorUtil.MakePath_Icon("Update/UpdateKeyChanges_" + (i + 1), false));
+							if(updateImage != null)
+							{
+								_updateImages.Add(updateImage);
+							}
+						}
+
+						_nUpdateImages = _updateImages.Count;//유효한 이미지 개수만 받자
+						
+					}
+				}
+				
+			}
+			catch(Exception)
+			{
+
+			}
+			
+
+			_iPage = 0;
+			_nPages = _nUpdateImages + 1;
+
+			//본문
+			_info = strInfoPerLanguages[(int)_language + 1];
 			_info = _info.Replace("\r\n", "\n");
 
 			//디버그 경고 (혹시 모르니)
@@ -245,6 +377,8 @@ namespace AnyPortrait
 			int firstCR = _info.IndexOf("\n");
 			_info = _info.Substring(firstCR);
 
+			
+			_str_Next = "▶";
 			switch (_language)
 			{
 				case apEditor.LANGUAGE.English:

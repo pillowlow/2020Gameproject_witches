@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -34,8 +33,32 @@ namespace AnyPortrait
 	/// </summary>
 	public class apHotKey
 	{
-		public delegate void FUNC_HOTKEY_EVENT(object paramObject);
-		public delegate void FUNC_RESV_HOTKEY_EVENT(KeyCode keyCode, bool isShift, bool isAlt, bool isCtrl, object paramObject);
+		//변경 21.12.8 : 처리 결과를 Return 받아야 한다.
+		//싱글톤/Static 함수로 처리한다.
+		//이게 리턴되는것 자체가 성공이다.
+		public class HotKeyResult
+		{
+			private static HotKeyResult _instance = new HotKeyResult();
+
+			public string _customLabel = null;
+
+			//외부 생성 불가
+			private HotKeyResult() { }
+
+			public static HotKeyResult MakeResult(string customLabel = null)
+			{
+				if(_instance == null)
+				{
+					_instance = new HotKeyResult();
+				}
+				_instance._customLabel = customLabel;
+				return _instance;
+			}
+		}
+
+
+		public delegate HotKeyResult FUNC_HOTKEY_EVENT(object paramObject);
+		public delegate HotKeyResult FUNC_RESV_HOTKEY_EVENT(KeyCode keyCode, bool isShift, bool isAlt, bool isCtrl, object paramObject);
 
 		//변경 20.1.26 : Label을 string으로 받지 말고 enum으로 받은뒤, 미리 정의된 Label을 출력하자
 		public enum LabelText
@@ -87,7 +110,8 @@ namespace AnyPortrait
 		{
 			public KeyCode _keyCode;
 			//public string _label;//이전
-			public LabelText _labelType = LabelText.None;
+			//public LabelText _labelType = LabelText.None;//이전
+			public apStringWrapper _labelText = null;//변경 20.12.3 : Wrapper 방식으로 직접 지정
 			public bool _isShift;
 			public bool _isAlt;
 			public bool _isCtrl;
@@ -113,45 +137,76 @@ namespace AnyPortrait
 				_isIgnoreCtrlShift = false;
 			}
 
-			public void SetEvent(	FUNC_HOTKEY_EVENT funcEvent, 
-									LabelText labelType,
-									KeyCode keyCode, bool isShift, bool isAlt, bool isCtrl, 
+			//public void SetEvent(	FUNC_HOTKEY_EVENT funcEvent, 
+			//						LabelText labelType,
+			//						KeyCode keyCode, bool isShift, bool isAlt, bool isCtrl, 
+			//						object paramObject)
+			//{
+			//	_funcEvent = funcEvent;
+			//	//_label = label;//이전
+			//	_labelType = labelType;//변경 20.1.26
+			//	_keyCode = keyCode;
+			//	_isShift = isShift;
+			//	_isAlt = isAlt;
+			//	_isCtrl = isCtrl;
+
+			//	_isIgnoreCtrlShift = false;
+
+			//	_isCombination = _isShift || _isAlt || _isCtrl;
+
+			//	_paramObject = paramObject;
+			//}
+
+			////추가 20.7.19
+			////단일 키 입력이지만, Ctrl/Shift인 경우에도 동작할 때.
+			////다만 이 이벤트는 다른 단축키 입력이 해당되지 않을때 동작한다.
+			//public void SetEventIgnoreCtrlShift(	FUNC_HOTKEY_EVENT funcEvent, 
+			//										LabelText labelType,
+			//										KeyCode keyCode, 
+			//										object paramObject)
+			//{
+			//	_funcEvent = funcEvent;
+			//	//_label = label;//이전
+			//	_labelType = labelType;//변경 20.1.26
+			//	_keyCode = keyCode;
+			//	_isShift = false;
+			//	_isAlt = false;
+			//	_isCtrl = false;
+
+			//	_isIgnoreCtrlShift = true;//<<이거
+
+			//	_isCombination = false;
+
+			//	_paramObject = paramObject;
+			//}
+
+			//변경 20.12.3
+			//HotKeyUnit을 이용한 것으로 변경
+			public void SetEvent(FUNC_HOTKEY_EVENT funcEvent,
+									apHotKeyMapping.HotkeyMapUnit hotKeyUnit,
 									object paramObject)
 			{
 				_funcEvent = funcEvent;
-				//_label = label;//이전
-				_labelType = labelType;//변경 20.1.26
-				_keyCode = keyCode;
-				_isShift = isShift;
-				_isAlt = isAlt;
-				_isCtrl = isCtrl;
+				
+				_labelText = hotKeyUnit._label_Workspace;
+				_keyCode = hotKeyUnit._keyCode_Converted;
 
-				_isIgnoreCtrlShift = false;
-
+				if(hotKeyUnit._isIgnoreSpecialKey)
+				{
+					_isShift = false;
+					_isAlt = false;
+					_isCtrl = false;
+					_isIgnoreCtrlShift = true;
+				}
+				else
+				{
+					_isShift = hotKeyUnit._isShift_Cur;
+					_isAlt = hotKeyUnit._isAlt_Cur;
+					_isCtrl = hotKeyUnit._isCtrl_Cur;
+					_isIgnoreCtrlShift = false;
+				}
+				
 				_isCombination = _isShift || _isAlt || _isCtrl;
-
-				_paramObject = paramObject;
-			}
-
-			//추가 20.7.19
-			//단일 키 입력이지만, Ctrl/Shift인 경우에도 동작할 때.
-			//다만 이 이벤트는 다른 단축키 입력이 해당되지 않을때 동작한다.
-			public void SetEventIgnoreCtrlShift(	FUNC_HOTKEY_EVENT funcEvent, 
-													LabelText labelType,
-													KeyCode keyCode, 
-													object paramObject)
-			{
-				_funcEvent = funcEvent;
-				//_label = label;//이전
-				_labelType = labelType;//변경 20.1.26
-				_keyCode = keyCode;
-				_isShift = false;
-				_isAlt = false;
-				_isCtrl = false;
-
-				_isIgnoreCtrlShift = true;//<<이거
-
-				_isCombination = false;
 
 				_paramObject = paramObject;
 			}
@@ -222,6 +277,14 @@ namespace AnyPortrait
 		{
 			Ctrl, Shift, Alt
 		}
+
+		//public enum SPECIAL_KEY_BUTTON_STATUS
+		//{
+		//	Pressed,
+		//	Released,
+		//	ReleasedButDelayed,//Released 상태이지만 Pressed 상태에서 얼마 지나지 않았다.
+		//}
+
 		private class SpecialKeyProcess
 		{
 			public SPECIAL_KEY _key;
@@ -229,7 +292,8 @@ namespace AnyPortrait
 			public bool _isPressed_Delayed;
 			public System.Diagnostics.Stopwatch _timer = new System.Diagnostics.Stopwatch();
 
-			private const long DELAY_TIME_MSEC = 300;//0.3초
+			//private const long DELAY_TIME_MSEC = 300;//0.3초
+			private const long DELAY_TIME_MSEC = 150;//0.15초
 
 			public SpecialKeyProcess(SPECIAL_KEY specialKey)
 			{
@@ -240,8 +304,13 @@ namespace AnyPortrait
 
 			public void OnKeyDown()
 			{
-				_isPressed_Input = true;
-				_isPressed_Delayed = true;
+				if (!_isPressed_Input)
+				{
+					_isPressed_Input = true;
+					_isPressed_Delayed = true;
+					_timer.Reset();
+					_timer.Start();
+				}
 			}
 
 			public void OnKeyUp()
@@ -251,38 +320,60 @@ namespace AnyPortrait
 					_isPressed_Input = false;
 					_isPressed_Delayed = true;//일단은 True
 
+					_timer.Stop();
 					_timer.Reset();
 					_timer.Start();
+					//Debug.LogWarning("Up > " + _key + " > 딜레이 체크 시작 : " + _timer.ElapsedMilliseconds);
+				}
+				else if(_isPressed_Delayed)
+				{
+					//딜레이 중이라면
+					if (_timer.ElapsedMilliseconds > DELAY_TIME_MSEC)
+					{
+						_isPressed_Delayed = false;
+						_timer.Stop();
+
+						//Debug.LogError("Up > " + _key + " > 딜레이 끝 : " + _timer.ElapsedMilliseconds);
+					}
+					//else
+					//{
+					//	Debug.Log("Up > " + _key + " > 딜레이 중 : " + _timer.ElapsedMilliseconds + " (~" + DELAY_TIME_MSEC + ")");
+					//}
 				}
 			}
 
+			//미사용 코드
 			public bool IsPressed()
 			{
-				if(_isPressed_Input)
+				if (_isPressed_Input)
 				{
 					//실제로 눌린 상태
 					return true;
 				}
 				else
 				{
-					if(_isPressed_Delayed)
+					if (_isPressed_Delayed)
 					{
 						//일단은 딜레이 중이다.
-						if(_timer.ElapsedMilliseconds > DELAY_TIME_MSEC)
+						if (_timer.ElapsedMilliseconds > DELAY_TIME_MSEC)
 						{
 							_isPressed_Delayed = false;
 							_timer.Stop();
+
+							//Debug.LogError(_key + " > 딜레이 끝 : " + _timer.ElapsedMilliseconds);
 						}
 						//else
 						//{
-						//	Debug.Log("딜레이된 특수 키 : " + _key + " (" + (float)(_timer.ElapsedMilliseconds / 1000.0) + "s)");
+						//	Debug.Log(_key + " > 딜레이 중 : " + _timer.ElapsedMilliseconds);
 						//}
+						
 					}
 
 					return _isPressed_Delayed;
 
 				}
 			}
+
 
 			public void ResetTimer()
 			{
@@ -298,6 +389,29 @@ namespace AnyPortrait
 		public enum EVENT_RESULT
 		{
 			None, NormalEvent, ReservedEvent
+		}
+
+		public class HotKeyCheck
+		{
+			public HotKeyEvent _checkedEvent = null;
+			public HotKeyResult _checkedResult = null;
+
+			public HotKeyCheck()
+			{
+				Clear();
+			}
+
+			public void Clear()
+			{
+				_checkedEvent = null;
+				_checkedResult = null;
+			}
+
+			public void SetResult(HotKeyEvent checkedEvent, HotKeyResult checkedResult)
+			{
+				_checkedEvent = checkedEvent;
+				_checkedResult = checkedResult;
+			}
 		}
 
 		// Members
@@ -321,6 +435,9 @@ namespace AnyPortrait
 
 
 		private KeyCode _prevKey = KeyCode.None;
+		private bool _prevCtrl = false;
+		private bool _prevShift = false;
+		private bool _prevAlt = false;
 
 		private Dictionary<SPECIAL_KEY, SpecialKeyProcess> _specialKeys = new Dictionary<SPECIAL_KEY, SpecialKeyProcess>();
 
@@ -330,7 +447,9 @@ namespace AnyPortrait
 		private Dictionary<LabelText, apStringWrapper> _labels = new Dictionary<LabelText, apStringWrapper>();
 
 		//추가 20.1.27 : 입력 연산 후 바로 리턴하지 말고, 결과값을 변수로 가지고 있자
+		private HotKeyCheck _checkedResult = null;
 		private HotKeyEvent _resultHotKeyEvent = null;
+		private HotKeyResult _eventResult = null;
 		private ReservedHotKeyEvent _resultReservedHotKeyEvent = null;
 
 		// Init
@@ -341,7 +460,11 @@ namespace AnyPortrait
 			_isAnyEvent_Reserved = false;
 
 			_resultHotKeyEvent = null;
+			_eventResult = null;
 			_resultReservedHotKeyEvent = null;
+
+			_checkedResult = new HotKeyCheck();
+			
 
 
 			if (_hotKeyEvents == null)
@@ -382,6 +505,9 @@ namespace AnyPortrait
 			//_isSpecialKey_Shift = false;
 			//_isSpecialKey_Alt = false;
 			_prevKey = KeyCode.None;
+			_prevCtrl = false;
+			_prevShift = false;
+			_prevAlt = false;
 
 			if(_specialKeys == null)
 			{
@@ -517,6 +643,7 @@ namespace AnyPortrait
 			}
 
 			_resultHotKeyEvent = null;
+			_eventResult = null;
 			_resultReservedHotKeyEvent = null;
 		}
 
@@ -529,10 +656,47 @@ namespace AnyPortrait
 		//변경 20.1.27 : 리턴값이 바로 안나오고, GetResultEvent / GetReservedResultEvent 함수로 가져오게 변경 (뭔가 결과가 발생하는지 체크 위한 bool 리턴)
 		public EVENT_RESULT OnKeyEvent(KeyCode keyCode, bool isCtrl, bool isShift, bool isAlt, bool isPressed)
 		{
-			if(keyCode == KeyCode.None)
+			//if(isPressed)
+			//{
+			//	Debug.Log("Pressed : " + keyCode + "(Ctrl : " + isCtrl + " / Shift : " + isShift + " / Alt : " + isAlt + ")");
+			//}
+			//else
+			//{
+			//	Debug.LogWarning("Released : " + keyCode + "(Ctrl : " + isCtrl + " / Shift : " + isShift + " / Alt : " + isAlt + ")");
+			//}
+
+			//21.2.9 : 키코드가 특수키라면, bool로 변환하고 keyCode는 None으로 변환
+			switch (keyCode)
 			{
-				return EVENT_RESULT.None;
+#if UNITY_EDITOR_OSX
+				case KeyCode.LeftCommand:
+				case KeyCode.RightCommand:
+#else
+				case KeyCode.LeftControl:
+				case KeyCode.RightControl:
+#endif
+					isCtrl = isPressed;
+					keyCode = KeyCode.None;
+					break;
+
+				case KeyCode.LeftShift:
+				case KeyCode.RightShift:
+					isShift = isPressed;
+					keyCode = KeyCode.None;
+					break;
+
+				case KeyCode.LeftAlt:
+				case KeyCode.RightAlt:
+					isAlt = isPressed;
+					keyCode = KeyCode.None;
+					break;
 			}
+
+			//이건 삭제 21.2.9
+			//if(keyCode == KeyCode.None)
+			//{
+			//	return EVENT_RESULT.None;
+			//}
 			
 			
 			if (isPressed)
@@ -544,7 +708,11 @@ namespace AnyPortrait
 				//	return null;
 				//}
 
-				if (_prevKey == keyCode)
+				if (_prevKey == keyCode
+					//스페셜키 조건 추가 21.2.9
+					&& _prevCtrl == isCtrl
+					&& _prevShift == isShift
+					&& _prevAlt == isAlt)
 				{
 					//Debug.Log(">> 이전 키와 같음 : " + keyCode);
 					return EVENT_RESULT.None;
@@ -555,141 +723,234 @@ namespace AnyPortrait
 			else
 			{
 				_prevKey = KeyCode.None;
+
+				//Up 이벤트에서도 특수키는 해제하지 않는다. (보조키 형태로 이벤트가 있었다면)
 			}
+
+			//특수키 반영
+			_prevCtrl = isCtrl;
+			_prevShift = isShift;
+			_prevAlt = isAlt;
+
+
 
 			//추가적으로, 유니티에서 제공하는 값에 따라서도 변동
-			if (isPressed)
+			//이거 이상한데.
+			//if (isPressed)
+			//{
+			//	//Pressed인 경우 False > True로만 보정
+			//	if (isCtrl)
+			//	{
+			//		_specialKeys[SPECIAL_KEY.Ctrl].OnKeyDown();
+			//	}
+			//	if (isShift)
+			//	{
+			//		_specialKeys[SPECIAL_KEY.Shift].OnKeyDown();
+			//	}
+			//	if (isAlt)
+			//	{
+			//		_specialKeys[SPECIAL_KEY.Alt].OnKeyDown();
+			//	}
+			//}
+			//else
+			//{
+			//	//Released인 경우 False > True로만 보정
+			//	if (!isCtrl)
+			//	{
+			//		_specialKeys[SPECIAL_KEY.Ctrl].OnKeyUp();
+			//	}
+			//	if (!isShift)
+			//	{
+			//		_specialKeys[SPECIAL_KEY.Shift].OnKeyUp();
+			//	}
+			//	if (!isAlt)
+			//	{
+			//		_specialKeys[SPECIAL_KEY.Alt].OnKeyUp();
+			//	}
+			//}
+
+			//변경 21.2.9 : 특수키는 Pressed 상관없이 각각 처리해야한다.
+			if(isCtrl)	{ _specialKeys[SPECIAL_KEY.Ctrl].OnKeyDown(); }
+			else		{ _specialKeys[SPECIAL_KEY.Ctrl].OnKeyUp(); }
+
+			if(isShift)	{ _specialKeys[SPECIAL_KEY.Shift].OnKeyDown(); }
+			else		{ _specialKeys[SPECIAL_KEY.Shift].OnKeyUp(); }
+
+			if(isAlt)	{ _specialKeys[SPECIAL_KEY.Alt].OnKeyDown(); }
+			else		{ _specialKeys[SPECIAL_KEY.Alt].OnKeyUp(); }
+
+
+			//이전
+			#region [미사용 코드]
+			//			switch (keyCode)
+			//			{		
+			//				// Special Key
+			//#if UNITY_EDITOR_OSX
+			//				case KeyCode.LeftCommand:
+			//				case KeyCode.RightCommand:
+			//#else
+			//				case KeyCode.LeftControl:
+			//				case KeyCode.RightControl:
+			//#endif
+			//					if(isPressed)
+			//					{
+			//						_specialKeys[SPECIAL_KEY.Ctrl].OnKeyDown();
+			//					}
+			//					else
+			//					{
+			//						_specialKeys[SPECIAL_KEY.Ctrl].OnKeyUp();
+			//					}
+			//					break;
+
+			//				case KeyCode.LeftShift:
+			//				case KeyCode.RightShift:
+			//					if(isPressed)
+			//					{
+			//						_specialKeys[SPECIAL_KEY.Shift].OnKeyDown();
+			//					}
+			//					else
+			//					{
+			//						_specialKeys[SPECIAL_KEY.Shift].OnKeyUp();
+			//					}
+			//					break;
+
+			//				case KeyCode.LeftAlt:
+			//				case KeyCode.RightAlt:
+			//					if(isPressed)
+			//					{
+			//						_specialKeys[SPECIAL_KEY.Alt].OnKeyDown();
+			//					}
+			//					else
+			//					{
+			//						_specialKeys[SPECIAL_KEY.Alt].OnKeyUp();
+			//					}
+			//					break;
+
+			//				default:
+			//					//그 외의 키값이라면..
+			//					//Up 이벤트에만 반응하자 > 변경
+			//					//특수키가 있는 단축키 => Up 이벤트에서만 적용
+			//					//특수키가 없는 단축키 => Down 이벤트에서만 적용
+			//					//if (!isPressed)
+			//					{
+			//						//해당하는 이벤트가 있는가?
+			//						//추가 20.1.27 : ReservedHotKeyEvent 먼저 체크한다.
+			//						if (_isAnyEvent_Reserved)
+			//						{
+			//							ReservedHotKeyEvent reservedHotKeyEvent = CheckReservedHotKeyEvent(keyCode,
+			//																			_specialKeys[SPECIAL_KEY.Shift].IsPressed(),
+			//																			_specialKeys[SPECIAL_KEY.Alt].IsPressed(),
+			//																			_specialKeys[SPECIAL_KEY.Ctrl].IsPressed(),
+			//																			isPressed);
+
+			//							if(reservedHotKeyEvent != null)
+			//							{
+			//								//Reserved 이벤트가 먼저 발생했다.
+			//								_resultReservedHotKeyEvent = reservedHotKeyEvent;
+			//							}
+			//						}
+
+			//						if (_resultReservedHotKeyEvent == null && _isAnyEvent_Normal)
+			//						{
+			//							//Reserved 이벤트가 발생하지 않고, 기본 이벤트가 등록되었다면
+			//							HotKeyCheck checkedEvent = CheckHotKeyEvent(keyCode,
+			//																		_specialKeys[SPECIAL_KEY.Shift].IsPressed(),
+			//																		_specialKeys[SPECIAL_KEY.Alt].IsPressed(),
+			//																		_specialKeys[SPECIAL_KEY.Ctrl].IsPressed(),
+			//																		isPressed);
+
+			//							if (checkedEvent != null)
+			//							{
+			//								//이벤트가 발생했다.
+			//								_resultHotKeyEvent = checkedEvent._checkedEvent;
+			//								_eventResult = checkedEvent._checkedResult;
+
+			//								//////일단 이 메인 키를 누른 상태에서 Lock을 건다.
+			//								////_isLock = true;
+			//								//return hotkeyEvent;
+			//							}
+			//						}
+
+
+
+			//						//딜레이 처리가 끝났다면 특수키 타이머를 리셋한다.
+			//						_specialKeys[SPECIAL_KEY.Shift].ResetTimer();
+			//						_specialKeys[SPECIAL_KEY.Alt].ResetTimer();
+			//						_specialKeys[SPECIAL_KEY.Ctrl].ResetTimer();
+
+
+			//					}
+
+			//					break;
+			//			} 
+			#endregion
+
+
+			//변경 21.2.9
+
+			//if (isPressed)
+			//{
+			//	Debug.Log("Pressed : " + keyCode + " (Ctrl : " + isCtrl + " / Shift : " + isShift + " / Alt : " + isAlt + ")");
+			//}
+			//else
+			//{
+			//	Debug.LogWarning("Released : " + keyCode + " (Ctrl : " + isCtrl + " / Shift : " + isShift + " / Alt : " + isAlt + ")");
+			//}
+
+			if (keyCode != KeyCode.None)
 			{
-				//Pressed인 경우 False > True로만 보정
-				if (isCtrl)
+				
+				//특수키가 있는 단축키 => Up 이벤트에서만 적용
+				//특수키가 없는 단축키 => Down 이벤트에서만 적용
+				//if (!isPressed)
 				{
-					_specialKeys[SPECIAL_KEY.Ctrl].OnKeyDown();
-				}
-				if (isShift)
-				{
-					_specialKeys[SPECIAL_KEY.Shift].OnKeyDown();
-				}
-				if (isAlt)
-				{
-					_specialKeys[SPECIAL_KEY.Alt].OnKeyDown();
-				}
-			}
-			else
-			{
-				//Released인 경우 False > True로만 보정
-				if (!isCtrl)
-				{
-					_specialKeys[SPECIAL_KEY.Ctrl].OnKeyUp();
-				}
-				if (!isShift)
-				{
-					_specialKeys[SPECIAL_KEY.Shift].OnKeyUp();
-				}
-				if (!isAlt)
-				{
-					_specialKeys[SPECIAL_KEY.Alt].OnKeyUp();
-				}
-			}
+					//해당하는 이벤트가 있는가?
+					//추가 20.1.27 : ReservedHotKeyEvent 먼저 체크한다.
+					if (_isAnyEvent_Reserved)
+					{
+						ReservedHotKeyEvent reservedHotKeyEvent = CheckReservedHotKeyEvent(keyCode,
+																		_specialKeys[SPECIAL_KEY.Shift].IsPressed(),
+																		_specialKeys[SPECIAL_KEY.Alt].IsPressed(),
+																		_specialKeys[SPECIAL_KEY.Ctrl].IsPressed(),
+																		isPressed);
 
-			switch (keyCode)
-			{		
-				// Special Key
-#if UNITY_EDITOR_OSX
-				case KeyCode.LeftCommand:
-				case KeyCode.RightCommand:
-#else
-				case KeyCode.LeftControl:
-				case KeyCode.RightControl:
-#endif
-					if(isPressed)
-					{
-						_specialKeys[SPECIAL_KEY.Ctrl].OnKeyDown();
-					}
-					else
-					{
-						_specialKeys[SPECIAL_KEY.Ctrl].OnKeyUp();
-					}
-					break;
-
-				case KeyCode.LeftShift:
-				case KeyCode.RightShift:
-					if(isPressed)
-					{
-						_specialKeys[SPECIAL_KEY.Shift].OnKeyDown();
-					}
-					else
-					{
-						_specialKeys[SPECIAL_KEY.Shift].OnKeyUp();
-					}
-					break;
-
-				case KeyCode.LeftAlt:
-				case KeyCode.RightAlt:
-					if(isPressed)
-					{
-						_specialKeys[SPECIAL_KEY.Alt].OnKeyDown();
-					}
-					else
-					{
-						_specialKeys[SPECIAL_KEY.Alt].OnKeyUp();
-					}
-					break;
-
-				default:
-					//그 외의 키값이라면..
-					//Up 이벤트에만 반응하자 > 변경
-					//특수키가 있는 단축키 => Up 이벤트에서만 적용
-					//특수키가 없는 단축키 => Down 이벤트에서만 적용
-					//if (!isPressed)
-					{
-						//해당하는 이벤트가 있는가?
-						//추가 20.1.27 : ReservedHotKeyEvent 먼저 체크한다.
-						if (_isAnyEvent_Reserved)
+						if (reservedHotKeyEvent != null)
 						{
-							ReservedHotKeyEvent reservedHotKeyEvent = CheckReservedHotKeyEvent(keyCode,
-																			_specialKeys[SPECIAL_KEY.Shift].IsPressed(),
-																			_specialKeys[SPECIAL_KEY.Alt].IsPressed(),
-																			_specialKeys[SPECIAL_KEY.Ctrl].IsPressed(),
-																			isPressed);
-
-							if(reservedHotKeyEvent != null)
-							{
-								//Reserved 이벤트가 먼저 발생했다.
-								_resultReservedHotKeyEvent = reservedHotKeyEvent;
-							}
+							//Reserved 이벤트가 먼저 발생했다.
+							_resultReservedHotKeyEvent = reservedHotKeyEvent;
 						}
-
-						if (_resultReservedHotKeyEvent == null && _isAnyEvent_Normal)
-						{
-							//Reserved 이벤트가 발생하지 않고, 기본 이벤트가 등록되었다면
-							HotKeyEvent hotkeyEvent = CheckHotKeyEvent(keyCode,
-																			_specialKeys[SPECIAL_KEY.Shift].IsPressed(),
-																			_specialKeys[SPECIAL_KEY.Alt].IsPressed(),
-																			_specialKeys[SPECIAL_KEY.Ctrl].IsPressed(),
-																			isPressed);
-
-							if (hotkeyEvent != null)
-							{
-								//이벤트가 발생했다.
-								_resultHotKeyEvent = hotkeyEvent;
-								//////일단 이 메인 키를 누른 상태에서 Lock을 건다.
-								////_isLock = true;
-								//return hotkeyEvent;
-							}
-						}
-
-						
-
-						//딜레이 처리가 끝났다면 특수키 타이머를 리셋한다.
-						_specialKeys[SPECIAL_KEY.Shift].ResetTimer();
-						_specialKeys[SPECIAL_KEY.Alt].ResetTimer();
-						_specialKeys[SPECIAL_KEY.Ctrl].ResetTimer();
-
-						
 					}
-					
-					break;
+
+					if (_resultReservedHotKeyEvent == null && _isAnyEvent_Normal)
+					{
+						//Reserved 이벤트가 발생하지 않고, 기본 이벤트가 등록되었다면
+						HotKeyCheck checkedEvent = CheckHotKeyEvent(keyCode,
+																	_specialKeys[SPECIAL_KEY.Shift].IsPressed(),
+																	_specialKeys[SPECIAL_KEY.Alt].IsPressed(),
+																	_specialKeys[SPECIAL_KEY.Ctrl].IsPressed(),
+																	isPressed);
+
+						if (checkedEvent != null)
+						{
+							//이벤트가 발생했다.
+							_resultHotKeyEvent = checkedEvent._checkedEvent;
+							_eventResult = checkedEvent._checkedResult;
+
+							//////일단 이 메인 키를 누른 상태에서 Lock을 건다.
+							////_isLock = true;
+							//return hotkeyEvent;
+						}
+					}
+
+					//딜레이 처리가 끝났다면 특수키 타이머를 리셋한다.
+					_specialKeys[SPECIAL_KEY.Shift].ResetTimer();
+					_specialKeys[SPECIAL_KEY.Alt].ResetTimer();
+					_specialKeys[SPECIAL_KEY.Ctrl].ResetTimer();
+				}
 			}
+
+
+
 			if(_resultReservedHotKeyEvent != null)
 			{
 				return EVENT_RESULT.ReservedEvent;
@@ -701,9 +962,26 @@ namespace AnyPortrait
 			return EVENT_RESULT.None;
 		}
 
+		public void OnShiftKeyEvent(bool isShift)
+		{
+			if(_prevShift != isShift)
+			{
+				_prevShift = isShift;
+
+				//Debug.LogError("Shift 키는 여기서 따로 처리한다. - " + isShift);
+				if(isShift)	{ _specialKeys[SPECIAL_KEY.Shift].OnKeyDown(); }
+				else		{ _specialKeys[SPECIAL_KEY.Shift].OnKeyUp(); }
+			}
+		}
+
 		public HotKeyEvent GetResultEvent()
 		{
 			return _resultHotKeyEvent;
+		}
+
+		public HotKeyResult GetResultAfterCallback()
+		{
+			return _eventResult;
 		}
 
 		public ReservedHotKeyEvent GetResultReservedEvent()
@@ -864,7 +1142,10 @@ namespace AnyPortrait
 		// Functions
 		//------------------------------------------------------------------------------
 		//1) 일반 단축키의 Add, Pop, Check 함수들
-		public void AddHotKeyEvent(FUNC_HOTKEY_EVENT funcEvent, LabelText labelType, KeyCode keyCode, bool isShift, bool isAlt, bool isCtrl, object paramObject)
+		
+		//함수 인자 변경 (20.12.3)
+		//public void AddHotKeyEvent(FUNC_HOTKEY_EVENT funcEvent, LabelText labelType, KeyCode keyCode, bool isShift, bool isAlt, bool isCtrl, object paramObject)
+		public void AddHotKeyEvent(FUNC_HOTKEY_EVENT funcEvent, apHotKeyMapping.HotkeyMapUnit hotKeyUnit, object paramObject)
 		{
 			//_hotKeyEvents_Live.Add(PopEvent(funcEvent, labelType, keyCode, isShift, isAlt, isCtrl, paramObject));
 
@@ -878,12 +1159,20 @@ namespace AnyPortrait
 				}
 			}
 			HotKeyEvent nextEvent = _hotKeyEvents[_nEvent];
-			nextEvent.SetEvent(funcEvent, labelType, keyCode, isShift, isAlt, isCtrl, paramObject);
+			
+			//이전
+			//nextEvent.SetEvent(funcEvent, labelType, keyCode, isShift, isAlt, isCtrl, paramObject);
+
+			//변경 20.12.3
+			nextEvent.SetEvent(funcEvent, hotKeyUnit, paramObject);
+
 			_nEvent++;
 			_isAnyEvent_Normal = true;
 		}
 
-		public void AddHotKeyEventIgnoreCtrlShift(FUNC_HOTKEY_EVENT funcEvent, LabelText labelType, KeyCode keyCode, object paramObject)
+		//함수 인자 변경 (20.12.3)
+		//public void AddHotKeyEventIgnoreCtrlShift(FUNC_HOTKEY_EVENT funcEvent, LabelText labelType, KeyCode keyCode, object paramObject)
+		public void AddHotKeyEventIgnoreCtrlShift(FUNC_HOTKEY_EVENT funcEvent, apHotKeyMapping.HotkeyMapUnit hotKeyUnit, object paramObject)
 		{
 			//_hotKeyEvents_Live.Add(PopEventIgnoreCtrlShift(funcEvent, labelType, keyCode, paramObject));
 
@@ -897,7 +1186,13 @@ namespace AnyPortrait
 				}
 			}
 			HotKeyEvent nextEvent = _hotKeyEvents_woCS[_nEvent_woCS];
-			nextEvent.SetEventIgnoreCtrlShift(funcEvent, labelType, keyCode, paramObject);
+			
+			//이전
+			//nextEvent.SetEventIgnoreCtrlShift(funcEvent, labelType, keyCode, paramObject);
+
+			//변경 20.12.3
+			nextEvent.SetEvent(funcEvent, hotKeyUnit, paramObject);
+
 			_nEvent_woCS++;
 
 			_isAnyEvent_Normal = true;//이건 동일
@@ -946,17 +1241,30 @@ namespace AnyPortrait
 		//} 
 		#endregion
 
+
+
+		//2) 예약된 단축키의 Add, Check
+		public void AddReservedHotKey(FUNC_RESV_HOTKEY_EVENT funcEvent, RESERVED_KEY keyType, object paramObject)
+		{
+			_reservedHotKeyEvents_Mapping[keyType].SetEvent(funcEvent, paramObject);
+			_isAnyEvent_Reserved = true;
+		}
+
+
+
 		/// <summary>
 		/// OnGUI 후반부에 체크해준다.
 		/// Event가 used가 아니라면 호출 가능
 		/// </summary>
 		/// <param name=""></param>
-		public HotKeyEvent CheckHotKeyEvent(KeyCode keyCode, bool isShift, bool isAlt, bool isCtrl, bool isPressed)
+		public HotKeyCheck CheckHotKeyEvent(KeyCode keyCode, bool isShift, bool isAlt, bool isCtrl, bool isPressed)
 		{
 			if (!_isAnyEvent_Normal)
 			{
 				return null;
 			}
+
+			_checkedResult.Clear();
 
 			
 			HotKeyEvent hkEvent = null;
@@ -1008,9 +1316,10 @@ namespace AnyPortrait
 					try
 					{
 						//저장된 이벤트를 실행하자
-						hkEvent._funcEvent(hkEvent._paramObject);
-
-						return hkEvent;
+						HotKeyResult eventResult = hkEvent._funcEvent(hkEvent._paramObject);
+						
+						_checkedResult.SetResult(hkEvent, eventResult);
+						return _checkedResult;
 					}
 					catch (Exception ex)
 					{
@@ -1047,9 +1356,10 @@ namespace AnyPortrait
 					try
 					{
 						//저장된 이벤트를 실행하자
-						hkEvent._funcEvent(hkEvent._paramObject);
+						HotKeyResult eventResult = hkEvent._funcEvent(hkEvent._paramObject);
 
-						return hkEvent;
+						_checkedResult.SetResult(hkEvent, eventResult);
+						return _checkedResult;
 					}
 					catch (Exception ex)
 					{
@@ -1064,14 +1374,22 @@ namespace AnyPortrait
 		}
 
 
-		//2) 예약된 단축키의 Add, Check
-		public void AddReservedHotKey(FUNC_RESV_HOTKEY_EVENT funcEvent, RESERVED_KEY keyType, object paramObject)
-		{
-			_reservedHotKeyEvents_Mapping[keyType].SetEvent(funcEvent, paramObject);
-			_isAnyEvent_Reserved = true;
-		}
+		
 
-		public ReservedHotKeyEvent CheckReservedHotKeyEvent(KeyCode keyCode, bool isShift, bool isAlt, bool isCtrl, bool isPressed)
+
+
+
+
+
+
+
+
+
+
+		public ReservedHotKeyEvent CheckReservedHotKeyEvent(
+			KeyCode keyCode, 
+			bool isShift, bool isAlt, bool isCtrl, 
+			bool isPressed)
 		{
 			if(!_isAnyEvent_Reserved)
 			{
@@ -1206,10 +1524,11 @@ namespace AnyPortrait
 
 		// Get / Set
 		//---------------------------------------------
-		public apStringWrapper GetText(HotKeyEvent hotkeyEvent)
-		{
-			return _labels[hotkeyEvent._labelType];
-		}
+		//삭제 20.12.3
+		//public apStringWrapper GetText(HotKeyEvent hotkeyEvent)
+		//{
+		//	return _labels[hotkeyEvent._labelType];
+		//}
 	}
 
 }

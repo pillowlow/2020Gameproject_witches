@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -284,7 +283,7 @@ namespace AnyPortrait
 			List<apBone> boneList = meshGroup._boneList_Root;
 			for (int i = 0; i < boneList.Count; i++)
 			{
-				bone = CheckBoneClick(boneList[i], mousePosW, mousePosGL, Editor._boneGUIRenderMode, -1, Editor.Select.IsBoneIKRenderable);
+				bone = CheckBoneClickRecursive(boneList[i], mousePosW, mousePosGL, Editor._boneGUIRenderMode, -1, Editor.Select.IsBoneIKRenderable, true);
 				if (bone != null)
 				{
 					resultBone = bone;
@@ -333,14 +332,17 @@ namespace AnyPortrait
 			return null;
 		}
 
-		private apBone CheckBoneClick(apBone targetBone, Vector2 mousePosW, Vector2 mousePosGL, apEditor.BONE_RENDER_MODE boneRenderMode, int curBoneDepth, bool isBoneIKRenderable)
+		private apBone CheckBoneClickRecursive(	apBone targetBone, 
+												Vector2 mousePosW, Vector2 mousePosGL, 
+												apEditor.BONE_RENDER_MODE boneRenderMode, 
+												int curBoneDepth, bool isBoneIKRenderable, bool isNotEditObjSelectable)
 		{
 			apBone resultBone = null;
 			apBone bone = null;
 			//Child가 먼저 렌더링되므로, 여기가 우선순위
 			for (int i = 0; i < targetBone._childBones.Count; i++)
 			{
-				bone = CheckBoneClick(targetBone._childBones[i], mousePosW, mousePosGL, boneRenderMode, curBoneDepth, isBoneIKRenderable);
+				bone = CheckBoneClickRecursive(targetBone._childBones[i], mousePosW, mousePosGL, boneRenderMode, curBoneDepth, isBoneIKRenderable, isNotEditObjSelectable);
 				if (bone != null)
 				{
 					if (bone._depth > curBoneDepth)//Depth 처리를 해야한다.
@@ -354,8 +356,19 @@ namespace AnyPortrait
 			{
 				return resultBone;
 			}
+
 			if (resultBone == null)
 			{
+				//추가 21.2.17
+				if (!isNotEditObjSelectable &&
+					(targetBone._exCalculateMode == apBone.EX_CALCULATE.Disabled_NotEdit || targetBone._exCalculateMode == apBone.EX_CALCULATE.Disabled_ExRun))
+				{
+					//모디파이어에 등록되지 않은 본은 선택 불가이다.
+					//Debug.LogError("[" + targetBone._name + "] 옵션이 꺼져서 선택 불가");
+					//클릭 체크 안하고 바로 null 리턴
+					return null;
+				}
+
 				if (IsBoneClick(targetBone, mousePosW, mousePosGL, boneRenderMode, isBoneIKRenderable, Editor._boneGUIOption_RenderType))
 				{
 					return targetBone;
@@ -382,7 +395,8 @@ namespace AnyPortrait
 
 		public bool IsBoneClick(apBone bone, Vector2 mousePosW, Vector2 mousePosGL, apEditor.BONE_RENDER_MODE boneRenderMode, bool isBoneIKRenderable, apEditor.BONE_DISPLAY_METHOD boneDisplayMethod)
 		{
-			if (!bone.IsGUIVisible)
+			//if (!bone.IsGUIVisible)//이전
+			if (!bone.IsVisibleInGUI)//변경 21.1.28
 			{
 				return false;
 			}

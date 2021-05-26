@@ -1,5 +1,5 @@
 ﻿------------------------------------------------------------
-		AnyPortrait (Version 1.2.6)
+		AnyPortrait (Version 1.3.1)
 ------------------------------------------------------------
 
 
@@ -453,9 +453,86 @@ please contact us for any issues that may be causing the problem.
 - An issue is fixed that meshes with a negative default size could not be edited by the gizmo.
 - An issue is fixed that meshes, which is applied Rigging or Transform modifiers, with a negative default size did not work properly.
 
+1.3.0 (April 10, 2021)
+- Rigging modifier and animation processing performance improvements during game playing
+- A menu that allows users to assign most of the shortcut keys in the editor has been added to the setting dialog box.
+- The content of the upper message that appears when you press the shortcut key is changed in more detail, and it is improved so that unnecessary cases are not displayed.
+- (Added Shortcut) Page Up, Page Down : Scroll the animation timeline UI up and down
+- (Added Shortcut) Ctrl + <,> : Move to the previous or next keyframe
+- (Added Shortcut) N : Turn the animation's “Auto-Key” function on or off
+- (Added Shortcut) ~ : Switch between the Hierarchy tab and the Controller tab on the left side of the editor
+- (Added Shortcut) Enter : Execute the Make Polygon function when making mesh
+- (Added Shortcut) 1-6 Number keys : Switch the mesh edit menu
+- (Added Shortcut) F2 : The focus moves to the UI that modifies the name of the current object
+- (Added Shortcut) I : Toggle Visibility Preset
+- (Added Shortcut) 1-5 Number keys : Switch Visibility Preset Rules
+- (Added Shortcut) Alt + O : Toggle Rotoscoping
+- (Added Shortcut) 9 Number key : Previous Rotoscoping Image File
+- (Added Shortcut) 0 Number key : Next Rotoscoping Image File
+- (Added Shortcut) D : Switch whether to make multiple modifiers to run in edit mode
+- (Added Shortcut) Alt + D : Set the modifier's target not to be selected even if the selection lock is released in edit mode
+- (Added Shortcut) Alt + G : Display objects that are not subject to modifiers in edit mode as gray color
+- (Added Shortcut) Alt + B : Preview calculation result for bones in edit mode
+- (Added Shortcut) Alt + C : Preview calculation result for color in edit mode
+- "View menu" has been added to replace the role of the existing view icons
+- Onion Skin, mesh, bone display option buttons have been deleted (These can be set to reappear in the Setting dialog)
+- Status icons indicating how objects can be displayed and edited in the workspace appear in the upper right corner.
+- A new "Visibility Preset" function has been added to the "View Menu" that allows the user to pre-define which bones and meshes to display in the workspace.
+- Modifier Lock is removed and is replaced with "Edit Mode Options" (added to View menu)
+- The previous automatic mesh generation function has been removed, and a completely new and improved automatic mesh generation function is provided
+- Mesh can be created directly from the mesh settings menu
+- Modifying the area for mesh generation is improved be easily edited with the mouse.
+- When selecting a mesh created from a PSD file, an option to automatically generate a mesh is added to this message when selecting the option that prompts you to remove vertices.
+- The "Rotoscoping" feature, which shows external image files in the background of the workspace, is added to the View menu
+- The function to paste two or more keys in combination in the modifier by control parameter is added.
+- After coping values ​​in up to 4 slots, you can paste them in the form of sum values or average values.
+- It is improved so that copied values ​​can be pasted even if they are not the same object as long as the minimum conditions are satisfied (except for copy & paste in animation)
+- The script function to get the Sorting Order of target mesh is added
+- Physics functions are improved such as AddForce to be applied to "Jiggle Bones"
+- The script functions are added that returns the currently playing apOptRootUnit or index
+- The size of the top UI of the editor and the first UI on the right has been reduced
+- Control parameter UI has been reduced and improved to show more Control Parameter UI on the screen. (Edit shortcut button has been deleted)
+- When selecting keyframes by dragging in the animation timeline UI, it has been improved to automatically scroll vertically and horizontally.
+- When selecting a mesh from the menu, the screen is automatically scrolled to fit the area or pivot of the mesh.
+- "Add all control parameters to the timeline" function is added
+- The order of sub-mesh groups in the Bone tab of the Hierarchy UI of the mesh group has been improved to be sorted by the depth
+- It is improved so that objects are sorted in the same order as the hierarchy when adding objects to the timeline.
+- It is improved so that the timeline layers are sorted in the same order as in the hierarchy when the "button to sort timeline layers by depth" is pressed.
+- When using the "Depth To Order" method in the Bake dialog, an option to assign the sorting order at intervals other than 1 has been added.
+- If there is only one image, the image is automatically set when creating a mesh
+- When opening or saving an external file, the last path is recorded and is improved to be used as the default path the next time the dialog is opened.
+- The option to keep the "Auto-Key" function even after the edit mode exits has been added.
+- When renaming a mesh group, if it is registered as a child of another mesh group, the name of the connected object is synchronized so that it is changed together (the vice versa is not synchronized)
+- An issue is fixed that occurred in the internal functions of apOptTransform, GetMeshTransform, and GetMeshGroupTransform.
+- An issue is fixed that the Transparency Sort Mode was forcibly fixed to Orthographic even when the billboard option was turned off.
+- An issue is fixed that the interpolation of the animation timeline of the "control parameter" type was not properly processed while the game was running.
+- An issue is fixed that a "ghost input" that seemed to keep typing these keys for a while after releasing other shortcut keys after pressing Ctrl, Shift, Alt keys occurs
+- An issue is fixed that the control parameter was not selected correctly when clicking another control parameter UI immediately after moving the cursor out of the editor while being selected in certain versions of the Unity editor.
+- An issue is fixed that too many registry values ​​were created when the editor options were saved.
+- An issue is fixed that the backup file was incorrectly saved differently from the specification depending on the user's device environment. (Backup files from previous versions can be opened in this version, but on the contrary, backup files created in this version cannot be opened in previous versions. )
+- An issue is fixed that the preview was displayed abnormally because the "default position, rotation, and size of the mesh group" was not applied in the "Reimport PSD" function.
+- An issue is fixed that the Jiggle Bone setting was missing when exporting the bone structure to a file.
+- An issue is fixed that some buttons appeared to be clickable in the UI of animation clips with no mesh groups connected
+- "Physic" of the modifier name has been modified to "Physics"
+- An issue is fixed that layer opacity was not applied when importing a PSD file
+- An issue is fixed that Bake could not be executed when the Physics modifier was applied to the double-sided mesh.
+- An issue is fixed that when Bake was performed while the size of the GameObject of apPortrait or GameObjects above it was inverted, it would not render normally even if the scale was restored to its original value.
+- An issue is fixed that "Bones with no rigging weight applied to them appear gray" is not updated immediately after performing the "Pos-Paste" function.
+- An issue is fixed that the dialog was forcibly closed during the process of opening a PSD file due to a Unity Editor error in the latest macOS (however, the error log may continue to occur until updated in macOS or Unity)
+- An issue is fixed that editing the modifier of a child mesh group would become uneditable when undoing it
+- An issue is fixed that an afterimage of 1 frame remained when the root unit was switched by animation.
+- An issue is fixed that when playing animation with a script after calling Hide and Show, it was not normally converted to the more than second root unit 
+- An issue is fixed that the processing result was not applied to the control parameter in the first frame when playing animation with a script
+
+1.3.1 (April 19, 2021)
+- It is changed so that the failure message does not appear when creating an overlapped keyframe
+- An issue is fixed that some data of other animation clips could be initialized if you undo immediately after creating any data during animation work
+
+
+
 
 ------------------------------------------------------------
-			한국어 설명 (버전 1.2.6)
+			한국어 설명 (버전 1.3.1)
 ------------------------------------------------------------
 
 AnyPortrait를 사용해주셔서 감사를 드립니다.
@@ -907,4 +984,77 @@ AnyPortrait는 PC, 모바일, 웹, 콘솔에서 구동되도록 개발되었습�
 - 기본 크기가 음수인 메시를 기즈모로 편집할 수 없었던 문제가 수정됨
 - 기본 크기가 음수인 메시에 Rigging 또는 Transform 모디파이어가 적용된 경우 정상적으로 동작하지 않는 문제가 수정됨
 
+1.3.0 (2021년 4월 10일)
+- 게임 실행 중의 Rigging 모디파이어와 애니메이션 처리 성능 향상
+- 에디터 내의 대부분의 단축키를 사용자가 지정할 수 있는 메뉴가 설정 다이얼로그에 추가
+- 단축키를 누른 경우 나타나는 상단 메시지의 내용이 더 상세하게 변경되며, 불필요한 경우는 나타나지 않도록 개선
+- (추가된 단축키) Page Up, Page Down : 애니메이션 타임라인 UI를 상하로 스크롤
+- (추가된 단축키) Ctrl + <, > : 이전, 다음 키프레임으로 이동
+- (추가된 단축키) N : 애니메이션의 "Auto-Key" 기능을 켜거나 끄기
+- (추가된 단축키) ~ : 에디터 왼쪽의 Hierarchy 탭과 Controller 탭을 전환
+- (추가된 단축키) Enter : 메시 제작시 Make Polygon 기능이 실행
+- (추가된 단축키) 숫자 1~6 키 : 메시 편집 메뉴를 전환
+- (추가된 단축키) F2 : 현재 오브젝트의 이름을 수정하는 UI로 포커스가 이동    
+- (추가된 단축키) I : 보기 프리셋 켜거나 끄기
+- (추가된 단축키) 숫자 1~5 키 : 보기 프리셋 규칙 전환
+- (추가된 단축키) Alt + O : 로토스코핑 켜거나 끄기
+- (추가된 단축키) 숫자 9 키 : 이전 로토스코핑 이미지 파일
+- (추가된 단축키) 숫자 0 키 : 다음 로토스코핑 이미지 파일
+- (추가된 단축키) D : 편집 모드시 여러개의 모디파이어 동작 여부 전환
+- (추가된 단축키) Alt + D : 편집 모드시 선택 잠금을 해제해도 모디파이어의 대상이 선택되지 않도록 설정
+- (추가된 단축키) Alt + G : 편집 모드시 모디파이어의 대상이 되지 않는 객체를 회색으로 출력
+- (추가된 단축키) Alt + B : 편집 모드시, 본의 처리 결과 미리보기
+- (추가된 단축키) Alt + C : 편집 모드시, 색상 처리 결과 미리보기
+- "보기 메뉴"가 추가되어 기존의 보기 아이콘의 역할을 대체
+- 기존의 잔상(Onion Skin), 메시, 본의 출력 옵션 버튼들이 삭제됨 (설정 다이얼로그에서 다시 나타나게 설정 가능)
+- 작업 공간에서 오브젝트들이 어떻게 출력되고 편집될 수 있는지를 나타내는 상태 아이콘들이 우측 상단에 등장    
+- 작업 공간에서 어떤 본과 메시들을 출력할지를 사용자가 직접 미리 지정할 수 있는 "보기 프리셋" 기능이 "보기 메뉴"에 새롭게 추가됨
+- 모디파이어 잠금 옵션이 삭제되고, "편집 모드 옵션"으로 대체 (보기 메뉴에 추가됨)
+- 기존의 자동 메시 생성 기능은 삭제되고, 완전히 새롭게 개선된 자동 메시 생성 기능이 제공
+- 메시 설정 화면에서도 메시를 바로 생성 가능
+- 메시를 생성하기 위한 영역(Area)를 간편하게 마우스로 편집할 수 있도록 개선
+- PSD 파일로부터 생성된 메시를 선택할 때 버텍스를 삭제할지 물어보는 메시지가 나타나는 옵션 선택시, 이 메시지에 자동으로 메시를 생성하는 선택지가 추가
+- 작업 공간의 배경에 외부 이미지를 출력하는 "로토스코핑" 기능이 보기 메뉴에 추가
+- 컨트롤 파라미터에 의한 모디파이어에서 2개 이상의 키를 조합하여 붙여넣을 수 있는 기능이 추가
+- 최대 4개의 슬롯에 값을 저장한 후, 이를 더한 값이나 평균 값의 형태로 붙여넣기 가능
+- 최소의 조건만 만족하면 동일한 객체가 아니더라도 복사된 값을 붙여넣을 수 있도록 개선 (단, 애니메이션에서의 복사&붙여넣기는 예외)
+- 특정 메시의 Sorting Order를 가져올 수 있는 함수 추가
+- AddForce와 같은 물리 함수가 "지글본"에도 적용되도록 개선
+- 현재 재생 중인 apOptRootUnit이나 인덱스를 리턴하는 함수 추가
+- 에디터의 상단 UI, 오른쪽 첫번째 UI의 크기가 축소
+- 컨트롤 파라미터 UI 축소되어 한 화면에 더 많은 컨트롤 파라미터 UI가 나타나도록 개선. (편집 바로가기 버튼이 삭제됨)
+- 애니메이션 타임라인 UI에서 드래그를 하여 키프레임을 선택할 때, 상하좌우로 자동으로 스크롤이 되도록 개선
+- 메뉴에서 메시를 선택할 때, 메시의 영역(Area) 또는 피벗(Pivot)에 맞게 자동으로 화면이 스크롤되도록 개선
+- "컨트롤 파라미터들을 일괄적으로 타임라인에 추가하기" 기능 추가
+- 메시 그룹의 Hierarchy UI의 Bone 탭의 하위 메시 그룹 순서가 Depth에 맞게 정렬
+- 일괄적으로 객체들을 타임라인에 추가할 때, Hierarchy의 순서와 동일하게 정렬
+- "타임라인 레이어를 Depth 기준으로 정렬하는 버튼"을 누르면, 타임라인 레이어가 Hierarchy에서의 순서와 동일하게 정렬
+- Bake 다이얼로그에서 Depth To Order 방식을 사용시, 1이 아닌 그 이상의 간격으로 Sorting Order를 할당할 수 있는 옵션 추가
+- 이미지가 한개인 경우, 메시를 생성하면 해당 이미지가 자동으로 설정됨
+- 외부의 파일을 열거나 저장할 때, 마지막 경로가 기록되어 다음에 해당 다이얼로그를 열 때 기본 경로로 사용됨
+- "Auto-Key" 기능이 편집 모드가 종료된 이후에도 유지되는 옵션 추가
+- 메시 그룹의 이름을 바꿀 때, 이것이 다른 메시 그룹의 자식으로 등록되었다면, 연결된 객체의 이름이 동기화되어 같이 변경되도록 개선 (그 반대로는 동기화되지 않음)
+- apOptTransform의 내부 함수인 GetMeshTransform, GetMeshGroupTransform에서 발생하는 에러가 수정됨
+- 빌보드 옵션을 끈 상태에서도 Transparency Sort Mode가 강제로 Orthographic으로 고정되는 문제가 수정됨
+- 게임 실행 중에 "컨트롤 파라미터" 타입의 애니메이션 타임라인의 보간이 정상적으로 처리되지 않는 문제가 수정됨
+- Ctrl, Shift, Alt키를 누른 후 다른 단축키를 뗀 이후에도 잠시동안, 이 키들이 계속해서 입력된 것 같은 "고스트 현상"이 수정됨
+- Unity 에디터 특정 버전에서, 컨트롤 파라미터가 선택된 상태에서 에디터 외부로 커서가 나갔다 들어온 직후, 다른 컨트롤 파라미터 UI를 클릭할 때 제대로 선택되지 않는 문제가 수정됨
+- 에디터의 옵션이 저장될 때, 너무 많은 레지스트리 값이 생성되는 문제가 수정됨
+- 사용자의 기기 환경에 따라서 백업 파일이 스펙과 다르게 잘못 저장되는 문제가 수정됨 (이전 버전에서의 백업 파일을 이번 버전에서 열 수 있지만, 반대로 이번 버전에서 생성되는 백업 파일은 이전 버전에서 열 수 없음)
+- "PSD 다시 가져오기" 기능에서 "메시 그룹의 기본 위치, 회전, 크기"가 적용되지 않아서 미리보기가 이상하게 출력되는 문제가 수정됨
+- 본 구조를 파일로 내보낼 때, 지글본(Jiggle Bone) 설정이 누락되는 문제가 수정됨
+- 메시 그룹이 연결되지 않은 애니메이션 클립의 UI에서 일부 버튼이 누를 수 있는 것처럼 나타나는 문제가 수정됨
+- 모디파이어 이름 중 "Physic"을 "Physics"로 수정됨
+- PSD 파일을 가져올 때, 레이어의 불투명도가 적용되지 않는 문제가 수정됨
+- 양면 메시에 Physics 모디파이어가 적용된 경우 Bake를 할 수 없는 문제가 수정됨
+- apPortrait의 GameObject 또는 그 상위의 GameObject들의 크기가 반전된 상태에서 Bake를 하면, Scale을 원래대로 복원해도 정상적으로 렌더링되지 않는 문제가 수정됨
+- "리깅 가중치가 적용되지 않은 본들은 회색으로 보이기"가 "Pos-Paste" 기능을 수행한 직후에는 갱신되지 않는 문제가 수정됨
+- 최신 macOS에서 Unity Editor 에러로 인하여 PSD 파일을 여는 과정에서 다이얼로그가 강제로 종료되는 문제가 수정됨 (단, 해당 에러 로그는 macOS 또는 Unity에서 업데이트하기 전까지는 계속 발생 가능)
+- 자식 메시 그룹의 모디파이어를 수정할 때 실행 취소를 하면 편집이 불가한 상태가 되버리는 문제가 수정됨
+- 애니메이션으로 루트 유닛이 전환될 경우 1프레임 잔상이 남는 문제가 수정됨
+- Hide, Show를 호출한 이후 스크립트로 애니메이션을 재생할 때, 2번째 이후의 루트 유닛으로 정상적으로 전환되지 않는 문제가 수정됨
+- 스크립트로 애니메이션을 재생할 때, 첫 프레임에서 컨트롤 파라미터에 처리 결과가 적용되지 않는 문제가 수정됨
 
+1.3.1 (2021년 4월 19일)
+- 중첩된 키프레임 생성시 실패 메시지가 나타나지 않도록 변경됨
+- 애니메이션 작업 중 데이터 생성 직후 실행 취소를 하면 다른 애니메이션 클립의 일부 데이터가 초기화될 수 있는 문제가 수정됨

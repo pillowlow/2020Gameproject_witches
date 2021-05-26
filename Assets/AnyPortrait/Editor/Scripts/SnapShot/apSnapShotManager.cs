@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -50,10 +49,17 @@ namespace AnyPortrait
 
 
 		//Copy 타입 (Clipboard)
-		private apSnapShotStackUnit _clipboard_ModMesh = null;
+		
 		private apSnapShotStackUnit _clipboard_Keyframe = null;
 		private apSnapShotStackUnit _clipboard_VertRig = null;
-		private apSnapShotStackUnit _clipboard_ModBone = null;
+		//이전
+		//private apSnapShotStackUnit _clipboard_ModMesh = null;
+		//private apSnapShotStackUnit _clipboard_ModBone = null;
+
+		//슬롯 4개로 변경
+		private const int NUM_MOD_CLIPBOARD = 4;
+		private apSnapShotStackUnit[] _clipboard_ModMeshes = null;
+		private apSnapShotStackUnit[] _clipboard_ModBones = null;
 
 		//추가 3.29 : 여러개의 키프레임을 저장하기 위한 용도. Timeline에서 복사한 경우 해당한다.
 		private apAnimClip _clipboard_AnimClipOfKeyframes = null;
@@ -77,23 +83,43 @@ namespace AnyPortrait
 		//-------------------------------------------
 		private apSnapShotManager()
 		{
-
+			Clear();
 		}
 
 
 
 		public void Clear()
 		{
-			_clipboard_ModMesh = null;
-			_clipboard_Keyframe = null;
-			_clipboard_VertRig = null;
-			_clipboard_ModBone = null;
+			//변경 > Null + 생성은 불합리하다. 
+			if(_clipboard_Keyframe == null) { _clipboard_Keyframe = new apSnapShotStackUnit(); }
+			_clipboard_Keyframe.Clear();
+			
+			if(_clipboard_VertRig == null) { _clipboard_VertRig = new apSnapShotStackUnit(); }
+			_clipboard_VertRig.Clear();
+			
+
+			//이전
+			//_clipboard_ModMesh = null;
+			//_clipboard_ModBone = null;
+			
+			//변경 21.3.19
+			if(_clipboard_ModMeshes == null) { _clipboard_ModMeshes = new apSnapShotStackUnit[NUM_MOD_CLIPBOARD]; }
+			if(_clipboard_ModBones == null) { _clipboard_ModBones = new apSnapShotStackUnit[NUM_MOD_CLIPBOARD]; }
+
+			for (int i = 0; i < NUM_MOD_CLIPBOARD; i++)
+			{
+				if (_clipboard_ModBones[i] == null) { _clipboard_ModBones[i] = new apSnapShotStackUnit(); }
+				if (_clipboard_ModMeshes[i] == null) { _clipboard_ModMeshes[i] = new apSnapShotStackUnit(); }
+				_clipboard_ModBones[i].Clear();
+				_clipboard_ModMeshes[i].Clear();
+			}
 
 			_snapShotList.Clear();
 			//_curSnapShot = null;
 			//_iCurSnapShot = -1;
 			//_restoredSnapShot = false;
 
+			//키프레임 복사하기
 			_clipboard_AnimClipOfKeyframes = null;
 			_clipboard_Keyframes = null;
 			_copied_keyframes_StartFrame = -1;
@@ -116,51 +142,182 @@ namespace AnyPortrait
 		//--------------------------------------------------------------------
 		// 1. ModMesh
 		//--------------------------------------------------------------------
-		public void Copy_ModMesh(apModifiedMesh modMesh, string snapShotName)
+		public void Copy_ModMesh(apModifiedMesh modMesh, string snapShotName, int iSlot)
 		{
-			_clipboard_ModMesh = new apSnapShotStackUnit(snapShotName);
-			bool result = _clipboard_ModMesh.SetSnapShot_ModMesh(modMesh, "Clipboard");
+			//변경 21.3.19 : 1개가 아닌 4개의 슬롯에 저장할 수 있다.
+			if(_clipboard_ModMeshes == null)
+			{
+				_clipboard_ModMeshes = new apSnapShotStackUnit[NUM_MOD_CLIPBOARD];
+				for (int i = 0; i < NUM_MOD_CLIPBOARD; i++)
+				{
+					_clipboard_ModMeshes[i] = new apSnapShotStackUnit();
+				}
+			}
+
+			
+			if(_clipboard_ModMeshes[iSlot] == null)
+			{
+				_clipboard_ModMeshes[iSlot] = new apSnapShotStackUnit();
+			}
+			apSnapShotStackUnit curUnit = _clipboard_ModMeshes[iSlot];
+			curUnit.Clear();
+			curUnit.SetName(snapShotName);
+			
+			bool result = curUnit.SetSnapShot_ModMesh(modMesh, "Clipboard");
 			if (!result)
 			{
-				_clipboard_ModMesh = null;//<<저장 불가능하다.
+				curUnit.Clear();//<<저장 불가능하다.
 			}
 		}
 
-		public bool Paste_ModMesh(apModifiedMesh targetModMesh)
-		{
-			if (targetModMesh == null)
-			{ return false; }
-			if (_clipboard_ModMesh == null)
-			{ return false; }
 
+		//1개의 Slot을 복사하는 경우
+		public bool Paste_ModMesh_Single(apModifiedMesh targetModMesh, int iSlot, bool isMorphMod)
+		{
+			if (targetModMesh == null
+				|| _clipboard_ModMeshes == null
+				|| _clipboard_ModMeshes[iSlot] == null)
+			{
+				return false;
+			}
+			
 			//만약, 복사-붙여넣기 불가능한 객체이면 생략한다.
-			bool isKeySync = _clipboard_ModMesh.IsKeySyncable(targetModMesh);
+			bool isKeySync = false;
+			if(isMorphMod)
+			{
+				isKeySync = _clipboard_ModMeshes[iSlot].IsKeySyncable_MorphMod(targetModMesh);
+			}
+			else
+			{
+				isKeySync = _clipboard_ModMeshes[iSlot].IsKeySyncable_TFMod(targetModMesh);
+			}
+			
 			if (!isKeySync)
 			{
 				return false;
 			}
 
-			return _clipboard_ModMesh.Load(targetModMesh);
+			return _clipboard_ModMeshes[iSlot].Load(targetModMesh);
 		}
 
-		public string GetClipboardName_ModMesh()
+
+		//2개 이상의 Slot을 복사하는 경우
+		public bool Paste_ModMesh_Multiple(apModifiedMesh targetModMesh,
+											bool isMorhMod, int iMainSlot, bool[] slots, int methodType)
 		{
-			if (_clipboard_ModMesh == null)
+			if (targetModMesh == null
+				|| _clipboard_ModMeshes == null)
 			{
-				return "";
+				return false;
 			}
-			return _clipboard_ModMesh._unitName;
+
+			List<apSnapShotStackUnit> pastableUnits = new List<apSnapShotStackUnit>();
+
+			//슬롯을 하나씩 체크한다.
+			apSnapShotStackUnit curUnit = null;
+			for (int i = 0; i < NUM_MOD_CLIPBOARD; i++)
+			{
+				if (i == iMainSlot || slots[i])
+				{
+					curUnit = _clipboard_ModMeshes[i];
+					if (curUnit != null)
+					{
+						if(
+							(isMorhMod && curUnit.IsKeySyncable_MorphMod(targetModMesh))
+							|| (!isMorhMod && curUnit.IsKeySyncable_TFMod(targetModMesh))
+							)
+						{
+							//다중 복사에 적용
+							pastableUnits.Add(curUnit);
+						}
+					}
+				}
+			}
+
+			if(pastableUnits.Count == 0)
+			{
+				//복사가 불가능하다.
+				return false;
+			}
+
+			if(pastableUnits.Count == 1)
+			{
+				//1개라면 Single과 동일
+				return pastableUnits[0].Load(targetModMesh);
+			}
+
+			//이제 다중 복사를 해보자
+			//가상의 유닛을 만들고,
+			//값을 누적시키자.
+			//일단 전부 합한 후, Average 타입일때는 합한 개수만큼 나누면 된다.
+			apSnapShot_ModifiedMesh tmpModMeshSnapShot = new apSnapShot_ModifiedMesh();
+			tmpModMeshSnapShot.Clear();
+			tmpModMeshSnapShot.ReadyToAddMultipleSnapShots(methodType == 0);
+			
+			//각각 더해지는 가중치는 연산 방식 0 : Sum, 1 : Average에 따라 다르다.
+			float weight = methodType == 0 ? 1.0f : 1.0f / pastableUnits.Count;
+
+			for (int i = 0; i < pastableUnits.Count; i++)
+			{
+				//값을 누적시킨다.
+				tmpModMeshSnapShot.AddSnapShot(pastableUnits[i]._snapShot as apSnapShot_ModifiedMesh, weight, methodType == 0);
+			}
+
+			//누적된 값을 ModMesh에 적용
+			return tmpModMeshSnapShot.Load(targetModMesh);
 		}
 
-		public bool IsPastable(apModifiedMesh targetModMesh)
+
+
+
+
+
+
+
+		public string GetClipboardName_ModMesh(int iSlot)
 		{
-			if (targetModMesh == null)
-			{ return false; }
-			if (_clipboard_ModMesh == null)
-			{ return false; }
+			if (_clipboard_ModMeshes == null
+				|| _clipboard_ModMeshes[iSlot] == null
+				|| !_clipboard_ModMeshes[iSlot]._isDataSaved)
+			{
+				return null;
+			}
+
+			return _clipboard_ModMeshes[iSlot].Name;
+		}
+
+
+		public bool IsPastable_TF(apModifiedMesh targetModMesh, int iSlot)
+		{
+			if (targetModMesh == null
+				|| _clipboard_ModMeshes == null
+				|| _clipboard_ModMeshes[iSlot] == null)
+			{
+				return false;
+			}
+			
 
 			//만약, 복사-붙여넣기 불가능한 객체이면 생략한다.
-			bool isKeySync = _clipboard_ModMesh.IsKeySyncable(targetModMesh);
+			bool isKeySync = _clipboard_ModMeshes[iSlot].IsKeySyncable_TFMod(targetModMesh);
+			if (!isKeySync)
+			{
+				return false;
+			}
+			return true;
+		}
+
+		public bool IsPastable_Morph(apModifiedMesh targetModMesh, int iSlot)
+		{
+			if (targetModMesh == null
+				|| _clipboard_ModMeshes == null
+				|| _clipboard_ModMeshes[iSlot] == null)
+			{
+				return false;
+			}
+			
+
+			//만약, 복사-붙여넣기 불가능한 객체이면 생략한다.
+			bool isKeySync = _clipboard_ModMeshes[iSlot].IsKeySyncable_MorphMod(targetModMesh);
 			if (!isKeySync)
 			{
 				return false;
@@ -172,51 +329,140 @@ namespace AnyPortrait
 		//--------------------------------------------------------------------
 		// 1-2. ModBone
 		//--------------------------------------------------------------------
-		public void Copy_ModBone(apModifiedBone modBone, string snapShotName)
+		public void Copy_ModBone(apModifiedBone modBone, string snapShotName, int iSlot)
 		{
-			_clipboard_ModBone = new apSnapShotStackUnit(snapShotName);
-			bool result = _clipboard_ModBone.SetSnapShot_ModBone(modBone, "Clipboard");
+			if(_clipboard_ModBones == null)
+			{
+				_clipboard_ModBones = new apSnapShotStackUnit[NUM_MOD_CLIPBOARD];
+				for (int i = 0; i < NUM_MOD_CLIPBOARD; i++)
+				{
+					_clipboard_ModBones[i] = new apSnapShotStackUnit();
+				}
+			}
+			if(_clipboard_ModBones[iSlot] == null)
+			{
+				_clipboard_ModBones[iSlot] = new apSnapShotStackUnit();
+			}
+
+			apSnapShotStackUnit curUnit = _clipboard_ModBones[iSlot];
+			curUnit.Clear();
+			curUnit.SetName(snapShotName);
+
+			bool result = curUnit.SetSnapShot_ModBone(modBone, "Clipboard");
 			if (!result)
 			{
-				_clipboard_ModBone = null;//<<저장 불가능하다.
+				curUnit.Clear();//<<저장 불가능하다.
 			}
 		}
 
-		public bool Paste_ModBone(apModifiedBone targetModBone)
+		public bool Paste_ModBone_Single(apModifiedBone targetModBone, int iSlot)
 		{
-			if (targetModBone == null)
-			{ return false; }
-			if (_clipboard_ModBone == null)
-			{ return false; }
+			if (targetModBone == null
+				|| _clipboard_ModBones == null
+				|| _clipboard_ModBones[iSlot] == null)
+			{
+				return false;
+			}
 
 			//만약, 복사-붙여넣기 불가능한 객체이면 생략한다.
-			bool isKeySync = _clipboard_ModBone.IsKeySyncable(targetModBone);
+			bool isKeySync = _clipboard_ModBones[iSlot].IsKeySyncable_TFMod(targetModBone);
 			if (!isKeySync)
 			{
 				return false;
 			}
 
-			return _clipboard_ModBone.Load(targetModBone);
+			return _clipboard_ModBones[iSlot].Load(targetModBone);
 		}
 
-		public string GetClipboardName_ModBone()
+
+		public bool Paste_ModBone_Multiple(apModifiedBone targetModBone, int iMainSlot, bool[] slots, int methodType)
 		{
-			if (_clipboard_ModBone == null)
+			if (targetModBone == null
+				|| _clipboard_ModBones == null)
 			{
-				return "";
+				return false;
 			}
-			return _clipboard_ModBone._unitName;
+
+			List<apSnapShotStackUnit> pastableUnits = new List<apSnapShotStackUnit>();
+
+			//슬롯을 하나씩 체크한다.
+			apSnapShotStackUnit curUnit = null;
+			for (int i = 0; i < NUM_MOD_CLIPBOARD; i++)
+			{
+				if (i == iMainSlot || slots[i])
+				{
+					curUnit = _clipboard_ModBones[i];
+					if (curUnit != null)
+					{
+						if(curUnit.IsKeySyncable_TFMod(targetModBone))
+						{
+							//다중 복사에 적용
+							pastableUnits.Add(curUnit);
+						}
+					}
+				}
+			}
+
+			if(pastableUnits.Count == 0)
+			{
+				//복사가 불가능하다.
+				return false;
+			}
+
+			if(pastableUnits.Count == 1)
+			{
+				//1개라면 Single과 동일
+				return pastableUnits[0].Load(targetModBone);
+			}
+
+			//이제 다중 복사를 해보자
+			//가상의 유닛을 만들고,
+			//값을 누적시키자.
+			//일단 전부 합한 후, Average 타입일때는 합한 개수만큼 나누면 된다.
+			apSnapShot_ModifiedBone tmpModBoneSnapShot = new apSnapShot_ModifiedBone();
+			tmpModBoneSnapShot.Clear();
+			tmpModBoneSnapShot.ReadyToAddMultipleSnapShots(methodType == 0);
+			
+			//각각 더해지는 가중치는 연산 방식 0 : Sum, 1 : Average에 따라 다르다.
+			float weight = methodType == 0 ? 1.0f : 1.0f / pastableUnits.Count;
+
+			for (int i = 0; i < pastableUnits.Count; i++)
+			{
+				//값을 누적시킨다.
+				tmpModBoneSnapShot.AddSnapShot(pastableUnits[i]._snapShot as apSnapShot_ModifiedBone, weight, methodType == 0);
+			}
+
+			//누적된 값을 ModMesh에 적용
+			return tmpModBoneSnapShot.Load(targetModBone);
 		}
 
-		public bool IsPastable(apModifiedBone targetModBone)
+
+
+
+
+
+		public string GetClipboardName_ModBone(int iSlot)
 		{
-			if (targetModBone == null)
-			{ return false; }
-			if (_clipboard_ModBone == null)
-			{ return false; }
+			if (_clipboard_ModBones == null
+				|| _clipboard_ModBones[iSlot] == null
+				|| !_clipboard_ModBones[iSlot]._isDataSaved)
+			{
+				return null;
+			}
+			return _clipboard_ModBones[iSlot].Name;
+		}
+
+		public bool IsPastable(apModifiedBone targetModBone, int iSlot)
+		{
+			if (targetModBone == null
+				|| _clipboard_ModBones == null
+				|| _clipboard_ModBones[iSlot] == null)
+			{
+				return false;
+			}
 
 			//만약, 복사-붙여넣기 불가능한 객체이면 생략한다.
-			bool isKeySync = _clipboard_ModBone.IsKeySyncable(targetModBone);
+			bool isKeySync = _clipboard_ModBones[iSlot].IsKeySyncable_TFMod(targetModBone);
 			if (!isKeySync)
 			{
 				return false;
@@ -229,7 +475,12 @@ namespace AnyPortrait
 		//--------------------------------------------------------------------
 		public void Copy_Keyframe(apAnimKeyframe keyframe, string snapShotName)
 		{
-			_clipboard_Keyframe = new apSnapShotStackUnit(snapShotName);
+			if(_clipboard_Keyframe == null)
+			{
+				_clipboard_Keyframe = new apSnapShotStackUnit();
+			}
+			_clipboard_Keyframe.Clear();
+			_clipboard_Keyframe.SetName(snapShotName);
 			bool result = _clipboard_Keyframe.SetSnapShot_Keyframe(keyframe, "Clipboard");
 			if (!result)
 			{
@@ -239,10 +490,11 @@ namespace AnyPortrait
 
 		public bool Paste_Keyframe(apAnimKeyframe targetKeyframe)
 		{
-			if (targetKeyframe == null)
-			{ return false; }
-			if (_clipboard_Keyframe == null)
-			{ return false; }
+			if (targetKeyframe == null
+				|| _clipboard_Keyframe == null)
+			{
+				return false;
+			}
 
 			//만약, 복사-붙여넣기 불가능한 객체이면 생략한다.
 			bool isKeySync = _clipboard_Keyframe.IsKeySyncable(targetKeyframe);
@@ -256,19 +508,21 @@ namespace AnyPortrait
 
 		public string GetClipboardName_Keyframe()
 		{
-			if (_clipboard_Keyframe == null)
+			if (_clipboard_Keyframe == null
+				|| !_clipboard_Keyframe._isDataSaved)
 			{
 				return "";
 			}
-			return _clipboard_Keyframe._unitName;
+			return _clipboard_Keyframe.Name;
 		}
 
 		public bool IsPastable(apAnimKeyframe keyframe)
 		{
-			if (keyframe == null)
-			{ return false; }
-			if (_clipboard_Keyframe == null)
-			{ return false; }
+			if (keyframe == null
+				|| _clipboard_Keyframe == null)
+			{
+				return false;
+			}
 
 			//만약, 복사-붙여넣기 불가능한 객체이면 생략한다.
 			bool isKeySync = _clipboard_Keyframe.IsKeySyncable(keyframe);
@@ -314,7 +568,9 @@ namespace AnyPortrait
 			{
 				srcKeyframe = keyframes[i];
 
-				apSnapShotStackUnit newUnit = new apSnapShotStackUnit("Keyframe");
+				apSnapShotStackUnit newUnit = new apSnapShotStackUnit();
+				newUnit.Clear();
+				newUnit.SetName("Keyframe");
 				newUnit.SetSnapShot_Keyframe(srcKeyframe, "Clipboard");
 				_clipboard_Keyframes.Add(newUnit);
 
@@ -385,7 +641,12 @@ namespace AnyPortrait
 		//--------------------------------------------------------------------
 		public void Copy_VertRig(apModifiedVertexRig modVertRig, string snapShotName)
 		{
-			_clipboard_VertRig = new apSnapShotStackUnit(snapShotName);
+			if(_clipboard_VertRig == null)
+			{
+				_clipboard_VertRig = new apSnapShotStackUnit();
+			}
+			_clipboard_VertRig.Clear();
+			_clipboard_VertRig.SetName(snapShotName);
 			bool result = _clipboard_VertRig.SetSnapShot_VertRig(modVertRig, "Clipboard");
 			if (!result)
 			{
@@ -395,10 +656,11 @@ namespace AnyPortrait
 
 		public bool Paste_VertRig(apModifiedVertexRig targetModVertRig)
 		{
-			if (targetModVertRig == null)
-			{ return false; }
-			if (_clipboard_VertRig == null)
-			{ return false; }
+			if (targetModVertRig == null
+				|| _clipboard_VertRig == null)
+			{
+				return false;
+			}
 
 			//만약, 복사-붙여넣기 불가능한 객체이면 생략한다.
 			bool isKeySync = _clipboard_VertRig.IsKeySyncable(targetModVertRig);
@@ -412,10 +674,11 @@ namespace AnyPortrait
 
 		public bool IsPastable(apModifiedVertexRig vertRig)
 		{
-			if (vertRig == null)
-			{ return false; }
-			if (_clipboard_VertRig == null)
-			{ return false; }
+			if (vertRig == null
+				|| _clipboard_VertRig == null)
+			{
+				return false;
+			}
 
 			//만약, 복사-붙여넣기 불가능한 객체이면 생략한다.
 			bool isKeySync = _clipboard_VertRig.IsKeySyncable(vertRig);

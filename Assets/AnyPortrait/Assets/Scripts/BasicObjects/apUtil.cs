@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -275,6 +274,117 @@ namespace AnyPortrait
 			return strSrc;
 		}
 
+
+		/// <summary>
+		/// 문자열 길이를 리턴한다. 조금 다를 순 있으니 약간의 여백을 고려하자 (GUI용 / 영어 위주)
+		/// </summary>
+		/// <param name="strSrc"></param>
+		/// <returns></returns>
+		public static int GetStringRealLength(string strSrc)
+		{	
+			if(string.IsNullOrEmpty(strSrc))
+			{
+				return 0;
+			}
+
+			int nSrc = strSrc.Length;
+			int result = 0;
+			char curChar = '0';
+
+			for (int i = 0; i < nSrc; i++)
+			{
+				curChar = strSrc[i];
+				switch (curChar)
+				{
+					case 'A': result += 9; break;
+					case 'B': result += 8; break;
+					case 'C': result += 9; break;
+					case 'D': result += 9; break;
+					case 'E': result += 7; break;
+					case 'F': result += 6; break;
+					case 'G': result += 9; break;
+					case 'H': result += 8; break;
+					case 'I': result += 4; break;
+					case 'J': result += 6; break;
+					case 'K': result += 8; break;
+					case 'L': result += 6; break;
+					case 'M': result += 9; break;
+					case 'N': result += 8; break;
+					case 'O': result += 9; break;
+					case 'P': result += 7; break;
+					case 'Q': result += 9; break;
+					case 'R': result += 8; break;
+					case 'S': result += 7; break;
+					case 'T': result += 8; break;
+					case 'U': result += 7; break;
+					case 'V': result += 9; break;
+					case 'W': result += 10; break;
+					case 'X': result += 8; break;
+					case 'Y': result += 8; break;
+					case 'Z': result += 8; break;
+
+
+					case 'a': result += 7; break;
+					case 'b': result += 7; break;
+					case 'c': result += 6; break;
+					case 'd': result += 7; break;
+					case 'e': result += 6; break;
+					case 'f': result += 5; break;
+					case 'g': result += 7; break;
+					case 'h': result += 7; break;
+					case 'i': result += 2; break;
+					case 'j': result += 5; break;
+					case 'k': result += 7; break;
+					case 'l': result += 3; break;
+					case 'm': result += 11; break;
+					case 'n': result += 7; break;
+					case 'o': result += 7; break;
+					case 'p': result += 7; break;
+					case 'q': result += 7; break;
+					case 'r': result += 5; break;
+					case 's': result += 5; break;
+					case 't': result += 5; break;
+					case 'u': result += 7; break;
+					case 'v': result += 7; break;
+					case 'w': result += 9; break;
+					case 'x': result += 7; break;
+					case 'y': result += 7; break;
+					case 'z': result += 6; break;
+
+
+					case '1': result += 7; break;
+					case '2': result += 7; break;
+					case '3': result += 6; break;
+					case '4': result += 8; break;
+					case '5': result += 7; break;
+					case '6': result += 7; break;
+					case '7': result += 7; break;
+					case '8': result += 7; break;
+					case '9': result += 7; break;
+					case '0': result += 7; break;
+					case '(': result += 5; break;
+					case ')': result += 5; break;
+					case '[': result += 5; break;
+					case ']': result += 5; break;
+					case ' ': result += 4; break;
+					case '/': result += 6; break;
+					case '+': result += 9; break;
+					case '-': result += 6; break;
+					case '!': result += 3; break;
+					case ':': result += 3; break;
+					case '?': result += 7; break;
+					case '.': result += 4; break;
+					case ',': result += 4; break; 
+					case ';': result += 4; break; 
+					case '>': result += 8; break;
+					case '<': result += 8; break;
+
+					default: result += 7; break;
+				}
+			}
+
+			return result;
+		}
 
 		//추가 20.4.3 : 갱신 요청에 관련된 변수를 별도로 만든다.
 		//---------------------------------------------------------------------------------------------------

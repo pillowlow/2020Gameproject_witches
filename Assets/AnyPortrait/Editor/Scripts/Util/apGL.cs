@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -238,6 +237,7 @@ namespace AnyPortrait
 				BoneV2,//추가 20.3.20 : 본 렌더링의 v2 방식
 				Texture_VColorMul,//추가 20.3.25 : 텍스쳐*VertColor (_Color없음)
 				RigCircleV2,//리깅용 Circle Vert v2 방식
+				Gray_Normal, Gray_Clipped,//추가 21.2.16 : 비활성화된 객체 선택
 			}
 			private Material _mat_Color = null;
 			private Material _mat_MaskOnly = null;
@@ -258,6 +258,9 @@ namespace AnyPortrait
 			private Material _mat_BoneV2 = null;//추가 20.3.20
 			private Material _mat_Texture_VColorMul = null;//추가 20.3.25
 			private Material _mat_RigCircleV2 = null;
+
+			private Material _mat_Gray_Normal = null;//추가 21.2.16 : 비활성화된 객체를 표현하기 위한 재질
+			private Material _mat_Gray_Clipped = null;//추가 21.2.16 : 비활성화된 객체를 표현하기 위한 재질
 
 
 			private MatType _matType = MatType.None;
@@ -312,7 +315,8 @@ namespace AnyPortrait
 									Shader shader_Alpha2White,
 									Shader shader_BoneV2, Texture2D uniformTexture_BoneSpriteSheet,
 									Shader shader_Texture_VColorMul,
-									Shader shader_RigCircleV2, Texture2D uniformTexture_RigCircle
+									Shader shader_RigCircleV2, Texture2D uniformTexture_RigCircle,
+									Shader shader_Gray_Normal, Shader shader_Gray_Clipped
 									)
 			{
 				//_mat_Color = mat_Color;
@@ -372,6 +376,10 @@ namespace AnyPortrait
 				{
 					_mat_RigCircleV2.mainTexture = uniformTexture_RigCircle;
 				}
+
+				//추가 21.2.16 : 비활성화된 객체를 표현하기 위한 재질
+				_mat_Gray_Normal = new Material(shader_Gray_Normal);
+				_mat_Gray_Clipped = new Material(shader_Gray_Clipped);
 
 				//쉐이더 프로퍼티
 				_propertyID__ScreenSize =	Shader.PropertyToID("_ScreenSize");
@@ -489,6 +497,14 @@ namespace AnyPortrait
 					case MatType.RigCircleV2:
 						_mat_RigCircleV2.SetVector(_propertyID__ScreenSize, _glScreenClippingSize);//_ScreenSize
 						break;
+
+					case MatType.Gray_Normal:
+						_mat_Gray_Normal.SetVector(_propertyID__ScreenSize, _glScreenClippingSize);//_ScreenSize
+						break;
+
+					case MatType.Gray_Clipped:
+						_mat_Gray_Clipped.SetVector(_propertyID__ScreenSize, _glScreenClippingSize);//_ScreenSize
+						break;
 				}
 
 
@@ -519,6 +535,9 @@ namespace AnyPortrait
 				}
 				_mat_Texture_VColorMul.SetVector(_propertyID__ScreenSize, _glScreenClippingSize);
 				_mat_RigCircleV2.SetVector(_propertyID__ScreenSize, _glScreenClippingSize);//_ScreenSize
+
+				_mat_Gray_Normal.SetVector(_propertyID__ScreenSize, _glScreenClippingSize);//_ScreenSize
+				_mat_Gray_Clipped.SetVector(_propertyID__ScreenSize, _glScreenClippingSize);//_ScreenSize
 			}
 
 			/// <summary>
@@ -686,6 +705,46 @@ namespace AnyPortrait
 				}
 			}
 
+
+			public void SetPass_Mask_Gray(Color color, Texture2D texture, bool isRenderMask)
+			{
+				_color = color;
+				_texture = texture;
+
+				if (isRenderMask)
+				{
+					//RenderTexture로 만든다.
+					_matType = MatType.MaskOnly;
+
+					//RenderTexture를 활성화한다.
+					_renderTexture = RenderTexture.GetTemporary(_renderTextureSize_Width, _renderTextureSize_Height, 8);
+					_renderTexture.wrapMode = TextureWrapMode.Clamp;
+
+					//RenderTexture를 사용
+					RenderTexture.active = _renderTexture;
+
+					//[중요] Temp RenderTexture는 색상 초기화가 안되어있다. 꼭 해준다.
+					GL.Clear(true, true, Color.clear, 0.0f);
+
+
+					_mat_MaskOnly.SetColor(_propertyID__Color, _color);//_Color
+					_mat_MaskOnly.SetTexture(_propertyID__MainTex, _texture);//_MainTex
+					//_mat_MaskOnly.SetFloat(_propertyID__vColorITP, vertColorRatio);//_vColorITP
+					_mat_MaskOnly.SetFloat(_propertyID__PosOffsetX, 0);//_PosOffsetX
+					_mat_MaskOnly.SetFloat(_propertyID__PosOffsetY, 0);//_PosOffsetY
+					_mat_MaskOnly.SetPass(0);
+				}
+				else
+				{
+					_matType = MatType.Gray_Normal;
+
+					
+					_mat_Gray_Normal.SetColor(_propertyID__Color, _color);//_Color
+					_mat_Gray_Normal.SetTexture(_propertyID__MainTex, _texture);//_MainTex
+					_mat_Gray_Normal.SetPass(0);
+				}
+			}
+
 			public void SetPass_Clipped(Color color, Texture2D texture, float vertColorRatio, apPortrait.SHADER_TYPE shaderType, Color parentColor)
 			{
 				_matType = MatType.Clipped;
@@ -835,7 +894,33 @@ namespace AnyPortrait
 			}
 
 
+			public void SetPass_Gray_Normal(Color color, Texture2D texture)
+			{
+				_matType = MatType.Gray_Normal;
+				_color = color;
+				_texture = texture;
 
+				_mat_Gray_Normal.SetColor(_propertyID__Color, _color);//_Color
+				_mat_Gray_Normal.SetTexture(_propertyID__MainTex, _texture);//_MainTex
+
+				_mat_Gray_Normal.SetPass(0);
+			}
+
+			public void SetPass_Gray_Clipped(Color color, Texture2D texture, Color parentColor)
+			{
+				_matType = MatType.Gray_Clipped;
+				
+				_color = color;
+				_texture = texture;
+				_mat_Gray_Clipped.SetColor(_propertyID__Color, _color);//_Color
+				_mat_Gray_Clipped.SetTexture(_propertyID__MainTex, _texture);//_MainTex
+				
+				//Mask를 넣자
+				_mat_Gray_Clipped.SetTexture(_propertyID__MaskRenderTexture, _renderTexture);//_MaskRenderTexture
+				_mat_Gray_Clipped.SetColor(_propertyID__MaskColor, parentColor);//_MaskColor
+
+				_mat_Gray_Clipped.SetPass(0);
+			}
 
 
 
@@ -870,7 +955,10 @@ namespace AnyPortrait
 					|| _mat_GUITexture == null
 					|| _mat_ToneColor_Normal == null
 					|| _mat_ToneColor_Clipped == null
-					|| _mat_Alpha2White == null);
+					|| _mat_Alpha2White == null
+					|| _mat_Gray_Normal == null
+					|| _mat_Gray_Clipped == null
+					);
 			}
 
 			
@@ -893,7 +981,9 @@ namespace AnyPortrait
 									Shader shader_Alpha2White,
 									Shader shader_BoneV2, Texture2D uniformTexture_BoneSpriteSheet,
 									Shader shader_TextureVColorMul,
-									Shader shader_RigCircleV2, Texture2D uniformTexture_RigCircleV2)
+									Shader shader_RigCircleV2, Texture2D uniformTexture_RigCircleV2,
+									Shader shader_Gray_Normal, Shader shader_Gray_Clipped
+			)
 		{
 			//_mat_Color = mat_Color;
 			//_mat_Texture = mat_Texture;
@@ -911,7 +1001,8 @@ namespace AnyPortrait
 								shader_Alpha2White,
 								shader_BoneV2, uniformTexture_BoneSpriteSheet,
 								shader_TextureVColorMul,
-								shader_RigCircleV2, uniformTexture_RigCircleV2);
+								shader_RigCircleV2, uniformTexture_RigCircleV2,
+								shader_Gray_Normal, shader_Gray_Clipped);
 
 			if(_func_GetWeightColor3 == null)
 			{
@@ -2030,6 +2121,27 @@ namespace AnyPortrait
 			GUI.Label(new Rect(pos.x, pos.y, width + 50, 30.0f), text, _textStyle);
 		}
 
+		public static void DrawTextGL_IgnoreRightClipping(string text, Vector2 pos, float width, Color color)
+		{
+			if (_matBatch.IsNotReady())
+			{
+				return;
+			}
+
+			if (IsVertexClipped(pos))
+			{
+				return;
+			}
+
+			//if (IsVertexClipped(pos + new Vector2(width, 15)))
+			//{
+			//	return;
+			//}
+			_textStyle.normal.textColor = color;
+
+			GUI.Label(new Rect(pos.x, pos.y, width + 50, 30.0f), text, _textStyle);
+		}
+
 
 		//-------------------------------------------------------------------------------
 		// Draw Texture
@@ -2315,6 +2427,74 @@ namespace AnyPortrait
 			//GL.Flush();
 		}
 
+
+		/// <summary>
+		/// 이미 VColor Texture Pass가 시작될 때 사용하는 텍스쳐
+		/// </summary>
+		/// <param name="image"></param>
+		/// <param name="pos"></param>
+		/// <param name="width"></param>
+		/// <param name="height"></param>
+		/// <param name="VColor1x"></param>
+		/// <param name="depth"></param>
+		public static void DrawTextureGLWithVColor(Texture2D image, Vector2 pos, float width, float height, Color VColor1x, float depth)
+		{
+			if (_matBatch.IsNotReady())
+			{
+				return;
+			}
+
+			float realWidth = width * _zoom;
+			float realHeight = height * _zoom;
+
+			float realWidth_Half = realWidth * 0.5f;
+			float realHeight_Half = realHeight * 0.5f;
+
+			//CW
+			// -------->
+			// | 0(--) 1
+			// | 		
+			// | 3   2 (++)
+			Vector2 pos_0 = new Vector2(pos.x - realWidth_Half, pos.y - realHeight_Half);
+			Vector2 pos_1 = new Vector2(pos.x + realWidth_Half, pos.y - realHeight_Half);
+			Vector2 pos_2 = new Vector2(pos.x + realWidth_Half, pos.y + realHeight_Half);
+			Vector2 pos_3 = new Vector2(pos.x - realWidth_Half, pos.y + realHeight_Half);
+
+
+			float widthResize = (pos_1.x - pos_0.x);
+			float heightResize = (pos_3.y - pos_0.y);
+
+			if (widthResize < 1.0f || heightResize < 1.0f)
+			{
+				return;
+			}
+
+			float u_left = 0.0f;
+			float u_right = 1.0f;
+
+			float v_top = 0.0f;
+			float v_bottom = 1.0f;
+
+			Vector3 uv_0 = new Vector3(u_left, v_bottom, 0.0f);
+			Vector3 uv_1 = new Vector3(u_right, v_bottom, 0.0f);
+			Vector3 uv_2 = new Vector3(u_right, v_top, 0.0f);
+			Vector3 uv_3 = new Vector3(u_left, v_top, 0.0f);
+
+			//CW
+			// -------->
+			// | 0   1
+			// | 		
+			// | 3   2
+			GL.Color(VColor1x);
+			GL.TexCoord(uv_0);	GL.Vertex(new Vector3(pos_0.x, pos_0.y, depth)); // 0
+			GL.TexCoord(uv_1);	GL.Vertex(new Vector3(pos_1.x, pos_1.y, depth)); // 1
+			GL.TexCoord(uv_2);	GL.Vertex(new Vector3(pos_2.x, pos_2.y, depth)); // 2
+
+			GL.TexCoord(uv_2);	GL.Vertex(new Vector3(pos_2.x, pos_2.y, depth)); // 2
+			GL.TexCoord(uv_3);	GL.Vertex(new Vector3(pos_3.x, pos_3.y, depth)); // 3
+			GL.TexCoord(uv_0);	GL.Vertex(new Vector3(pos_0.x, pos_0.y, depth)); // 0
+		}
+
 		/// <summary>
 		/// 이미 VColor Texture Pass가 시작될 때 사용하는 Box 그리기 함수
 		/// </summary>
@@ -2366,7 +2546,14 @@ namespace AnyPortrait
 		//-------------------------------------------------------------------------------
 		// Draw Mesh
 		//-------------------------------------------------------------------------------
-		public static void DrawMesh(apMesh mesh, apMatrix3x3 matrix, Color color2X, RENDER_TYPE renderType, apVertexController vertexController, apEditor editor, Vector2 mousePosition)
+		public static void DrawMesh(	apMesh mesh, 
+										apMatrix3x3 matrix, 
+										Color color2X, 
+										RENDER_TYPE renderType, 
+										apVertexController vertexController, 
+										apEditor editor, 
+										Vector2 mousePosition,
+										bool isPSDAreaEditing)
 		{
 			try
 			{
@@ -2546,10 +2733,21 @@ namespace AnyPortrait
 					_matBatch.SetClippingSize(_glScreenClippingSize);
 					GL.Begin(GL.LINES);
 
-					DrawLine(pos_LT, pos_RT, editor._colorOption_AtlasBorder, false);
-					DrawLine(pos_RT, pos_RB, editor._colorOption_AtlasBorder, false);
-					DrawLine(pos_RB, pos_LB, editor._colorOption_AtlasBorder, false);
-					DrawLine(pos_LB, pos_LT, editor._colorOption_AtlasBorder, false);
+					if(!isPSDAreaEditing)
+					{
+						DrawLine(pos_LT, pos_RT, editor._colorOption_AtlasBorder, false);
+						DrawLine(pos_RT, pos_RB, editor._colorOption_AtlasBorder, false);
+						DrawLine(pos_RB, pos_LB, editor._colorOption_AtlasBorder, false);
+						DrawLine(pos_LB, pos_LT, editor._colorOption_AtlasBorder, false);
+					}
+					else
+					{
+						DrawAnimatedLine(pos_LT, pos_RT, editor._colorOption_AtlasBorder, false);
+						DrawAnimatedLine(pos_RT, pos_RB, editor._colorOption_AtlasBorder, false);
+						DrawAnimatedLine(pos_RB, pos_LB, editor._colorOption_AtlasBorder, false);
+						DrawAnimatedLine(pos_LB, pos_LT, editor._colorOption_AtlasBorder, false);
+					}
+					
 
 					GL.End();
 				}
@@ -2722,467 +2920,522 @@ namespace AnyPortrait
 		}
 
 
+		public static void DrawMeshAreaEditing(	apMesh mesh, 
+												apMatrix3x3 matrix, 
+												apEditor editor,
+												Vector2 mousePosition)
+		{
+			
+			try
+			{
+				if (mesh == null || mesh.LinkedTextureData == null || mesh.LinkedTextureData._image == null)//변경 코드
+				{
+					return;
+				}
+				if(!mesh._isPSDParsed)
+				{
+					return;
+				}
+				matrix *= mesh.Matrix_VertToLocal;
+
+				Texture2D imgControlPoint = editor.ImageSet.Get(apImageSet.PRESET.TransformControlPoint);
+				
+				//크기는 26
+				float imgSize = 26.0f / apGL.Zoom;
+
+				Vector2 pos_LT = matrix.MultiplyPoint(new Vector2(mesh._atlasFromPSD_LT.x, mesh._atlasFromPSD_LT.y));
+				Vector2 pos_RT = matrix.MultiplyPoint(new Vector2(mesh._atlasFromPSD_RB.x, mesh._atlasFromPSD_LT.y));
+				Vector2 pos_LB = matrix.MultiplyPoint(new Vector2(mesh._atlasFromPSD_LT.x, mesh._atlasFromPSD_RB.y));
+				Vector2 pos_RB = matrix.MultiplyPoint(new Vector2(mesh._atlasFromPSD_RB.x, mesh._atlasFromPSD_RB.y));
+				
+				AddCursorRect(mousePosition, World2GL(pos_LT), 20, 20, MouseCursor.MoveArrow);
+				AddCursorRect(mousePosition, World2GL(pos_RT), 20, 20, MouseCursor.MoveArrow);
+				AddCursorRect(mousePosition, World2GL(pos_LB), 20, 20, MouseCursor.MoveArrow);
+				AddCursorRect(mousePosition, World2GL(pos_RB), 20, 20, MouseCursor.MoveArrow);
+
+				_matBatch.SetPass_Texture_VColor(_textureColor_Gray, imgControlPoint, 1.0f, apPortrait.SHADER_TYPE.AlphaBlend);
+				_matBatch.SetClippingSize(_glScreenClippingSize);
+
+				//4개의 점을 만든다.
+				GL.Begin(GL.TRIANGLES);
+				DrawTextureGLWithVColor(imgControlPoint, World2GL(pos_LT), imgSize, imgSize, (editor.Select._meshAreaPointEditType == apSelection.MESH_AREA_POINT_EDIT.LT ? Color.red : Color.white), 1.0f);
+				DrawTextureGLWithVColor(imgControlPoint, World2GL(pos_RT), imgSize, imgSize, (editor.Select._meshAreaPointEditType == apSelection.MESH_AREA_POINT_EDIT.RT ? Color.red : Color.white), 1.0f);
+				DrawTextureGLWithVColor(imgControlPoint, World2GL(pos_LB), imgSize, imgSize, (editor.Select._meshAreaPointEditType == apSelection.MESH_AREA_POINT_EDIT.LB ? Color.red : Color.white), 1.0f);
+				DrawTextureGLWithVColor(imgControlPoint, World2GL(pos_RB), imgSize, imgSize, (editor.Select._meshAreaPointEditType == apSelection.MESH_AREA_POINT_EDIT.RB ? Color.red : Color.white), 1.0f);
+
+				GL.End();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+
+
 		//------------------------------------------------------------------------------------------------
 		// Make Mesh 중 AutoGenerate 메뉴에서의 프리뷰 기능
 		//------------------------------------------------------------------------------------------------
-		public static void DrawMeshAutoGenerationPreview(apMesh mesh, 
-															apMatrix3x3 matrix, 
-															apEditor editor,
-															apMeshGenerator meshGenerator)
-		{
-			if (mesh == null || mesh.LinkedTextureData == null || mesh.LinkedTextureData._image == null || editor == null || meshGenerator == null)
-			{
-				return;
-			}
-
-			if(!meshGenerator.IsScanned)
-			{
-				return;
-			}
-			
-			//아웃라인을 그리자
-			apMeshGenerator.ScanTileGroup outlineGroup = null;
-			//apMeshGenerator.ScanTile scanTile = null;
-			apMeshGenerator.OuterPoint outerPoint = null;
-			
-			Vector2 imageHalfOffset = new Vector2(mesh.LinkedTextureData._width * 0.5f, mesh.LinkedTextureData._height * 0.5f);
-			
-			Vector2 pos_A;
-			Vector2 pos_B;
-			Vector2 pos_0;
-			Vector2 pos_1;
-			Vector2 pos_2;
-			Vector2 pos_3;
-
-
-			//_matBatch.SetPass_Color();
-			//_matBatch.SetClippingSize(_glScreenClippingSize);
-
-			//GL.Begin(GL.LINES);
-			//GL.Color(new Color(0.0f, 1.0f, 1.0f, 0.5f));
-
-			//Vector2 pos_Min;
-			//Vector2 pos_Max;
-
-			//for (int iGroup = 0; iGroup < meshGenerator._outlineGroups.Count; iGroup++)
-			//{
-			//	outlineGroup = meshGenerator._outlineGroups[iGroup];
-			//	for (int iTile = 0; iTile < outlineGroup._tiles.Count; iTile++)
-			//	{
-			//		scanTile = outlineGroup._tiles[iTile];
-			//		pos_Min = World2GL(meshGenerator.GetTilePos_Min(scanTile._iX, scanTile._iY) - (mesh._offsetPos + imageHalfOffset));
-			//		pos_Max = World2GL(meshGenerator.GetTilePos_Max(scanTile._iX, scanTile._iY) - (mesh._offsetPos + imageHalfOffset));
-
-			//		GL.Vertex(new Vector3(pos_Min.x, pos_Min.y, 0));
-			//		GL.Vertex(new Vector3(pos_Min.x, pos_Max.y, 0));
-
-			//		GL.Vertex(new Vector3(pos_Min.x, pos_Max.y, 0));
-			//		GL.Vertex(new Vector3(pos_Max.x, pos_Max.y, 0));
-
-			//		GL.Vertex(new Vector3(pos_Max.x, pos_Max.y, 0));
-			//		GL.Vertex(new Vector3(pos_Max.x, pos_Min.y, 0));
-
-			//		GL.Vertex(new Vector3(pos_Max.x, pos_Min.y, 0));
-			//		GL.Vertex(new Vector3(pos_Min.x, pos_Min.y, 0));
-			//	}
-			//}
-			//GL.End();
-			
-			
-
-			if (!meshGenerator.IsPreviewed)
-			{
-				//Scan 상태
-				_matBatch.SetPass_Color();
-				_matBatch.SetClippingSize(_glScreenClippingSize);
-
-				Color lineColor_Enabled_Selected = new Color(1.0f, 1.0f, 0.0f, 0.8f);
-				Color lineColor_Disabled_Selected = new Color(1.0f, 1.0f, 1.0f, 0.6f);
-				Color lineColor_Enabled = new Color(1.0f, 0.0f, 1.0f, 0.8f);
-				Color lineColor_Disabled = new Color(1.0f, 1.0f, 1.0f, 0.4f);
-				bool isSelected = false;
-				
-
-				GL.Begin(GL.LINES);
-				//GL.Color(new Color(1.0f, 0.0f, 1.0f, 0.8f));
-				for (int iGroup = 0; iGroup < meshGenerator._outlineGroups.Count; iGroup++)
-				{
-					outlineGroup = meshGenerator._outlineGroups[iGroup];
-					isSelected = meshGenerator._selectedOuterGroup == outlineGroup;
-
-					for (int iPoint = 0; iPoint < outlineGroup._outerPoints.Count; iPoint++)
-					{
-						outerPoint = outlineGroup._outerPoints[iPoint];
-						if (outerPoint._nextPoint != null)
-						{
-							pos_A = World2GL(outerPoint._pos - (mesh._offsetPos + imageHalfOffset));
-							pos_B = World2GL(outerPoint._nextPoint._pos - (mesh._offsetPos + imageHalfOffset));
-							if (isSelected)
-							{
-								DrawAnimatedLineGL(pos_A, pos_B, outlineGroup._isEnabled ? lineColor_Enabled_Selected : lineColor_Disabled_Selected, false);
-							}
-							else
-							{
-								DrawLineGL(pos_A, pos_B, outlineGroup._isEnabled ? lineColor_Enabled : lineColor_Disabled, false);
-							}
-							//GL.Vertex(pos_A);
-							//GL.Vertex(pos_B);
-						}
-					}
-				}
-				GL.End();
-
-				_matBatch.SetPass_Color();
-				_matBatch.SetClippingSize(_glScreenClippingSize);
-
-				float pointHalfSize = 2;
-				GL.Begin(GL.TRIANGLES);
-				
-				
-				for (int iGroup = 0; iGroup < meshGenerator._outlineGroups.Count; iGroup++)
-				{
-					outlineGroup = meshGenerator._outlineGroups[iGroup];
-					if(!outlineGroup._isEnabled)
-					{
-						continue;
-					}
-					for (int iPoint = 0; iPoint < outlineGroup._outerPoints.Count; iPoint++)
-					{
-						outerPoint = outlineGroup._outerPoints[iPoint];
-						pos_A = World2GL(outerPoint._pos - (mesh._offsetPos + imageHalfOffset));
-
-						pos_0 = pos_A + new Vector2(-pointHalfSize, -pointHalfSize);
-						pos_1 = pos_A + new Vector2(pointHalfSize, -pointHalfSize);
-						pos_2 = pos_A + new Vector2(pointHalfSize, pointHalfSize);
-						pos_3 = pos_A + new Vector2(-pointHalfSize, pointHalfSize);
-
-						GL.Color(new Color(1.0f, 1.0f, 0.0f, 0.8f));
-
-						GL.Vertex(pos_0);
-						GL.Vertex(pos_1);
-						GL.Vertex(pos_2);
-						GL.Vertex(pos_2);
-						GL.Vertex(pos_3);
-						GL.Vertex(pos_0);
-
-						GL.Vertex(pos_2);
-						GL.Vertex(pos_1);
-						GL.Vertex(pos_0);
-						GL.Vertex(pos_0);
-						GL.Vertex(pos_3);
-						GL.Vertex(pos_2);
-					}
-				}
-				GL.End();
-
-				_matBatch.SetPass_Color();
-				_matBatch.SetClippingSize(_glScreenClippingSize);
-
-				GL.Begin(GL.LINES);
-
-
-				for (int iGroup = 0; iGroup < meshGenerator._outlineGroups.Count; iGroup++)
-				{
-					outlineGroup = meshGenerator._outlineGroups[iGroup];
-					if(!outlineGroup._isEnabled)
-					{
-						continue;
-					}
-					for (int iPoint = 0; iPoint < outlineGroup._outerPoints.Count; iPoint++)
-					{
-						outerPoint = outlineGroup._outerPoints[iPoint];
-						pos_0 = World2GL(outerPoint._pos - (mesh._offsetPos + imageHalfOffset));
-						//pos_1 = World2GL(outerPoint._pos + (outerPoint._normal_Prev * 3) - (mesh._offsetPos + imageHalfOffset));
-						pos_2 = World2GL(outerPoint._pos + (outerPoint._normal_Avg * 7) - (mesh._offsetPos + imageHalfOffset));
-						//pos_3 = World2GL(outerPoint._pos + (outerPoint._normal_Next * 3) - (mesh._offsetPos + imageHalfOffset));
-
-						if (outerPoint._isInversedNormal_Prev || outerPoint._isInversedNormal_Next)
-						{
-							GL.Color(new Color(1.0f, 0.0f, 0.0f, 0.8f));
-						}
-						else
-						{
-							GL.Color(new Color(1.0f, 1.0f, 0.0f, 0.8f));
-						}
-
-						//Normal Prev
-						//GL.Vertex(pos_0);
-						//GL.Vertex(pos_1);
-
-						//Normal Avg
-						GL.Vertex(pos_0);
-						GL.Vertex(pos_2);
-
-						//Normal Next
-						//GL.Vertex(pos_0);
-						//GL.Vertex(pos_3);
-
-
-
-					}
-				}
-				GL.End();
-			}
-			else
-			{
-				//Previewed 상태
-
-				_matBatch.SetPass_Color();
-				_matBatch.SetClippingSize(_glScreenClippingSize);
-
-				GL.Begin(GL.LINES);
-				GL.Color(new Color(1.0f, 0.0f, 1.0f, 0.8f));
-				for (int iPoint = 0; iPoint < meshGenerator._outerPoints_Preview.Count; iPoint++)
-				{
-					outerPoint = meshGenerator._outerPoints_Preview[iPoint];
-					if (outerPoint._nextPoint != null)
-					{
-						pos_A = World2GL(outerPoint._pos - (mesh._offsetPos + imageHalfOffset));
-						pos_B = World2GL(outerPoint._nextPoint._pos - (mesh._offsetPos + imageHalfOffset));
-
-						GL.Vertex(pos_A);
-						GL.Vertex(pos_B);
-					}
-				}
-				GL.End();
-
-				////Normal 표시
-				//_matBatch.SetPass_Color();
-				//_matBatch.SetClippingSize(_glScreenClippingSize);
-
-				//GL.Begin(GL.LINES);
-				//GL.Color(new Color(1.0f, 0.0f, 1.0f, 0.8f));
-				//for (int iPoint = 0; iPoint < meshGenerator._outerPoints_Preview.Count; iPoint++)
-				//{
-				//	outerPoint = meshGenerator._outerPoints_Preview[iPoint];
-				//	pos_0 = World2GL(outerPoint._pos - (mesh._offsetPos + imageHalfOffset));
-				//	pos_2 = World2GL(outerPoint._pos + (outerPoint._normal_Avg * 7) - (mesh._offsetPos + imageHalfOffset));
-
-				//	GL.Color(new Color(1.0f, 1.0f, 1.0f, 0.8f));
-
-				//	GL.Vertex(pos_0);
-				//	GL.Vertex(pos_2);
-				//}
-				//GL.End();
-
-				_matBatch.SetPass_Color();
-				_matBatch.SetClippingSize(_glScreenClippingSize);
-
-				float pointHalfSize = 2;
-				GL.Begin(GL.TRIANGLES);
-				GL.Color(new Color(1.0f, 1.0f, 0.0f, 0.8f));
-				for (int iPoint = 0; iPoint < meshGenerator._outerPoints_Preview.Count; iPoint++)
-				{
-						outerPoint = meshGenerator._outerPoints_Preview[iPoint];
-						pos_A = World2GL(outerPoint._pos - (mesh._offsetPos + imageHalfOffset));
-
-						pos_0 = pos_A + new Vector2(-pointHalfSize, -pointHalfSize);
-						pos_1 = pos_A + new Vector2(pointHalfSize, -pointHalfSize);
-						pos_2 = pos_A + new Vector2(pointHalfSize, pointHalfSize);
-						pos_3 = pos_A + new Vector2(-pointHalfSize, pointHalfSize);
-						GL.Vertex(pos_0);	GL.Vertex(pos_1);	GL.Vertex(pos_2);
-						GL.Vertex(pos_2);	GL.Vertex(pos_3);	GL.Vertex(pos_0);
-
-						GL.Vertex(pos_2);	GL.Vertex(pos_1);	GL.Vertex(pos_0);
-						GL.Vertex(pos_0);	GL.Vertex(pos_3);	GL.Vertex(pos_2);
-				}
-				GL.End();
-
-
-				apMeshGenerator.InnerPoint curInnerPoint = null;
-				
-				_matBatch.SetPass_Color();
-				_matBatch.SetClippingSize(_glScreenClippingSize);
-
-				GL.Begin(GL.LINES);
-				
-				for (int iPoint = 0; iPoint < meshGenerator._innerPoints.Count; iPoint++)
-				{
-					curInnerPoint = meshGenerator._innerPoints[iPoint];
-
-					//인접한 Inner Point과의 선분
-					GL.Color(new Color(0.0f, 1.0f, 1.0f, 0.8f));
-					if(curInnerPoint._linkedPoint_GUI != null)
-					{
-						for (int iNext = 0; iNext < curInnerPoint._linkedPoint_GUI.Count; iNext++)
-						{
-							pos_A = World2GL(curInnerPoint._pos - (mesh._offsetPos + imageHalfOffset));
-							pos_B = World2GL(curInnerPoint._linkedPoint_GUI[iNext]._pos - (mesh._offsetPos + imageHalfOffset));
-
-							GL.Vertex(pos_A);
-							GL.Vertex(pos_B);
-						}
-					}
-
-					//인접한 Inner -> Outer Point과의 선분
-					GL.Color(new Color(0.0f, 1.0f, 0.5f, 0.8f));
-					if(curInnerPoint._linkedOuterPoints != null)
-					{
-						for (int iOut = 0; iOut < curInnerPoint._linkedOuterPoints.Count; iOut++)
-						{
-							pos_A = World2GL(curInnerPoint._pos - (mesh._offsetPos + imageHalfOffset));
-							pos_B = World2GL(curInnerPoint._linkedOuterPoints[iOut]._pos - (mesh._offsetPos + imageHalfOffset));
-							DrawAnimatedLineGL(pos_A, pos_B, new Color(0.0f, 1.0f, 0.5f, 0.8f), false);
-							//GL.Vertex(pos_A);
-							//GL.Vertex(pos_B);
-						}
-					}
-				}
-				GL.End();
-				
-				bool isAnyLockedPoint = false;
-				bool isAnyAxisLimitedPoint = false;
-				_matBatch.SetPass_Color();
-				_matBatch.SetClippingSize(_glScreenClippingSize);
-
-				GL.Begin(GL.TRIANGLES);
-				GL.Color(new Color(1.0f, 1.0f, 1.0f, 0.8f));
-				for (int iPoint = 0; iPoint < meshGenerator._innerPoints.Count; iPoint++)
-				{
-					curInnerPoint = meshGenerator._innerPoints[iPoint];
-					pos_A = World2GL(curInnerPoint._pos - (mesh._offsetPos + imageHalfOffset));
-
-					pos_0 = pos_A + new Vector2(-pointHalfSize, -pointHalfSize);
-					pos_1 = pos_A + new Vector2(pointHalfSize, -pointHalfSize);
-					pos_2 = pos_A + new Vector2(pointHalfSize, pointHalfSize);
-					pos_3 = pos_A + new Vector2(-pointHalfSize, pointHalfSize);
-					GL.Vertex(pos_0);	GL.Vertex(pos_1);	GL.Vertex(pos_2);
-					GL.Vertex(pos_2);	GL.Vertex(pos_3);	GL.Vertex(pos_0);
-
-					GL.Vertex(pos_2);	GL.Vertex(pos_1);	GL.Vertex(pos_0);
-					GL.Vertex(pos_0);	GL.Vertex(pos_3);	GL.Vertex(pos_2);
-
-					if(curInnerPoint._moveLock == apMeshGenerator.INNER_MOVE_LOCK.Locked)
-					{
-						isAnyLockedPoint = true;
-					}
-					else if(curInnerPoint._moveLock == apMeshGenerator.INNER_MOVE_LOCK.AxisLimited)
-					{
-						isAnyAxisLimitedPoint = true;
-					}
-				}
-				GL.End();
-
-				//Inner Point가 Lock 상태인 경우
-
-				if(isAnyLockedPoint || isAnyAxisLimitedPoint)
-				{
-					float iconSize = 16 / _zoom;
-					Vector2 posOffset = new Vector2(8, 8);
-					
-					Texture2D img_innerAxisLimited = editor.ImageSet.Get(apImageSet.PRESET.MeshEdit_InnerPointAxisLimited);
-					Texture2D img_innerLocked = editor.ImageSet.Get(apImageSet.PRESET.MeshEdit_InnerPointLocked);
-
-					for (int iPoint = 0; iPoint < meshGenerator._innerPoints.Count; iPoint++)
-					{
-						curInnerPoint = meshGenerator._innerPoints[iPoint];
-						pos_A = World2GL(curInnerPoint._pos - (mesh._offsetPos + imageHalfOffset));
-						if(curInnerPoint._moveLock == apMeshGenerator.INNER_MOVE_LOCK.Locked)
-						{
-							DrawTextureGL(img_innerLocked, pos_A + posOffset, iconSize, iconSize, _textureColor_Gray, 0.0f);
-						}
-						else if(curInnerPoint._moveLock == apMeshGenerator.INNER_MOVE_LOCK.AxisLimited)
-						{
-							DrawTextureGL(img_innerAxisLimited, pos_A + posOffset, iconSize, iconSize, _textureColor_Gray, 0.0f);
-
-							//DrawBoldLineGL(pos_A, World2GL(curInnerPoint._limitedPosA - (mesh._offsetPos + imageHalfOffset)), 4, Color.red, true);
-							//DrawBoldLineGL(pos_A, World2GL(curInnerPoint._limitedPosB - (mesh._offsetPos + imageHalfOffset)), 4, Color.yellow, true);
-						}
-					}
-				}
-			}
-
-
-			//컨트롤 포인트
-			Texture2D img_controlPoint = editor.ImageSet.Get(apImageSet.PRESET.TransformAutoGenMapperCtrl);
-
-			List<apMeshGenMapper.ControlPoint> controlPoints = meshGenerator.Mapper.ControlPoints;
-			List<apMeshGenMapper.ControlPoint> selectedPoints = meshGenerator._selectedControlPoints;
-			if (controlPoints != null)
-			{
-				//float controlPointHalfSize = 13;//(전체 26)
-				float controlPointSize = (float)26 / _zoom;//(전체 26)
-				apMeshGenMapper.ControlPoint curPoint = null;
-
-				_matBatch.SetPass_Color();
-				
-				_matBatch.SetClippingSize(_glScreenClippingSize);
-				
-				//GL.Begin(GL.LINES);
-				GL.Begin(GL.TRIANGLES);
-				
-				for (int iPoint = 0; iPoint < controlPoints.Count; iPoint++)
-				{
-					curPoint = controlPoints[iPoint];
-					pos_A = World2GL(curPoint._pos_Cur - (mesh._offsetPos + imageHalfOffset));
-					if (curPoint._linkedOuterPoints.Count > 0)
-					{
-						for (int i = 0; i < curPoint._linkedOuterPoints.Count; i++)
-						{
-							pos_B = World2GL(curPoint._linkedOuterPoints[i]._pos_Cur - (mesh._offsetPos + imageHalfOffset));
-
-							DrawBoldLineGL(pos_A, pos_B, 3, new Color(1.0f, 0.5f, 0.0f, 0.8f), false);
-							//GL.Color(new Color(1.0f, 0.5f, 0.0f, 1.0f));
-							//GL.Vertex(pos_A);
-							//GL.Vertex(pos_B);
-						}
-					}
-					if(curPoint._linkedInnerOrCrossPoints.Count > 0)
-					{
-						for (int i = 0; i < curPoint._linkedInnerOrCrossPoints.Count; i++)
-						{
-							pos_B = World2GL(curPoint._linkedInnerOrCrossPoints[i]._pos_Cur - (mesh._offsetPos + imageHalfOffset));
-
-							DrawBoldLineGL(pos_A, pos_B, 2, new Color(1.0f, 1.0f, 0.0f, 0.5f), false);
-							//GL.Color(new Color(1.0f, 1.0f, 0.0f, 0.8f));
-							//GL.Vertex(pos_A);
-							//GL.Vertex(pos_B);
-						}
-					}
-				}
-				GL.End();
-
-
-
-				//_matBatch.SetPass_Color();
-				//_matBatch.SetPass_Texture_Normal(Color.gray, img_controlPoint, apPortrait.SHADER_TYPE.AlphaBlend);
-				//_matBatch.SetClippingSize(_glScreenClippingSize);
-				
-				//GL.Begin(GL.TRIANGLES);
-				
-				//GL.Color(new Color(1.0f, 1.0f, 1.0f, 1.0f));
-				for (int iPoint = 0; iPoint < controlPoints.Count; iPoint++)
-				{
-					curPoint = controlPoints[iPoint];
-					pos_A = World2GL(curPoint._pos_Cur - (mesh._offsetPos + imageHalfOffset));
-					
-					if(selectedPoints.Contains(curPoint))
-					{
-						DrawTextureGL(img_controlPoint, pos_A, controlPointSize, controlPointSize, Color.red, 0.0f, true);
-					}
-					else
-					{
-						DrawTextureGL(img_controlPoint, pos_A, controlPointSize, controlPointSize, Color.gray, 0.0f, true);
-					}
-					
-					//pos_0 = pos_A + new Vector2(-controlPointHalfSize, -controlPointHalfSize);
-					//pos_1 = pos_A + new Vector2(controlPointHalfSize, -controlPointHalfSize);
-					//pos_2 = pos_A + new Vector2(controlPointHalfSize, controlPointHalfSize);
-					//pos_3 = pos_A + new Vector2(-controlPointHalfSize, controlPointHalfSize);
-
-					//GL.Vertex(pos_0); GL.Vertex(pos_1); GL.Vertex(pos_2);
-					//GL.Vertex(pos_2); GL.Vertex(pos_3); GL.Vertex(pos_0);
-
-					//GL.Vertex(pos_2); GL.Vertex(pos_1); GL.Vertex(pos_0);
-					//GL.Vertex(pos_0); GL.Vertex(pos_3); GL.Vertex(pos_2);
-					AddCursorRect(editor.Mouse.PosLast, pos_A, controlPointSize, controlPointSize, MouseCursor.MoveArrow);
-				}
-				//GL.End();
-			}
-
-			
-		}
-
+		#region [미사용 코드] 메시 생성 V1은 사용 안함
+		//public static void DrawMeshAutoGenerationPreview(apMesh mesh, 
+		//													apMatrix3x3 matrix, 
+		//													apEditor editor,
+		//													apMeshGenerator meshGenerator)
+		//{
+		//	if (mesh == null || mesh.LinkedTextureData == null || mesh.LinkedTextureData._image == null || editor == null || meshGenerator == null)
+		//	{
+		//		return;
+		//	}
+
+		//	if(!meshGenerator.IsScanned)
+		//	{
+		//		return;
+		//	}
+
+		//	//아웃라인을 그리자
+		//	apMeshGenerator.ScanTileGroup outlineGroup = null;
+		//	//apMeshGenerator.ScanTile scanTile = null;
+		//	apMeshGenerator.OuterPoint outerPoint = null;
+
+		//	Vector2 imageHalfOffset = new Vector2(mesh.LinkedTextureData._width * 0.5f, mesh.LinkedTextureData._height * 0.5f);
+
+		//	Vector2 pos_A;
+		//	Vector2 pos_B;
+		//	Vector2 pos_0;
+		//	Vector2 pos_1;
+		//	Vector2 pos_2;
+		//	Vector2 pos_3;
+
+
+		//	//_matBatch.SetPass_Color();
+		//	//_matBatch.SetClippingSize(_glScreenClippingSize);
+
+		//	//GL.Begin(GL.LINES);
+		//	//GL.Color(new Color(0.0f, 1.0f, 1.0f, 0.5f));
+
+		//	//Vector2 pos_Min;
+		//	//Vector2 pos_Max;
+
+		//	//for (int iGroup = 0; iGroup < meshGenerator._outlineGroups.Count; iGroup++)
+		//	//{
+		//	//	outlineGroup = meshGenerator._outlineGroups[iGroup];
+		//	//	for (int iTile = 0; iTile < outlineGroup._tiles.Count; iTile++)
+		//	//	{
+		//	//		scanTile = outlineGroup._tiles[iTile];
+		//	//		pos_Min = World2GL(meshGenerator.GetTilePos_Min(scanTile._iX, scanTile._iY) - (mesh._offsetPos + imageHalfOffset));
+		//	//		pos_Max = World2GL(meshGenerator.GetTilePos_Max(scanTile._iX, scanTile._iY) - (mesh._offsetPos + imageHalfOffset));
+
+		//	//		GL.Vertex(new Vector3(pos_Min.x, pos_Min.y, 0));
+		//	//		GL.Vertex(new Vector3(pos_Min.x, pos_Max.y, 0));
+
+		//	//		GL.Vertex(new Vector3(pos_Min.x, pos_Max.y, 0));
+		//	//		GL.Vertex(new Vector3(pos_Max.x, pos_Max.y, 0));
+
+		//	//		GL.Vertex(new Vector3(pos_Max.x, pos_Max.y, 0));
+		//	//		GL.Vertex(new Vector3(pos_Max.x, pos_Min.y, 0));
+
+		//	//		GL.Vertex(new Vector3(pos_Max.x, pos_Min.y, 0));
+		//	//		GL.Vertex(new Vector3(pos_Min.x, pos_Min.y, 0));
+		//	//	}
+		//	//}
+		//	//GL.End();
+
+
+
+		//	if (!meshGenerator.IsPreviewed)
+		//	{
+		//		//Scan 상태
+		//		_matBatch.SetPass_Color();
+		//		_matBatch.SetClippingSize(_glScreenClippingSize);
+
+		//		Color lineColor_Enabled_Selected = new Color(1.0f, 1.0f, 0.0f, 0.8f);
+		//		Color lineColor_Disabled_Selected = new Color(1.0f, 1.0f, 1.0f, 0.6f);
+		//		Color lineColor_Enabled = new Color(1.0f, 0.0f, 1.0f, 0.8f);
+		//		Color lineColor_Disabled = new Color(1.0f, 1.0f, 1.0f, 0.4f);
+		//		bool isSelected = false;
+
+
+		//		GL.Begin(GL.LINES);
+		//		//GL.Color(new Color(1.0f, 0.0f, 1.0f, 0.8f));
+		//		for (int iGroup = 0; iGroup < meshGenerator._outlineGroups.Count; iGroup++)
+		//		{
+		//			outlineGroup = meshGenerator._outlineGroups[iGroup];
+		//			isSelected = meshGenerator._selectedOuterGroup == outlineGroup;
+
+		//			for (int iPoint = 0; iPoint < outlineGroup._outerPoints.Count; iPoint++)
+		//			{
+		//				outerPoint = outlineGroup._outerPoints[iPoint];
+		//				if (outerPoint._nextPoint != null)
+		//				{
+		//					pos_A = World2GL(outerPoint._pos - (mesh._offsetPos + imageHalfOffset));
+		//					pos_B = World2GL(outerPoint._nextPoint._pos - (mesh._offsetPos + imageHalfOffset));
+		//					if (isSelected)
+		//					{
+		//						DrawAnimatedLineGL(pos_A, pos_B, outlineGroup._isEnabled ? lineColor_Enabled_Selected : lineColor_Disabled_Selected, false);
+		//					}
+		//					else
+		//					{
+		//						DrawLineGL(pos_A, pos_B, outlineGroup._isEnabled ? lineColor_Enabled : lineColor_Disabled, false);
+		//					}
+		//					//GL.Vertex(pos_A);
+		//					//GL.Vertex(pos_B);
+		//				}
+		//			}
+		//		}
+		//		GL.End();
+
+		//		_matBatch.SetPass_Color();
+		//		_matBatch.SetClippingSize(_glScreenClippingSize);
+
+		//		float pointHalfSize = 2;
+		//		GL.Begin(GL.TRIANGLES);
+
+
+		//		for (int iGroup = 0; iGroup < meshGenerator._outlineGroups.Count; iGroup++)
+		//		{
+		//			outlineGroup = meshGenerator._outlineGroups[iGroup];
+		//			if(!outlineGroup._isEnabled)
+		//			{
+		//				continue;
+		//			}
+		//			for (int iPoint = 0; iPoint < outlineGroup._outerPoints.Count; iPoint++)
+		//			{
+		//				outerPoint = outlineGroup._outerPoints[iPoint];
+		//				pos_A = World2GL(outerPoint._pos - (mesh._offsetPos + imageHalfOffset));
+
+		//				pos_0 = pos_A + new Vector2(-pointHalfSize, -pointHalfSize);
+		//				pos_1 = pos_A + new Vector2(pointHalfSize, -pointHalfSize);
+		//				pos_2 = pos_A + new Vector2(pointHalfSize, pointHalfSize);
+		//				pos_3 = pos_A + new Vector2(-pointHalfSize, pointHalfSize);
+
+		//				GL.Color(new Color(1.0f, 1.0f, 0.0f, 0.8f));
+
+		//				GL.Vertex(pos_0);
+		//				GL.Vertex(pos_1);
+		//				GL.Vertex(pos_2);
+		//				GL.Vertex(pos_2);
+		//				GL.Vertex(pos_3);
+		//				GL.Vertex(pos_0);
+
+		//				GL.Vertex(pos_2);
+		//				GL.Vertex(pos_1);
+		//				GL.Vertex(pos_0);
+		//				GL.Vertex(pos_0);
+		//				GL.Vertex(pos_3);
+		//				GL.Vertex(pos_2);
+		//			}
+		//		}
+		//		GL.End();
+
+		//		_matBatch.SetPass_Color();
+		//		_matBatch.SetClippingSize(_glScreenClippingSize);
+
+		//		GL.Begin(GL.LINES);
+
+
+		//		for (int iGroup = 0; iGroup < meshGenerator._outlineGroups.Count; iGroup++)
+		//		{
+		//			outlineGroup = meshGenerator._outlineGroups[iGroup];
+		//			if(!outlineGroup._isEnabled)
+		//			{
+		//				continue;
+		//			}
+		//			for (int iPoint = 0; iPoint < outlineGroup._outerPoints.Count; iPoint++)
+		//			{
+		//				outerPoint = outlineGroup._outerPoints[iPoint];
+		//				pos_0 = World2GL(outerPoint._pos - (mesh._offsetPos + imageHalfOffset));
+		//				//pos_1 = World2GL(outerPoint._pos + (outerPoint._normal_Prev * 3) - (mesh._offsetPos + imageHalfOffset));
+		//				pos_2 = World2GL(outerPoint._pos + (outerPoint._normal_Avg * 7) - (mesh._offsetPos + imageHalfOffset));
+		//				//pos_3 = World2GL(outerPoint._pos + (outerPoint._normal_Next * 3) - (mesh._offsetPos + imageHalfOffset));
+
+		//				if (outerPoint._isInversedNormal_Prev || outerPoint._isInversedNormal_Next)
+		//				{
+		//					GL.Color(new Color(1.0f, 0.0f, 0.0f, 0.8f));
+		//				}
+		//				else
+		//				{
+		//					GL.Color(new Color(1.0f, 1.0f, 0.0f, 0.8f));
+		//				}
+
+		//				//Normal Prev
+		//				//GL.Vertex(pos_0);
+		//				//GL.Vertex(pos_1);
+
+		//				//Normal Avg
+		//				GL.Vertex(pos_0);
+		//				GL.Vertex(pos_2);
+
+		//				//Normal Next
+		//				//GL.Vertex(pos_0);
+		//				//GL.Vertex(pos_3);
+
+
+
+		//			}
+		//		}
+		//		GL.End();
+		//	}
+		//	else
+		//	{
+		//		//Previewed 상태
+
+		//		_matBatch.SetPass_Color();
+		//		_matBatch.SetClippingSize(_glScreenClippingSize);
+
+		//		GL.Begin(GL.LINES);
+		//		GL.Color(new Color(1.0f, 0.0f, 1.0f, 0.8f));
+		//		for (int iPoint = 0; iPoint < meshGenerator._outerPoints_Preview.Count; iPoint++)
+		//		{
+		//			outerPoint = meshGenerator._outerPoints_Preview[iPoint];
+		//			if (outerPoint._nextPoint != null)
+		//			{
+		//				pos_A = World2GL(outerPoint._pos - (mesh._offsetPos + imageHalfOffset));
+		//				pos_B = World2GL(outerPoint._nextPoint._pos - (mesh._offsetPos + imageHalfOffset));
+
+		//				GL.Vertex(pos_A);
+		//				GL.Vertex(pos_B);
+		//			}
+		//		}
+		//		GL.End();
+
+		//		////Normal 표시
+		//		//_matBatch.SetPass_Color();
+		//		//_matBatch.SetClippingSize(_glScreenClippingSize);
+
+		//		//GL.Begin(GL.LINES);
+		//		//GL.Color(new Color(1.0f, 0.0f, 1.0f, 0.8f));
+		//		//for (int iPoint = 0; iPoint < meshGenerator._outerPoints_Preview.Count; iPoint++)
+		//		//{
+		//		//	outerPoint = meshGenerator._outerPoints_Preview[iPoint];
+		//		//	pos_0 = World2GL(outerPoint._pos - (mesh._offsetPos + imageHalfOffset));
+		//		//	pos_2 = World2GL(outerPoint._pos + (outerPoint._normal_Avg * 7) - (mesh._offsetPos + imageHalfOffset));
+
+		//		//	GL.Color(new Color(1.0f, 1.0f, 1.0f, 0.8f));
+
+		//		//	GL.Vertex(pos_0);
+		//		//	GL.Vertex(pos_2);
+		//		//}
+		//		//GL.End();
+
+		//		_matBatch.SetPass_Color();
+		//		_matBatch.SetClippingSize(_glScreenClippingSize);
+
+		//		float pointHalfSize = 2;
+		//		GL.Begin(GL.TRIANGLES);
+		//		GL.Color(new Color(1.0f, 1.0f, 0.0f, 0.8f));
+		//		for (int iPoint = 0; iPoint < meshGenerator._outerPoints_Preview.Count; iPoint++)
+		//		{
+		//				outerPoint = meshGenerator._outerPoints_Preview[iPoint];
+		//				pos_A = World2GL(outerPoint._pos - (mesh._offsetPos + imageHalfOffset));
+
+		//				pos_0 = pos_A + new Vector2(-pointHalfSize, -pointHalfSize);
+		//				pos_1 = pos_A + new Vector2(pointHalfSize, -pointHalfSize);
+		//				pos_2 = pos_A + new Vector2(pointHalfSize, pointHalfSize);
+		//				pos_3 = pos_A + new Vector2(-pointHalfSize, pointHalfSize);
+		//				GL.Vertex(pos_0);	GL.Vertex(pos_1);	GL.Vertex(pos_2);
+		//				GL.Vertex(pos_2);	GL.Vertex(pos_3);	GL.Vertex(pos_0);
+
+		//				GL.Vertex(pos_2);	GL.Vertex(pos_1);	GL.Vertex(pos_0);
+		//				GL.Vertex(pos_0);	GL.Vertex(pos_3);	GL.Vertex(pos_2);
+		//		}
+		//		GL.End();
+
+
+		//		apMeshGenerator.InnerPoint curInnerPoint = null;
+
+		//		_matBatch.SetPass_Color();
+		//		_matBatch.SetClippingSize(_glScreenClippingSize);
+
+		//		GL.Begin(GL.LINES);
+
+		//		for (int iPoint = 0; iPoint < meshGenerator._innerPoints.Count; iPoint++)
+		//		{
+		//			curInnerPoint = meshGenerator._innerPoints[iPoint];
+
+		//			//인접한 Inner Point과의 선분
+		//			GL.Color(new Color(0.0f, 1.0f, 1.0f, 0.8f));
+		//			if(curInnerPoint._linkedPoint_GUI != null)
+		//			{
+		//				for (int iNext = 0; iNext < curInnerPoint._linkedPoint_GUI.Count; iNext++)
+		//				{
+		//					pos_A = World2GL(curInnerPoint._pos - (mesh._offsetPos + imageHalfOffset));
+		//					pos_B = World2GL(curInnerPoint._linkedPoint_GUI[iNext]._pos - (mesh._offsetPos + imageHalfOffset));
+
+		//					GL.Vertex(pos_A);
+		//					GL.Vertex(pos_B);
+		//				}
+		//			}
+
+		//			//인접한 Inner -> Outer Point과의 선분
+		//			GL.Color(new Color(0.0f, 1.0f, 0.5f, 0.8f));
+		//			if(curInnerPoint._linkedOuterPoints != null)
+		//			{
+		//				for (int iOut = 0; iOut < curInnerPoint._linkedOuterPoints.Count; iOut++)
+		//				{
+		//					pos_A = World2GL(curInnerPoint._pos - (mesh._offsetPos + imageHalfOffset));
+		//					pos_B = World2GL(curInnerPoint._linkedOuterPoints[iOut]._pos - (mesh._offsetPos + imageHalfOffset));
+		//					DrawAnimatedLineGL(pos_A, pos_B, new Color(0.0f, 1.0f, 0.5f, 0.8f), false);
+		//					//GL.Vertex(pos_A);
+		//					//GL.Vertex(pos_B);
+		//				}
+		//			}
+		//		}
+		//		GL.End();
+
+		//		bool isAnyLockedPoint = false;
+		//		bool isAnyAxisLimitedPoint = false;
+		//		_matBatch.SetPass_Color();
+		//		_matBatch.SetClippingSize(_glScreenClippingSize);
+
+		//		GL.Begin(GL.TRIANGLES);
+		//		GL.Color(new Color(1.0f, 1.0f, 1.0f, 0.8f));
+		//		for (int iPoint = 0; iPoint < meshGenerator._innerPoints.Count; iPoint++)
+		//		{
+		//			curInnerPoint = meshGenerator._innerPoints[iPoint];
+		//			pos_A = World2GL(curInnerPoint._pos - (mesh._offsetPos + imageHalfOffset));
+
+		//			pos_0 = pos_A + new Vector2(-pointHalfSize, -pointHalfSize);
+		//			pos_1 = pos_A + new Vector2(pointHalfSize, -pointHalfSize);
+		//			pos_2 = pos_A + new Vector2(pointHalfSize, pointHalfSize);
+		//			pos_3 = pos_A + new Vector2(-pointHalfSize, pointHalfSize);
+		//			GL.Vertex(pos_0);	GL.Vertex(pos_1);	GL.Vertex(pos_2);
+		//			GL.Vertex(pos_2);	GL.Vertex(pos_3);	GL.Vertex(pos_0);
+
+		//			GL.Vertex(pos_2);	GL.Vertex(pos_1);	GL.Vertex(pos_0);
+		//			GL.Vertex(pos_0);	GL.Vertex(pos_3);	GL.Vertex(pos_2);
+
+		//			if(curInnerPoint._moveLock == apMeshGenerator.INNER_MOVE_LOCK.Locked)
+		//			{
+		//				isAnyLockedPoint = true;
+		//			}
+		//			else if(curInnerPoint._moveLock == apMeshGenerator.INNER_MOVE_LOCK.AxisLimited)
+		//			{
+		//				isAnyAxisLimitedPoint = true;
+		//			}
+		//		}
+		//		GL.End();
+
+		//		//Inner Point가 Lock 상태인 경우
+
+		//		if(isAnyLockedPoint || isAnyAxisLimitedPoint)
+		//		{
+		//			float iconSize = 16 / _zoom;
+		//			Vector2 posOffset = new Vector2(8, 8);
+
+		//			Texture2D img_innerAxisLimited = editor.ImageSet.Get(apImageSet.PRESET.MeshEdit_InnerPointAxisLimited);
+		//			Texture2D img_innerLocked = editor.ImageSet.Get(apImageSet.PRESET.MeshEdit_InnerPointLocked);
+
+		//			for (int iPoint = 0; iPoint < meshGenerator._innerPoints.Count; iPoint++)
+		//			{
+		//				curInnerPoint = meshGenerator._innerPoints[iPoint];
+		//				pos_A = World2GL(curInnerPoint._pos - (mesh._offsetPos + imageHalfOffset));
+		//				if(curInnerPoint._moveLock == apMeshGenerator.INNER_MOVE_LOCK.Locked)
+		//				{
+		//					DrawTextureGL(img_innerLocked, pos_A + posOffset, iconSize, iconSize, _textureColor_Gray, 0.0f);
+		//				}
+		//				else if(curInnerPoint._moveLock == apMeshGenerator.INNER_MOVE_LOCK.AxisLimited)
+		//				{
+		//					DrawTextureGL(img_innerAxisLimited, pos_A + posOffset, iconSize, iconSize, _textureColor_Gray, 0.0f);
+
+		//					//DrawBoldLineGL(pos_A, World2GL(curInnerPoint._limitedPosA - (mesh._offsetPos + imageHalfOffset)), 4, Color.red, true);
+		//					//DrawBoldLineGL(pos_A, World2GL(curInnerPoint._limitedPosB - (mesh._offsetPos + imageHalfOffset)), 4, Color.yellow, true);
+		//				}
+		//			}
+		//		}
+		//	}
+
+
+		//	//컨트롤 포인트
+		//	Texture2D img_controlPoint = editor.ImageSet.Get(apImageSet.PRESET.TransformAutoGenMapperCtrl);
+
+		//	List<apMeshGenMapper.ControlPoint> controlPoints = meshGenerator.Mapper.ControlPoints;
+		//	List<apMeshGenMapper.ControlPoint> selectedPoints = meshGenerator._selectedControlPoints;
+		//	if (controlPoints != null)
+		//	{
+		//		//float controlPointHalfSize = 13;//(전체 26)
+		//		float controlPointSize = (float)26 / _zoom;//(전체 26)
+		//		apMeshGenMapper.ControlPoint curPoint = null;
+
+		//		_matBatch.SetPass_Color();
+
+		//		_matBatch.SetClippingSize(_glScreenClippingSize);
+
+		//		//GL.Begin(GL.LINES);
+		//		GL.Begin(GL.TRIANGLES);
+
+		//		for (int iPoint = 0; iPoint < controlPoints.Count; iPoint++)
+		//		{
+		//			curPoint = controlPoints[iPoint];
+		//			pos_A = World2GL(curPoint._pos_Cur - (mesh._offsetPos + imageHalfOffset));
+		//			if (curPoint._linkedOuterPoints.Count > 0)
+		//			{
+		//				for (int i = 0; i < curPoint._linkedOuterPoints.Count; i++)
+		//				{
+		//					pos_B = World2GL(curPoint._linkedOuterPoints[i]._pos_Cur - (mesh._offsetPos + imageHalfOffset));
+
+		//					DrawBoldLineGL(pos_A, pos_B, 3, new Color(1.0f, 0.5f, 0.0f, 0.8f), false);
+		//					//GL.Color(new Color(1.0f, 0.5f, 0.0f, 1.0f));
+		//					//GL.Vertex(pos_A);
+		//					//GL.Vertex(pos_B);
+		//				}
+		//			}
+		//			if(curPoint._linkedInnerOrCrossPoints.Count > 0)
+		//			{
+		//				for (int i = 0; i < curPoint._linkedInnerOrCrossPoints.Count; i++)
+		//				{
+		//					pos_B = World2GL(curPoint._linkedInnerOrCrossPoints[i]._pos_Cur - (mesh._offsetPos + imageHalfOffset));
+
+		//					DrawBoldLineGL(pos_A, pos_B, 2, new Color(1.0f, 1.0f, 0.0f, 0.5f), false);
+		//					//GL.Color(new Color(1.0f, 1.0f, 0.0f, 0.8f));
+		//					//GL.Vertex(pos_A);
+		//					//GL.Vertex(pos_B);
+		//				}
+		//			}
+		//		}
+		//		GL.End();
+
+
+
+		//		//_matBatch.SetPass_Color();
+		//		//_matBatch.SetPass_Texture_Normal(Color.gray, img_controlPoint, apPortrait.SHADER_TYPE.AlphaBlend);
+		//		//_matBatch.SetClippingSize(_glScreenClippingSize);
+
+		//		//GL.Begin(GL.TRIANGLES);
+
+		//		//GL.Color(new Color(1.0f, 1.0f, 1.0f, 1.0f));
+		//		for (int iPoint = 0; iPoint < controlPoints.Count; iPoint++)
+		//		{
+		//			curPoint = controlPoints[iPoint];
+		//			pos_A = World2GL(curPoint._pos_Cur - (mesh._offsetPos + imageHalfOffset));
+
+		//			if(selectedPoints.Contains(curPoint))
+		//			{
+		//				DrawTextureGL(img_controlPoint, pos_A, controlPointSize, controlPointSize, Color.red, 0.0f, true);
+		//			}
+		//			else
+		//			{
+		//				DrawTextureGL(img_controlPoint, pos_A, controlPointSize, controlPointSize, Color.gray, 0.0f, true);
+		//			}
+
+		//			//pos_0 = pos_A + new Vector2(-controlPointHalfSize, -controlPointHalfSize);
+		//			//pos_1 = pos_A + new Vector2(controlPointHalfSize, -controlPointHalfSize);
+		//			//pos_2 = pos_A + new Vector2(controlPointHalfSize, controlPointHalfSize);
+		//			//pos_3 = pos_A + new Vector2(-controlPointHalfSize, controlPointHalfSize);
+
+		//			//GL.Vertex(pos_0); GL.Vertex(pos_1); GL.Vertex(pos_2);
+		//			//GL.Vertex(pos_2); GL.Vertex(pos_3); GL.Vertex(pos_0);
+
+		//			//GL.Vertex(pos_2); GL.Vertex(pos_1); GL.Vertex(pos_0);
+		//			//GL.Vertex(pos_0); GL.Vertex(pos_3); GL.Vertex(pos_2);
+		//			AddCursorRect(editor.Mouse.PosLast, pos_A, controlPointSize, controlPointSize, MouseCursor.MoveArrow);
+		//		}
+		//		//GL.End();
+		//	}
+
+
+		//}
+
+		#endregion
 
 
 		//------------------------------------------------------------------------------------------------
@@ -3548,6 +3801,7 @@ namespace AnyPortrait
 											apSelection select,
 											apEditor editor,
 											Vector2 mousePos,
+											
 											bool isMainSelected = true)//선택된 경우, Main인지 여부 (20.5.28)
 		{
 			try
@@ -3692,6 +3946,15 @@ namespace AnyPortrait
 				{
 					isMeshRender = true;
 				}
+				bool isNotEditedGrayColor = false;
+
+				if(editor._exModObjOption_ShowGray && 
+					(	renderUnit._exCalculateMode == apRenderUnit.EX_CALCULATE.Disabled_NotEdit ||
+						renderUnit._exCalculateMode == apRenderUnit.EX_CALCULATE.Disabled_ExRun))
+				{
+					//선택되지 않은 건 Gray 색상으로 표시하고자 할 때
+					isNotEditedGrayColor = true;
+				}
 
 
 				bool isDrawTFBorderLine = ((int)(renderType & RENDER_TYPE.TransformBorderLine) != 0);
@@ -3726,22 +3989,28 @@ namespace AnyPortrait
 						color2 = Color.black;
 					}
 
-					if(isToneColor)
+
+					if (isToneColor)
 					{
-						//_matBatch.SetPass_ToneColor_Normal(_toneColor, mesh.LinkedTextureData._image);//이전
-						_matBatch.SetPass_ToneColor_Normal(_toneColor, linkedTextureData._image);//변경
-						
+						_matBatch.SetPass_ToneColor_Normal(_toneColor, linkedTextureData._image);
+
 					}
-					else if (!isBoneWeightColor && !isPhyVolumeWeightColor)
+					else if (isNotEditedGrayColor)
 					{
-						//_matBatch.SetPass_Texture_VColor(textureColor, mesh.LinkedTextureData._image, 0.0f, renderUnit.ShaderType);//이전
-						_matBatch.SetPass_Texture_VColor(textureColor, linkedTextureData._image, 0.0f, renderUnit.ShaderType);//변경
+						//추가 21.2.16 : 편집되지 않은 경우
+						_matBatch.SetPass_Gray_Normal(textureColor, linkedTextureData._image);
+					}
+					else if (isBoneWeightColor || isPhyVolumeWeightColor)
+					{
+						//가중치 색상
+						_matBatch.SetPass_Texture_VColor(textureColor, linkedTextureData._image, vertexColorRatio, renderUnit.ShaderType);
 					}
 					else
 					{
-						//_matBatch.SetPass_Texture_VColor(textureColor, mesh.LinkedTextureData._image, vertexColorRatio, renderUnit.ShaderType);//이전
-						_matBatch.SetPass_Texture_VColor(textureColor, linkedTextureData._image, vertexColorRatio, renderUnit.ShaderType);//변경
+						//기본 색상
+						_matBatch.SetPass_Texture_VColor(textureColor, linkedTextureData._image, 0.0f, renderUnit.ShaderType);
 					}
+
 					_matBatch.SetClippingSize(_glScreenClippingSize);
 
 
@@ -4840,6 +5109,18 @@ namespace AnyPortrait
 					}
 				}
 
+				//추가 21.2.16 : 선택되지 않은 RenderUnit은 회색으로 표시
+				bool isNotEditedGrayColor_Parent = false;
+
+				if (editor._exModObjOption_ShowGray &&
+					(renderUnit._exCalculateMode == apRenderUnit.EX_CALCULATE.Disabled_NotEdit ||
+						renderUnit._exCalculateMode == apRenderUnit.EX_CALCULATE.Disabled_ExRun))
+				{
+					//선택되지 않은 건 Gray 색상으로 표시하고자 할 때
+					isNotEditedGrayColor_Parent = true;
+				}
+
+
 
 				//렌더링 방식은 Mesh (with Color) 또는 Vertex / Outline이 있다.
 
@@ -4884,6 +5165,10 @@ namespace AnyPortrait
 						//_matBatch.SetPass_Mask_ToneColor(_toneColor, mesh.LinkedTextureData._image, isRenderTexture);//이전
 						_matBatch.SetPass_Mask_ToneColor(_toneColor, linkedTextureData._image, isRenderTexture);
 						
+					}
+					else if(isNotEditedGrayColor_Parent)
+					{
+						_matBatch.SetPass_Mask_Gray(textureColor, linkedTextureData._image, isRenderTexture);
 					}
 					else
 					{
@@ -5029,7 +5314,7 @@ namespace AnyPortrait
 				for (int iClip = 0; iClip < nClipMeshes; iClip++)
 				{
 					clipMeshSet = childClippedSet[iClip];
-					if(clipMeshSet == null || clipMeshSet._meshTransform == null)
+					if (clipMeshSet == null || clipMeshSet._meshTransform == null)
 					{
 						continue;
 					}
@@ -5047,16 +5332,32 @@ namespace AnyPortrait
 
 					//추가 12.04 : Extra 옵션 적용
 					apTextureData childTextureData = clipMesh.LinkedTextureData;
-					if(clipRenderUnit.IsExtraTextureChanged)
+					if (clipRenderUnit.IsExtraTextureChanged)
 					{
 						childTextureData = clipRenderUnit.ChangedExtraTextureData;
 					}
 
-					if(isToneColor)
+					//추가 21.2.16 : 선택되지 않은 RenderUnit은 회색으로 표시
+					bool isNotEditedGrayColor = false;
+
+					if (editor._exModObjOption_ShowGray &&
+						(clipRenderUnit._exCalculateMode == apRenderUnit.EX_CALCULATE.Disabled_NotEdit ||
+							clipRenderUnit._exCalculateMode == apRenderUnit.EX_CALCULATE.Disabled_ExRun))
+					{
+						//선택되지 않은 건 Gray 색상으로 표시하고자 할 때
+						isNotEditedGrayColor = true;
+					}
+
+
+					if (isToneColor)
 					{
 						//Onion ToneColor Clipping
 						//_matBatch.SetPass_Clipped_ToneColor(_toneColor, clipMesh.LinkedTextureData._image, renderUnit._meshColor2X);//이전
 						_matBatch.SetPass_Clipped_ToneColor(_toneColor, childTextureData._image, renderUnit._meshColor2X);
+					}
+					else if (isNotEditedGrayColor)
+					{
+						_matBatch.SetPass_Gray_Clipped(clipRenderUnit._meshColor2X, childTextureData._image, renderUnit._meshColor2X);
 					}
 					else
 					{

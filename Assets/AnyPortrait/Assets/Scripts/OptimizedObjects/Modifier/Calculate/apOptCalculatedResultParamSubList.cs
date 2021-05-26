@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -74,6 +73,19 @@ namespace AnyPortrait
 		private bool _isVertexLocalMorph = false;
 		private bool _isVertexRigging = false;
 
+		//추가 20.11.24 : 애니메이션의 빠른 키프레임 조회를 위해 만든 LUT 멤버와 거기서 연산된 두개(혹은 한개의 PKV)
+		private apOptCalculatedAnimKeyLUT _animKeyLUT = null;
+		
+		public apOptCalculatedResultParam.OptParamKeyValueSet[] _resultAnimKeyPKVs = null;//결과 PKV (애니메이션)
+		public int[] _resultAnimKeyPKVIndices = null;//결과 PKV의 인덱스(애니메이션)
+		public int _nResultAnimKey = 0;
+
+		//계산을 위한 임시 변수
+		private apOptCalculatedResultParam.OptParamKeyValueSet _cal_resultAnimKeyPKV_A = null;
+		private apOptCalculatedResultParam.OptParamKeyValueSet _cal_resultAnimKeyPKV_B = null;
+		private apOptCalculatedAnimKeyLUT.LUTUnit _cal_targetLUT = null;
+		private apAnimKeyframe _cal_keyframe_A = null;
+		private apAnimKeyframe _cal_keyframe_B = null;
 
 		// Init
 		//--------------------------------------------
@@ -168,10 +180,8 @@ namespace AnyPortrait
 					if (_keyParamSetGroup._keyControlParam != null)
 					{
 						//보간을 위한 Key Point와 Area를 만들자.
-						if (_cpLerpPoints == null)
-						{ _cpLerpPoints = new List<apOptCalculatedLerpPoint>(); }
-						if (_cpLerpAreas == null)
-						{ _cpLerpAreas = new List<apOptCalculatedLerpArea>(); }
+						if (_cpLerpPoints == null) { _cpLerpPoints = new List<apOptCalculatedLerpPoint>(); }
+						if (_cpLerpAreas == null) { _cpLerpAreas = new List<apOptCalculatedLerpArea>(); }
 
 						_cpLerpPoint_A = null;
 						_cpLerpPoint_B = null;
@@ -182,6 +192,23 @@ namespace AnyPortrait
 					}
 					break;
 
+				case apModifierParamSetGroup.SYNC_TARGET.KeyFrame:
+					{
+						if(_animKeyLUT == null)
+						{
+							_animKeyLUT = new apOptCalculatedAnimKeyLUT(_keyParamSetGroup._keyAnimClip, _keyParamSetGroup._keyAnimTimelineLayer);
+						}
+
+						_animKeyLUT.MakeLUT(this);//완성!
+
+						if(_resultAnimKeyPKVs == null)
+						{
+							_resultAnimKeyPKVs = new apOptCalculatedResultParam.OptParamKeyValueSet[2];//배열의 최대 크기는 2
+							_resultAnimKeyPKVIndices = new int[2];
+						}
+						_nResultAnimKey = 0;
+					}
+					break;
 			}
 		}
 
@@ -269,6 +296,43 @@ namespace AnyPortrait
 
 			return true;
 		}
+
+
+
+		public bool Calculate_AnimMod()
+		{
+			//이 부분은 빠른 처리를 위해 제거
+			//if (_keyParamSetGroup == null)
+			//{
+			//	Debug.LogError("Null KeyParamSetGroup");
+			//	return false;
+			//}
+
+			//if (!IsUpdatable)
+			//{
+			//	return false;
+			//}
+
+			_totalWeight = 0.0f;
+			//이거 안해도 된다. (초기화 안해도 결과에서 사용안함)
+			//for (int i = 0; i < _nSubParamKeyValues; i++)
+			//{
+			//	_subParamKeyValues[i].ReadyToCalculate();
+			//}
+
+			//키프레임의 Weight 계산
+			//TODO : 이 내부에 LookUpTable을 이용하여 처리를 가속화할 것
+			//CalculateWeight_KeyFrame();/이전 함수
+			CalculateWeight_KeyFrame_WithLUT();
+
+
+			return true;
+		}
+
+
+
+
+
 
 
 		/// <summary>
@@ -974,6 +1038,143 @@ namespace AnyPortrait
 			}
 
 			
+		}
+
+
+
+		/// <summary>
+		/// 추가 20.11.24 : 개선된 버전. LUT를 이용하여 for 없이 딱! 필요한 Keyframe들과 ParamKeyValueSet만 꺼낸다.
+		/// 굳이 다른걸 false 필요는 없으며 대신 Modifier에서도 선택된 ParamKeyValue만 사용해야한다.
+		/// </summary>
+		private void CalculateWeight_KeyFrame_WithLUT()
+		{
+			if (_keyParamSetGroup == null || _keyParamSetGroup._keyAnimTimelineLayer == null)
+			{
+				return;
+			}
+			apAnimClip animClip = _keyParamSetGroup._keyAnimClip;
+			
+			//9.26 : 이거 수정해야한다.
+			//Int형 프레임과 Float형 프레임을 둘다 사용한다.
+			int curFrame = animClip.CurFrame;
+			float curFrameFloat = animClip.CurFrameFloat;//<<이건 실수형
+			
+			_cal_resultAnimKeyPKV_A = null;
+			_cal_resultAnimKeyPKV_B = null;
+			_totalWeight = 0.0f;
+
+			
+
+			_cal_targetLUT = _animKeyLUT.GetLUT(curFrame);//이부분이 핵심
+
+			if(_cal_targetLUT == null)
+			{
+				//조회된 LUT Result가 없다.
+				_resultAnimKeyPKVs[0] = null;
+				_resultAnimKeyPKVs[1] = null;
+
+				_resultAnimKeyPKVIndices[0] = -1;
+				_resultAnimKeyPKVIndices[1] = -1;
+				_nResultAnimKey = 0;
+				return;
+			}
+
+			_cal_resultAnimKeyPKV_A = _cal_targetLUT._paramKeyValueSet_Cur;
+			_cal_resultAnimKeyPKV_B = _cal_targetLUT._paramKeyValueSet_Next;
+
+			int iResultAnimKeyPKV_A = _cal_targetLUT._iParamKeyValueSet_Cur;
+			int iResultAnimKeyPKV_B = _cal_targetLUT._iParamKeyValueSet_Next;
+
+			_cal_keyframe_A = _cal_targetLUT._keyframe_Cur;
+			_cal_keyframe_B = _cal_targetLUT._keyframe_Next;
+
+			int lengthFrames = animClip.EndFrame - animClip.StartFrame;
+
+			if(_cal_resultAnimKeyPKV_A == _cal_resultAnimKeyPKV_B)
+			{
+				//A와 B가 같다 > 한개의 PKV의 영역에 들어와서 100%로 계산해야함
+				_cal_resultAnimKeyPKV_A._dist = 0.0f;
+				_cal_resultAnimKeyPKV_A._isCalculated = true;
+				_cal_resultAnimKeyPKV_A._weight = 1.0f;
+				_totalWeight += 1.0f;
+				_cal_resultAnimKeyPKV_A._animKeyPos = apOptCalculatedResultParam.AnimKeyPos.ExactKey;
+
+				//1개의 결과
+				_resultAnimKeyPKVs[0] = _cal_resultAnimKeyPKV_A;
+				_resultAnimKeyPKVs[1] = _cal_resultAnimKeyPKV_A;
+
+				_resultAnimKeyPKVIndices[0] = iResultAnimKeyPKV_A;
+				_resultAnimKeyPKVIndices[1] = iResultAnimKeyPKV_A;
+
+				_nResultAnimKey = 1;
+			}
+			else
+			{
+				//두개의 영역에 들어왔다.
+				int frameInt_ForA = curFrame;
+				int frameInt_ForB = curFrame;
+				float frameFloat_ForA = curFrameFloat;
+				float frameFloat_ForB = curFrameFloat;
+
+				if(frameInt_ForA < _cal_keyframe_A._frameIndex)
+				{
+					frameInt_ForA += lengthFrames;
+					frameFloat_ForA += lengthFrames;
+				}
+
+				if(frameInt_ForB > _cal_keyframe_B._frameIndex)
+				{
+					frameInt_ForB -= lengthFrames;
+				}
+				if(frameFloat_ForB > _cal_keyframe_B._frameIndex)
+				{
+					frameFloat_ForB -= lengthFrames;
+				}
+
+				//PKV A 계산
+				_cal_resultAnimKeyPKV_A._dist = 0.0f;
+				_cal_resultAnimKeyPKV_A._isCalculated = true;
+				_cal_resultAnimKeyPKV_A._weight = _cal_keyframe_A._curveKey.GetItp_Float(frameFloat_ForA, false, frameInt_ForA);
+				_cal_resultAnimKeyPKV_A._animKeyPos = apOptCalculatedResultParam.AnimKeyPos.PrevKey;
+
+				//Rotation Bias도 계산한다.
+				if(_cal_keyframe_A._nextRotationBiasMode != apAnimKeyframe.ROTATION_BIAS.None)
+				{
+					_cal_resultAnimKeyPKV_A.SetAnimRotationBias(_cal_keyframe_A._nextRotationBiasMode, _cal_keyframe_A._nextRotationBiasCount);
+				}
+
+				//PKV B 계산
+				_cal_resultAnimKeyPKV_B._dist = 0.0f;
+				_cal_resultAnimKeyPKV_B._isCalculated = true;
+				_cal_resultAnimKeyPKV_B._weight = _cal_keyframe_B._curveKey.GetItp_Float(frameFloat_ForB, true, frameInt_ForB);
+				_cal_resultAnimKeyPKV_B._animKeyPos = apOptCalculatedResultParam.AnimKeyPos.NextKey;
+
+				//Rotation Bias도 계산한다.
+				if(_cal_keyframe_B._prevRotationBiasMode != apAnimKeyframe.ROTATION_BIAS.None)
+				{
+					_cal_resultAnimKeyPKV_B.SetAnimRotationBias(_cal_keyframe_B._prevRotationBiasMode, _cal_keyframe_B._prevRotationBiasCount);
+				}
+
+				//Weight 계산
+				_totalWeight += _cal_resultAnimKeyPKV_A._weight;
+				_totalWeight += _cal_resultAnimKeyPKV_B._weight;
+
+				if(_totalWeight > 0.0f)
+				{
+					_cal_resultAnimKeyPKV_A._weight /= _totalWeight;
+					_cal_resultAnimKeyPKV_B._weight /= _totalWeight;
+					_totalWeight = 1.0f;
+				}
+
+				//1개의 결과
+				_resultAnimKeyPKVs[0] = _cal_resultAnimKeyPKV_A;
+				_resultAnimKeyPKVs[1] = _cal_resultAnimKeyPKV_B;
+
+				_resultAnimKeyPKVIndices[0] = iResultAnimKeyPKV_A;
+				_resultAnimKeyPKVIndices[1] = iResultAnimKeyPKV_B;
+				_nResultAnimKey = 2;
+			}
+
 		}
 
 		//---------------------------------------------------

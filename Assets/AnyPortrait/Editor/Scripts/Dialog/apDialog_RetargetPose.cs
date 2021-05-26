@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -337,1041 +336,916 @@ namespace AnyPortrait
 		//------------------------------------------------------------------------
 		void OnGUI()
 		{
-			int width = (int)position.width;
-			int height = (int)position.height;
-			if (_editor == null || _funcResult == null || _targetMeshGroup == null || _targetAnimClip == null)
+			try
 			{
-				CloseDialog();
-				return;
-			}
-
-			Color prevColor = GUI.backgroundColor;
-
-			//레이아웃 구조
-			//1. Save
-			// - 저장 버튼
-			//2. Load
-			// - 로드 버튼
-			// - 본 정보 리스트
-			//   - <색상> 인덱스, 이름 -> 적용 여부 + IK + 색상 로드
-			// - 전체 선택 / 해제
-			// - 전체 IK 포함 여부, 
-			// - 옵션 : 크기
-
-			width -= 10;
-
-			//1. Save
-			GUIStyle guiStyleBox = new GUIStyle(GUI.skin.box);
-			guiStyleBox.alignment = TextAnchor.MiddleCenter;
-			guiStyleBox.normal.textColor = apEditorUtil.BoxTextColor;
-
-			GUIStyle guiStyleBox_Left = new GUIStyle(GUI.skin.textField);
-			guiStyleBox_Left.alignment = TextAnchor.MiddleLeft;
-
-			string strExport = _editor.GetText(TEXT.DLG_Export);
-			string strImport = _editor.GetText(TEXT.DLG_Import);
-			string strSelect = _editor.GetText(TEXT.DLG_Select);
-
-			//"  Export Animation Clip"
-			GUILayout.Box(new GUIContent("  " + _editor.GetText(TEXT.DLG_ExportAnimationClip), _editor.ImageSet.Get(apImageSet.PRESET.Anim_Save)), guiStyleBox, GUILayout.Width(width), GUILayout.Height(35));
-			GUILayout.Space(5);
-			EditorGUILayout.BeginHorizontal(GUILayout.Width(width), GUILayout.Height(25));
-			GUILayout.Space(5);
-			int nTimelines = _targetAnimClip._timelines.Count;
-
-			string strTimeline = "";
-			if(nTimelines == 0)
-			{
-				//strTimeline = "No Timelines to Export";
-				strTimeline = _editor.GetText(TEXT.DLG_NoTimelinesToExport);
-			}
-			else if(nTimelines == 1)
-			{
-				//strTimeline = "1 Timeline to Export";
-				strTimeline = _editor.GetText(TEXT.DLG_1TimelinesToExport);
-			}
-			else
-			{
-				//strTimeline = nTimelines + " Timelines to Export";
-				strTimeline = _editor.GetTextFormat(TEXT.DLG_NTimelinesToExport, nTimelines);
-			}
-			if (nTimelines > 0)
-			{
-				GUI.backgroundColor = new Color(prevColor.r * 0.8f, prevColor.g * 1.5f, prevColor.b * 1.5f, 1.0f);
-			}
-			GUILayout.Box(strTimeline, guiStyleBox, GUILayout.Width(width - 120), GUILayout.Height(25));
-			GUI.backgroundColor = prevColor;
-
-			if (apEditorUtil.ToggledButton(_editor.ImageSet.Get(apImageSet.PRESET.Anim_Save), " " + strExport, false, (nTimelines > 0), 115, 25))//" Export"
-			{
-				string saveFilePath = EditorUtility.SaveFilePanel("Save Animation Clip", "", "", "ani");
-				if(!string.IsNullOrEmpty(saveFilePath))
+				int width = (int)position.width;
+				int height = (int)position.height;
+				if (_editor == null || _funcResult == null || _targetMeshGroup == null || _targetAnimClip == null)
 				{
-					//TODO : Save를 하자
-					bool isResult = apRetarget.SaveAnimClip(_targetAnimClip, saveFilePath);
-					if (isResult)
-					{
-						_editor.Notification("[" + saveFilePath + "] is Saved", false, false);
-						//Debug.Log("[" + saveFilePath + "] is Saved");
-					}
-					else
-					{
-						//Debug.LogError("File Save Failed");
-					}
+					CloseDialog();
+					return;
 				}
-			}
-			EditorGUILayout.EndHorizontal();
 
-			GUILayout.Space(10);
-			apEditorUtil.GUI_DelimeterBoxH(width);
-			GUILayout.Space(10);
+				Color prevColor = GUI.backgroundColor;
 
+				//레이아웃 구조
+				//1. Save
+				// - 저장 버튼
+				//2. Load
+				// - 로드 버튼
+				// - 본 정보 리스트
+				//   - <색상> 인덱스, 이름 -> 적용 여부 + IK + 색상 로드
+				// - 전체 선택 / 해제
+				// - 전체 IK 포함 여부, 
+				// - 옵션 : 크기
 
-			//2. Load
-			// - 로드 버튼
-			// - 본 정보 리스트
-			//   - <색상> 인덱스, 이름 -> 적용 여부 + IK + 색상 로드
-			// - 전체 선택 / 해제
-			// - 전체 IK 포함 여부, 
-			// - 옵션 : 크기
-			//"  Import Animation Clip"
-			GUILayout.Box(new GUIContent("  " + _editor.GetText(TEXT.DLG_ImportAnimationClip), _editor.ImageSet.Get(apImageSet.PRESET.Anim_Load)), guiStyleBox, GUILayout.Width(width), GUILayout.Height(35));
-			GUILayout.Space(5);
-			
+				width -= 10;
 
-			//로드한 파일 정보
-			EditorGUILayout.BeginHorizontal(GUILayout.Width(width), GUILayout.Height(25));
-			GUILayout.Space(5);
-			//TODO : 
-			bool isFileLoaded = _retargetData.IsAnimFileLoaded;
-			string strFileName = _retargetData.AnimLoadedFilePath;
-			if(isFileLoaded)
-			{
-				GUI.backgroundColor = new Color(prevColor.r * 0.8f, prevColor.g * 2.0f, prevColor.b * 0.8f, 1.0f);
-			}
-			else
-			{
-				//strFileName = "No File is Imported";
-				strFileName = _editor.GetText(TEXT.DLG_NoFileIsImported);
-				GUI.backgroundColor = new Color(prevColor.r * 1.5f, prevColor.g * 0.8f, prevColor.b * 0.8f, 1.0f);
-			}
-			
-			EditorGUILayout.TextField(strFileName, guiStyleBox_Left, GUILayout.Width(width - 120), GUILayout.Height(25));
-			GUI.backgroundColor = prevColor;
+				//1. Save
+				GUIStyle guiStyleBox = new GUIStyle(GUI.skin.box);
+				guiStyleBox.alignment = TextAnchor.MiddleCenter;
+				guiStyleBox.normal.textColor = apEditorUtil.BoxTextColor;
 
-			if (apEditorUtil.ToggledButton(_editor.GetText(TEXT.DLG_LoadFile), false, true, 115, 25))//"Load File"
-			{
-				string loadFilePath = EditorUtility.OpenFilePanel("Open Animation Clip", "", "ani");
-				if(!string.IsNullOrEmpty(loadFilePath))
+				GUIStyle guiStyleBox_Left = new GUIStyle(GUI.skin.textField);
+				guiStyleBox_Left.alignment = TextAnchor.MiddleLeft;
+
+				string strExport = _editor.GetText(TEXT.DLG_Export);
+				string strImport = _editor.GetText(TEXT.DLG_Import);
+				string strSelect = _editor.GetText(TEXT.DLG_Select);
+
+				//"  Export Animation Clip"
+				GUILayout.Box(new GUIContent("  " + _editor.GetText(TEXT.DLG_ExportAnimationClip), _editor.ImageSet.Get(apImageSet.PRESET.Anim_Save)), guiStyleBox, GUILayout.Width(width), GUILayout.Height(35));
+				GUILayout.Space(5);
+				EditorGUILayout.BeginHorizontal(GUILayout.Width(width), GUILayout.Height(25));
+				GUILayout.Space(5);
+				int nTimelines = _targetAnimClip._timelines.Count;
+
+				string strTimeline = "";
+				if (nTimelines == 0)
 				{
-					bool loadResult = _retargetData.LoadAnimClip(loadFilePath);
-					if (loadResult)
-					{
-						_editor.Notification("[" + loadFilePath + "] is Loaded", false, false);
-						//Debug.Log("[" + loadFilePath + "] is Loaded");
-
-						EndSelectLinkMode();//<<Select LinkMode를 초기화
-											//연결도 초기화
-
-						for (int i = 0; i < _targetTransforms.Count; i++)
-						{
-							_targetTransforms[i].ClearLink();
-						}
-						for (int i = 0; i < _targetBones.Count; i++)
-						{
-							_targetBones[i].ClearLink();
-						}
-						for (int i = 0; i < _targetTimelines.Count; i++)
-						{
-							_targetTimelines[i].ClearLink();
-						}
-
-						foreach (KeyValuePair<TargetUnit, List<TargetUnit>> layers in _targetTimelineLayers)
-						{
-							for (int i = 0; i < layers.Value.Count; i++)
-							{
-								layers.Value[i].ClearLink();
-							}
-						}
-
-						//EnableAll을 먼저 수행한다.
-						EnableAll(false);
-						
-						
-					}
+					//strTimeline = "No Timelines to Export";
+					strTimeline = _editor.GetText(TEXT.DLG_NoTimelinesToExport);
 				}
-			}
-
-			EditorGUILayout.EndHorizontal();
-
-			GUILayout.Space(5);
-
-			bool isDrawRightList = true;
-			int categoryWidth = ((width - 10) / 5) - 2;
-			EditorGUILayout.BeginHorizontal(GUILayout.Width(width), GUILayout.Height(30));
-			GUILayout.Space(5);
-			//"Meshes / MeshGroups"
-			if(apEditorUtil.ToggledButton(_editor.GetText(TEXT.DLG_MeshesMeshGroups), _mappingCategory == MAPPING_CATEGORY.Transform, categoryWidth, 30))
-			{
-				_mappingCategory = MAPPING_CATEGORY.Transform;
-			}
-			//"Bones"
-			if(apEditorUtil.ToggledButton(_editor.GetText(TEXT.DLG_Bones), _mappingCategory == MAPPING_CATEGORY.Bone, categoryWidth, 30))
-			{
-				_mappingCategory = MAPPING_CATEGORY.Bone;
-			}
-			//"Control Parameters"
-			if(apEditorUtil.ToggledButton(_editor.GetText(TEXT.DLG_ControlParameters), _mappingCategory == MAPPING_CATEGORY.ControlParam, categoryWidth, 30))
-			{
-				_mappingCategory = MAPPING_CATEGORY.ControlParam;
-			}
-			//"Timelines"
-			if(apEditorUtil.ToggledButton(_editor.GetText(TEXT.DLG_Timelines), _mappingCategory == MAPPING_CATEGORY.Timeline, categoryWidth, 30))
-			{
-				_mappingCategory = MAPPING_CATEGORY.Timeline;
-			}
-			//"Events"
-			if(apEditorUtil.ToggledButton(_editor.GetText(TEXT.DLG_AnimEvents), _mappingCategory == MAPPING_CATEGORY.Event, categoryWidth, 30))
-			{
-				_mappingCategory = MAPPING_CATEGORY.Event;
-			}
-			EditorGUILayout.EndHorizontal();
-
-
-			if(_mappingCategory == MAPPING_CATEGORY.Event)
-			{
-				isDrawRightList = false;
-			}
-
-
-			
-
-			GUILayout.Space(5);
-
-			//리스트를 좌우로 나눈다.
-			int listHeight = height - 450;
-			int leftWidth = ((width + 10) / 2) + 70;
-			int rightWidth = ((width + 10) / 2) - 70;
-			if(!isDrawRightList)
-			{
-				leftWidth = width + 10;
-			}
-
-			EditorGUILayout.BeginHorizontal(GUILayout.Width(width), GUILayout.Height(20));
-			GUILayout.Space(10);
-			EditorGUILayout.LabelField(_editor.GetText(TEXT.DLG_LoadedData), GUILayout.Width(150));//"Loaded Data"
-			if(isDrawRightList)
-			{
-				GUILayout.Space(leftWidth - (160));
-				EditorGUILayout.LabelField(_editor.GetText(TEXT.DLG_TargetObjects), GUILayout.Width(150));//"Target Objects"
-			}
-			EditorGUILayout.EndHorizontal();
-
-			GUILayout.Space(5);
-
-			GUIStyle guiStyle_ItemLabel = new GUIStyle(GUI.skin.label);
-			guiStyle_ItemLabel.alignment = TextAnchor.MiddleLeft;
-
-			GUIStyle guiStyle_ItemLabel_Linked = new GUIStyle(GUI.skin.label);
-			guiStyle_ItemLabel_Linked.alignment = TextAnchor.MiddleLeft;
-			if(EditorGUIUtility.isProSkin)
-			{
-				guiStyle_ItemLabel_Linked.normal.textColor = Color.cyan;
-			}
-			else
-			{
-				guiStyle_ItemLabel_Linked.normal.textColor = new Color(0.0f, 0.2f, 1.0f, 1.0f);
-			}
-			
-
-			GUIStyle guiStyle_ItemTextBox = new GUIStyle(GUI.skin.textField);
-			guiStyle_ItemTextBox.alignment = TextAnchor.MiddleLeft;
-			guiStyle_ItemTextBox.normal.textColor = apEditorUtil.BoxTextColor;
-
-			GUIStyle guiStyle_Box = new GUIStyle(GUI.skin.box);
-			guiStyle_Box.margin = GUI.skin.textField.margin;
-			guiStyle_Box.alignment = TextAnchor.MiddleLeft;
-			guiStyle_Box.wordWrap = guiStyle_ItemLabel.wordWrap;
-
-			GUIStyle guiStyle_Fold = new GUIStyle(GUI.skin.label);
-
-			Rect lastRect = GUILayoutUtility.GetLastRect();
-
-			GUI.backgroundColor = new Color(0.9f, 0.9f, 0.9f);
-			GUI.Box(new Rect(0, lastRect.y + 5, leftWidth, listHeight), "");
-
-
-			//링크 선택 모드 체크하자
-			CheckSelectLinkMode();
-
-			if (isDrawRightList)
-			{
-				if(_isSelectLinkMode)
+				else if (nTimelines == 1)
 				{
-					GUI.backgroundColor = new Color(0.7f, 1.0f, 0.8f);
+					//strTimeline = "1 Timeline to Export";
+					strTimeline = _editor.GetText(TEXT.DLG_1TimelinesToExport);
 				}
 				else
 				{
-					GUI.backgroundColor = new Color(0.9f, 0.9f, 0.9f);
+					//strTimeline = nTimelines + " Timelines to Export";
+					strTimeline = _editor.GetTextFormat(TEXT.DLG_NTimelinesToExport, nTimelines);
 				}
-				
-				GUI.Box(new Rect(leftWidth, lastRect.y + 5, rightWidth, listHeight), "");
-			}
-			GUI.backgroundColor = prevColor;
-
-			EditorGUILayout.BeginHorizontal(GUILayout.Width(width + 10), GUILayout.Height(listHeight));
-
-			apRetargetAnimFile animFile = _retargetData.AnimFile;
-
-			
-			//리타겟 정보와 타임라인 정보 두개를 보여줘야 한다.
-			// 1. 왼쪽 리스트 : 타임라인 정보
-			_scrollList_Timeline = EditorGUILayout.BeginScrollView(_scrollList_Timeline, false, true, GUILayout.Width(leftWidth), GUILayout.Height(listHeight));
-			EditorGUILayout.BeginVertical(GUILayout.Width(leftWidth - 30));
-
-			if(_targetMeshGroup != null && animFile != null)
-			{
-				//연결이 될 "대상"이다.
-				//카테고리에 따라 나오는게 다르다.
-				int itemWidth = leftWidth - 20;
-				int itemHeight = 20;
-
-				
-
-				switch (_mappingCategory)
+				if (nTimelines > 0)
 				{
-					case MAPPING_CATEGORY.Transform:
-						{
-							//Transform을 그린다.
-							int nTransforms = animFile._transforms_Total.Count;
-							apRetargetSubUnit subUnit = null;
-							for (int i = 0; i < nTransforms; i++)
-							{
-								subUnit = animFile._transforms_Total[i];
-								EditorGUILayout.BeginHorizontal(GUILayout.Width(itemWidth), GUILayout.Height(itemHeight));
-								GUILayout.Space(10);
-
-								switch (subUnit._type)
-								{
-									case apRetargetSubUnit.TYPE.MeshTransform:
-										EditorGUILayout.LabelField(new GUIContent("", _imgIcon_Mesh), GUILayout.Width(itemHeight), GUILayout.Height(itemHeight));
-										break;
-
-									case apRetargetSubUnit.TYPE.MeshGroupTransform:
-										EditorGUILayout.LabelField(new GUIContent("", _imgIcon_MeshGroup), GUILayout.Width(itemHeight), GUILayout.Height(itemHeight));
-										break;
-
-									case apRetargetSubUnit.TYPE.Bone:
-										EditorGUILayout.LabelField(new GUIContent("", _imgIcon_Bone), GUILayout.Width(itemHeight), GUILayout.Height(itemHeight));
-										break;
-								}
-								EditorGUILayout.LabelField(subUnit._name, guiStyle_ItemLabel, GUILayout.Width(150), GUILayout.Height(itemHeight));
-
-
-								//TODO
-								// Import를 할 것인지
-								// 대상이 무엇인지
-								// Change 할 것인지를 결정
-								GUILayout.Space(10);
-								//"Import", "Import"
-								if(apEditorUtil.ToggledButton_2Side(strImport, strImport, subUnit._isImported, true, 70, itemHeight))
-								{
-									subUnit._isImported = !subUnit._isImported;
-								}
-								GUILayout.Space(5);
-
-								if (subUnit._isImported)
-								{
-									bool isSelected = false;
-									bool isAvailable = false;
-									string strLinkName = subUnit.LinkedName;
-									
-									if(_isSelectLinkMode)
-									{
-										//선택 모드일때
-										if(_srcTransformSubUnit == subUnit)
-										{
-											strLinkName = " >>> ";
-											isSelected = true;
-											isAvailable = true;
-										}
-										else
-										{
-											isSelected = false;
-											isAvailable = false;
-										}
-									}
-									else
-									{
-										//일반 모드일때
-										isSelected = subUnit._isImported && subUnit.IsLinked;
-										isAvailable = subUnit._isImported;
-									}
-
-									if (apEditorUtil.ToggledButton_2Side(strLinkName, strLinkName, isSelected, isAvailable, 150, itemHeight))
-									{
-										if(_isSelectLinkMode)
-										{
-											//연결 중이라면 종료
-											EndSelectLinkMode();
-										}
-										else
-										{
-											//연결을 시작하자
-											StartSelectLinkMode(subUnit, _mappingCategory);
-										}
-									}
-
-									if(GUILayout.Button("X", GUILayout.Width(itemHeight), GUILayout.Height(itemHeight)))
-									{
-										UnlinkTransform(subUnit);
-
-										if(_isSelectLinkMode)
-										{
-											//연결 중이라면 종료
-											EndSelectLinkMode();
-										}
-										
-									}
-								}
-								EditorGUILayout.EndHorizontal();
-								
-							}
-							
-						}
-						break;
-
-					case MAPPING_CATEGORY.Bone:
-						{
-							//Bone을 그린다.
-							int nBones = animFile._bones_Total.Count;
-							apRetargetSubUnit subUnit = null;
-							for (int i = 0; i < nBones; i++)
-							{
-								subUnit = animFile._bones_Total[i];
-								EditorGUILayout.BeginHorizontal(GUILayout.Width(itemWidth), GUILayout.Height(itemHeight));
-								GUILayout.Space(10);
-
-								EditorGUILayout.LabelField(new GUIContent("", _imgIcon_Bone), GUILayout.Width(itemHeight), GUILayout.Height(itemHeight));
-
-								EditorGUILayout.LabelField(subUnit._name, guiStyle_ItemLabel, GUILayout.Width(150), GUILayout.Height(itemHeight));
-
-								//TODO
-								// Import를 할 것인지
-								// 대상이 무엇인지
-								// Change 할 것인지를 결정
-								GUILayout.Space(10);
-								//"Import", "Import"
-								if(apEditorUtil.ToggledButton_2Side(strImport, strImport, subUnit._isImported, true, 70, itemHeight))
-								{
-									subUnit._isImported = !subUnit._isImported;
-								}
-								GUILayout.Space(5);
-
-								if (subUnit._isImported)
-								{
-									bool isSelected = false;
-									bool isAvailable = false;
-									string strLinkName = subUnit.LinkedName;
-									
-									if(_isSelectLinkMode)
-									{
-										//선택 모드일때
-										if(_srcBoneSubUnit == subUnit)
-										{
-											strLinkName = " >>> ";
-											isSelected = true;
-											isAvailable = true;
-										}
-										else
-										{
-											isSelected = false;
-											isAvailable = false;
-										}
-									}
-									else
-									{
-										//일반 모드일때
-										isSelected = subUnit._isImported && subUnit.IsLinked;
-										isAvailable = subUnit._isImported;
-									}
-
-									if (apEditorUtil.ToggledButton_2Side(strLinkName, strLinkName, isSelected, isAvailable, 150, itemHeight))
-									{
-										if(_isSelectLinkMode)
-										{
-											//연결 중이라면 종료
-											EndSelectLinkMode();
-										}
-										else
-										{
-											//연결을 시작하자
-											StartSelectLinkMode(subUnit, _mappingCategory);
-										}
-										
-									}
-
-									if(GUILayout.Button("X", GUILayout.Width(itemHeight), GUILayout.Height(itemHeight)))
-									{
-										UnlinkBone(subUnit);
-
-										if(_isSelectLinkMode)
-										{
-											//연결 중이라면 종료
-											EndSelectLinkMode();
-										}
-										
-									}
-								}
-
-
-								EditorGUILayout.EndHorizontal();
-								
-							}
-						}
-						break;
-
-					case MAPPING_CATEGORY.ControlParam:
-						{
-							//Control Param을 그린다.
-							int nControlParams = animFile._controlParams.Count;
-							apRetargetControlParam cpUnit = null;
-							for (int i = 0; i < nControlParams; i++)
-							{
-								cpUnit = animFile._controlParams[i];
-								EditorGUILayout.BeginHorizontal(GUILayout.Width(itemWidth), GUILayout.Height(itemHeight));
-								GUILayout.Space(10);
-
-								EditorGUILayout.LabelField(new GUIContent("", _imgIcon_ControlParam), GUILayout.Width(itemHeight), GUILayout.Height(itemHeight));
-
-								EditorGUILayout.LabelField(cpUnit._keyName, guiStyle_ItemLabel, GUILayout.Width(150), GUILayout.Height(itemHeight));
-
-								// Import를 할 것인지
-								// 대상이 무엇인지
-								// Change 할 것인지를 결정
-								GUILayout.Space(10);
-								//"Import", "Import"
-								if(apEditorUtil.ToggledButton_2Side(strImport, strImport, cpUnit._isImported, true, 70, itemHeight))
-								{
-									cpUnit._isImported = !cpUnit._isImported;
-								}
-								GUILayout.Space(5);
-
-								if (cpUnit._isImported)
-								{
-									bool isSelected = false;
-									bool isAvailable = false;
-									string strLinkName = cpUnit.LinkedName;
-									
-									if(_isSelectLinkMode)
-									{
-										//선택 모드일때
-										if(_srcControlParamUnit == cpUnit)
-										{
-											strLinkName = " >>> ";
-											isSelected = true;
-											isAvailable = true;
-										}
-										else
-										{
-											isSelected = false;
-											isAvailable = false;
-										}
-									}
-									else
-									{
-										//일반 모드일때
-										isSelected = cpUnit._isImported && cpUnit.IsLinked;
-										isAvailable = cpUnit._isImported;
-									}
-
-									if (apEditorUtil.ToggledButton_2Side(strLinkName, strLinkName, isSelected, isAvailable, 150, itemHeight))
-									{
-										if(_isSelectLinkMode)
-										{
-											//연결 중이라면 종료
-											EndSelectLinkMode();
-										}
-										else
-										{
-											//연결을 시작하자
-											StartSelectLinkMode(cpUnit, _mappingCategory);
-										}
-										
-									}
-
-									if(GUILayout.Button("X", GUILayout.Width(itemHeight), GUILayout.Height(itemHeight)))
-									{
-										UnlinkControlParam(cpUnit);
-
-										if(_isSelectLinkMode)
-										{
-											//연결 중이라면 종료
-											EndSelectLinkMode();
-										}
-										
-									}
-								}
-
-
-								EditorGUILayout.EndHorizontal();
-								
-							}
-						}
-						break;
-
-					case MAPPING_CATEGORY.Timeline:
-						{
-							//Timeline과 TimelineLayer를 그린다.
-							int nTimeline = animFile._timelineUnits.Count;
-							apRetargetTimelineUnit timelineUnit = null;
-							for (int iT = 0; iT < nTimeline; iT++)
-							{
-								timelineUnit = animFile._timelineUnits[iT];
-
-								//타임라인을 먼저 출력하고, 
-								EditorGUILayout.BeginHorizontal(GUILayout.Width(itemWidth), GUILayout.Height(itemHeight));
-								GUILayout.Space(5);
-
-								Texture2D iconFold = timelineUnit._isFold ? _imgIcon_FoldRight : _imgIcon_FoldDown;
-								if(GUILayout.Button(iconFold, guiStyle_Fold, GUILayout.Width(itemHeight), GUILayout.Height(itemHeight)))
-								{
-									timelineUnit._isFold = !timelineUnit._isFold;
-								}
-
-								string strName = "";
-								if(timelineUnit._linkType == apAnimClip.LINK_TYPE.ControlParam)
-								{
-									EditorGUILayout.LabelField(new GUIContent("", _imgIcon_Timeline_ControlParam), GUILayout.Width(itemHeight), GUILayout.Height(itemHeight));
-									strName = "Control Parameters";
-								}
-								else
-								{
-									EditorGUILayout.LabelField(new GUIContent("", _imgIcon_Timeline_AnimModifier), GUILayout.Width(itemHeight), GUILayout.Height(itemHeight));
-									
-									switch (timelineUnit._linkedModifierType)
-									{
-										case apModifierBase.MODIFIER_TYPE.AnimatedTF:
-											strName = "Animation (Transform)";
-											break;
-
-										case apModifierBase.MODIFIER_TYPE.AnimatedMorph:
-											strName = "Animation (Morph)";
-											break;
-
-										default:
-											break;
-									}
-								}
-
-								
-								//if(timelineUnit._linkedModifierType == apModifierBase.MODIFIER_TYPE.)
-								EditorGUILayout.LabelField(strName, guiStyle_ItemLabel, GUILayout.Width(150), GUILayout.Height(itemHeight));
-
-								//TODO
-								// Import를 할 것인지
-								// 대상이 무엇인지
-								// Change 할 것인지를 결정
-								GUILayout.Space(10);
-								//"Import", "Import"
-								if(apEditorUtil.ToggledButton_2Side(strImport, strImport, timelineUnit._isImported, true, 70, itemHeight))
-								{
-									timelineUnit._isImported = !timelineUnit._isImported;
-								}
-								GUILayout.Space(5);
-
-								if (timelineUnit._isImported)
-								{
-									bool isSelected = false;
-									bool isAvailable = false;
-									string strLinkName = timelineUnit.LinkedName;
-									
-									if(_isSelectLinkMode)
-									{
-										//선택 모드일때
-										if(_srcTimelineUnit == timelineUnit)
-										{
-											strLinkName = " >>> ";
-											isSelected = true;
-											isAvailable = true;
-										}
-										else
-										{
-											isSelected = false;
-											isAvailable = false;
-										}
-									}
-									else
-									{
-										//일반 모드일때
-										isSelected = timelineUnit._isImported && timelineUnit.IsLinked;
-										isAvailable = timelineUnit._isImported;
-									}
-
-									if (apEditorUtil.ToggledButton_2Side(strLinkName, strLinkName, isSelected, isAvailable, 150, itemHeight))
-									{
-										if(_isSelectLinkMode)
-										{
-											//연결 중이라면 종료
-											EndSelectLinkMode();
-										}
-										else
-										{
-											//연결을 시작하자
-											StartSelectLinkMode(timelineUnit, _mappingCategory);
-										}
-										
-									}
-
-									if(GUILayout.Button("X", GUILayout.Width(itemHeight), GUILayout.Height(itemHeight)))
-									{
-										UnlinkTimeline(timelineUnit);
-
-										if(_isSelectLinkMode)
-										{
-											//연결 중이라면 종료
-											EndSelectLinkMode();
-										}
-										
-									}
-								}
-
-								EditorGUILayout.EndHorizontal();
-
-								if (!timelineUnit._isFold)
-								{
-									//내부 레이어도 그리자
-									apRetargetTimelineLayerUnit layerUnit = null;
-									for (int i = 0; i < timelineUnit._layerUnits.Count; i++)
-									{
-										layerUnit = timelineUnit._layerUnits[i];
-
-										EditorGUILayout.BeginHorizontal(GUILayout.Width(itemWidth), GUILayout.Height(itemHeight));
-										GUILayout.Space(30);
-										EditorGUILayout.LabelField("", GUILayout.Width(itemHeight), GUILayout.Height(itemHeight));
-										
-
-										EditorGUILayout.LabelField(layerUnit._displayName, guiStyle_ItemLabel, GUILayout.Width(150), GUILayout.Height(itemHeight));
-
-										//TODO
-										// Import를 할 것인지
-										// 대상이 무엇인지
-										// Change 할 것인지를 결정
-										GUILayout.Space(10);
-
-
-
-										
-
-										EditorGUILayout.EndHorizontal();
-									}
-								}
-								
-							}
-						}
-						break;
-
-					case MAPPING_CATEGORY.Event:
-						{
-							//Animation Event를 그린다.
-							int nEvent = animFile._animEvents.Count;
-							apRetargetAnimEvent animEvent = null;
-							for (int i = 0; i < nEvent; i++)
-							{
-								animEvent = animFile._animEvents[i];
-
-								EditorGUILayout.BeginHorizontal(GUILayout.Width(itemWidth), GUILayout.Height(itemHeight));
-								GUILayout.Space(10);
-
-								EditorGUILayout.LabelField(new GUIContent("", _imgIcon_Event), GUILayout.Width(30), GUILayout.Height(itemHeight));
-
-								EditorGUILayout.LabelField("[" + animEvent._frameIndex + "] " + animEvent._eventName, guiStyle_ItemLabel, GUILayout.Width(150), GUILayout.Height(itemHeight));
-
-								//TODO
-								// Import를 할 것인지
-								// 대상이 무엇인지
-								// Change 할 것인지를 결정
-								GUILayout.Space(10);
-								//"Import", "Import"
-								if(apEditorUtil.ToggledButton_2Side(strImport, strImport, animEvent._isImported, true, 70, itemHeight))
-								{
-									animEvent._isImported = !animEvent._isImported;
-								}
-								GUILayout.Space(5);
-
-								
-								EditorGUILayout.EndHorizontal();
-							}
-						}
-						break;
+					GUI.backgroundColor = new Color(prevColor.r * 0.8f, prevColor.g * 1.5f, prevColor.b * 1.5f, 1.0f);
 				}
-			}
+				GUILayout.Box(strTimeline, guiStyleBox, GUILayout.Width(width - 120), GUILayout.Height(25));
+				GUI.backgroundColor = prevColor;
 
-			EditorGUILayout.EndVertical();
-			GUILayout.Space(listHeight + 100);
-			EditorGUILayout.EndScrollView();
-
-
-			//오른쪽 리스트
-			//----------------------------
-			if (isDrawRightList)
-			{
-				//2. 오른쪽 스크롤 : 오브젝트, 본 리타겟
-				_scrollList_Bone = EditorGUILayout.BeginScrollView(_scrollList_Bone, false, true, GUILayout.Width(rightWidth), GUILayout.Height(listHeight));
-				EditorGUILayout.BeginVertical(GUILayout.Width(rightWidth - 30));
-
-				if (_targetMeshGroup != null)
+				if (apEditorUtil.ToggledButton(_editor.ImageSet.Get(apImageSet.PRESET.Anim_Save), " " + strExport, false, (nTimelines > 0), 115, 25))//" Export"
 				{
-					int itemWidth = rightWidth - 20;
-					int itemHeight = 20;
+					string saveFilePath = EditorUtility.SaveFilePanel("Save Animation Clip",
+																		apEditorUtil.GetLastOpenSaveFileDirectoryPath(apEditorUtil.SAVED_LAST_FILE_PATH.BoneAnimExport), "", "ani");
+					if (!string.IsNullOrEmpty(saveFilePath))
+					{
+						//TODO : Save를 하자
+						bool isResult = apRetarget.SaveAnimClip(_targetAnimClip, saveFilePath);
 
-					int linkedWidth = 140;
+						apEditorUtil.SetLastExternalOpenSaveFilePath(saveFilePath, apEditorUtil.SAVED_LAST_FILE_PATH.BoneAnimExport);//추가 21.3.1.
 
+						if (isResult)
+						{
+							_editor.Notification("[" + saveFilePath + "] is Saved", false, false);
+							//Debug.Log("[" + saveFilePath + "] is Saved");
+						}
+						else
+						{
+							//Debug.LogError("File Save Failed");
+						}
+					}
+				}
+				EditorGUILayout.EndHorizontal();
+
+				GUILayout.Space(10);
+				apEditorUtil.GUI_DelimeterBoxH(width);
+				GUILayout.Space(10);
+
+
+				//2. Load
+				// - 로드 버튼
+				// - 본 정보 리스트
+				//   - <색상> 인덱스, 이름 -> 적용 여부 + IK + 색상 로드
+				// - 전체 선택 / 해제
+				// - 전체 IK 포함 여부, 
+				// - 옵션 : 크기
+				//"  Import Animation Clip"
+				GUILayout.Box(new GUIContent("  " + _editor.GetText(TEXT.DLG_ImportAnimationClip), _editor.ImageSet.Get(apImageSet.PRESET.Anim_Load)), guiStyleBox, GUILayout.Width(width), GUILayout.Height(35));
+				GUILayout.Space(5);
+
+
+				//로드한 파일 정보
+				EditorGUILayout.BeginHorizontal(GUILayout.Width(width), GUILayout.Height(25));
+				GUILayout.Space(5);
+				//TODO : 
+				bool isFileLoaded = _retargetData.IsAnimFileLoaded;
+				string strFileName = _retargetData.AnimLoadedFilePath;
+				if (isFileLoaded)
+				{
+					GUI.backgroundColor = new Color(prevColor.r * 0.8f, prevColor.g * 2.0f, prevColor.b * 0.8f, 1.0f);
+				}
+				else
+				{
+					//strFileName = "No File is Imported";
+					strFileName = _editor.GetText(TEXT.DLG_NoFileIsImported);
+					GUI.backgroundColor = new Color(prevColor.r * 1.5f, prevColor.g * 0.8f, prevColor.b * 0.8f, 1.0f);
+				}
+
+				EditorGUILayout.TextField(strFileName, guiStyleBox_Left, GUILayout.Width(width - 120), GUILayout.Height(25));
+				GUI.backgroundColor = prevColor;
+
+				if (apEditorUtil.ToggledButton(_editor.GetText(TEXT.DLG_LoadFile), false, true, 115, 25))//"Load File"
+				{
+					string loadFilePath = EditorUtility.OpenFilePanel("Open Animation Clip",
+																		apEditorUtil.GetLastOpenSaveFileDirectoryPath(apEditorUtil.SAVED_LAST_FILE_PATH.BoneAnimExport), "ani");
+					if (!string.IsNullOrEmpty(loadFilePath))
+					{
+						bool loadResult = _retargetData.LoadAnimClip(loadFilePath);
+						apEditorUtil.SetLastExternalOpenSaveFilePath(loadFilePath, apEditorUtil.SAVED_LAST_FILE_PATH.BoneAnimExport);//추가 21.3.1
+
+						if (loadResult)
+						{
+							_editor.Notification("[" + loadFilePath + "] is Loaded", false, false);
+							//Debug.Log("[" + loadFilePath + "] is Loaded");
+
+							EndSelectLinkMode();//<<Select LinkMode를 초기화
+												//연결도 초기화
+
+							for (int i = 0; i < _targetTransforms.Count; i++)
+							{
+								_targetTransforms[i].ClearLink();
+							}
+							for (int i = 0; i < _targetBones.Count; i++)
+							{
+								_targetBones[i].ClearLink();
+							}
+							for (int i = 0; i < _targetTimelines.Count; i++)
+							{
+								_targetTimelines[i].ClearLink();
+							}
+
+							foreach (KeyValuePair<TargetUnit, List<TargetUnit>> layers in _targetTimelineLayers)
+							{
+								for (int i = 0; i < layers.Value.Count; i++)
+								{
+									layers.Value[i].ClearLink();
+								}
+							}
+
+							//EnableAll을 먼저 수행한다.
+							EnableAll(false);
+
+
+						}
+					}
+				}
+
+				EditorGUILayout.EndHorizontal();
+
+				GUILayout.Space(5);
+
+				bool isDrawRightList = true;
+				int categoryWidth = ((width - 10) / 5) - 2;
+				EditorGUILayout.BeginHorizontal(GUILayout.Width(width), GUILayout.Height(30));
+				GUILayout.Space(5);
+				//"Meshes / MeshGroups"
+				if (apEditorUtil.ToggledButton(_editor.GetText(TEXT.DLG_MeshesMeshGroups), _mappingCategory == MAPPING_CATEGORY.Transform, categoryWidth, 30))
+				{
+					_mappingCategory = MAPPING_CATEGORY.Transform;
+				}
+				//"Bones"
+				if (apEditorUtil.ToggledButton(_editor.GetText(TEXT.DLG_Bones), _mappingCategory == MAPPING_CATEGORY.Bone, categoryWidth, 30))
+				{
+					_mappingCategory = MAPPING_CATEGORY.Bone;
+				}
+				//"Control Parameters"
+				if (apEditorUtil.ToggledButton(_editor.GetText(TEXT.DLG_ControlParameters), _mappingCategory == MAPPING_CATEGORY.ControlParam, categoryWidth, 30))
+				{
+					_mappingCategory = MAPPING_CATEGORY.ControlParam;
+				}
+				//"Timelines"
+				if (apEditorUtil.ToggledButton(_editor.GetText(TEXT.DLG_Timelines), _mappingCategory == MAPPING_CATEGORY.Timeline, categoryWidth, 30))
+				{
+					_mappingCategory = MAPPING_CATEGORY.Timeline;
+				}
+				//"Events"
+				if (apEditorUtil.ToggledButton(_editor.GetText(TEXT.DLG_AnimEvents), _mappingCategory == MAPPING_CATEGORY.Event, categoryWidth, 30))
+				{
+					_mappingCategory = MAPPING_CATEGORY.Event;
+				}
+				EditorGUILayout.EndHorizontal();
+
+
+				if (_mappingCategory == MAPPING_CATEGORY.Event)
+				{
+					isDrawRightList = false;
+				}
+
+
+
+
+				GUILayout.Space(5);
+
+				//리스트를 좌우로 나눈다.
+				int listHeight = height - 450;
+				int leftWidth = ((width + 10) / 2) + 70;
+				int rightWidth = ((width + 10) / 2) - 70;
+				if (!isDrawRightList)
+				{
+					leftWidth = width + 10;
+				}
+
+				EditorGUILayout.BeginHorizontal(GUILayout.Width(width), GUILayout.Height(20));
+				GUILayout.Space(10);
+				EditorGUILayout.LabelField(_editor.GetText(TEXT.DLG_LoadedData), GUILayout.Width(150));//"Loaded Data"
+				if (isDrawRightList)
+				{
+					GUILayout.Space(leftWidth - (160));
+					EditorGUILayout.LabelField(_editor.GetText(TEXT.DLG_TargetObjects), GUILayout.Width(150));//"Target Objects"
+				}
+				EditorGUILayout.EndHorizontal();
+
+				GUILayout.Space(5);
+
+				GUIStyle guiStyle_ItemLabel = new GUIStyle(GUI.skin.label);
+				guiStyle_ItemLabel.alignment = TextAnchor.MiddleLeft;
+
+				GUIStyle guiStyle_ItemLabel_Linked = new GUIStyle(GUI.skin.label);
+				guiStyle_ItemLabel_Linked.alignment = TextAnchor.MiddleLeft;
+				if (EditorGUIUtility.isProSkin)
+				{
+					guiStyle_ItemLabel_Linked.normal.textColor = Color.cyan;
+				}
+				else
+				{
+					guiStyle_ItemLabel_Linked.normal.textColor = new Color(0.0f, 0.2f, 1.0f, 1.0f);
+				}
+
+
+				GUIStyle guiStyle_ItemTextBox = new GUIStyle(GUI.skin.textField);
+				guiStyle_ItemTextBox.alignment = TextAnchor.MiddleLeft;
+				guiStyle_ItemTextBox.normal.textColor = apEditorUtil.BoxTextColor;
+
+				GUIStyle guiStyle_Box = new GUIStyle(GUI.skin.box);
+				guiStyle_Box.margin = GUI.skin.textField.margin;
+				guiStyle_Box.alignment = TextAnchor.MiddleLeft;
+				guiStyle_Box.wordWrap = guiStyle_ItemLabel.wordWrap;
+
+				GUIStyle guiStyle_Fold = new GUIStyle(GUI.skin.label);
+
+				Rect lastRect = GUILayoutUtility.GetLastRect();
+
+				GUI.backgroundColor = new Color(0.9f, 0.9f, 0.9f);
+				GUI.Box(new Rect(0, lastRect.y + 5, leftWidth, listHeight), "");
+
+
+				//링크 선택 모드 체크하자
+				CheckSelectLinkMode();
+
+				if (isDrawRightList)
+				{
+					if (_isSelectLinkMode)
+					{
+						GUI.backgroundColor = new Color(0.7f, 1.0f, 0.8f);
+					}
+					else
+					{
+						GUI.backgroundColor = new Color(0.9f, 0.9f, 0.9f);
+					}
+
+					GUI.Box(new Rect(leftWidth, lastRect.y + 5, rightWidth, listHeight), "");
+				}
+				GUI.backgroundColor = prevColor;
+
+				EditorGUILayout.BeginHorizontal(GUILayout.Width(width + 10), GUILayout.Height(listHeight));
+
+				apRetargetAnimFile animFile = _retargetData.AnimFile;
+
+
+				//리타겟 정보와 타임라인 정보 두개를 보여줘야 한다.
+				// 1. 왼쪽 리스트 : 타임라인 정보
+				_scrollList_Timeline = EditorGUILayout.BeginScrollView(_scrollList_Timeline, false, true, GUILayout.Width(leftWidth), GUILayout.Height(listHeight));
+				EditorGUILayout.BeginVertical(GUILayout.Width(leftWidth - 30));
+
+				if (_targetMeshGroup != null && animFile != null)
+				{
 					//연결이 될 "대상"이다.
 					//카테고리에 따라 나오는게 다르다.
-					TargetUnit selectedLinkTargetUnit = null;
+					int itemWidth = leftWidth - 20;
+					int itemHeight = 20;
+
+
+
 					switch (_mappingCategory)
 					{
 						case MAPPING_CATEGORY.Transform:
 							{
 								//Transform을 그린다.
-								//처음 로드할때 리스트를 만들어두자
-								TargetUnit targetUnit = null;
-								for (int i = 0; i < _targetTransforms.Count; i++)
+								int nTransforms = animFile._transforms_Total.Count;
+								apRetargetSubUnit subUnit = null;
+								for (int i = 0; i < nTransforms; i++)
 								{
-									targetUnit = _targetTransforms[i];
+									subUnit = animFile._transforms_Total[i];
 									EditorGUILayout.BeginHorizontal(GUILayout.Width(itemWidth), GUILayout.Height(itemHeight));
 									GUILayout.Space(10);
 
-									if(targetUnit._type == TargetUnit.TYPE.MeshTransform)
+									switch (subUnit._type)
 									{
-										EditorGUILayout.LabelField(new GUIContent("", _imgIcon_Mesh), GUILayout.Width(itemHeight), GUILayout.Height(itemHeight));
-									}
-									else
-									{
-										EditorGUILayout.LabelField(new GUIContent("", _imgIcon_MeshGroup), GUILayout.Width(itemHeight), GUILayout.Height(itemHeight));
-									}
+										case apRetargetSubUnit.TYPE.MeshTransform:
+											EditorGUILayout.LabelField(new GUIContent("", _imgIcon_Mesh), GUILayout.Width(itemHeight), GUILayout.Height(itemHeight));
+											break;
 
-									if (targetUnit._isLinked)
-									{
-										EditorGUILayout.LabelField(targetUnit._name, guiStyle_ItemLabel_Linked, GUILayout.Width(150), GUILayout.Height(itemHeight));
+										case apRetargetSubUnit.TYPE.MeshGroupTransform:
+											EditorGUILayout.LabelField(new GUIContent("", _imgIcon_MeshGroup), GUILayout.Width(itemHeight), GUILayout.Height(itemHeight));
+											break;
+
+										case apRetargetSubUnit.TYPE.Bone:
+											EditorGUILayout.LabelField(new GUIContent("", _imgIcon_Bone), GUILayout.Width(itemHeight), GUILayout.Height(itemHeight));
+											break;
 									}
-									else
-									{
-										EditorGUILayout.LabelField(targetUnit._name, guiStyle_ItemLabel, GUILayout.Width(150), GUILayout.Height(itemHeight));
-									}
+									EditorGUILayout.LabelField(subUnit._name, guiStyle_ItemLabel, GUILayout.Width(150), GUILayout.Height(itemHeight));
+
 
 									//TODO
 									// Import를 할 것인지
 									// 대상이 무엇인지
 									// Change 할 것인지를 결정
-									if(_isSelectLinkMode)
+									GUILayout.Space(10);
+									//"Import", "Import"
+									if (apEditorUtil.ToggledButton_2Side(strImport, strImport, subUnit._isImported, true, 70, itemHeight))
 									{
-										if (_srcTransformSubUnit != null)
-										{
-											if ((_srcTransformSubUnit._type == apRetargetSubUnit.TYPE.MeshTransform && targetUnit._meshTransform != null)
-												|| (_srcTransformSubUnit._type == apRetargetSubUnit.TYPE.MeshGroupTransform && targetUnit._meshGroupTransform != null))
-											{
-												//타입이 맞다면 선택 가능
-												//string strBtn = "Select";
-												string strBtn = strSelect;
-												if(targetUnit._linkedSubUnit != null && targetUnit._linkedSubUnit._isImported)
-												{
-													strBtn = targetUnit._linkedSubUnit._name;
-												}
-												
-												if (GUILayout.Button(strBtn, GUILayout.Width(linkedWidth), GUILayout.Height(itemHeight)))
-												{
-													//TODO
-													selectedLinkTargetUnit = targetUnit;
-												}
-											}
-											
-										}
-										
+										subUnit._isImported = !subUnit._isImported;
 									}
-									else
-									{
-										if(targetUnit._linkedSubUnit != null && targetUnit._linkedSubUnit._isImported)
-										{
-											GUILayout.Box(targetUnit._linkedSubUnit._name, guiStyle_Box, GUILayout.Width(linkedWidth), GUILayout.Height(itemHeight));
-										}
-									}
+									GUILayout.Space(5);
 
+									if (subUnit._isImported)
+									{
+										bool isSelected = false;
+										bool isAvailable = false;
+										string strLinkName = subUnit.LinkedName;
+
+										if (_isSelectLinkMode)
+										{
+											//선택 모드일때
+											if (_srcTransformSubUnit == subUnit)
+											{
+												strLinkName = " >>> ";
+												isSelected = true;
+												isAvailable = true;
+											}
+											else
+											{
+												isSelected = false;
+												isAvailable = false;
+											}
+										}
+										else
+										{
+											//일반 모드일때
+											isSelected = subUnit._isImported && subUnit.IsLinked;
+											isAvailable = subUnit._isImported;
+										}
+
+										if (apEditorUtil.ToggledButton_2Side(strLinkName, strLinkName, isSelected, isAvailable, 150, itemHeight))
+										{
+											if (_isSelectLinkMode)
+											{
+												//연결 중이라면 종료
+												EndSelectLinkMode();
+											}
+											else
+											{
+												//연결을 시작하자
+												StartSelectLinkMode(subUnit, _mappingCategory);
+											}
+										}
+
+										if (GUILayout.Button("X", GUILayout.Width(itemHeight), GUILayout.Height(itemHeight)))
+										{
+											UnlinkTransform(subUnit);
+
+											if (_isSelectLinkMode)
+											{
+												//연결 중이라면 종료
+												EndSelectLinkMode();
+											}
+
+										}
+									}
 									EditorGUILayout.EndHorizontal();
+
 								}
+
 							}
 							break;
 
 						case MAPPING_CATEGORY.Bone:
 							{
 								//Bone을 그린다.
-								//처음 로드할때 리스트를 만들어두자.
-								TargetUnit targetUnit = null;
-								for (int i = 0; i < _targetBones.Count; i++)
+								int nBones = animFile._bones_Total.Count;
+								apRetargetSubUnit subUnit = null;
+								for (int i = 0; i < nBones; i++)
 								{
-									targetUnit = _targetBones[i];
+									subUnit = animFile._bones_Total[i];
 									EditorGUILayout.BeginHorizontal(GUILayout.Width(itemWidth), GUILayout.Height(itemHeight));
 									GUILayout.Space(10);
 
 									EditorGUILayout.LabelField(new GUIContent("", _imgIcon_Bone), GUILayout.Width(itemHeight), GUILayout.Height(itemHeight));
 
-									if (targetUnit._isLinked)
-									{
-										EditorGUILayout.LabelField(targetUnit._name, guiStyle_ItemLabel_Linked, GUILayout.Width(150), GUILayout.Height(itemHeight));
-									}
-									else
-									{
-										EditorGUILayout.LabelField(targetUnit._name, guiStyle_ItemLabel, GUILayout.Width(150), GUILayout.Height(itemHeight));
-									}
+									EditorGUILayout.LabelField(subUnit._name, guiStyle_ItemLabel, GUILayout.Width(150), GUILayout.Height(itemHeight));
 
 									//TODO
 									// Import를 할 것인지
 									// 대상이 무엇인지
 									// Change 할 것인지를 결정
-									if(_isSelectLinkMode)
+									GUILayout.Space(10);
+									//"Import", "Import"
+									if (apEditorUtil.ToggledButton_2Side(strImport, strImport, subUnit._isImported, true, 70, itemHeight))
 									{
-										if (_srcBoneSubUnit != null)
+										subUnit._isImported = !subUnit._isImported;
+									}
+									GUILayout.Space(5);
+
+									if (subUnit._isImported)
+									{
+										bool isSelected = false;
+										bool isAvailable = false;
+										string strLinkName = subUnit.LinkedName;
+
+										if (_isSelectLinkMode)
 										{
-											//string strBtn = "Select";
-											string strBtn = strSelect;
-											if (targetUnit._linkedSubUnit != null && targetUnit._linkedSubUnit._isImported)
+											//선택 모드일때
+											if (_srcBoneSubUnit == subUnit)
 											{
-												strBtn = targetUnit._linkedSubUnit._name;
+												strLinkName = " >>> ";
+												isSelected = true;
+												isAvailable = true;
+											}
+											else
+											{
+												isSelected = false;
+												isAvailable = false;
+											}
+										}
+										else
+										{
+											//일반 모드일때
+											isSelected = subUnit._isImported && subUnit.IsLinked;
+											isAvailable = subUnit._isImported;
+										}
+
+										if (apEditorUtil.ToggledButton_2Side(strLinkName, strLinkName, isSelected, isAvailable, 150, itemHeight))
+										{
+											if (_isSelectLinkMode)
+											{
+												//연결 중이라면 종료
+												EndSelectLinkMode();
+											}
+											else
+											{
+												//연결을 시작하자
+												StartSelectLinkMode(subUnit, _mappingCategory);
 											}
 
-											if (GUILayout.Button(strBtn, GUILayout.Width(linkedWidth), GUILayout.Height(itemHeight)))
-											{
-												//TODO
-												selectedLinkTargetUnit = targetUnit;
-											}
 										}
-										
-									}
-									else
-									{
-										if(targetUnit._linkedSubUnit != null && targetUnit._linkedSubUnit._isImported)
+
+										if (GUILayout.Button("X", GUILayout.Width(itemHeight), GUILayout.Height(itemHeight)))
 										{
-											GUILayout.Box(targetUnit._linkedSubUnit._name, guiStyle_Box, GUILayout.Width(linkedWidth), GUILayout.Height(itemHeight));
+											UnlinkBone(subUnit);
+
+											if (_isSelectLinkMode)
+											{
+												//연결 중이라면 종료
+												EndSelectLinkMode();
+											}
+
 										}
 									}
+
 
 									EditorGUILayout.EndHorizontal();
+
 								}
 							}
 							break;
 
 						case MAPPING_CATEGORY.ControlParam:
 							{
-								TargetUnit targetUnit = null;
-								for (int i = 0; i < _targetControlParams.Count; i++)
+								//Control Param을 그린다.
+								int nControlParams = animFile._controlParams.Count;
+								apRetargetControlParam cpUnit = null;
+								for (int i = 0; i < nControlParams; i++)
 								{
-									targetUnit = _targetControlParams[i];
-
+									cpUnit = animFile._controlParams[i];
 									EditorGUILayout.BeginHorizontal(GUILayout.Width(itemWidth), GUILayout.Height(itemHeight));
 									GUILayout.Space(10);
 
 									EditorGUILayout.LabelField(new GUIContent("", _imgIcon_ControlParam), GUILayout.Width(itemHeight), GUILayout.Height(itemHeight));
 
-									if (targetUnit._isLinked)
-									{
-										EditorGUILayout.LabelField(targetUnit._name, guiStyle_ItemLabel_Linked, GUILayout.Width(150), GUILayout.Height(itemHeight));
-									}
-									else
-									{
-										EditorGUILayout.LabelField(targetUnit._name, guiStyle_ItemLabel, GUILayout.Width(150), GUILayout.Height(itemHeight));
-									}
+									EditorGUILayout.LabelField(cpUnit._keyName, guiStyle_ItemLabel, GUILayout.Width(150), GUILayout.Height(itemHeight));
 
-									//TODO
 									// Import를 할 것인지
 									// 대상이 무엇인지
 									// Change 할 것인지를 결정
-									if(_isSelectLinkMode)
+									GUILayout.Space(10);
+									//"Import", "Import"
+									if (apEditorUtil.ToggledButton_2Side(strImport, strImport, cpUnit._isImported, true, 70, itemHeight))
 									{
-										if (_srcControlParamUnit != null 
-											&& _srcControlParamUnit._valueType == targetUnit._controlParam._valueType)
+										cpUnit._isImported = !cpUnit._isImported;
+									}
+									GUILayout.Space(5);
+
+									if (cpUnit._isImported)
+									{
+										bool isSelected = false;
+										bool isAvailable = false;
+										string strLinkName = cpUnit.LinkedName;
+
+										if (_isSelectLinkMode)
 										{
-											//string strBtn = "Select";
-											string strBtn = strSelect;
-											if (targetUnit._linkedControlParam != null && targetUnit._linkedControlParam._isImported)
+											//선택 모드일때
+											if (_srcControlParamUnit == cpUnit)
 											{
-												strBtn = targetUnit._linkedControlParam._keyName;
+												strLinkName = " >>> ";
+												isSelected = true;
+												isAvailable = true;
+											}
+											else
+											{
+												isSelected = false;
+												isAvailable = false;
+											}
+										}
+										else
+										{
+											//일반 모드일때
+											isSelected = cpUnit._isImported && cpUnit.IsLinked;
+											isAvailable = cpUnit._isImported;
+										}
+
+										if (apEditorUtil.ToggledButton_2Side(strLinkName, strLinkName, isSelected, isAvailable, 150, itemHeight))
+										{
+											if (_isSelectLinkMode)
+											{
+												//연결 중이라면 종료
+												EndSelectLinkMode();
+											}
+											else
+											{
+												//연결을 시작하자
+												StartSelectLinkMode(cpUnit, _mappingCategory);
 											}
 
-											if (GUILayout.Button(strBtn, GUILayout.Width(linkedWidth), GUILayout.Height(itemHeight)))
-											{
-												//TODO
-												selectedLinkTargetUnit = targetUnit;
-											}
 										}
-										
-									}
-									else
-									{
-										if(targetUnit._linkedControlParam != null && targetUnit._linkedControlParam._isImported)
+
+										if (GUILayout.Button("X", GUILayout.Width(itemHeight), GUILayout.Height(itemHeight)))
 										{
-											GUILayout.Box(targetUnit._linkedControlParam._keyName, guiStyle_Box, GUILayout.Width(linkedWidth), GUILayout.Height(itemHeight));
+											UnlinkControlParam(cpUnit);
+
+											if (_isSelectLinkMode)
+											{
+												//연결 중이라면 종료
+												EndSelectLinkMode();
+											}
+
 										}
 									}
+
 
 									EditorGUILayout.EndHorizontal();
+
 								}
 							}
 							break;
 
 						case MAPPING_CATEGORY.Timeline:
 							{
-								TargetUnit targetUnit = null;
-								TargetUnit targetUnitLayer = null;
-								for (int i = 0; i < _targetTimelines.Count; i++)
+								//Timeline과 TimelineLayer를 그린다.
+								int nTimeline = animFile._timelineUnits.Count;
+								apRetargetTimelineUnit timelineUnit = null;
+								for (int iT = 0; iT < nTimeline; iT++)
 								{
-									targetUnit = _targetTimelines[i];
-									
-									EditorGUILayout.BeginHorizontal(GUILayout.Width(itemWidth), GUILayout.Height(itemHeight));
-									GUILayout.Space(10);
+									timelineUnit = animFile._timelineUnits[iT];
 
-									Texture2D iconFold = targetUnit._isFold ? _imgIcon_FoldRight : _imgIcon_FoldDown;
-									if(GUILayout.Button(iconFold, guiStyle_Fold, GUILayout.Width(itemHeight), GUILayout.Height(itemHeight)))
+									//타임라인을 먼저 출력하고, 
+									EditorGUILayout.BeginHorizontal(GUILayout.Width(itemWidth), GUILayout.Height(itemHeight));
+									GUILayout.Space(5);
+
+									Texture2D iconFold = timelineUnit._isFold ? _imgIcon_FoldRight : _imgIcon_FoldDown;
+									if (GUILayout.Button(iconFold, guiStyle_Fold, GUILayout.Width(itemHeight), GUILayout.Height(itemHeight)))
 									{
-										targetUnit._isFold = !targetUnit._isFold;
+										timelineUnit._isFold = !timelineUnit._isFold;
 									}
 
-									if(targetUnit._type == TargetUnit.TYPE.Timeline)
+									string strName = "";
+									if (timelineUnit._linkType == apAnimClip.LINK_TYPE.ControlParam)
 									{
-										if (targetUnit._timeline._linkType == apAnimClip.LINK_TYPE.AnimatedModifier)
-										{
-											EditorGUILayout.LabelField(new GUIContent("", _imgIcon_Timeline_AnimModifier), GUILayout.Width(itemHeight), GUILayout.Height(itemHeight));
-										}
-										else
-										{
-											EditorGUILayout.LabelField(new GUIContent("", _imgIcon_Timeline_ControlParam), GUILayout.Width(itemHeight), GUILayout.Height(itemHeight));
-										}
+										EditorGUILayout.LabelField(new GUIContent("", _imgIcon_Timeline_ControlParam), GUILayout.Width(itemHeight), GUILayout.Height(itemHeight));
+										strName = "Control Parameters";
 									}
 									else
 									{
-										EditorGUILayout.LabelField("", GUILayout.Width(itemHeight), GUILayout.Height(itemHeight));
+										EditorGUILayout.LabelField(new GUIContent("", _imgIcon_Timeline_AnimModifier), GUILayout.Width(itemHeight), GUILayout.Height(itemHeight));
+
+										switch (timelineUnit._linkedModifierType)
+										{
+											case apModifierBase.MODIFIER_TYPE.AnimatedTF:
+												strName = "Animation (Transform)";
+												break;
+
+											case apModifierBase.MODIFIER_TYPE.AnimatedMorph:
+												strName = "Animation (Morph)";
+												break;
+
+											default:
+												break;
+										}
 									}
-								
-									EditorGUILayout.LabelField(targetUnit._name, guiStyle_ItemLabel, GUILayout.Width(150), GUILayout.Height(itemHeight));
+
+
+									//if(timelineUnit._linkedModifierType == apModifierBase.MODIFIER_TYPE.)
+									EditorGUILayout.LabelField(strName, guiStyle_ItemLabel, GUILayout.Width(150), GUILayout.Height(itemHeight));
 
 									//TODO
 									// Import를 할 것인지
 									// 대상이 무엇인지
 									// Change 할 것인지를 결정
-									if(_isSelectLinkMode)
-									{	
-										if (_srcTimelineUnit != null)
+									GUILayout.Space(10);
+									//"Import", "Import"
+									if (apEditorUtil.ToggledButton_2Side(strImport, strImport, timelineUnit._isImported, true, 70, itemHeight))
+									{
+										timelineUnit._isImported = !timelineUnit._isImported;
+									}
+									GUILayout.Space(5);
+
+									if (timelineUnit._isImported)
+									{
+										bool isSelected = false;
+										bool isAvailable = false;
+										string strLinkName = timelineUnit.LinkedName;
+
+										if (_isSelectLinkMode)
 										{
-											//1. Timeline 선택 중일때
-											//타입이 맞아야 한다.
-											if (targetUnit._type == TargetUnit.TYPE.Timeline
-													&& _srcTimelineUnit._linkType == targetUnit._timeline._linkType)
+											//선택 모드일때
+											if (_srcTimelineUnit == timelineUnit)
+											{
+												strLinkName = " >>> ";
+												isSelected = true;
+												isAvailable = true;
+											}
+											else
+											{
+												isSelected = false;
+												isAvailable = false;
+											}
+										}
+										else
+										{
+											//일반 모드일때
+											isSelected = timelineUnit._isImported && timelineUnit.IsLinked;
+											isAvailable = timelineUnit._isImported;
+										}
+
+										if (apEditorUtil.ToggledButton_2Side(strLinkName, strLinkName, isSelected, isAvailable, 150, itemHeight))
+										{
+											if (_isSelectLinkMode)
+											{
+												//연결 중이라면 종료
+												EndSelectLinkMode();
+											}
+											else
+											{
+												//연결을 시작하자
+												StartSelectLinkMode(timelineUnit, _mappingCategory);
+											}
+
+										}
+
+										if (GUILayout.Button("X", GUILayout.Width(itemHeight), GUILayout.Height(itemHeight)))
+										{
+											UnlinkTimeline(timelineUnit);
+
+											if (_isSelectLinkMode)
+											{
+												//연결 중이라면 종료
+												EndSelectLinkMode();
+											}
+
+										}
+									}
+
+									EditorGUILayout.EndHorizontal();
+
+									if (!timelineUnit._isFold)
+									{
+										//내부 레이어도 그리자
+										apRetargetTimelineLayerUnit layerUnit = null;
+										for (int i = 0; i < timelineUnit._layerUnits.Count; i++)
+										{
+											layerUnit = timelineUnit._layerUnits[i];
+
+											EditorGUILayout.BeginHorizontal(GUILayout.Width(itemWidth), GUILayout.Height(itemHeight));
+											GUILayout.Space(30);
+											EditorGUILayout.LabelField("", GUILayout.Width(itemHeight), GUILayout.Height(itemHeight));
+
+
+											EditorGUILayout.LabelField(layerUnit._displayName, guiStyle_ItemLabel, GUILayout.Width(150), GUILayout.Height(itemHeight));
+
+											//TODO
+											// Import를 할 것인지
+											// 대상이 무엇인지
+											// Change 할 것인지를 결정
+											GUILayout.Space(10);
+
+
+
+
+
+											EditorGUILayout.EndHorizontal();
+										}
+									}
+
+								}
+							}
+							break;
+
+						case MAPPING_CATEGORY.Event:
+							{
+								//Animation Event를 그린다.
+								int nEvent = animFile._animEvents.Count;
+								apRetargetAnimEvent animEvent = null;
+								for (int i = 0; i < nEvent; i++)
+								{
+									animEvent = animFile._animEvents[i];
+
+									EditorGUILayout.BeginHorizontal(GUILayout.Width(itemWidth), GUILayout.Height(itemHeight));
+									GUILayout.Space(10);
+
+									EditorGUILayout.LabelField(new GUIContent("", _imgIcon_Event), GUILayout.Width(30), GUILayout.Height(itemHeight));
+
+									EditorGUILayout.LabelField("[" + animEvent._frameIndex + "] " + animEvent._eventName, guiStyle_ItemLabel, GUILayout.Width(150), GUILayout.Height(itemHeight));
+
+									//TODO
+									// Import를 할 것인지
+									// 대상이 무엇인지
+									// Change 할 것인지를 결정
+									GUILayout.Space(10);
+									//"Import", "Import"
+									if (apEditorUtil.ToggledButton_2Side(strImport, strImport, animEvent._isImported, true, 70, itemHeight))
+									{
+										animEvent._isImported = !animEvent._isImported;
+									}
+									GUILayout.Space(5);
+
+
+									EditorGUILayout.EndHorizontal();
+								}
+							}
+							break;
+					}
+				}
+
+				EditorGUILayout.EndVertical();
+				GUILayout.Space(listHeight + 100);
+				EditorGUILayout.EndScrollView();
+
+
+				//오른쪽 리스트
+				//----------------------------
+				if (isDrawRightList)
+				{
+					//2. 오른쪽 스크롤 : 오브젝트, 본 리타겟
+					_scrollList_Bone = EditorGUILayout.BeginScrollView(_scrollList_Bone, false, true, GUILayout.Width(rightWidth), GUILayout.Height(listHeight));
+					EditorGUILayout.BeginVertical(GUILayout.Width(rightWidth - 30));
+
+					if (_targetMeshGroup != null)
+					{
+						int itemWidth = rightWidth - 20;
+						int itemHeight = 20;
+
+						int linkedWidth = 140;
+
+						//연결이 될 "대상"이다.
+						//카테고리에 따라 나오는게 다르다.
+						TargetUnit selectedLinkTargetUnit = null;
+						switch (_mappingCategory)
+						{
+							case MAPPING_CATEGORY.Transform:
+								{
+									//Transform을 그린다.
+									//처음 로드할때 리스트를 만들어두자
+									TargetUnit targetUnit = null;
+									for (int i = 0; i < _targetTransforms.Count; i++)
+									{
+										targetUnit = _targetTransforms[i];
+										EditorGUILayout.BeginHorizontal(GUILayout.Width(itemWidth), GUILayout.Height(itemHeight));
+										GUILayout.Space(10);
+
+										if (targetUnit._type == TargetUnit.TYPE.MeshTransform)
+										{
+											EditorGUILayout.LabelField(new GUIContent("", _imgIcon_Mesh), GUILayout.Width(itemHeight), GUILayout.Height(itemHeight));
+										}
+										else
+										{
+											EditorGUILayout.LabelField(new GUIContent("", _imgIcon_MeshGroup), GUILayout.Width(itemHeight), GUILayout.Height(itemHeight));
+										}
+
+										if (targetUnit._isLinked)
+										{
+											EditorGUILayout.LabelField(targetUnit._name, guiStyle_ItemLabel_Linked, GUILayout.Width(150), GUILayout.Height(itemHeight));
+										}
+										else
+										{
+											EditorGUILayout.LabelField(targetUnit._name, guiStyle_ItemLabel, GUILayout.Width(150), GUILayout.Height(itemHeight));
+										}
+
+										//TODO
+										// Import를 할 것인지
+										// 대상이 무엇인지
+										// Change 할 것인지를 결정
+										if (_isSelectLinkMode)
+										{
+											if (_srcTransformSubUnit != null)
+											{
+												if ((_srcTransformSubUnit._type == apRetargetSubUnit.TYPE.MeshTransform && targetUnit._meshTransform != null)
+													|| (_srcTransformSubUnit._type == apRetargetSubUnit.TYPE.MeshGroupTransform && targetUnit._meshGroupTransform != null))
+												{
+													//타입이 맞다면 선택 가능
+													//string strBtn = "Select";
+													string strBtn = strSelect;
+													if (targetUnit._linkedSubUnit != null && targetUnit._linkedSubUnit._isImported)
+													{
+														strBtn = targetUnit._linkedSubUnit._name;
+													}
+
+													if (GUILayout.Button(strBtn, GUILayout.Width(linkedWidth), GUILayout.Height(itemHeight)))
+													{
+														//TODO
+														selectedLinkTargetUnit = targetUnit;
+													}
+												}
+
+											}
+
+										}
+										else
+										{
+											if (targetUnit._linkedSubUnit != null && targetUnit._linkedSubUnit._isImported)
+											{
+												GUILayout.Box(targetUnit._linkedSubUnit._name, guiStyle_Box, GUILayout.Width(linkedWidth), GUILayout.Height(itemHeight));
+											}
+										}
+
+										EditorGUILayout.EndHorizontal();
+									}
+								}
+								break;
+
+							case MAPPING_CATEGORY.Bone:
+								{
+									//Bone을 그린다.
+									//처음 로드할때 리스트를 만들어두자.
+									TargetUnit targetUnit = null;
+									for (int i = 0; i < _targetBones.Count; i++)
+									{
+										targetUnit = _targetBones[i];
+										EditorGUILayout.BeginHorizontal(GUILayout.Width(itemWidth), GUILayout.Height(itemHeight));
+										GUILayout.Space(10);
+
+										EditorGUILayout.LabelField(new GUIContent("", _imgIcon_Bone), GUILayout.Width(itemHeight), GUILayout.Height(itemHeight));
+
+										if (targetUnit._isLinked)
+										{
+											EditorGUILayout.LabelField(targetUnit._name, guiStyle_ItemLabel_Linked, GUILayout.Width(150), GUILayout.Height(itemHeight));
+										}
+										else
+										{
+											EditorGUILayout.LabelField(targetUnit._name, guiStyle_ItemLabel, GUILayout.Width(150), GUILayout.Height(itemHeight));
+										}
+
+										//TODO
+										// Import를 할 것인지
+										// 대상이 무엇인지
+										// Change 할 것인지를 결정
+										if (_isSelectLinkMode)
+										{
+											if (_srcBoneSubUnit != null)
 											{
 												//string strBtn = "Select";
 												string strBtn = strSelect;
-												if (targetUnit._linkedTimelineUnit != null && targetUnit._linkedTimelineUnit._isImported)
+												if (targetUnit._linkedSubUnit != null && targetUnit._linkedSubUnit._isImported)
 												{
-													strBtn = targetUnit._linkedTimelineUnit.LinkedName;
+													strBtn = targetUnit._linkedSubUnit._name;
 												}
 
 												if (GUILayout.Button(strBtn, GUILayout.Width(linkedWidth), GUILayout.Height(itemHeight)))
@@ -1380,219 +1254,359 @@ namespace AnyPortrait
 													selectedLinkTargetUnit = targetUnit;
 												}
 											}
+
 										}
-										
-									}
-									else
-									{
-										if(targetUnit._type == TargetUnit.TYPE.Timeline
-											&& targetUnit._linkedTimelineUnit != null
-											&& targetUnit._linkedTimelineUnit._isImported)
+										else
 										{
-											GUILayout.Box(targetUnit._linkedTimelineUnit.LinkedName, guiStyle_Box, GUILayout.Width(linkedWidth), GUILayout.Height(itemHeight));
+											if (targetUnit._linkedSubUnit != null && targetUnit._linkedSubUnit._isImported)
+											{
+												GUILayout.Box(targetUnit._linkedSubUnit._name, guiStyle_Box, GUILayout.Width(linkedWidth), GUILayout.Height(itemHeight));
+											}
 										}
-										//else if(targetUnit._type == TargetUnit.TYPE.TimelineLayer
-										//	&& targetUnit._linkedTimelineLayerUnit != null)
-										//{
-										//	GUILayout.Box(targetUnit._linkedTimelineLayerUnit.LinkedControlParamName, guiStyle_Box, GUILayout.Width(120), GUILayout.Height(itemHeight));
-										//}
+
+										EditorGUILayout.EndHorizontal();
 									}
+								}
+								break;
 
-									EditorGUILayout.EndHorizontal();
-
-									if (!targetUnit._isFold)
+							case MAPPING_CATEGORY.ControlParam:
+								{
+									TargetUnit targetUnit = null;
+									for (int i = 0; i < _targetControlParams.Count; i++)
 									{
-										//레이어를 출력하자
-										List<TargetUnit> timelineLayers = _targetTimelineLayers[targetUnit];
+										targetUnit = _targetControlParams[i];
 
-										for (int iL = 0; iL < timelineLayers.Count; iL++)
+										EditorGUILayout.BeginHorizontal(GUILayout.Width(itemWidth), GUILayout.Height(itemHeight));
+										GUILayout.Space(10);
+
+										EditorGUILayout.LabelField(new GUIContent("", _imgIcon_ControlParam), GUILayout.Width(itemHeight), GUILayout.Height(itemHeight));
+
+										if (targetUnit._isLinked)
 										{
-											targetUnitLayer = timelineLayers[iL];
-											EditorGUILayout.BeginHorizontal(GUILayout.Width(itemWidth), GUILayout.Height(itemHeight));
-											GUILayout.Space(30);
-											
+											EditorGUILayout.LabelField(targetUnit._name, guiStyle_ItemLabel_Linked, GUILayout.Width(150), GUILayout.Height(itemHeight));
+										}
+										else
+										{
+											EditorGUILayout.LabelField(targetUnit._name, guiStyle_ItemLabel, GUILayout.Width(150), GUILayout.Height(itemHeight));
+										}
+
+										//TODO
+										// Import를 할 것인지
+										// 대상이 무엇인지
+										// Change 할 것인지를 결정
+										if (_isSelectLinkMode)
+										{
+											if (_srcControlParamUnit != null
+												&& _srcControlParamUnit._valueType == targetUnit._controlParam._valueType)
+											{
+												//string strBtn = "Select";
+												string strBtn = strSelect;
+												if (targetUnit._linkedControlParam != null && targetUnit._linkedControlParam._isImported)
+												{
+													strBtn = targetUnit._linkedControlParam._keyName;
+												}
+
+												if (GUILayout.Button(strBtn, GUILayout.Width(linkedWidth), GUILayout.Height(itemHeight)))
+												{
+													//TODO
+													selectedLinkTargetUnit = targetUnit;
+												}
+											}
+
+										}
+										else
+										{
+											if (targetUnit._linkedControlParam != null && targetUnit._linkedControlParam._isImported)
+											{
+												GUILayout.Box(targetUnit._linkedControlParam._keyName, guiStyle_Box, GUILayout.Width(linkedWidth), GUILayout.Height(itemHeight));
+											}
+										}
+
+										EditorGUILayout.EndHorizontal();
+									}
+								}
+								break;
+
+							case MAPPING_CATEGORY.Timeline:
+								{
+									TargetUnit targetUnit = null;
+									TargetUnit targetUnitLayer = null;
+									for (int i = 0; i < _targetTimelines.Count; i++)
+									{
+										targetUnit = _targetTimelines[i];
+
+										EditorGUILayout.BeginHorizontal(GUILayout.Width(itemWidth), GUILayout.Height(itemHeight));
+										GUILayout.Space(10);
+
+										Texture2D iconFold = targetUnit._isFold ? _imgIcon_FoldRight : _imgIcon_FoldDown;
+										if (GUILayout.Button(iconFold, guiStyle_Fold, GUILayout.Width(itemHeight), GUILayout.Height(itemHeight)))
+										{
+											targetUnit._isFold = !targetUnit._isFold;
+										}
+
+										if (targetUnit._type == TargetUnit.TYPE.Timeline)
+										{
+											if (targetUnit._timeline._linkType == apAnimClip.LINK_TYPE.AnimatedModifier)
+											{
+												EditorGUILayout.LabelField(new GUIContent("", _imgIcon_Timeline_AnimModifier), GUILayout.Width(itemHeight), GUILayout.Height(itemHeight));
+											}
+											else
+											{
+												EditorGUILayout.LabelField(new GUIContent("", _imgIcon_Timeline_ControlParam), GUILayout.Width(itemHeight), GUILayout.Height(itemHeight));
+											}
+										}
+										else
+										{
 											EditorGUILayout.LabelField("", GUILayout.Width(itemHeight), GUILayout.Height(itemHeight));
+										}
 
-											EditorGUILayout.LabelField(targetUnitLayer._name, guiStyle_ItemLabel, GUILayout.Width(150), GUILayout.Height(itemHeight));
+										EditorGUILayout.LabelField(targetUnit._name, guiStyle_ItemLabel, GUILayout.Width(150), GUILayout.Height(itemHeight));
 
-											EditorGUILayout.EndHorizontal();
+										//TODO
+										// Import를 할 것인지
+										// 대상이 무엇인지
+										// Change 할 것인지를 결정
+										if (_isSelectLinkMode)
+										{
+											if (_srcTimelineUnit != null)
+											{
+												//1. Timeline 선택 중일때
+												//타입이 맞아야 한다.
+												if (targetUnit._type == TargetUnit.TYPE.Timeline
+														&& _srcTimelineUnit._linkType == targetUnit._timeline._linkType)
+												{
+													//string strBtn = "Select";
+													string strBtn = strSelect;
+													if (targetUnit._linkedTimelineUnit != null && targetUnit._linkedTimelineUnit._isImported)
+													{
+														strBtn = targetUnit._linkedTimelineUnit.LinkedName;
+													}
+
+													if (GUILayout.Button(strBtn, GUILayout.Width(linkedWidth), GUILayout.Height(itemHeight)))
+													{
+														//TODO
+														selectedLinkTargetUnit = targetUnit;
+													}
+												}
+											}
+
+										}
+										else
+										{
+											if (targetUnit._type == TargetUnit.TYPE.Timeline
+												&& targetUnit._linkedTimelineUnit != null
+												&& targetUnit._linkedTimelineUnit._isImported)
+											{
+												GUILayout.Box(targetUnit._linkedTimelineUnit.LinkedName, guiStyle_Box, GUILayout.Width(linkedWidth), GUILayout.Height(itemHeight));
+											}
+											//else if(targetUnit._type == TargetUnit.TYPE.TimelineLayer
+											//	&& targetUnit._linkedTimelineLayerUnit != null)
+											//{
+											//	GUILayout.Box(targetUnit._linkedTimelineLayerUnit.LinkedControlParamName, guiStyle_Box, GUILayout.Width(120), GUILayout.Height(itemHeight));
+											//}
+										}
+
+										EditorGUILayout.EndHorizontal();
+
+										if (!targetUnit._isFold)
+										{
+											//레이어를 출력하자
+											List<TargetUnit> timelineLayers = _targetTimelineLayers[targetUnit];
+
+											for (int iL = 0; iL < timelineLayers.Count; iL++)
+											{
+												targetUnitLayer = timelineLayers[iL];
+												EditorGUILayout.BeginHorizontal(GUILayout.Width(itemWidth), GUILayout.Height(itemHeight));
+												GUILayout.Space(30);
+
+												EditorGUILayout.LabelField("", GUILayout.Width(itemHeight), GUILayout.Height(itemHeight));
+
+												EditorGUILayout.LabelField(targetUnitLayer._name, guiStyle_ItemLabel, GUILayout.Width(150), GUILayout.Height(itemHeight));
+
+												EditorGUILayout.EndHorizontal();
+											}
 										}
 									}
 								}
-							}
-							break;
+								break;
 
-						case MAPPING_CATEGORY.Event:
-							//Event는 그리지 않는다.
-							break;
+							case MAPPING_CATEGORY.Event:
+								//Event는 그리지 않는다.
+								break;
+						}
+
+						if (selectedLinkTargetUnit != null)
+						{
+							//Link 선택을 했다.
+							SelectTargetUnit(selectedLinkTargetUnit);
+						}
 					}
 
-					if(selectedLinkTargetUnit != null)
+					EditorGUILayout.EndVertical();
+					GUILayout.Space(listHeight + 100);
+					EditorGUILayout.EndScrollView();
+				}
+
+				EditorGUILayout.EndHorizontal();
+
+
+				GUILayout.Space(20);
+
+				// - 전체 선택 / 해제
+				// - 전체 IK 포함 여부, 
+				// - 옵션 : 크기
+				int widthBottom = ((width - 20) / 5) - 2;
+				int widthBottom2 = ((width - 20) / 4);
+
+				EditorGUILayout.BeginHorizontal(GUILayout.Width(width), GUILayout.Height(25));
+				GUILayout.Space(5);
+				string strEnableObjectsType = "";
+				switch (_mappingCategory)
+				{
+					case MAPPING_CATEGORY.Transform:
+						//strEnableObjectsType = "Mesh / MeshGroup";
+						strEnableObjectsType = _editor.GetText(TEXT.DLG_MeshesMeshGroups);
+						break;
+
+					case MAPPING_CATEGORY.Bone:
+						//strEnableObjectsType = "Bones";
+						strEnableObjectsType = _editor.GetText(TEXT.DLG_Bones);
+						break;
+
+					case MAPPING_CATEGORY.ControlParam:
+						//strEnableObjectsType = "Control Parameters";
+						strEnableObjectsType = _editor.GetText(TEXT.DLG_ControlParameters);
+						break;
+
+					case MAPPING_CATEGORY.Event:
+						//strEnableObjectsType = "Events";
+						strEnableObjectsType = _editor.GetText(TEXT.DLG_AnimEvents);
+						break;
+
+					case MAPPING_CATEGORY.Timeline:
+						//strEnableObjectsType = "Timelines";
+						strEnableObjectsType = _editor.GetText(TEXT.DLG_Timelines);
+						break;
+				}
+
+				if (_mappingCategory != MAPPING_CATEGORY.Event)
+				{
+					//"Auto Mapping " + strEnableObjectsType
+					if (apEditorUtil.ToggledButton(string.Format("{0} {1}", _editor.GetText(TEXT.DLG_AutoMapping), strEnableObjectsType), false, isFileLoaded, widthBottom2 + 30, 25))
 					{
-						//Link 선택을 했다.
-						SelectTargetUnit(selectedLinkTargetUnit);
+						AutoMapping(_mappingCategory);
+					}
+				}
+				else
+				{
+					//Event는 Auto Mapping이 없다.
+					GUILayout.Space(widthBottom2 + 30 + 4);
+				}
+
+				GUILayout.Space(13 + widthBottom2 - 30);
+				//"Enable " + strEnableObjectsType
+				if (apEditorUtil.ToggledButton(_editor.GetText(TEXT.DLG_Enable) + " " + strEnableObjectsType, false, isFileLoaded, widthBottom2, 25))
+				{
+					EnableObjects(_mappingCategory);
+				}
+				//"Disable " + strEnableObjectsType
+				if (apEditorUtil.ToggledButton(_editor.GetText(TEXT.DLG_Disable) + " " + strEnableObjectsType, false, isFileLoaded, widthBottom2, 25))
+				{
+					DisableObjects(_mappingCategory);
+				}
+				EditorGUILayout.EndHorizontal();
+
+
+				EditorGUILayout.BeginHorizontal(GUILayout.Width(width), GUILayout.Height(25));
+				GUILayout.Space(5);
+				if (apEditorUtil.ToggledButton(_editor.GetText(TEXT.DLG_AutoMappingAll), false, isFileLoaded, widthBottom, 25))//"Auto Mapping All"
+				{
+					AutoMappingAll();
+				}
+				GUILayout.Space(5);
+				if (apEditorUtil.ToggledButton(_editor.GetText(TEXT.DLG_SaveMapping), false, isFileLoaded, widthBottom, 25))//"Save Mapping"
+				{
+					SaveMapping();
+				}
+				if (apEditorUtil.ToggledButton(_editor.GetText(TEXT.DLG_LoadMapping), false, isFileLoaded, widthBottom, 25))//"Load Mapping"
+				{
+					LoadMapping();
+				}
+				GUILayout.Space(8);
+				if (apEditorUtil.ToggledButton(_editor.GetText(TEXT.DLG_EnableAll), false, isFileLoaded, widthBottom, 25))//"Enable All"
+				{
+					EnableAll();
+				}
+				if (apEditorUtil.ToggledButton(_editor.GetText(TEXT.DLG_DisableAll), false, isFileLoaded, widthBottom, 25))//"Disable All"
+				{
+					DisableAll();
+				}
+				EditorGUILayout.EndHorizontal();
+
+
+
+
+
+				GUILayout.Space(10);
+
+				//int widthValue = width - 155;
+
+				bool isClose = false;
+				bool isSelectBtnAvailable = _retargetData.IsAnimFileLoaded;//<<TODO : 파일을 연게 있다면 이게 true
+
+				EditorGUILayout.BeginHorizontal(GUILayout.Width(width), GUILayout.Height(30));
+				GUILayout.Space(5);
+
+				//"  Import Merge"
+				if (apEditorUtil.ToggledButton(_editor.ImageSet.Get(apImageSet.PRESET.Anim_Load), "  " + _editor.GetText(TEXT.DLG_ImportMerge), false, isSelectBtnAvailable, (width - 10) / 2, 30))
+				{
+					bool isResult = EditorUtility.DisplayDialog(_editor.GetText(TEXT.Retarget_ImportAnim_Title),
+																_editor.GetText(TEXT.Retarget_ImportAnimMerge_Body),
+																_editor.GetText(TEXT.Import),
+																_editor.GetText(TEXT.Cancel));
+
+					if (isResult)
+					{
+						_funcResult(true, _loadKey, _retargetData, _targetMeshGroup, _targetAnimClip, true);
+						isClose = true;
 					}
 				}
 
-				EditorGUILayout.EndVertical();
-				GUILayout.Space(listHeight + 100);
-				EditorGUILayout.EndScrollView();
-			}
-
-			EditorGUILayout.EndHorizontal();
-
-
-			GUILayout.Space(20);
-
-			// - 전체 선택 / 해제
-			// - 전체 IK 포함 여부, 
-			// - 옵션 : 크기
-			int widthBottom = ((width - 20) / 5) - 2;
-			int widthBottom2 = ((width - 20) / 4);
-
-			EditorGUILayout.BeginHorizontal(GUILayout.Width(width), GUILayout.Height(25));
-			GUILayout.Space(5);
-			string strEnableObjectsType = "";
-			switch (_mappingCategory)
-			{
-				case MAPPING_CATEGORY.Transform:
-					//strEnableObjectsType = "Mesh / MeshGroup";
-					strEnableObjectsType = _editor.GetText(TEXT.DLG_MeshesMeshGroups);
-					break;
-
-				case MAPPING_CATEGORY.Bone:
-					//strEnableObjectsType = "Bones";
-					strEnableObjectsType = _editor.GetText(TEXT.DLG_Bones);
-					break;
-
-				case MAPPING_CATEGORY.ControlParam:
-					//strEnableObjectsType = "Control Parameters";
-					strEnableObjectsType = _editor.GetText(TEXT.DLG_ControlParameters);
-					break;
-
-				case MAPPING_CATEGORY.Event:
-					//strEnableObjectsType = "Events";
-					strEnableObjectsType = _editor.GetText(TEXT.DLG_AnimEvents);
-					break;
-
-				case MAPPING_CATEGORY.Timeline:
-					//strEnableObjectsType = "Timelines";
-					strEnableObjectsType = _editor.GetText(TEXT.DLG_Timelines);
-					break;
-			}
-
-			if (_mappingCategory != MAPPING_CATEGORY.Event)
-			{
-				//"Auto Mapping " + strEnableObjectsType
-				if (apEditorUtil.ToggledButton(string.Format("{0} {1}", _editor.GetText(TEXT.DLG_AutoMapping), strEnableObjectsType), false, isFileLoaded, widthBottom2 + 30, 25))
+				//"  Import Replace"
+				if (apEditorUtil.ToggledButton(_editor.ImageSet.Get(apImageSet.PRESET.Anim_Load), "  " + _editor.GetText(TEXT.DLG_ImportReplace), false, isSelectBtnAvailable, (width - 10) / 2, 30))
 				{
-					AutoMapping(_mappingCategory);
+					bool isResult = EditorUtility.DisplayDialog(_editor.GetText(TEXT.Retarget_ImportAnim_Title),
+																_editor.GetText(TEXT.Retarget_ImportAnimReplace_Body),
+																_editor.GetText(TEXT.Import),
+																_editor.GetText(TEXT.Cancel));
+
+					if (isResult)
+					{
+						_funcResult(true, _loadKey, _retargetData, _targetMeshGroup, _targetAnimClip, false);
+						isClose = true;
+					}
 				}
-			}
-			else
-			{
-				//Event는 Auto Mapping이 없다.
-				GUILayout.Space(widthBottom2 + 30 + 4);
-			}
-			
-			GUILayout.Space(13 + widthBottom2 - 30);
-			//"Enable " + strEnableObjectsType
-			if (apEditorUtil.ToggledButton(_editor.GetText(TEXT.DLG_Enable) + " " + strEnableObjectsType, false, isFileLoaded, widthBottom2, 25))
-			{
-				EnableObjects(_mappingCategory);
-			}
-			//"Disable " + strEnableObjectsType
-			if (apEditorUtil.ToggledButton(_editor.GetText(TEXT.DLG_Disable) + " " + strEnableObjectsType, false, isFileLoaded, widthBottom2, 25))
-			{
-				DisableObjects(_mappingCategory);
-			}
-			EditorGUILayout.EndHorizontal();
+				EditorGUILayout.EndHorizontal();
+				GUILayout.Space(10);
+				apEditorUtil.GUI_DelimeterBoxH(width);
+				GUILayout.Space(10);
 
-
-			EditorGUILayout.BeginHorizontal(GUILayout.Width(width), GUILayout.Height(25));
-			GUILayout.Space(5);
-			if (apEditorUtil.ToggledButton(_editor.GetText(TEXT.DLG_AutoMappingAll), false, isFileLoaded, widthBottom, 25))//"Auto Mapping All"
-			{
-				AutoMappingAll();
-			}
-			GUILayout.Space(5);
-			if (apEditorUtil.ToggledButton(_editor.GetText(TEXT.DLG_SaveMapping), false, isFileLoaded, widthBottom, 25))//"Save Mapping"
-			{
-				SaveMapping();
-			}
-			if (apEditorUtil.ToggledButton(_editor.GetText(TEXT.DLG_LoadMapping), false, isFileLoaded, widthBottom, 25))//"Load Mapping"
-			{
-				LoadMapping();
-			}
-			GUILayout.Space(8);
-			if (apEditorUtil.ToggledButton(_editor.GetText(TEXT.DLG_EnableAll), false, isFileLoaded, widthBottom, 25))//"Enable All"
-			{
-				EnableAll();
-			}
-			if (apEditorUtil.ToggledButton(_editor.GetText(TEXT.DLG_DisableAll), false, isFileLoaded, widthBottom, 25))//"Disable All"
-			{
-				DisableAll();
-			}
-			EditorGUILayout.EndHorizontal();
-
-			
-			
-			
-
-			GUILayout.Space(10);
-
-			//int widthValue = width - 155;
-			
-			bool isClose = false;
-			bool isSelectBtnAvailable = _retargetData.IsAnimFileLoaded;//<<TODO : 파일을 연게 있다면 이게 true
-
-			EditorGUILayout.BeginHorizontal(GUILayout.Width(width), GUILayout.Height(30));
-			GUILayout.Space(5);
-
-			//"  Import Merge"
-			if (apEditorUtil.ToggledButton(_editor.ImageSet.Get(apImageSet.PRESET.Anim_Load), "  " + _editor.GetText(TEXT.DLG_ImportMerge), false, isSelectBtnAvailable, (width - 10) / 2, 30))
-			{
-				bool isResult = EditorUtility.DisplayDialog(_editor.GetText(TEXT.Retarget_ImportAnim_Title),
-															_editor.GetText(TEXT.Retarget_ImportAnimMerge_Body),
-															_editor.GetText(TEXT.Import),
-															_editor.GetText(TEXT.Cancel));
-
-				if (isResult)
+				if (apEditorUtil.ToggledButton(_editor.GetText(TEXT.DLG_Close), false, true, width, 30))//"Close"
 				{
-					_funcResult(true, _loadKey, _retargetData, _targetMeshGroup, _targetAnimClip, true);
+					//_funcResult(false, _loadKey, null, null);
+					_funcResult(false, _loadKey, null, _targetMeshGroup, _targetAnimClip, false);
 					isClose = true;
 				}
-			}
 
-			//"  Import Replace"
-			if (apEditorUtil.ToggledButton(_editor.ImageSet.Get(apImageSet.PRESET.Anim_Load), "  " + _editor.GetText(TEXT.DLG_ImportReplace), false, isSelectBtnAvailable, (width - 10) / 2, 30))
-			{
-				bool isResult = EditorUtility.DisplayDialog(_editor.GetText(TEXT.Retarget_ImportAnim_Title),
-															_editor.GetText(TEXT.Retarget_ImportAnimReplace_Body),
-															_editor.GetText(TEXT.Import),
-															_editor.GetText(TEXT.Cancel));
-
-				if (isResult)
+				if (isClose)
 				{
-					_funcResult(true, _loadKey, _retargetData, _targetMeshGroup, _targetAnimClip, false);
-					isClose = true;
+					CloseDialog();
 				}
 			}
-			EditorGUILayout.EndHorizontal();
-			GUILayout.Space(10);
-			apEditorUtil.GUI_DelimeterBoxH(width);
-			GUILayout.Space(10);
-
-			if (apEditorUtil.ToggledButton(_editor.GetText(TEXT.DLG_Close), false, true, width, 30))//"Close"
+			catch(Exception ex)
 			{
-				//_funcResult(false, _loadKey, null, null);
-				_funcResult(false, _loadKey, null, _targetMeshGroup, _targetAnimClip, false);
-				isClose = true;
-			}
-			
-			if (isClose)
-			{
-				CloseDialog();
+				//추가 21.3.17 : Try-Catch 추가. Mac에서 에러가 발생하기 쉽다.
+				Debug.LogError("AnyPortrait : Exception occurs : " + ex);
 			}
 		}
 
@@ -2175,9 +2189,11 @@ namespace AnyPortrait
 				return;
 			}
 
-			string filePath = EditorUtility.SaveFilePanel("Save Mapping", "", "", "amp");
+			string filePath = EditorUtility.SaveFilePanel("Save Mapping", apEditorUtil.GetLastOpenSaveFileDirectoryPath(apEditorUtil.SAVED_LAST_FILE_PATH.BoneAnimExport), "", "amp");
 			if(!string.IsNullOrEmpty(filePath))
 			{
+				apEditorUtil.SetLastExternalOpenSaveFilePath(filePath, apEditorUtil.SAVED_LAST_FILE_PATH.BoneAnimExport);//추가 21.3.1
+
 				_mapping.SaveMapping(filePath, _retargetData.AnimFile);
 			}
 		}
@@ -2189,9 +2205,10 @@ namespace AnyPortrait
 				return;
 			}
 
-			string filePath = EditorUtility.OpenFilePanel("Load Mapping", "", "amp");
+			string filePath = EditorUtility.OpenFilePanel("Load Mapping", apEditorUtil.GetLastOpenSaveFileDirectoryPath(apEditorUtil.SAVED_LAST_FILE_PATH.BoneAnimExport), "amp");
 			if(!string.IsNullOrEmpty(filePath))
 			{
+				apEditorUtil.SetLastExternalOpenSaveFilePath(filePath, apEditorUtil.SAVED_LAST_FILE_PATH.BoneAnimExport);//21.3.1
 				_mapping.LoadMapping(filePath, _retargetData.AnimFile, _targetTransforms, _targetBones, _targetControlParams, _targetTimelines);
 			}
 		}

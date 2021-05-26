@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -236,6 +235,19 @@ namespace AnyPortrait
 
 			_isUpdate_BoneIKMatrix = false;
 			_isUpdate_BoneIKRigging = false;
+		}
+
+		/// <summary>
+		/// 추가 21.3.20 : RenderUnit들을 삭제하여, Reset시 재활용되지 않고 무조건 새로 만들게 만든다.
+		/// 에디터에서 메시 그룹 메뉴를 선택할 때만 호출한다.
+		/// </summary>
+		public void ClearRenderUnits()
+		{
+			if(_renderUnits_All != null)
+			{
+				_renderUnits_All.Clear();
+			}
+			_rootRenderUnit = null;
 		}
 
 		public void SetDirtyToReset()
@@ -900,8 +912,33 @@ namespace AnyPortrait
 
 			_isNeedRenderUnitReset = false;
 
-			_renderUnits_All.Clear();
+			//추가 21.3.20 : Clear전에 재활용을 위한 값들을 저장하자
+			Dictionary<object, apRenderUnit> prevSubObj2RenderUnits = new Dictionary<object, apRenderUnit>();
+			int nRenderUnits = _renderUnits_All.Count;
+			apRenderUnit curRenderUnit = null;
+			for (int i = 0; i < nRenderUnits; i++)
+			{
+				curRenderUnit = _renderUnits_All[i];
+				if(curRenderUnit._meshTransform != null)
+				{
+					if(!prevSubObj2RenderUnits.ContainsKey(curRenderUnit._meshTransform))
+					{
+						prevSubObj2RenderUnits.Add(curRenderUnit._meshTransform, curRenderUnit);
+					}
+				}
+				else if(curRenderUnit._meshGroupTransform != null)
+				{
+					if(!prevSubObj2RenderUnits.ContainsKey(curRenderUnit._meshGroupTransform))
+					{
+						prevSubObj2RenderUnits.Add(curRenderUnit._meshGroupTransform, curRenderUnit);
+					}
+				}
+			}
 
+			
+			_renderUnits_All.Clear();//이게 문제 > 재활용이 가능해야한다.위에서 저장한 값을 이용하자
+
+			
 
 
 			_rootRenderUnit = null;
@@ -909,7 +946,7 @@ namespace AnyPortrait
 			//AddRenderUnitPerMeshGroup(this, null, null);
 
 			//Render Unit들을 생성해준다.
-			AddRenderUnitPerMeshGroup(this, _rootMeshGroupTransform, null);
+			AddRenderUnitPerMeshGroup(this, _rootMeshGroupTransform, null, prevSubObj2RenderUnits);
 
 			_isNeedRenderUnitSort = true;//<<Sort가 필요하다고 알려준다.
 
@@ -926,7 +963,7 @@ namespace AnyPortrait
 					//"모든 오브젝트 > 현재 메시 그룹과 모든 모디파이어"로 변경
 					linkRefreshRequest.Set_MeshGroup_AllModifiers(this);
 				}
-			}	
+			}
 			_parentPortrait.LinkAndRefreshInEditor(false, linkRefreshRequest);
 			
 
@@ -953,12 +990,42 @@ namespace AnyPortrait
 		{
 			_isNeedRenderUnitReset = false;
 
+			//이것도 문제..
+
+
+			//추가 21.3.20 : Clear전에 재활용을 위한 값들을 저장하자
+			Dictionary<object, apRenderUnit> prevSubObj2RenderUnits = new Dictionary<object, apRenderUnit>();
+			int nRenderUnits = _renderUnits_All.Count;
+			apRenderUnit curRenderUnit = null;
+			for (int i = 0; i < nRenderUnits; i++)
+			{
+				curRenderUnit = _renderUnits_All[i];
+				if(curRenderUnit._meshTransform != null)
+				{
+					if(!prevSubObj2RenderUnits.ContainsKey(curRenderUnit._meshTransform))
+					{
+						prevSubObj2RenderUnits.Add(curRenderUnit._meshTransform, curRenderUnit);
+					}
+				}
+				else if(curRenderUnit._meshGroupTransform != null)
+				{
+					if(!prevSubObj2RenderUnits.ContainsKey(curRenderUnit._meshGroupTransform))
+					{
+						prevSubObj2RenderUnits.Add(curRenderUnit._meshGroupTransform, curRenderUnit);
+					}
+				}
+			}
+
+			//이제 클리어해도 된다.
 			_renderUnits_All.Clear();
+
+
+
 
 			_rootRenderUnit = null;
 
 			//Render Unit들을 생성해준다.
-			AddRenderUnitPerMeshGroup(this, _rootMeshGroupTransform, null);
+			AddRenderUnitPerMeshGroup(this, _rootMeshGroupTransform, null, prevSubObj2RenderUnits);
 
 			_isNeedRenderUnitSort = true;//<<Sort가 필요하다고 알려준다.
 			
@@ -1063,7 +1130,10 @@ namespace AnyPortrait
 
 
 
-		public void AddRenderUnitPerMeshGroup(apMeshGroup targetMeshGroup, apTransform_MeshGroup targetMeshGroupTransform, apRenderUnit parentRenderUnit)
+		public void AddRenderUnitPerMeshGroup(	apMeshGroup targetMeshGroup, 
+												apTransform_MeshGroup targetMeshGroupTransform, 
+												apRenderUnit parentRenderUnit,
+												Dictionary<object, apRenderUnit> prevSubObj2RenderUnits)
 		{
 			//1. 그룹 노드를 만든다. -> 이게 Mesh의 Parent
 			string renderKeyword = "Node";
@@ -1074,6 +1144,7 @@ namespace AnyPortrait
 
 			apRenderUnit curRenderUnit_Group = null;
 
+			#region [미사용 코드] 대신 prevSubObj2RenderUnits를 이용하자
 			//생성하기 전에
 			//동일한 targetMeshGroup을 가진 다른 RenderUnit이 있는지 검색하자
 			//if(_parentPortrait != null)
@@ -1093,13 +1164,25 @@ namespace AnyPortrait
 			//			break;
 			//		}
 			//	}
-			//}
+			//} 
+			#endregion
 
-
+			if (prevSubObj2RenderUnits != null)
+			{
+				//재활용이 가능한 경우
+				if (targetMeshGroupTransform != null && prevSubObj2RenderUnits.ContainsKey(targetMeshGroupTransform))
+				{
+					curRenderUnit_Group = prevSubObj2RenderUnits[targetMeshGroupTransform];
+					curRenderUnit_Group.ResetReuse();
+					curRenderUnit_Group.SetGroup(targetMeshGroup, targetMeshGroupTransform, parentRenderUnit);
+					//Debug.Log("Render Unit (Group) 재활용 : " + curRenderUnit_Group.Name);
+				}
+			}
 			if (curRenderUnit_Group == null)
 			{
 				curRenderUnit_Group = new apRenderUnit(_parentPortrait, renderKeyword);
 				curRenderUnit_Group.SetGroup(targetMeshGroup, targetMeshGroupTransform, parentRenderUnit);
+				//Debug.LogError("Render Unit (Group) 새로 생성 : " + curRenderUnit_Group.Name);
 			}
 
 			if (parentRenderUnit == null)
@@ -1118,6 +1201,8 @@ namespace AnyPortrait
 				}
 
 				apRenderUnit renderUnit = null;
+
+				#region [미사용 코드] 대신 prevSubObj2RenderUnits를 이용하자
 				//생성하기 전에
 				//동일한 targetMeshGroup을 가진 다른 RenderUnit이 있는지 검색하자
 				//if (_parentPortrait != null)
@@ -1137,12 +1222,25 @@ namespace AnyPortrait
 				//			break;
 				//		}
 				//	}
-				//}
+				//} 
+				#endregion
 
+				if (prevSubObj2RenderUnits != null)
+				{
+					//재활용이 가능한 경우
+					if (meshTransform != null && prevSubObj2RenderUnits.ContainsKey(meshTransform))
+					{
+						renderUnit = prevSubObj2RenderUnits[meshTransform];
+						renderUnit.ResetReuse();
+						renderUnit.SetMesh(targetMeshGroup, meshTransform, curRenderUnit_Group);
+						//Debug.Log("Render Unit (Mesh) 재활용 : " + renderUnit.Name);
+					}
+				}
 				if (renderUnit == null)
 				{
 					renderUnit = new apRenderUnit(_parentPortrait, "Mesh");
 					renderUnit.SetMesh(targetMeshGroup, meshTransform, curRenderUnit_Group);
+					//Debug.LogError("Render Unit (Mesh) 새로 생성 : " + renderUnit.Name);
 				}
 
 				_renderUnits_All.Add(renderUnit);
@@ -1158,7 +1256,7 @@ namespace AnyPortrait
 					continue;
 				}
 
-				AddRenderUnitPerMeshGroup(meshGroupTransform._meshGroup, meshGroupTransform, curRenderUnit_Group);
+				AddRenderUnitPerMeshGroup(meshGroupTransform._meshGroup, meshGroupTransform, curRenderUnit_Group, prevSubObj2RenderUnits);
 			}
 		}
 
@@ -2707,7 +2805,7 @@ namespace AnyPortrait
 				boneSet = _boneListSets[iSet];
 				for (int iRoot = 0; iRoot < boneSet._bones_Root.Count; iRoot++)
 				{
-					boneSet._bones_Root[iRoot].ResetGUIVisibleRecursive();
+					boneSet._bones_Root[iRoot].ResetGUIVisibleRecursive(false);
 				}
 			}
 		}

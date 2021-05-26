@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -148,6 +147,8 @@ namespace AnyPortrait
 			{
 				guiStyle_Selected.normal.textColor = Color.white;
 			}
+			GUIStyle guiStyle_NotAvailable = new GUIStyle(GUIStyle.none);
+			guiStyle_NotAvailable.normal.textColor = Color.red;
 			
 
 			GUIStyle guiStyle_Center = new GUIStyle(GUIStyle.none);
@@ -164,10 +165,12 @@ namespace AnyPortrait
 			GUILayout.Button(new GUIContent(_editor.GetText(TEXT.DLG_MeshGroups), iconImageCategory), guiStyle_None, GUILayout.Height(20));//<투명 버튼//"Mesh Groups"
 
 			//GUILayout.Space(10);
+			apMeshGroup curMeshGroup = null;
 			for (int i = 0; i < _selectableMeshGroups.Count; i++)
 			{
 				GUIStyle curGUIStyle = guiStyle_None;
-				if (_selectableMeshGroups[i] == _selectedMeshGroup)
+				curMeshGroup = _selectableMeshGroups[i];
+				if (curMeshGroup == _selectedMeshGroup)
 				{
 					Rect lastRect = GUILayoutUtility.GetLastRect();
 					prevColor = GUI.backgroundColor;
@@ -186,13 +189,17 @@ namespace AnyPortrait
 
 					curGUIStyle = guiStyle_Selected;
 				}
-
+				if(_targetAnimClip != null && curMeshGroup._parentMeshGroup != null)
+				{
+					//애니메이션 클립과 연결된 메시 그룹을 선택할 때 > 자식 메시 그룹은 붉은 색으로 표시한다.
+					curGUIStyle = guiStyle_NotAvailable;
+				}
 
 				EditorGUILayout.BeginHorizontal(GUILayout.Width(width - 50));
 				GUILayout.Space(15);
-				if (GUILayout.Button(new GUIContent(" " + _selectableMeshGroups[i]._name, iconMeshGroup), curGUIStyle, GUILayout.Width(width - 35), GUILayout.Height(20)))
+				if (GUILayout.Button(new GUIContent(" " + curMeshGroup._name, iconMeshGroup), curGUIStyle, GUILayout.Width(width - 35), GUILayout.Height(20)))
 				{
-					_selectedMeshGroup = _selectableMeshGroups[i];
+					_selectedMeshGroup = curMeshGroup;
 				}
 
 				EditorGUILayout.EndHorizontal();

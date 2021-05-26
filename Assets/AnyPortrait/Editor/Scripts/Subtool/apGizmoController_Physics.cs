@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -609,21 +608,22 @@ namespace AnyPortrait
 		//---------------------------------------------------------------------------------------
 		public void AddHotKeys__Modifier_Physics(bool isGizmoRenderable, apGizmos.CONTROL_TYPE controlType, bool isFFDMode)
 		{
-			Editor.AddHotKeyEvent(OnHotKeyEvent__Modifier_Physics__Ctrl_A, apHotKey.LabelText.SelectAllVertices, KeyCode.A, false, false, true, null);
+			//Editor.AddHotKeyEvent(OnHotKeyEvent__Modifier_Physics__Ctrl_A, apHotKey.LabelText.SelectAllVertices, KeyCode.A, false, false, true, null);
+			Editor.AddHotKeyEvent(OnHotKeyEvent__Modifier_Physics__Ctrl_A, apHotKeyMapping.KEY_TYPE.SelectAllVertices_EditMod, null);//변경
 		}
 
 		// 단축키 : 버텍스 전체 선택
-		private void OnHotKeyEvent__Modifier_Physics__Ctrl_A(object paramObject)
+		private apHotKey.HotKeyResult OnHotKeyEvent__Modifier_Physics__Ctrl_A(object paramObject)
 		{
 			if (Editor.Select.MeshGroup == null || Editor.Select.Modifier == null)
 			{
-				return;
+				return null;
 			}
 
 
 			if (Editor.Select.ModRenderVerts_All == null)
 			{
-				return;
+				return null;
 			}
 
 
@@ -691,6 +691,7 @@ namespace AnyPortrait
 				Editor.SetRepaint();//<<추가
 			}
 			//-----------------------------------
+			return apHotKey.HotKeyResult.MakeResult();
 		}
 
 		//---------------------------------------------------------------------------------------

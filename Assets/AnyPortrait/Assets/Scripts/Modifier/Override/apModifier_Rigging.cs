@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -34,10 +33,10 @@ namespace AnyPortrait
 	{
 		// Members
 		//----------------------------------------------
-		[NonSerialized]
-		private MODIFIER_TYPE[] _generalExEditableModType = new MODIFIER_TYPE[] {   MODIFIER_TYPE.Morph,
-																				MODIFIER_TYPE.Rigging,
-																				MODIFIER_TYPE.TF };
+		//[NonSerialized]
+		//private MODIFIER_TYPE[] _generalExEditableModType = new MODIFIER_TYPE[] {   MODIFIER_TYPE.Morph,
+		//																		MODIFIER_TYPE.Rigging,
+		//																		MODIFIER_TYPE.TF };
 
 		// Init
 		//----------------------------------------------
@@ -147,14 +146,14 @@ namespace AnyPortrait
 		public override bool IsPreUpdate { get { return false; } }
 
 
-		/// <summary>
-		/// ExEdit 중 GeneralEdit 모드에서 "동시에 작업 가능하도록 허용 된 Modifier Type들"을 리턴한다.
-		/// </summary>
-		/// <returns></returns>
-		public override MODIFIER_TYPE[] GetGeneralExEditableModTypes()
-		{
-			return _generalExEditableModType;
-		}
+		///// <summary>
+		///// ExEdit 중 GeneralEdit 모드에서 "동시에 작업 가능하도록 허용 된 Modifier Type들"을 리턴한다.
+		///// </summary>
+		///// <returns></returns>
+		//public override MODIFIER_TYPE[] GetGeneralExEditableModTypes()
+		//{
+		//	return _generalExEditableModType;
+		//}
 	}
 
 }

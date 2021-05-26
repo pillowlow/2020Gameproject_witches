@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -767,16 +766,20 @@ namespace AnyPortrait
 			float y2_Min = Mathf.Min(edge2A.y, edge2B.y);
 			float y2_Max = Mathf.Max(edge2A.y, edge2B.y);
 
+
+
+			//이전 방식
+
 			//수직/수평에 따라 다르게 처리
 			//if (Mathf.Abs(dX_1) < zeroBias * 0.01f)
-			if(Mathf.Approximately(dX_1, 0.0f))
+			if (Mathf.Approximately(dX_1, 0.0f))
 			{
 				//Line 1이 수직일 때
 
 				float X1 = (edge1A.x + edge1B.x) * 0.5f;
-				
+
 				//if (Mathf.Abs(dX_2) < zeroBias * 0.01f)
-				if(Mathf.Approximately(dX_2, 0.0f))
+				if (Mathf.Approximately(dX_2, 0.0f))
 				{
 					//Line 2도 같이 수직일 때
 					//수직 + 수직
@@ -793,18 +796,27 @@ namespace AnyPortrait
 						{
 							_crossPoint._isIntersetion = true;
 							_crossPoint._isSameLine = true;//<<이건 교차점 대신 아예 겹친다.
-							_crossPoint._pos = edge1A;
+
+							//이전
+							//_crossPoint._pos = edge1A;
+
+							//변경 21.3.14 : Y는 겹치는 중점을 설정
+							float commonY_Min = Mathf.Max(y1_Min, y2_Min);
+							float commonY_Max = Mathf.Min(y1_Max, y2_Max);
+							float commonY_Avg = commonY_Min * 0.5f + commonY_Max * 0.5f;
+
+							_crossPoint._pos = new Vector2(X1 * 0.5f + X2 * 0.5f, commonY_Avg);
 							return;
 						}
 					}
 				}
-				else if(Mathf.Approximately(dY_2, 0.0f))
+				else if (Mathf.Approximately(dY_2, 0.0f))
 				{
 					//Line2가 수평일 때
 					float Y2 = (edge2A.y + edge2B.y) * 0.5f;
 
 					//서로가 범위 안에 들어가야 한다.
-					if(y1_Min <= Y2 && Y2 <= y1_Max
+					if (y1_Min <= Y2 && Y2 <= y1_Max
 						&& x2_Min <= X1 && X1 <= x2_Max)
 					{
 						//[교차] : 수직1 + 수평2
@@ -835,7 +847,7 @@ namespace AnyPortrait
 					}
 				}
 			}
-			else if(Mathf.Approximately(dY_1, 0.0f))
+			else if (Mathf.Approximately(dY_1, 0.0f))
 			{
 				//Line 1이 수평일 때
 				float Y1 = (edge1A.y + edge1B.y) * 0.5f;
@@ -846,7 +858,7 @@ namespace AnyPortrait
 					//교차점 비교
 					float X2 = (edge2A.x + edge2B.x) * 0.5f;
 
-					if(y2_Min <= Y1 && Y1 <= y2_Max
+					if (y2_Min <= Y1 && Y1 <= y2_Max
 						&& x1_Min <= X2 && X2 <= x1_Max)
 					{
 						//[교차] : 수평1 + 수직2
@@ -862,7 +874,7 @@ namespace AnyPortrait
 					//Y가 같고 X 범위가 겹쳐야 함 Same
 					float Y2 = (edge2A.y + edge2B.y) * 0.5f;
 
-					if(Mathf.Approximately(Y1, Y2))
+					if (Mathf.Approximately(Y1, Y2))
 					{
 						if (IsAreaIntersection(x1_Min, x1_Max, x2_Min, x2_Max))
 						{
@@ -887,7 +899,7 @@ namespace AnyPortrait
 
 					float XResult = (b1 - b2) / a2;
 
-					if(x1_Min <= XResult && XResult <= x1_Max
+					if (x1_Min <= XResult && XResult <= x1_Max
 						&& x2_Min <= XResult && XResult <= x2_Max)
 					{
 						//Line 1, 2의 X 범위 안에 들어간다.
@@ -904,7 +916,7 @@ namespace AnyPortrait
 				b1 = edge1A.y - edge1A.x * a1;
 
 				//if (Mathf.Abs(dX_2) < zeroBias * 0.01f)
-				if(Mathf.Approximately(dX_2, 0.0f))
+				if (Mathf.Approximately(dX_2, 0.0f))
 				{
 					//Line 2가 수직일 때
 					//Line2를 기준으로 x, y범위 비교후 Y 체크 [교차]
@@ -933,7 +945,7 @@ namespace AnyPortrait
 
 					float XResult = (b2 - b1) / a1;
 
-					if(x1_Min <= XResult && XResult <= x1_Max
+					if (x1_Min <= XResult && XResult <= x1_Max
 						&& x2_Min <= XResult && XResult <= x2_Max)
 					{
 						//Line 1, 2의 X 범위 안에 들어간다.
@@ -960,7 +972,7 @@ namespace AnyPortrait
 						float Yparam2 = (a2 * b1) - (a1 * b2);
 
 						//if (Mathf.Abs(Yparam1) < zeroBias * 0.01f)
-						if(Mathf.Approximately(Yparam1, 0.0f))
+						if (Mathf.Approximately(Yparam1, 0.0f))
 						{
 							//기울기가 같을때
 							//b도 같아야한다.
@@ -992,9 +1004,7 @@ namespace AnyPortrait
 					}
 				}
 			}
-
-
-			//return _crossPoint;
+			
 		}
 
 		private bool IsAreaIntersection(float area1Min, float area1Max, float area2Min, float area2Max)

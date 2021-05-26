@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -99,8 +98,28 @@ namespace AnyPortrait
 		private int _softSelectionCurveRatio = 0;//-100 (오목) ~ 0 (선형) - 100 (볼록)
 		public int SoftSelectionRadius { get { return _softSelectionRadius; } }
 		public int SoftSelectionCurveRatio { get { return _softSelectionCurveRatio; } }
-		public void IncreaseSoftSelectionRadius(object paramObject) { if (_isSoftSelectionMode) { _softSelectionRadius = Mathf.Clamp(_softSelectionRadius + 10, 0, MAX_SOFT_SELECTION_RADIUS); RefreshSoftSelectionValue(_softSelectionRadius, _softSelectionCurveRatio); } }
-		public void DecreaseSoftSelectionRadius(object paramObject) { if (_isSoftSelectionMode) { _softSelectionRadius = Mathf.Clamp(_softSelectionRadius - 10, 0, MAX_SOFT_SELECTION_RADIUS); RefreshSoftSelectionValue(_softSelectionRadius, _softSelectionCurveRatio); } }
+		public apHotKey.HotKeyResult IncreaseSoftSelectionRadius(object paramObject)
+		{
+			if (_isSoftSelectionMode)
+			{
+				_softSelectionRadius = Mathf.Clamp(_softSelectionRadius + 10, 0, MAX_SOFT_SELECTION_RADIUS);
+				RefreshSoftSelectionValue(_softSelectionRadius, _softSelectionCurveRatio);
+				return apHotKey.HotKeyResult.MakeResult();
+			}
+			return null;
+		}
+
+
+		public apHotKey.HotKeyResult DecreaseSoftSelectionRadius(object paramObject)
+		{
+			if (_isSoftSelectionMode)
+			{
+				_softSelectionRadius = Mathf.Clamp(_softSelectionRadius - 10, 0, MAX_SOFT_SELECTION_RADIUS);
+				RefreshSoftSelectionValue(_softSelectionRadius, _softSelectionCurveRatio);
+				return apHotKey.HotKeyResult.MakeResult();
+			}
+			return null;
+		}
 
 		//public const int MAX_BRUSH_RADIUS = 500;//이전
 		public const int MAX_BRUSH_RADIUS = 1500;//변경 20.9.13 : 최대 크기가 커졌다.
@@ -1379,17 +1398,17 @@ namespace AnyPortrait
 						if (_isFFDMode && _isFFDModeAvailable)
 						{	
 							//FFD 이벤트
-							Editor.HotKey.AddReservedHotKey(OnKeyboardEvent_FFD_Move, apHotKey.RESERVED_KEY.Arrow, null);
-							Editor.HotKey.AddReservedHotKey(OnKeyboardEvent_FFD_Move, apHotKey.RESERVED_KEY.Arrow_Shift, null);
-							Editor.HotKey.AddReservedHotKey(OnKeyboardEvent_FFD_EnterOrEscape, apHotKey.RESERVED_KEY.EnterOrEscape, null);
+							Editor.AddReservedHotKeyEvent(OnKeyboardEvent_FFD_Move, apHotKey.RESERVED_KEY.Arrow, null);
+							Editor.AddReservedHotKeyEvent(OnKeyboardEvent_FFD_Move, apHotKey.RESERVED_KEY.Arrow_Shift, null);
+							Editor.AddReservedHotKeyEvent(OnKeyboardEvent_FFD_EnterOrEscape, apHotKey.RESERVED_KEY.EnterOrEscape, null);
 						}
 						else
 						{
 							if(_func_KeyboardMove != null)
 							{
 								//일반 이벤트
-								Editor.HotKey.AddReservedHotKey(OnKeyboardEvent_Normal_Move, apHotKey.RESERVED_KEY.Arrow, null);
-								Editor.HotKey.AddReservedHotKey(OnKeyboardEvent_Normal_Move, apHotKey.RESERVED_KEY.Arrow_Shift, null);
+								Editor.AddReservedHotKeyEvent(OnKeyboardEvent_Normal_Move, apHotKey.RESERVED_KEY.Arrow, null);
+								Editor.AddReservedHotKeyEvent(OnKeyboardEvent_Normal_Move, apHotKey.RESERVED_KEY.Arrow_Shift, null);
 							}
 							
 						}
@@ -1399,17 +1418,17 @@ namespace AnyPortrait
 						if (_isFFDMode && _isFFDModeAvailable)
 						{	
 							//FFD 이벤트
-							Editor.HotKey.AddReservedHotKey(OnKeyboardEvent_FFD_Rotate, apHotKey.RESERVED_KEY.Arrow, null);
-							Editor.HotKey.AddReservedHotKey(OnKeyboardEvent_FFD_Rotate, apHotKey.RESERVED_KEY.Arrow_Shift, null);
-							Editor.HotKey.AddReservedHotKey(OnKeyboardEvent_FFD_EnterOrEscape, apHotKey.RESERVED_KEY.EnterOrEscape, null);
+							Editor.AddReservedHotKeyEvent(OnKeyboardEvent_FFD_Rotate, apHotKey.RESERVED_KEY.Arrow, null);
+							Editor.AddReservedHotKeyEvent(OnKeyboardEvent_FFD_Rotate, apHotKey.RESERVED_KEY.Arrow_Shift, null);
+							Editor.AddReservedHotKeyEvent(OnKeyboardEvent_FFD_EnterOrEscape, apHotKey.RESERVED_KEY.EnterOrEscape, null);
 						}
 						else
 						{
 							if(_func_KeyboardRotate != null)
 							{
 								//일반 이벤트
-								Editor.HotKey.AddReservedHotKey(OnKeyboardEvent_Normal_Rotate, apHotKey.RESERVED_KEY.Arrow, null);
-								Editor.HotKey.AddReservedHotKey(OnKeyboardEvent_Normal_Rotate, apHotKey.RESERVED_KEY.Arrow_Shift, null);
+								Editor.AddReservedHotKeyEvent(OnKeyboardEvent_Normal_Rotate, apHotKey.RESERVED_KEY.Arrow, null);
+								Editor.AddReservedHotKeyEvent(OnKeyboardEvent_Normal_Rotate, apHotKey.RESERVED_KEY.Arrow_Shift, null);
 							}
 						}
 						break;
@@ -1418,17 +1437,17 @@ namespace AnyPortrait
 						if (_isFFDMode && _isFFDModeAvailable)
 						{	
 							//FFD 이벤트
-							Editor.HotKey.AddReservedHotKey(OnKeyboardEvent_FFD_Scale, apHotKey.RESERVED_KEY.Arrow, null);
-							Editor.HotKey.AddReservedHotKey(OnKeyboardEvent_FFD_Scale, apHotKey.RESERVED_KEY.Arrow_Shift, null);
-							Editor.HotKey.AddReservedHotKey(OnKeyboardEvent_FFD_EnterOrEscape, apHotKey.RESERVED_KEY.EnterOrEscape, null);
+							Editor.AddReservedHotKeyEvent(OnKeyboardEvent_FFD_Scale, apHotKey.RESERVED_KEY.Arrow, null);
+							Editor.AddReservedHotKeyEvent(OnKeyboardEvent_FFD_Scale, apHotKey.RESERVED_KEY.Arrow_Shift, null);
+							Editor.AddReservedHotKeyEvent(OnKeyboardEvent_FFD_EnterOrEscape, apHotKey.RESERVED_KEY.EnterOrEscape, null);
 						}
 						else
 						{
 							if(_func_KeyboardScale != null)
 							{
 								//일반 이벤트
-								Editor.HotKey.AddReservedHotKey(OnKeyboardEvent_Normal_Scale, apHotKey.RESERVED_KEY.Arrow, null);
-								Editor.HotKey.AddReservedHotKey(OnKeyboardEvent_Normal_Scale, apHotKey.RESERVED_KEY.Arrow_Shift, null);
+								Editor.AddReservedHotKeyEvent(OnKeyboardEvent_Normal_Scale, apHotKey.RESERVED_KEY.Arrow, null);
+								Editor.AddReservedHotKeyEvent(OnKeyboardEvent_Normal_Scale, apHotKey.RESERVED_KEY.Arrow_Shift, null);
 							}
 						}
 						break;
@@ -4311,7 +4330,7 @@ namespace AnyPortrait
 		// 키보드 이벤트
 		//-------------------------------------------------------------------------------------------
 		//일반 이벤트 (등록된 이벤트를 다시 호출해야한다.)
-		private void OnKeyboardEvent_Normal_Move(KeyCode keyCode, bool isShift, bool isAlt, bool isCtrl, object paramObject)
+		private apHotKey.HotKeyResult OnKeyboardEvent_Normal_Move(KeyCode keyCode, bool isShift, bool isAlt, bool isCtrl, object paramObject)
 		{
 			if(_curBtnStatus_Left == apMouse.MouseBtnStatus.Down 
 				|| _curBtnStatus_Left == apMouse.MouseBtnStatus.Pressed
@@ -4319,7 +4338,7 @@ namespace AnyPortrait
 				|| _curBtnStatus_Right == apMouse.MouseBtnStatus.Pressed)
 			{
 				//마우스 입력이 있는 중이라면 일단 무효
-				return;
+				return null;
 			}
 
 			//Debug.Log("OnKeyboardEvent_Normal_Move : " + keyCode + " / isShift : " + (isShift));
@@ -4350,13 +4369,13 @@ namespace AnyPortrait
 				
 
 				_prevKeyboardContEventStatus = _keyboardContEventStatus;
-			}
 
-			
-			
+				return apHotKey.HotKeyResult.MakeResult();
+			}
+			return null;
 		}
 
-		private void OnKeyboardEvent_Normal_Rotate(KeyCode keyCode, bool isShift, bool isAlt, bool isCtrl, object paramObject)
+		private apHotKey.HotKeyResult OnKeyboardEvent_Normal_Rotate(KeyCode keyCode, bool isShift, bool isAlt, bool isCtrl, object paramObject)
 		{
 			if(_curBtnStatus_Left == apMouse.MouseBtnStatus.Down 
 				|| _curBtnStatus_Left == apMouse.MouseBtnStatus.Pressed
@@ -4364,7 +4383,7 @@ namespace AnyPortrait
 				|| _curBtnStatus_Right == apMouse.MouseBtnStatus.Pressed)
 			{
 				//마우스 입력이 있는 중이라면 일단 무효
-				return;
+				return null;
 			}
 
 			//Debug.Log("OnKeyboardEvent_Normal_Rotate : " + keyCode + " / isShift : " + (isShift));
@@ -4394,12 +4413,16 @@ namespace AnyPortrait
 				
 
 				_prevKeyboardContEventStatus = _keyboardContEventStatus;
+
+				return apHotKey.HotKeyResult.MakeResult();
 			}
+
+			return null;
 
 			
 		}
 
-		private void OnKeyboardEvent_Normal_Scale(KeyCode keyCode, bool isShift, bool isAlt, bool isCtrl, object paramObject)
+		private apHotKey.HotKeyResult OnKeyboardEvent_Normal_Scale(KeyCode keyCode, bool isShift, bool isAlt, bool isCtrl, object paramObject)
 		{
 			if(_curBtnStatus_Left == apMouse.MouseBtnStatus.Down 
 				|| _curBtnStatus_Left == apMouse.MouseBtnStatus.Pressed
@@ -4407,7 +4430,7 @@ namespace AnyPortrait
 				|| _curBtnStatus_Right == apMouse.MouseBtnStatus.Pressed)
 			{
 				//마우스 입력이 있는 중이라면 일단 무효
-				return;
+				return null;
 			}
 
 			//Debug.Log("OnKeyboardEvent_Normal_Scale : " + keyCode + " / isShift : " + (isShift));
@@ -4439,13 +4462,15 @@ namespace AnyPortrait
 
 
 				_prevKeyboardContEventStatus = _keyboardContEventStatus;
+
+				return apHotKey.HotKeyResult.MakeResult();
 			}
 
-			
+			return null;
 		}
 
 
-		private void OnKeyboardEvent_FFD_Move(KeyCode keyCode, bool isShift, bool isAlt, bool isCtrl, object paramObject)
+		private apHotKey.HotKeyResult OnKeyboardEvent_FFD_Move(KeyCode keyCode, bool isShift, bool isAlt, bool isCtrl, object paramObject)
 		{
 			if(_curBtnStatus_Left == apMouse.MouseBtnStatus.Down 
 				|| _curBtnStatus_Left == apMouse.MouseBtnStatus.Pressed
@@ -4453,13 +4478,13 @@ namespace AnyPortrait
 				|| _curBtnStatus_Right == apMouse.MouseBtnStatus.Pressed)
 			{
 				//마우스 입력이 있는 중이라면 일단 무효
-				return;
+				return null;
 			}
 
 			if (!_isFFDMode
 				|| GetNumSelectedTransformControlPoint() == 0)
 			{
-				return;
+				return null;
 			}
 
 			_keyboardContEventStatus = KEYBOARD_CONT_EVENT.Move_FFD;
@@ -4488,9 +4513,11 @@ namespace AnyPortrait
 			RefreshTransformObjects();
 
 			_prevKeyboardContEventStatus = _keyboardContEventStatus;
+
+			return apHotKey.HotKeyResult.MakeResult();
 		}
 
-		private void OnKeyboardEvent_FFD_Rotate(KeyCode keyCode, bool isShift, bool isAlt, bool isCtrl, object paramObject)
+		private apHotKey.HotKeyResult OnKeyboardEvent_FFD_Rotate(KeyCode keyCode, bool isShift, bool isAlt, bool isCtrl, object paramObject)
 		{
 			if(_curBtnStatus_Left == apMouse.MouseBtnStatus.Down 
 				|| _curBtnStatus_Left == apMouse.MouseBtnStatus.Pressed
@@ -4498,13 +4525,13 @@ namespace AnyPortrait
 				|| _curBtnStatus_Right == apMouse.MouseBtnStatus.Pressed)
 			{
 				//마우스 입력이 있는 중이라면 일단 무효
-				return;
+				return null;
 			}
 
 			if (!_isFFDMode
 				|| GetNumSelectedTransformControlPoint() == 0)
 			{
-				return;
+				return null;
 			}
 
 			_keyboardContEventStatus = KEYBOARD_CONT_EVENT.Rotate_FFD;
@@ -4541,9 +4568,11 @@ namespace AnyPortrait
 			RefreshTransformObjects();
 
 			_prevKeyboardContEventStatus = _keyboardContEventStatus;
+
+			return apHotKey.HotKeyResult.MakeResult();
 		}
 
-		private void OnKeyboardEvent_FFD_Scale(KeyCode keyCode, bool isShift, bool isAlt, bool isCtrl, object paramObject)
+		private apHotKey.HotKeyResult OnKeyboardEvent_FFD_Scale(KeyCode keyCode, bool isShift, bool isAlt, bool isCtrl, object paramObject)
 		{
 			if(_curBtnStatus_Left == apMouse.MouseBtnStatus.Down 
 				|| _curBtnStatus_Left == apMouse.MouseBtnStatus.Pressed
@@ -4551,13 +4580,13 @@ namespace AnyPortrait
 				|| _curBtnStatus_Right == apMouse.MouseBtnStatus.Pressed)
 			{
 				//마우스 입력이 있는 중이라면 일단 무효
-				return;
+				return null;
 			}
 
 			if (!_isFFDMode
 				|| GetNumSelectedTransformControlPoint() == 0)
 			{
-				return;
+				return null;
 			}
 
 			_keyboardContEventStatus = KEYBOARD_CONT_EVENT.Scale_FFD;
@@ -4594,9 +4623,11 @@ namespace AnyPortrait
 			RefreshTransformObjects();
 
 			_prevKeyboardContEventStatus = _keyboardContEventStatus;
+
+			return apHotKey.HotKeyResult.MakeResult();
 		}
 
-		private void OnKeyboardEvent_FFD_EnterOrEscape(KeyCode keyCode, bool isShift, bool isAlt, bool isCtrl, object paramObject)
+		private apHotKey.HotKeyResult OnKeyboardEvent_FFD_EnterOrEscape(KeyCode keyCode, bool isShift, bool isAlt, bool isCtrl, object paramObject)
 		{
 			if(_curBtnStatus_Left == apMouse.MouseBtnStatus.Down 
 				|| _curBtnStatus_Left == apMouse.MouseBtnStatus.Pressed
@@ -4604,12 +4635,12 @@ namespace AnyPortrait
 				|| _curBtnStatus_Right == apMouse.MouseBtnStatus.Pressed)
 			{
 				//마우스 입력이 있는 중이라면 일단 무효
-				return;
+				return null;
 			}
 
 			if (!_isFFDMode)
 			{
-				return;
+				return null;
 			}
 			//Debug.Log("OnKeyboardEvent_FFD_EnterOrEscape : " + keyCode + " / isShift : " + (isShift));
 			if(keyCode == KeyCode.Return || keyCode == KeyCode.KeypadEnter)
@@ -4624,6 +4655,8 @@ namespace AnyPortrait
 			//Enter / Esc는 키보드 입력에 연속성이 없다.
 			_keyboardContEventStatus = KEYBOARD_CONT_EVENT.None;
 			_prevKeyboardContEventStatus = KEYBOARD_CONT_EVENT.None;
+
+			return apHotKey.HotKeyResult.MakeResult();
 		}
 
 

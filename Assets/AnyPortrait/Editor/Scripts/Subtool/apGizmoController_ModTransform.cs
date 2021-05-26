@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -254,6 +253,9 @@ namespace AnyPortrait
 				apBone selectedBone = null;
 				apMeshGroup meshGroup = Editor.Select.MeshGroup;
 
+				//추가 21.2.17 : 편집 중이 아닌 오브젝트를 선택하는 건 "편집 모드가 아니거나" / "선택 제한 옵션이 꺼진 경우"이다.
+				bool isNotEditObjSelectable = Editor.Select.ExEditingMode == apSelection.EX_EDIT.None || !Editor._exModObjOption_NotSelectable;
+
 
 				//Bone 먼저 선택하자
 				if (isBoneTarget)
@@ -281,7 +283,7 @@ namespace AnyPortrait
 						boneSet = meshGroup._boneListSets[iSet];
 						for (int iRoot = 0; iRoot < boneSet._bones_Root.Count; iRoot++)
 						{
-							bone = CheckBoneClick(boneSet._bones_Root[iRoot], mousePosW, mousePosGL, Editor._boneGUIRenderMode, -1, Editor.Select.IsBoneIKRenderable);
+							bone = CheckBoneClickRecursive(boneSet._bones_Root[iRoot], mousePosW, mousePosGL, Editor._boneGUIRenderMode, -1, Editor.Select.IsBoneIKRenderable, isNotEditObjSelectable);
 							if (bone != null)
 							{
 								resultBone = bone;
@@ -337,8 +339,20 @@ namespace AnyPortrait
 						{
 							renderUnit = renderUnits[iUnit];
 
+							
+
+
 							if (renderUnit._meshTransform != null && renderUnit._meshTransform._mesh != null)
 							{
+								//추가 21.2.17
+								if(!isNotEditObjSelectable &&
+									(renderUnit._exCalculateMode == apRenderUnit.EX_CALCULATE.Disabled_NotEdit || renderUnit._exCalculateMode == apRenderUnit.EX_CALCULATE.Disabled_ExRun))
+								{
+									//모디파이어에 등록되지 않은 메시는 선택 불가이다.
+									//Debug.LogError("[" + renderUnit.Name + "] 옵션이 꺼져서 선택 불가");
+									continue;
+								}
+
 								if (renderUnit._meshTransform._isVisible_Default && renderUnit._meshColor2X.a > 0.1f)//Alpha 옵션 추가
 								{
 									//Debug.LogError("TODO : Mouse Picking 바꿀것");
@@ -347,8 +361,7 @@ namespace AnyPortrait
 									//	renderUnit._meshTransform._mesh,
 									//	renderUnit.WorldMatrixOfNode.inverse
 									//	);
-									bool isPick = apEditorUtil.IsMouseInRenderUnitMesh(
-										mousePosGL, renderUnit);
+									bool isPick = apEditorUtil.IsMouseInRenderUnitMesh(mousePosGL, renderUnit);
 
 									if (isPick)
 									{

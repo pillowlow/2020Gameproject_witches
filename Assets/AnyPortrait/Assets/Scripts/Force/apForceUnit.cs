@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -228,20 +227,14 @@ namespace AnyPortrait
 				{
 					_tWave_Direction.x += tDelta;
 					_tWave_Direction.y += tDelta;
-					if (_tWave_Direction.x > _directionWaveTime.x)
-					{ _tWave_Direction.x -= _directionWaveTime.x; }
-					if (_tWave_Direction.y > _directionWaveTime.y)
-					{ _tWave_Direction.y -= _directionWaveTime.y; }
+					if (_tWave_Direction.x > _directionWaveTime.x) { _tWave_Direction.x -= _directionWaveTime.x; }
+					if (_tWave_Direction.y > _directionWaveTime.y) { _tWave_Direction.y -= _directionWaveTime.y; }
 
-					if (_directionWaveTime.x < 0.001f)
-					{ _itp_Direction.x = 0.0f; }
-					else
-					{ _itp_Direction.x = _tWave_Direction.x / _directionWaveTime.x; }
+					if (_directionWaveTime.x < 0.001f)	{ _itp_Direction.x = 0.0f; }
+					else								{ _itp_Direction.x = _tWave_Direction.x / _directionWaveTime.x; }
 
-					if (_directionWaveTime.y < 0.001f)
-					{ _itp_Direction.y = 0.0f; }
-					else
-					{ _itp_Direction.y = _tWave_Direction.y / _directionWaveTime.y; }
+					if (_directionWaveTime.y < 0.001f)	{ _itp_Direction.y = 0.0f; }
+					else								{ _itp_Direction.y = _tWave_Direction.y / _directionWaveTime.y; }
 
 					_curDirectionW.x = _directionW.x + Mathf.Sin(_itp_Direction.x * Mathf.PI * 2.0f) * _directionWaveSize.x;
 					_curDirectionW.y = _directionW.y + Mathf.Sin(_itp_Direction.y * Mathf.PI * 2.0f) * _directionWaveSize.y;
@@ -255,12 +248,18 @@ namespace AnyPortrait
 			{
 				_tWave_Power += tDelta;
 				if (_tWave_Power > _powerWaveTime)
-				{ _tWave_Power -= _powerWaveTime; }
+				{
+					_tWave_Power -= _powerWaveTime;
+				}
 
 				if (_powerWaveTime < 0.001f)
-				{ _itp_Power = 0.0f; }
+				{
+					_itp_Power = 0.0f;
+				}
 				else
-				{ _itp_Power = _tWave_Power / _powerWaveTime; }
+				{
+					_itp_Power = _tWave_Power / _powerWaveTime;
+				}
 
 				_curPower = _power + Mathf.Sign(_itp_Power * Mathf.PI * 2.0f) * _powerWaveSize;
 			}

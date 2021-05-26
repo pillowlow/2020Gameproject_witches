@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using System.Collections;
@@ -90,9 +89,36 @@ namespace AnyPortrait
 
 		public int _level = 0;
 
+
+		//인코딩을 위한 Wrapper를 이용하자
+		//불필요한 메모리 누수를 막을 수 있다.
+		private static apStringWrapper s_tmpStrWrapper = new apStringWrapper(256);
+		private static apStringWrapper s_tmpStrWrapper_Value = new apStringWrapper(256);
+		private const string STR_COMMA = ",";
+		private const string STR_COMMA_AND_SPACE = ", ";
+		private const string STR_EMPTY = "";
+		private const string STR_R =  "R";
+		private const string STR_I =  "I";
+		private const string STR_N =  "N";
+		private const string STR_RETURN =  "\n";
+		private const string STR_CR =  "\r";
+		private const string STR_DOUBLE_BRACKET =  "[]";
+		private const string STR_SLASH =  "/";
+		private const string STR_REPLACE_SLASH = "<S$#_+_D=#>";//"/"를 가진 String을 만나면 이걸로 변환을 하자.		
+		private const string STR_CORRECTED_VERSION = "FIX";
+
 		public apBackupUnit()
 		{
+			//추가 21.3.6
+			if(s_tmpStrWrapper == null)
+			{
+				s_tmpStrWrapper = new apStringWrapper(256);
+			}
 
+			if(s_tmpStrWrapper_Value == null)
+			{
+				s_tmpStrWrapper_Value = new apStringWrapper(256);
+			}
 		}
 
 		public void SetRoot()
@@ -108,7 +134,18 @@ namespace AnyPortrait
 			_isListArrayItem = false;
 			_typeName_Full = fieldInfo.FieldType.FullName;
 			_typeName_Assembly = fieldInfo.FieldType.Assembly.FullName;
-			_typeName_Partial = _typeName_Full + ", " + _typeName_Assembly.Substring(0, _typeName_Assembly.IndexOf(","));
+
+			//이전
+			//_typeName_Partial = _typeName_Full + ", " + _typeName_Assembly.Substring(0, _typeName_Assembly.IndexOf(","));
+
+			//변경 21.3.6 : Wrapper 이용
+			s_tmpStrWrapper.Clear();
+			s_tmpStrWrapper.Append(_typeName_Full, false);
+			s_tmpStrWrapper.Append(STR_COMMA_AND_SPACE, false);
+			s_tmpStrWrapper.Append(_typeName_Assembly.Substring(0, _typeName_Assembly.IndexOf(',')), true);
+			_typeName_Partial = s_tmpStrWrapper.ToString();
+
+
 			_fieldName = fieldInfo.Name;
 			_itemIndex = -1;
 			_value = value;
@@ -168,9 +205,20 @@ namespace AnyPortrait
 			Type valueType = value.GetType();
 			_typeName_Full = valueType.FullName;
 			_typeName_Assembly = valueType.Assembly.FullName;
-			_typeName_Partial = _typeName_Full + ", " + _typeName_Assembly.Substring(0, _typeName_Assembly.IndexOf(","));
+			
+			//이전
+			//_typeName_Partial = _typeName_Full + ", " + _typeName_Assembly.Substring(0, _typeName_Assembly.IndexOf(","));
+			
+			//변경 21.3.6 : Wrapper 이용
+			s_tmpStrWrapper.Clear();
+			s_tmpStrWrapper.Append(_typeName_Full, false);
+			s_tmpStrWrapper.Append(STR_COMMA_AND_SPACE, false);
+			s_tmpStrWrapper.Append(_typeName_Assembly.Substring(0, _typeName_Assembly.IndexOf(',')), true);
+			_typeName_Partial = s_tmpStrWrapper.ToString();
 
-			_fieldName = "";//<<필드명은 없죠..
+			//_fieldName = "";//<<필드명은 없죠..
+			_fieldName = STR_EMPTY;//변경 21.3.6
+			
 			_itemIndex = itemIndex;
 			_value = value;
 
@@ -312,46 +360,48 @@ namespace AnyPortrait
 			parentInstance._childFields.Add(this);
 		}
 
-		public void PrintDebugRecursive()
-		{
-			string strIndent = "";
-			for (int i = 0; i < _level; i++)
-			{
-				strIndent += "    ";
-			}
-			if(_isRoot)
-			{
-				Debug.Log(strIndent + ": Root Unit");
-			}
-			else if(_isListArrayItem)
-			{
-				Debug.Log(strIndent + "[" + _typeName_Partial + " - Item] / (" + _fieldCategory +")");
-			}
-			else
-			{
-				Debug.Log(strIndent + "[" + _typeName_Partial + " : " + _fieldName + "] / (" + _fieldCategory +")");
-			}
+		#region [미사용 코드] 디버그용 코드이다.
+		//public void PrintDebugRecursive()
+		//{
+		//	string strIndent = "";
+		//	for (int i = 0; i < _level; i++)
+		//	{
+		//		strIndent += "    ";
+		//	}
+		//	if(_isRoot)
+		//	{
+		//		Debug.Log(strIndent + ": Root Unit");
+		//	}
+		//	else if(_isListArrayItem)
+		//	{
+		//		Debug.Log(strIndent + "[" + _typeName_Partial + " - Item] / (" + _fieldCategory +")");
+		//	}
+		//	else
+		//	{
+		//		Debug.Log(strIndent + "[" + _typeName_Partial + " : " + _fieldName + "] / (" + _fieldCategory +")");
+		//	}
 
 
-			if(_childFields != null && _childFields.Count > 0)
-			{
-				Debug.Log(strIndent + ">> Child Fields ------------------------");
-				for (int i = 0; i < _childFields.Count; i++)
-				{
-					_childFields[i].PrintDebugRecursive();
-				}
-				Debug.Log(strIndent + ">>--------------------------------------");
-			}
-			else if(_childItems != null && _childItems.Count > 0)
-			{
-				Debug.Log(strIndent + ">> Item Fields ------------------------");
-				for (int i = 0; i < _childItems.Count; i++)
-				{
-					_childItems[i].PrintDebugRecursive();
-				}
-				Debug.Log(strIndent + ">>--------------------------------------");
-			}
-		}
+		//	if(_childFields != null && _childFields.Count > 0)
+		//	{
+		//		Debug.Log(strIndent + ">> Child Fields ------------------------");
+		//		for (int i = 0; i < _childFields.Count; i++)
+		//		{
+		//			_childFields[i].PrintDebugRecursive();
+		//		}
+		//		Debug.Log(strIndent + ">>--------------------------------------");
+		//	}
+		//	else if(_childItems != null && _childItems.Count > 0)
+		//	{
+		//		Debug.Log(strIndent + ">> Item Fields ------------------------");
+		//		for (int i = 0; i < _childItems.Count; i++)
+		//		{
+		//			_childItems[i].PrintDebugRecursive();
+		//		}
+		//		Debug.Log(strIndent + ">>--------------------------------------");
+		//	}
+		//} 
+		#endregion
 
 		//------------------------------------------------------------------
 		// Encode
@@ -362,28 +412,40 @@ namespace AnyPortrait
 			//[Level:3] [Root/Item/None] [000FieldName-Index] [000Type-Index] [Category (00)] [00000 Value]
 			
 
-			System.Text.StringBuilder sb = new System.Text.StringBuilder();
+			//변경 21.3.6 : 인코딩 부분에서 메모리 누수가 없도록 만들자.
+			//이전에는 StringBuilder를 매번 만들었다.
+			//변경 > 공통의 변수를 이용하자. 
+			s_tmpStrWrapper.Clear();
+
+			//System.Text.StringBuilder sb = new System.Text.StringBuilder();
+			
 			//1.Level:3 입력
-			sb.Append(Int2String(_level, 3));
+			//sb.Append(Int2String(_level, 3));
+			s_tmpStrWrapper.Append(Int2String(_level, 3), false);
 
 			//2.Root/Item/Node 입력
 			if(_isRoot)
 			{
-				sb.Append("R");
+				//sb.Append("R");
+				s_tmpStrWrapper.Append(STR_R, false);
 			}
 			else if(_isListArrayItem)
 			{
-				sb.Append("I");
+				//sb.Append("I");
+				s_tmpStrWrapper.Append(STR_I, false);
 			}
 			else
 			{
-				sb.Append("N");
+				//sb.Append("N");
+				s_tmpStrWrapper.Append(STR_N, false);
 			}
 
 			//Root 타입은 여기서 끝
 			if(_isRoot)
-			{
-				return sb.ToString();
+			{	
+				//return sb.ToString();
+				s_tmpStrWrapper.MakeString();
+				return s_tmpStrWrapper.ToString();
 			}
 
 			//FieldName의 Index 버전 입력
@@ -400,51 +462,89 @@ namespace AnyPortrait
 				
 			string strTypeNameIndex = table.GetTypeIndex(_typeName_Partial).ToString();
 
-			sb.Append(Int2String(strFieldNameIndex.Length, 3));
-			sb.Append(strFieldNameIndex);
+			//이전
+			//sb.Append(Int2String(strFieldNameIndex.Length, 3));
+			//sb.Append(strFieldNameIndex);
+			
+			//변경
+			s_tmpStrWrapper.Append(Int2String(strFieldNameIndex.Length, 3), false);
+			s_tmpStrWrapper.Append(strFieldNameIndex, false);
+
+
 
 			//TypeName의 Index 버전 입력
-			sb.Append(Int2String(strTypeNameIndex.Length, 3));
-			sb.Append(strTypeNameIndex);
+			//이전
+			//sb.Append(Int2String(strTypeNameIndex.Length, 3));
+			//sb.Append(strTypeNameIndex);
+			//변경
+			s_tmpStrWrapper.Append(Int2String(strTypeNameIndex.Length, 3), false);
+			s_tmpStrWrapper.Append(strTypeNameIndex, false);
 
 			//Category의 Int형 직접 입력
-			sb.Append(Int2String(((int)_fieldCategory), 2));
+			//sb.Append(Int2String(((int)_fieldCategory), 2));
+			s_tmpStrWrapper.Append(Int2String(((int)_fieldCategory), 2), false);
 
 			//이제 value를 문자열로 입력해야한다.
-			string strValue = "";
+			//string strValue = "";
+			s_tmpStrWrapper_Value.Clear();
 
 
 			switch (_fieldCategory)
 			{
 				case FIELD_CATEGORY.Primitive:
-					strValue = _value.ToString();
+					//strValue = _value.ToString();//이전
+					s_tmpStrWrapper_Value.Append(_value.ToString(), false);
 					break;
 
 				case FIELD_CATEGORY.Enum:
-					strValue = ((int)_value).ToString();
+					//strValue = ((int)_value).ToString();
+					s_tmpStrWrapper_Value.Append((int)_value, false);
 					break;
 
 				case FIELD_CATEGORY.String:
-					strValue = _value.ToString();
+					//이전
+					//strValue = _value.ToString();					
 					
 					//여기서 주의
 					//개행 문자는 여기서 바꿔준다.
 					//에러가 나도 어쩔 수 없다.
-					strValue = strValue.Replace("\n", "[]");
-					strValue = strValue.Replace("\r", "");
+					//strValue = strValue.Replace("\n", "[]");
+					//strValue = strValue.Replace("\r", "");
+
+					//변경 21.3.6
+					s_tmpStrWrapper_Value.Append(_value.ToString()
+													.Replace(STR_RETURN, STR_DOUBLE_BRACKET)
+													.Replace(STR_CR, STR_EMPTY),
+												false);
+
 					break;
 
 				case FIELD_CATEGORY.Vector2:
-					{
+					{	
 						Vector2 vec2 = (Vector2)_value;
-						strValue = vec2.x + "," + vec2.y;
+						//,를 구분자로 이용했는데, 이게 특정 환경에서는 소수점이 ,로 사용되면서 파싱 에러를 일으킨다.
+						//구분자를 "/"로 변경한다.
+
+						//이전
+						//strValue = vec2.x + "," + vec2.y;
+
+						//변경 21.3.6
+						s_tmpStrWrapper_Value.Append(vec2.x, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(vec2.y, false);
 					}
 					break;
 
 				case FIELD_CATEGORY.Vector3:
 					{
 						Vector3 vec3 = (Vector3)_value;
-						strValue = vec3.x + "," + vec3.y + "," + vec3.z;
+						//구분자 변경 , > /
+						//이전
+						//strValue = vec3.x + "," + vec3.y + "," + vec3.z;
+
+						//변경 21.3.6
+						s_tmpStrWrapper_Value.Append(vec3.x, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(vec3.y, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(vec3.z, false);
 					}
 
 					break;
@@ -452,14 +552,30 @@ namespace AnyPortrait
 				case FIELD_CATEGORY.Vector4:
 					{
 						Vector4 vec4 = (Vector4)_value;
-						strValue = vec4.x + "," + vec4.y + "," + vec4.z + "," + vec4.w;
+						//구분자 변경 , > /
+						//이전
+						//strValue = vec4.x + "," + vec4.y + "," + vec4.z + "," + vec4.w;
+
+						//변경 21.3.6
+						s_tmpStrWrapper_Value.Append(vec4.x, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(vec4.y, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(vec4.z, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(vec4.w, false);
 					}
 					break;
 
 				case FIELD_CATEGORY.Color:
 					{
 						Color color = (Color)_value;
-						strValue = color.r + "," + color.g + "," + color.b + "," + color.a;
+						//구분자 변경 , > /
+						//이전
+						//strValue = color.r + "," + color.g + "," + color.b + "," + color.a;
+
+						//변경 21.3.6
+						s_tmpStrWrapper_Value.Append(color.r, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(color.g, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(color.b, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(color.a, false);
 					}
 
 					break;
@@ -468,10 +584,30 @@ namespace AnyPortrait
 					{
 						Matrix4x4 mat4 = (Matrix4x4)_value;
 
-						strValue =	mat4.m00 + "," + mat4.m10 + "," + mat4.m20 + "," + mat4.m30 + "," +
-									mat4.m01 + "," + mat4.m11 + "," + mat4.m21 + "," + mat4.m31 + "," +
-									mat4.m02 + "," + mat4.m12 + "," + mat4.m22 + "," + mat4.m32 + "," +
-									mat4.m03 + "," + mat4.m13 + "," + mat4.m23 + "," + mat4.m33;
+						//구분자 변경 , > /
+
+						//이전
+						//strValue =	mat4.m00 + "," + mat4.m10 + "," + mat4.m20 + "," + mat4.m30 + "," +
+						//			mat4.m01 + "," + mat4.m11 + "," + mat4.m21 + "," + mat4.m31 + "," +
+						//			mat4.m02 + "," + mat4.m12 + "," + mat4.m22 + "," + mat4.m32 + "," +
+						//			mat4.m03 + "," + mat4.m13 + "," + mat4.m23 + "," + mat4.m33;
+
+						s_tmpStrWrapper_Value.Append(mat4.m00, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(mat4.m10, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(mat4.m20, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(mat4.m30, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(mat4.m01, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(mat4.m11, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(mat4.m21, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(mat4.m31, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(mat4.m02, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(mat4.m12, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(mat4.m22, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(mat4.m32, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(mat4.m03, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(mat4.m13, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(mat4.m23, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(mat4.m33, false);
 					}
 
 					break;
@@ -480,9 +616,23 @@ namespace AnyPortrait
 					{
 						apMatrix3x3 mat3 = (apMatrix3x3)_value;
 
-						strValue =	mat3._m00 + "," + mat3._m10 + "," + mat3._m20 + "," +
-									mat3._m01 + "," + mat3._m11 + "," + mat3._m21 + "," +
-									mat3._m02 + "," + mat3._m12 + "," + mat3._m22 + ",";
+						//구분자 변경 , > /
+
+						//이전
+						//strValue =	mat3._m00 + "," + mat3._m10 + "," + mat3._m20 + "," +
+						//			mat3._m01 + "," + mat3._m11 + "," + mat3._m21 + "," +
+						//			mat3._m02 + "," + mat3._m12 + "," + mat3._m22 + ",";
+
+						//변경
+						s_tmpStrWrapper_Value.Append(mat3._m00, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(mat3._m10, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(mat3._m20, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(mat3._m01, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(mat3._m11, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(mat3._m21, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(mat3._m02, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(mat3._m12, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(mat3._m22, false);
 					}
 					break;
 
@@ -490,11 +640,29 @@ namespace AnyPortrait
 					{
 						MonoBehaviour monoBehaviour = (MonoBehaviour)_value;
 
-						strValue =	monoBehaviour.GetInstanceID() + "," +
-									monoBehaviour.name + "," +
-									monoBehaviour.transform.position.x + "," + monoBehaviour.transform.position.y + "," + monoBehaviour.transform.position.z + "," +
-									monoBehaviour.transform.localRotation.x + "," + monoBehaviour.transform.localRotation.y + "," + monoBehaviour.transform.localRotation.z + "," + monoBehaviour.transform.localRotation.w + "," +
-									monoBehaviour.transform.localScale.x + "," + monoBehaviour.transform.localScale.y + "," + monoBehaviour.transform.localScale.z;
+						//구분자를 /로 바꾼다.
+						//이전
+						//strValue =	monoBehaviour.GetInstanceID() + "," +
+						//			monoBehaviour.name + "," +
+						//			monoBehaviour.transform.position.x + "," + monoBehaviour.transform.position.y + "," + monoBehaviour.transform.position.z + "," +
+						//			monoBehaviour.transform.localRotation.x + "," + monoBehaviour.transform.localRotation.y + "," + monoBehaviour.transform.localRotation.z + "," + monoBehaviour.transform.localRotation.w + "," +
+						//			monoBehaviour.transform.localScale.x + "," + monoBehaviour.transform.localScale.y + "," + monoBehaviour.transform.localScale.z;
+
+						//변경
+						//신버전임을 알리기 위해 앞에 글자를 추가해야한다. (구분자 없음)
+						s_tmpStrWrapper_Value.Append(STR_CORRECTED_VERSION, false);
+						s_tmpStrWrapper_Value.Append(monoBehaviour.GetInstanceID(), false);				s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(monoBehaviour.name.Replace(STR_SLASH, STR_REPLACE_SLASH), false); s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(monoBehaviour.transform.position.x, false);		s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(monoBehaviour.transform.position.y, false);		s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(monoBehaviour.transform.position.z, false);		s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(monoBehaviour.transform.localRotation.x, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(monoBehaviour.transform.localRotation.y, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(monoBehaviour.transform.localRotation.z, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(monoBehaviour.transform.localRotation.w, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(monoBehaviour.transform.localScale.x, false);		s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(monoBehaviour.transform.localScale.y, false);		s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(monoBehaviour.transform.localScale.z, false);
 						
 					}
 					break;
@@ -503,33 +671,72 @@ namespace AnyPortrait
 					{
 						GameObject gameObj = (GameObject)_value;
 
-						strValue =	gameObj.GetInstanceID() + "," +
-									gameObj.name + "," +
-									gameObj.transform.position.x + "," + gameObj.transform.position.y + "," + gameObj.transform.position.z + "," +
-									gameObj.transform.localRotation.x + "," + gameObj.transform.localRotation.y + "," + gameObj.transform.localRotation.z + "," + gameObj.transform.localRotation.w + "," +
-									gameObj.transform.localScale.x + "," + gameObj.transform.localScale.y + "," + gameObj.transform.localScale.z;
+						//구분자 변경 , > /
+
+						//이전
+						//strValue =	gameObj.GetInstanceID() + "," +
+						//			gameObj.name + "," +
+						//			gameObj.transform.position.x + "," + gameObj.transform.position.y + "," + gameObj.transform.position.z + "," +
+						//			gameObj.transform.localRotation.x + "," + gameObj.transform.localRotation.y + "," + gameObj.transform.localRotation.z + "," + gameObj.transform.localRotation.w + "," +
+						//			gameObj.transform.localScale.x + "," + gameObj.transform.localScale.y + "," + gameObj.transform.localScale.z;
+
+						//변경
+						//신버전임을 알리기 위해 앞에 글자를 추가해야한다. (구분자 없음)
+						s_tmpStrWrapper_Value.Append(STR_CORRECTED_VERSION, false);
+						s_tmpStrWrapper_Value.Append(gameObj.GetInstanceID(), false);			s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(gameObj.name.Replace(STR_SLASH, STR_REPLACE_SLASH), false); s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(gameObj.transform.position.x, false);		s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(gameObj.transform.position.y, false);		s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(gameObj.transform.position.z, false);		s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(gameObj.transform.localRotation.x, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(gameObj.transform.localRotation.y, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(gameObj.transform.localRotation.z, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(gameObj.transform.localRotation.w, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(gameObj.transform.localScale.x, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(gameObj.transform.localScale.y, false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+						s_tmpStrWrapper_Value.Append(gameObj.transform.localScale.z, false);
 					}
 					break;
 				case FIELD_CATEGORY.UnityObject:
 					{
 						UnityEngine.Object uObj = (UnityEngine.Object)_value;
 
-						strValue = uObj.GetInstanceID().ToString();
+						//이전
+						//strValue = uObj.GetInstanceID().ToString();
+
+						//변경
+						s_tmpStrWrapper_Value.Append(uObj.GetInstanceID().ToString(), false);
 					}
 					break;
 
 				case FIELD_CATEGORY.Texture2D:
 					{
 						Texture2D tex = _value as Texture2D;
+
+						//구분자 변경 , > /
 						if (tex == null)
 						{
-							strValue = "-1, ,  ";
+							//이전
+							//strValue = "-1, ,  ";
+							
+							//변경
+							//신버전임을 앞에 추가해서 알려준다.
+							s_tmpStrWrapper_Value.Append(STR_CORRECTED_VERSION, false);
+							s_tmpStrWrapper_Value.Append("-1/ / ", false);
 						}
 						else
 						{
-							strValue =	tex.GetInstanceID() + "," +
-										tex.name + "," +
-										AssetDatabase.GetAssetPath(tex);
+							//이전
+							//strValue =	tex.GetInstanceID() + "," +
+							//			tex.name + "," +
+							//			AssetDatabase.GetAssetPath(tex);
+
+							//변경
+							//신버전임을 앞에 추가해서 알려준다.
+							s_tmpStrWrapper_Value.Append(STR_CORRECTED_VERSION, false);
+							s_tmpStrWrapper_Value.Append(tex.GetInstanceID(), false);								s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+							s_tmpStrWrapper_Value.Append(tex.name.Replace(STR_SLASH, STR_REPLACE_SLASH), false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+							s_tmpStrWrapper_Value.Append(AssetDatabase.GetAssetPath(tex).Replace(STR_SLASH, STR_REPLACE_SLASH), false);
 						}
 					}
 					break;
@@ -539,13 +746,27 @@ namespace AnyPortrait
 						Shader customShader = _value as Shader;
 						if (customShader == null)
 						{
-							strValue = "-1, , ";
+							//이전
+							//strValue = "-1, , ";
+
+							//변경
+							//신버전임을 앞에 추가해서 알려준다.
+							s_tmpStrWrapper_Value.Append(STR_CORRECTED_VERSION, false);
+							s_tmpStrWrapper_Value.Append("-1/ / ", false);
 						}
 						else
 						{
-							strValue =	customShader.GetInstanceID() + "," +
-										customShader.name + "," +
-										AssetDatabase.GetAssetPath(customShader);
+							//이전
+							//strValue =	customShader.GetInstanceID() + "," +
+							//			customShader.name + "," +
+							//			AssetDatabase.GetAssetPath(customShader);
+
+							//변경
+							//신버전임을 앞에 추가해서 알려준다.
+							s_tmpStrWrapper_Value.Append(STR_CORRECTED_VERSION, false);
+							s_tmpStrWrapper_Value.Append(customShader.GetInstanceID(), false);								s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+							s_tmpStrWrapper_Value.Append(customShader.name.Replace(STR_SLASH, STR_REPLACE_SLASH), false);	s_tmpStrWrapper_Value.Append(STR_SLASH, false);
+							s_tmpStrWrapper_Value.Append(AssetDatabase.GetAssetPath(customShader).Replace(STR_SLASH, STR_REPLACE_SLASH), false);
 						}
 					}
 					break;
@@ -560,7 +781,11 @@ namespace AnyPortrait
 
 						}
 
-						strValue = nChildFields.ToString();
+						//이전
+						//strValue = nChildFields.ToString();
+
+						//변경
+						s_tmpStrWrapper_Value.Append(nChildFields, false);
 					}
 					break;
 
@@ -574,15 +799,34 @@ namespace AnyPortrait
 							nChildItems = _childItems.Count;
 						}
 
-						strValue = nChildItems.ToString();
+						//이전
+						//strValue = nChildItems.ToString();
+
+						//변경
+						s_tmpStrWrapper_Value.Append(nChildItems, false);
 					}
 					break;
 			}
 
-			sb.Append(Int2String(strValue.Length, 5));
-			sb.Append(strValue);
+			
 
-			return sb.ToString();
+
+			//이전
+			//sb.Append(Int2String(strValue.Length, 5));
+			//sb.Append(strValue);
+
+			//return sb.ToString();
+
+			//변경
+
+			s_tmpStrWrapper_Value.MakeString();
+			string strValueResult = s_tmpStrWrapper_Value.ToString();
+
+			s_tmpStrWrapper.Append(Int2String(strValueResult.Length, 5), false);
+			s_tmpStrWrapper.Append(strValueResult, false);
+			s_tmpStrWrapper.MakeString();
+
+			return s_tmpStrWrapper.ToString();
 
 			#region [미사용 코드]
 			////return _level + "-";
@@ -854,11 +1098,13 @@ namespace AnyPortrait
 				_isRoot = false;
 				_isListArrayItem = false;
 
-				if(strRIN.Equals("R"))
+				//if(strRIN.Equals("R"))
+				if(strRIN.Equals(STR_R))//변경
 				{
 					_isRoot = true;
 				}
-				else if(strRIN.Equals("I"))
+				//else if(strRIN.Equals("I"))
+				else if(strRIN.Equals(STR_I))//변경
 				{
 					_isListArrayItem = true;
 				}
@@ -962,43 +1208,71 @@ namespace AnyPortrait
 							{
 								try
 								{
-									string[] strValues = strValue.Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
-									if (strValues.Length < 2)
-									{
-										Debug.LogError("Vector2 파싱 실패 [" + strValue + "]");
-										return false;
-									}
+									//변경 21.3.6 : 파싱 버그때문에 구분자가 /로 바뀌었다.
+									//"/"가 있다면 > 개선된 버전으로 디코딩
+									//"/"가 없다면 > 이전 버전으로 디코딩
 
-									//추가 20.9.13 : 실수형이 .대신 ,으로 저장되는 버그가 있다.
-									//그 경우엔 데이터가 두배로 보일 것
-									bool isFloatCommaBug = false;
-
-									if(strValues.Length >= 4)
+									if (strValue.Contains(STR_SLASH))
 									{
-										if(!strValues[0].Contains(".")
-											&& !strValues[1].Contains(".")
-											&& !strValues[2].Contains(".")
-											&& !strValues[3].Contains("."))
+										//Debug.Log("신버전 Vector2");
+
+										//개선된 버전으로 디코딩
+										string[] strValues = strValue.Split(new string[] { STR_SLASH }, StringSplitOptions.RemoveEmptyEntries);
+										if (strValues.Length < 2)
 										{
-											//- 개수가 두배이며, . 이 없다.
-											isFloatCommaBug = true;
+											Debug.LogError("Vector2 파싱 실패 [" + strValue + "]");
+											return false;
 										}
-									}
 
-									if (isFloatCommaBug)
-									{
-										//콤마 버그
-										_value = new Vector2(	float.Parse(strValues[0] + "." + strValues[1]),
-																float.Parse(strValues[2] + "." + strValues[3])
+										//추가 20.9.13 : 실수형이 .대신 ,으로 저장되는 버그가 있다. Replace할 것
+										_value = new Vector2(	float.Parse(strValues[0].Replace(',', '.')),
+																float.Parse(strValues[1].Replace(',', '.'))
 																);
 									}
 									else
 									{
-										//일반적인 경우
-										_value = new Vector2(	float.Parse(strValues[0]),
-																float.Parse(strValues[1])
-																);
+										//이전 버전으로 디코딩 (버그가 있을 수 있다.)
+										string[] strValues = strValue.Split(new string[] { STR_COMMA }, StringSplitOptions.RemoveEmptyEntries);
+										if (strValues.Length < 2)
+										{
+											Debug.LogError("Vector2 파싱 실패 [" + strValue + "]");
+											return false;
+										}
+
+										//추가 20.9.13 : 실수형이 .대신 ,으로 저장되는 버그가 있다.
+										//그 경우엔 데이터가 두배로 보일 것
+										bool isFloatCommaBug = false;
+
+										if (strValues.Length >= 4)
+										{
+											if (!strValues[0].Contains(".")
+												&& !strValues[1].Contains(".")
+												&& !strValues[2].Contains(".")
+												&& !strValues[3].Contains("."))
+											{
+												//- 개수가 두배이며, . 이 없다.
+												isFloatCommaBug = true;
+											}
+										}
+
+										if (isFloatCommaBug)
+										{
+											//콤마 버그
+											_value = new Vector2(float.Parse(strValues[0] + "." + strValues[1]),
+																	float.Parse(strValues[2] + "." + strValues[3])
+																	);
+										}
+										else
+										{
+											//일반적인 경우
+											_value = new Vector2(float.Parse(strValues[0]),
+																	float.Parse(strValues[1])
+																	);
+										}
 									}
+
+
+									
 									
 								}
 								catch (Exception exParse)
@@ -1012,50 +1286,75 @@ namespace AnyPortrait
 							{
 								try
 								{
-									string[] strValues = strValue.Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
-									if (strValues.Length < 3)
-									{
-										Debug.LogError("Vector3 파싱 실패 [" + strValue + "]");
-										return false;
-									}
+									//변경 21.3.6 : 파싱 버그때문에 구분자가 /로 바뀌었다.
+									//"/"가 있다면 > 개선된 버전으로 디코딩
+									//"/"가 없다면 > 이전 버전으로 디코딩
 
-									//추가 20.9.13 : 실수형이 .대신 ,으로 저장되는 버그가 있다.
-									//그 경우엔 데이터가 두배로 보일 것
-									bool isFloatCommaBug = false;
-
-									if(strValues.Length >= 6)
+									if (strValue.Contains(STR_SLASH))
 									{
-										if(!strValues[0].Contains(".")
-											&& !strValues[1].Contains(".")
-											&& !strValues[2].Contains(".")
-											&& !strValues[3].Contains(".")
-											&& !strValues[4].Contains(".")
-											&& !strValues[5].Contains(".")
-											)
+										//Debug.Log("신버전 Vector3");
+
+										//개선된 버전으로 디코딩
+										string[] strValues = strValue.Split(new string[] { STR_SLASH }, StringSplitOptions.RemoveEmptyEntries);
+										if (strValues.Length < 3)
 										{
-											//- 개수가 두배이며, . 이 없다.
-											isFloatCommaBug = true;
+											Debug.LogError("Vector3 파싱 실패 [" + strValue + "]");
+											return false;
 										}
-									}
 
-									if (isFloatCommaBug)
-									{
-										//콤마 버그
-										_value = new Vector3(	float.Parse(strValues[0] + "." + strValues[1]),
-																float.Parse(strValues[2] + "." + strValues[3]),
-																float.Parse(strValues[4] + "." + strValues[5])
+										//추가 20.9.13 : 실수형이 .대신 ,으로 저장되는 버그가 있다. Replace할 것
+										_value = new Vector3(	float.Parse(strValues[0].Replace(',', '.')),
+																float.Parse(strValues[1].Replace(',', '.')),
+																float.Parse(strValues[2].Replace(',', '.'))
 																);
+
 									}
 									else
 									{
-										//일반적인 경우
-										_value = new Vector3(	float.Parse(strValues[0]),
-																float.Parse(strValues[1]),
-																float.Parse(strValues[2])
-																);
-									}
+										//이전 버전으로 디코딩 (버그가 있을 수 있다.)
+										string[] strValues = strValue.Split(new string[] { STR_COMMA }, StringSplitOptions.RemoveEmptyEntries);
+										if (strValues.Length < 3)
+										{
+											Debug.LogError("Vector3 파싱 실패 [" + strValue + "]");
+											return false;
+										}
 
-									
+										//추가 20.9.13 : 실수형이 .대신 ,으로 저장되는 버그가 있다.
+										//그 경우엔 데이터가 두배로 보일 것
+										bool isFloatCommaBug = false;
+
+										if (strValues.Length >= 6)
+										{
+											if (!strValues[0].Contains(".")
+												&& !strValues[1].Contains(".")
+												&& !strValues[2].Contains(".")
+												&& !strValues[3].Contains(".")
+												&& !strValues[4].Contains(".")
+												&& !strValues[5].Contains(".")
+												)
+											{
+												//- 개수가 두배이며, . 이 없다.
+												isFloatCommaBug = true;
+											}
+										}
+
+										if (isFloatCommaBug)
+										{
+											//콤마 버그
+											_value = new Vector3(float.Parse(strValues[0] + "." + strValues[1]),
+																	float.Parse(strValues[2] + "." + strValues[3]),
+																	float.Parse(strValues[4] + "." + strValues[5])
+																	);
+										}
+										else
+										{
+											//일반적인 경우
+											_value = new Vector3(float.Parse(strValues[0]),
+																	float.Parse(strValues[1]),
+																	float.Parse(strValues[2])
+																	);
+										}
+									}
 								}
 								catch (Exception exParse)
 								{
@@ -1068,51 +1367,78 @@ namespace AnyPortrait
 							{
 								try
 								{
-									string[] strValues = strValue.Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
-									if (strValues.Length < 4)
-									{
-										Debug.LogError("Vector4 파싱 실패 [" + strValue + "]");
-										return false;
-									}
+									//변경 21.3.6 : 파싱 버그때문에 구분자가 /로 바뀌었다.
+									//"/"가 있다면 > 개선된 버전으로 디코딩
+									//"/"가 없다면 > 이전 버전으로 디코딩
 
-									//추가 20.9.13 : 실수형이 .대신 ,으로 저장되는 버그가 있다.
-									//그 경우엔 데이터가 두배로 보일 것
-									bool isFloatCommaBug = false;
-
-									if(strValues.Length >= 8)
+									if (strValue.Contains(STR_SLASH))
 									{
-										if(!strValues[0].Contains(".")
-											&& !strValues[1].Contains(".")
-											&& !strValues[2].Contains(".")
-											&& !strValues[3].Contains(".")
-											&& !strValues[4].Contains(".")
-											&& !strValues[5].Contains(".")
-											&& !strValues[6].Contains(".")
-											&& !strValues[7].Contains(".")
-											)
+										//Debug.Log("신버전 Vector4");
+
+										//개선된 버전으로 디코딩
+										string[] strValues = strValue.Split(new string[] { STR_SLASH }, StringSplitOptions.RemoveEmptyEntries);
+										if (strValues.Length < 4)
 										{
-											//- 개수가 두배이며, . 이 없다.
-											isFloatCommaBug = true;
+											Debug.LogError("Vector4 파싱 실패 [" + strValue + "]");
+											return false;
 										}
-									}
 
-									if (isFloatCommaBug)
-									{
-										//콤마 버그
-										_value = new Vector4(	float.Parse(strValues[0] + "." + strValues[1]),
-																float.Parse(strValues[2] + "." + strValues[3]),
-																float.Parse(strValues[4] + "." + strValues[5]),
-																float.Parse(strValues[6] + "." + strValues[7])
+										//추가 20.9.13 : 실수형이 .대신 ,으로 저장되는 버그가 있다.
+										_value = new Vector4(	float.Parse(strValues[0].Replace(',', '.')),
+																float.Parse(strValues[1].Replace(',', '.')),
+																float.Parse(strValues[2].Replace(',', '.')),
+																float.Parse(strValues[3].Replace(',', '.'))
 																);
 									}
 									else
 									{
-										//일반적인 경우
-										_value = new Vector4(	float.Parse(strValues[0]),
-																float.Parse(strValues[1]),
-																float.Parse(strValues[2]),
-																float.Parse(strValues[3])
-																);
+										//이전 버전으로 디코딩 (버그가 있을 수 있다.)
+										string[] strValues = strValue.Split(new string[] { STR_COMMA }, StringSplitOptions.RemoveEmptyEntries);
+										if (strValues.Length < 4)
+										{
+											Debug.LogError("Vector4 파싱 실패 [" + strValue + "]");
+											return false;
+										}
+
+										//추가 20.9.13 : 실수형이 .대신 ,으로 저장되는 버그가 있다.
+										//그 경우엔 데이터가 두배로 보일 것
+										bool isFloatCommaBug = false;
+
+										if (strValues.Length >= 8)
+										{
+											if (!strValues[0].Contains(".")
+												&& !strValues[1].Contains(".")
+												&& !strValues[2].Contains(".")
+												&& !strValues[3].Contains(".")
+												&& !strValues[4].Contains(".")
+												&& !strValues[5].Contains(".")
+												&& !strValues[6].Contains(".")
+												&& !strValues[7].Contains(".")
+												)
+											{
+												//- 개수가 두배이며, . 이 없다.
+												isFloatCommaBug = true;
+											}
+										}
+
+										if (isFloatCommaBug)
+										{
+											//콤마 버그
+											_value = new Vector4(float.Parse(strValues[0] + "." + strValues[1]),
+																	float.Parse(strValues[2] + "." + strValues[3]),
+																	float.Parse(strValues[4] + "." + strValues[5]),
+																	float.Parse(strValues[6] + "." + strValues[7])
+																	);
+										}
+										else
+										{
+											//일반적인 경우
+											_value = new Vector4(float.Parse(strValues[0]),
+																	float.Parse(strValues[1]),
+																	float.Parse(strValues[2]),
+																	float.Parse(strValues[3])
+																	);
+										}
 									}
 								}
 								catch (Exception exParse)
@@ -1126,52 +1452,80 @@ namespace AnyPortrait
 							{
 								try
 								{
-									string[] strValues = strValue.Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
-									if (strValues.Length < 4)
-									{
-										Debug.LogError("Color 파싱 실패 [" + strValue + "]");
-										return false;
-									}
+									//변경 21.3.6 : 파싱 버그때문에 구분자가 /로 바뀌었다.
+									//"/"가 있다면 > 개선된 버전으로 디코딩
+									//"/"가 없다면 > 이전 버전으로 디코딩
 
-									//추가 20.9.13 : 실수형이 .대신 ,으로 저장되는 버그가 있다.
-									//그 경우엔 데이터가 두배로 보일 것
-									bool isFloatCommaBug = false;
-
-									if(strValues.Length >= 8)
+									if (strValue.Contains(STR_SLASH))
 									{
-										if(!strValues[0].Contains(".")
-											&& !strValues[1].Contains(".")
-											&& !strValues[2].Contains(".")
-											&& !strValues[3].Contains(".")
-											&& !strValues[4].Contains(".")
-											&& !strValues[5].Contains(".")
-											&& !strValues[6].Contains(".")
-											&& !strValues[7].Contains(".")
-											)
+										//Debug.Log("신버전 Color");
+
+										//개선된 버전으로 디코딩
+										string[] strValues = strValue.Split(new string[] { STR_SLASH }, StringSplitOptions.RemoveEmptyEntries);
+										if (strValues.Length < 4)
 										{
-											//- 개수가 두배이며, . 이 없다.
-											isFloatCommaBug = true;
+											Debug.LogError("Color 파싱 실패 [" + strValue + "]");
+											return false;
 										}
-									}
 
-									if (isFloatCommaBug)
-									{
-										//콤마 버그
-										_value = new Color(		float.Parse(strValues[0] + "." + strValues[1]),
-																float.Parse(strValues[2] + "." + strValues[3]),
-																float.Parse(strValues[4] + "." + strValues[5]),
-																float.Parse(strValues[6] + "." + strValues[7])
-																);
+										//추가 20.9.13 : 실수형이 .대신 ,으로 저장되는 버그가 있다.
+										_value = new Color(	float.Parse(strValues[0].Replace(',', '.')),
+															float.Parse(strValues[1].Replace(',', '.')),
+															float.Parse(strValues[2].Replace(',', '.')),
+															float.Parse(strValues[3].Replace(',', '.'))
+															);
 									}
 									else
 									{
-										//일반적인 경우
-										_value = new Color(	float.Parse(strValues[0]),
-															float.Parse(strValues[1]),
-															float.Parse(strValues[2]),
-															float.Parse(strValues[3])
-															);
+										//이전 버전으로 디코딩 (버그가 있을 수 있다.)
+										string[] strValues = strValue.Split(new string[] { STR_COMMA }, StringSplitOptions.RemoveEmptyEntries);
+										if (strValues.Length < 4)
+										{
+											Debug.LogError("Color 파싱 실패 [" + strValue + "]");
+											return false;
+										}
+
+										//추가 20.9.13 : 실수형이 .대신 ,으로 저장되는 버그가 있다.
+										//그 경우엔 데이터가 두배로 보일 것
+										bool isFloatCommaBug = false;
+
+										if (strValues.Length >= 8)
+										{
+											if (!strValues[0].Contains(".")
+												&& !strValues[1].Contains(".")
+												&& !strValues[2].Contains(".")
+												&& !strValues[3].Contains(".")
+												&& !strValues[4].Contains(".")
+												&& !strValues[5].Contains(".")
+												&& !strValues[6].Contains(".")
+												&& !strValues[7].Contains(".")
+												)
+											{
+												//- 개수가 두배이며, . 이 없다.
+												isFloatCommaBug = true;
+											}
+										}
+
+										if (isFloatCommaBug)
+										{
+											//콤마 버그
+											_value = new Color(float.Parse(strValues[0] + "." + strValues[1]),
+																	float.Parse(strValues[2] + "." + strValues[3]),
+																	float.Parse(strValues[4] + "." + strValues[5]),
+																	float.Parse(strValues[6] + "." + strValues[7])
+																	);
+										}
+										else
+										{
+											//일반적인 경우
+											_value = new Color(float.Parse(strValues[0]),
+																float.Parse(strValues[1]),
+																float.Parse(strValues[2]),
+																float.Parse(strValues[3])
+																);
+										}
 									}
+									
 								}
 								catch (Exception exParse)
 								{
@@ -1184,83 +1538,127 @@ namespace AnyPortrait
 						case FIELD_CATEGORY.Matrix4x4:
 							{
 								try
-								{
-									string[] strValues = strValue.Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
-									if (strValues.Length < 16)
+								{//변경 21.3.6 : 파싱 버그때문에 구분자가 /로 바뀌었다.
+								 //"/"가 있다면 > 개선된 버전으로 디코딩
+								 //"/"가 없다면 > 이전 버전으로 디코딩
+
+									if (strValue.Contains(STR_SLASH))
 									{
-										Debug.LogError("Matrix4x4 파싱 실패 [" + strValue + "]");
-										return false;
-									}
+										//Debug.Log("신버전 Matrix4x4");
 
-									//추가 20.9.13 : 실수형이 .대신 ,으로 저장되는 버그가 있다.
-									//그 경우엔 데이터가 두배로 보일 것
-									bool isFloatCommaBug = false;
-
-									if(strValues.Length >= 32)
-									{
-										//- 개수가 두배이며, . 이 없는지 체크
-										isFloatCommaBug = true;
-
-										for (int iCheckFloatData = 0; iCheckFloatData < 32; iCheckFloatData++)
+										//개선된 버전으로 디코딩
+										string[] strValues = strValue.Split(new string[] { STR_SLASH }, StringSplitOptions.RemoveEmptyEntries);
+										if (strValues.Length < 16)
 										{
-											if(strValues[iCheckFloatData].Contains("."))
-											{
-												//하나라도 .이 있으면 이 버그가 아니다.
-												isFloatCommaBug = false;
-												break;
-											}
+											Debug.LogError("Matrix4x4 파싱 실패 [" + strValue + "]");
+											return false;
 										}
-									}
 
-									Matrix4x4 mat4 = new Matrix4x4();
+										//추가 20.9.13 : 실수형이 .대신 ,으로 저장되는 버그가 있다.
+										Matrix4x4 mat4 = new Matrix4x4();
+										mat4.m00 = float.Parse(strValues[0].Replace(',', '.'));
+										mat4.m10 = float.Parse(strValues[1].Replace(',', '.'));
+										mat4.m20 = float.Parse(strValues[2].Replace(',', '.'));
+										mat4.m30 = float.Parse(strValues[3].Replace(',', '.'));
 
-									if (isFloatCommaBug)
-									{
-										//콤마 버그
-										mat4.m00 = float.Parse(strValues[0] + "." + strValues[1]);
-										mat4.m10 = float.Parse(strValues[2] + "." + strValues[3]);
-										mat4.m20 = float.Parse(strValues[4] + "." + strValues[5]);
-										mat4.m30 = float.Parse(strValues[6] + "." + strValues[7]);
+										mat4.m01 = float.Parse(strValues[4].Replace(',', '.'));
+										mat4.m11 = float.Parse(strValues[5].Replace(',', '.'));
+										mat4.m21 = float.Parse(strValues[6].Replace(',', '.'));
+										mat4.m31 = float.Parse(strValues[7].Replace(',', '.'));
 
-										mat4.m01 = float.Parse(strValues[8] + "." + strValues[9]);
-										mat4.m11 = float.Parse(strValues[10] + "." + strValues[11]);
-										mat4.m21 = float.Parse(strValues[12] + "." + strValues[13]);
-										mat4.m31 = float.Parse(strValues[14] + "." + strValues[15]);
+										mat4.m02 = float.Parse(strValues[8].Replace(',', '.'));
+										mat4.m12 = float.Parse(strValues[9].Replace(',', '.'));
+										mat4.m22 = float.Parse(strValues[10].Replace(',', '.'));
+										mat4.m32 = float.Parse(strValues[11].Replace(',', '.'));
 
-										mat4.m02 = float.Parse(strValues[16] + "." + strValues[17]);
-										mat4.m12 = float.Parse(strValues[18] + "." + strValues[19]);
-										mat4.m22 = float.Parse(strValues[20] + "." + strValues[21]);
-										mat4.m32 = float.Parse(strValues[22] + "." + strValues[23]);
+										mat4.m03 = float.Parse(strValues[12].Replace(',', '.'));
+										mat4.m13 = float.Parse(strValues[13].Replace(',', '.'));
+										mat4.m23 = float.Parse(strValues[14].Replace(',', '.'));
+										mat4.m33 = float.Parse(strValues[15].Replace(',', '.'));
 
-										mat4.m03 = float.Parse(strValues[24] + "." + strValues[25]);
-										mat4.m13 = float.Parse(strValues[26] + "." + strValues[27]);
-										mat4.m23 = float.Parse(strValues[28] + "." + strValues[29]);
-										mat4.m33 = float.Parse(strValues[30] + "." + strValues[31]);
+										_value = mat4;
 									}
 									else
 									{
-										//일반적인 경우
-										mat4.m00 = float.Parse(strValues[0]);
-										mat4.m10 = float.Parse(strValues[1]);
-										mat4.m20 = float.Parse(strValues[2]);
-										mat4.m30 = float.Parse(strValues[3]);
+										//이전 버전으로 디코딩 (버그가 있을 수 있다.)
+										string[] strValues = strValue.Split(new string[] { STR_COMMA }, StringSplitOptions.RemoveEmptyEntries);
+										if (strValues.Length < 16)
+										{
+											Debug.LogError("Matrix4x4 파싱 실패 [" + strValue + "]");
+											return false;
+										}
 
-										mat4.m01 = float.Parse(strValues[4]);
-										mat4.m11 = float.Parse(strValues[5]);
-										mat4.m21 = float.Parse(strValues[6]);
-										mat4.m31 = float.Parse(strValues[7]);
+										//추가 20.9.13 : 실수형이 .대신 ,으로 저장되는 버그가 있다.
+										//그 경우엔 데이터가 두배로 보일 것
+										bool isFloatCommaBug = false;
 
-										mat4.m02 = float.Parse(strValues[8]);
-										mat4.m12 = float.Parse(strValues[9]);
-										mat4.m22 = float.Parse(strValues[10]);
-										mat4.m32 = float.Parse(strValues[11]);
+										if (strValues.Length >= 32)
+										{
+											//- 개수가 두배이며, . 이 없는지 체크
+											isFloatCommaBug = true;
 
-										mat4.m03 = float.Parse(strValues[12]);
-										mat4.m13 = float.Parse(strValues[13]);
-										mat4.m23 = float.Parse(strValues[14]);
-										mat4.m33 = float.Parse(strValues[15]);
+											for (int iCheckFloatData = 0; iCheckFloatData < 32; iCheckFloatData++)
+											{
+												if (strValues[iCheckFloatData].Contains("."))
+												{
+													//하나라도 .이 있으면 이 버그가 아니다.
+													isFloatCommaBug = false;
+													break;
+												}
+											}
+										}
+
+										Matrix4x4 mat4 = new Matrix4x4();
+
+										if (isFloatCommaBug)
+										{
+											//콤마 버그
+											mat4.m00 = float.Parse(strValues[0] + "." + strValues[1]);
+											mat4.m10 = float.Parse(strValues[2] + "." + strValues[3]);
+											mat4.m20 = float.Parse(strValues[4] + "." + strValues[5]);
+											mat4.m30 = float.Parse(strValues[6] + "." + strValues[7]);
+
+											mat4.m01 = float.Parse(strValues[8] + "." + strValues[9]);
+											mat4.m11 = float.Parse(strValues[10] + "." + strValues[11]);
+											mat4.m21 = float.Parse(strValues[12] + "." + strValues[13]);
+											mat4.m31 = float.Parse(strValues[14] + "." + strValues[15]);
+
+											mat4.m02 = float.Parse(strValues[16] + "." + strValues[17]);
+											mat4.m12 = float.Parse(strValues[18] + "." + strValues[19]);
+											mat4.m22 = float.Parse(strValues[20] + "." + strValues[21]);
+											mat4.m32 = float.Parse(strValues[22] + "." + strValues[23]);
+
+											mat4.m03 = float.Parse(strValues[24] + "." + strValues[25]);
+											mat4.m13 = float.Parse(strValues[26] + "." + strValues[27]);
+											mat4.m23 = float.Parse(strValues[28] + "." + strValues[29]);
+											mat4.m33 = float.Parse(strValues[30] + "." + strValues[31]);
+										}
+										else
+										{
+											//일반적인 경우
+											mat4.m00 = float.Parse(strValues[0]);
+											mat4.m10 = float.Parse(strValues[1]);
+											mat4.m20 = float.Parse(strValues[2]);
+											mat4.m30 = float.Parse(strValues[3]);
+
+											mat4.m01 = float.Parse(strValues[4]);
+											mat4.m11 = float.Parse(strValues[5]);
+											mat4.m21 = float.Parse(strValues[6]);
+											mat4.m31 = float.Parse(strValues[7]);
+
+											mat4.m02 = float.Parse(strValues[8]);
+											mat4.m12 = float.Parse(strValues[9]);
+											mat4.m22 = float.Parse(strValues[10]);
+											mat4.m32 = float.Parse(strValues[11]);
+
+											mat4.m03 = float.Parse(strValues[12]);
+											mat4.m13 = float.Parse(strValues[13]);
+											mat4.m23 = float.Parse(strValues[14]);
+											mat4.m33 = float.Parse(strValues[15]);
+										}
+										_value = mat4;
 									}
-									_value = mat4;
+									
 								}
 								catch (Exception exParse)
 								{
@@ -1274,66 +1672,105 @@ namespace AnyPortrait
 							{
 								try
 								{
-									string[] strValues = strValue.Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
-									if (strValues.Length < 9)
+									//변경 21.3.6 : 파싱 버그때문에 구분자가 /로 바뀌었다.
+									//"/"가 있다면 > 개선된 버전으로 디코딩
+									//"/"가 없다면 > 이전 버전으로 디코딩
+
+									if (strValue.Contains(STR_SLASH))
 									{
-										Debug.LogError("Matrix3x3 파싱 실패 [" + strValue + "]");
-										return false;
-									}
+										//Debug.Log("신버전 Matrix3x3");
 
-									//추가 20.9.13 : 실수형이 .대신 ,으로 저장되는 버그가 있다.
-									//그 경우엔 데이터가 두배로 보일 것
-									bool isFloatCommaBug = false;
-
-									if(strValues.Length >= 18)
-									{
-										//- 개수가 두배이며, . 이 없는지 체크
-										isFloatCommaBug = true;
-
-										for (int iCheckFloatData = 0; iCheckFloatData < 18; iCheckFloatData++)
+										//개선된 버전으로 디코딩
+										string[] strValues = strValue.Split(new string[] { STR_SLASH }, StringSplitOptions.RemoveEmptyEntries);
+										if (strValues.Length < 9)
 										{
-											if(strValues[iCheckFloatData].Contains("."))
-											{
-												//하나라도 .이 있으면 이 버그가 아니다.
-												isFloatCommaBug = false;
-												break;
-											}
+											Debug.LogError("Matrix3x3 파싱 실패 [" + strValue + "]");
+											return false;
 										}
-									}
 
-									apMatrix3x3 mat3 = new apMatrix3x3();
+										//추가 20.9.13 : 실수형이 .대신 ,으로 저장되는 버그가 있다.
+										apMatrix3x3 mat3 = new apMatrix3x3();
+										//일반적인 경우										
+										mat3._m00 = float.Parse(strValues[0].Replace(',', '.'));
+										mat3._m10 = float.Parse(strValues[1].Replace(',', '.'));
+										mat3._m20 = float.Parse(strValues[2].Replace(',', '.'));
 
-									if (isFloatCommaBug)
-									{
-										//콤마 버그
-										mat3._m00 = float.Parse(strValues[0] + "." + strValues[1]);
-										mat3._m10 = float.Parse(strValues[2] + "." + strValues[3]);
-										mat3._m20 = float.Parse(strValues[4] + "." + strValues[5]);
+										mat3._m01 = float.Parse(strValues[3].Replace(',', '.'));
+										mat3._m11 = float.Parse(strValues[4].Replace(',', '.'));
+										mat3._m21 = float.Parse(strValues[5].Replace(',', '.'));
 
-										mat3._m01 = float.Parse(strValues[6] + "." + strValues[7]);
-										mat3._m11 = float.Parse(strValues[8] + "." + strValues[9]);
-										mat3._m21 = float.Parse(strValues[10] + "." + strValues[11]);
+										mat3._m02 = float.Parse(strValues[6].Replace(',', '.'));
+										mat3._m12 = float.Parse(strValues[7].Replace(',', '.'));
+										mat3._m22 = float.Parse(strValues[8].Replace(',', '.'));
 
-										mat3._m02 = float.Parse(strValues[12] + "." + strValues[13]);
-										mat3._m12 = float.Parse(strValues[14] + "." + strValues[15]);
-										mat3._m22 = float.Parse(strValues[16] + "." + strValues[17]);
+										_value = mat3;
+										
 									}
 									else
 									{
-										//일반적인 경우										
-										mat3._m00 = float.Parse(strValues[0]);
-										mat3._m10 = float.Parse(strValues[1]);
-										mat3._m20 = float.Parse(strValues[2]);
+										//이전 버전으로 디코딩 (버그가 있을 수 있다.)
+										string[] strValues = strValue.Split(new string[] { STR_COMMA }, StringSplitOptions.RemoveEmptyEntries);
+										if (strValues.Length < 9)
+										{
+											Debug.LogError("Matrix3x3 파싱 실패 [" + strValue + "]");
+											return false;
+										}
 
-										mat3._m01 = float.Parse(strValues[3]);
-										mat3._m11 = float.Parse(strValues[4]);
-										mat3._m21 = float.Parse(strValues[5]);
+										//추가 20.9.13 : 실수형이 .대신 ,으로 저장되는 버그가 있다.
+										//그 경우엔 데이터가 두배로 보일 것
+										bool isFloatCommaBug = false;
 
-										mat3._m02 = float.Parse(strValues[6]);
-										mat3._m12 = float.Parse(strValues[7]);
-										mat3._m22 = float.Parse(strValues[8]);
+										if (strValues.Length >= 18)
+										{
+											//- 개수가 두배이며, . 이 없는지 체크
+											isFloatCommaBug = true;
+
+											for (int iCheckFloatData = 0; iCheckFloatData < 18; iCheckFloatData++)
+											{
+												if (strValues[iCheckFloatData].Contains("."))
+												{
+													//하나라도 .이 있으면 이 버그가 아니다.
+													isFloatCommaBug = false;
+													break;
+												}
+											}
+										}
+
+										apMatrix3x3 mat3 = new apMatrix3x3();
+
+										if (isFloatCommaBug)
+										{
+											//콤마 버그
+											mat3._m00 = float.Parse(strValues[0] + "." + strValues[1]);
+											mat3._m10 = float.Parse(strValues[2] + "." + strValues[3]);
+											mat3._m20 = float.Parse(strValues[4] + "." + strValues[5]);
+
+											mat3._m01 = float.Parse(strValues[6] + "." + strValues[7]);
+											mat3._m11 = float.Parse(strValues[8] + "." + strValues[9]);
+											mat3._m21 = float.Parse(strValues[10] + "." + strValues[11]);
+
+											mat3._m02 = float.Parse(strValues[12] + "." + strValues[13]);
+											mat3._m12 = float.Parse(strValues[14] + "." + strValues[15]);
+											mat3._m22 = float.Parse(strValues[16] + "." + strValues[17]);
+										}
+										else
+										{
+											//일반적인 경우										
+											mat3._m00 = float.Parse(strValues[0]);
+											mat3._m10 = float.Parse(strValues[1]);
+											mat3._m20 = float.Parse(strValues[2]);
+
+											mat3._m01 = float.Parse(strValues[3]);
+											mat3._m11 = float.Parse(strValues[4]);
+											mat3._m21 = float.Parse(strValues[5]);
+
+											mat3._m02 = float.Parse(strValues[6]);
+											mat3._m12 = float.Parse(strValues[7]);
+											mat3._m22 = float.Parse(strValues[8]);
+										}
+										_value = mat3;
 									}
-									_value = mat3;
+									
 								}
 								catch (Exception exParse)
 								{
@@ -1346,31 +1783,73 @@ namespace AnyPortrait
 							{
 								try
 								{
-									string[] strValues = strValue.Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
-									if (strValues.Length < 12)
+									//변경 21.3.6 : 파싱 버그때문에 구분자가 /로 바뀌었다.
+									//STR_CORRECTED_VERSION로 시작된다면 > 개선된 버전으로 디코딩
+									//STR_CORRECTED_VERSION로 시작되지 않는다면 > 이전 버전으로 디코딩
+									
+									if (strValue.StartsWith(STR_CORRECTED_VERSION))
 									{
-										Debug.LogError("Unity MonoBehaviour 파싱 실패 [" + strValue + "]");
-										return false;
+										//Debug.Log("신버전 Monobehaviour");
+
+										//개선된 버전으로 디코딩한다.
+										strValue = strValue.Substring(STR_CORRECTED_VERSION.Length);
+
+										string[] strValues = strValue.Split(new string[] { STR_SLASH }, StringSplitOptions.RemoveEmptyEntries);
+										if (strValues.Length < 12)
+										{
+											Debug.LogError("Unity MonoBehaviour 파싱 실패 [" + strValue + "]");
+											return false;
+										}
+
+										//Value 대신 Mono 값을 넣자
+										//_value = mat3;
+
+										_monoInstanceID = int.Parse(strValues[0]);
+										_monoName = strValues[1].ToString().Replace(STR_REPLACE_SLASH, STR_SLASH);
+										_monoPosition = new Vector3(	float.Parse(strValues[2].Replace(',', '.')),
+																		float.Parse(strValues[3].Replace(',', '.')),
+																		float.Parse(strValues[4].Replace(',', '.')));
+
+										_monoQuat = new Quaternion(	float.Parse(strValues[5].Replace(',', '.')),
+																	float.Parse(strValues[6].Replace(',', '.')),
+																	float.Parse(strValues[7].Replace(',', '.')),
+																	float.Parse(strValues[8].Replace(',', '.')));
+
+										_monoScale = new Vector3(	float.Parse(strValues[9].Replace(',', '.')),
+																	float.Parse(strValues[10].Replace(',', '.')),
+																	float.Parse(strValues[11].Replace(',', '.')));
+										_monoAssetPath = "";
 									}
+									else
+									{
+										//이전 버전으로 디코딩
+										string[] strValues = strValue.Split(new string[] { STR_COMMA }, StringSplitOptions.RemoveEmptyEntries);
+										if (strValues.Length < 12)
+										{
+											Debug.LogError("Unity MonoBehaviour 파싱 실패 [" + strValue + "]");
+											return false;
+										}
 
-									//Value 대신 Mono 값을 넣자
-									//_value = mat3;
+										//Value 대신 Mono 값을 넣자
+										//_value = mat3;
 
-									_monoInstanceID = int.Parse(strValues[0]);
-									_monoName = strValues[1].ToString();
-									_monoPosition = new Vector3(float.Parse(strValues[2]),
-																	float.Parse(strValues[3]),
-																	float.Parse(strValues[4]));
+										_monoInstanceID = int.Parse(strValues[0]);
+										_monoName = strValues[1].ToString();
+										_monoPosition = new Vector3(float.Parse(strValues[2]),
+																		float.Parse(strValues[3]),
+																		float.Parse(strValues[4]));
 
-									_monoQuat = new Quaternion(float.Parse(strValues[5]),
-																float.Parse(strValues[6]),
-																float.Parse(strValues[7]),
-																float.Parse(strValues[8]));
+										_monoQuat = new Quaternion(float.Parse(strValues[5]),
+																	float.Parse(strValues[6]),
+																	float.Parse(strValues[7]),
+																	float.Parse(strValues[8]));
 
-									_monoScale = new Vector3(float.Parse(strValues[9]),
-																float.Parse(strValues[10]),
-																float.Parse(strValues[11]));
-									_monoAssetPath = "";
+										_monoScale = new Vector3(float.Parse(strValues[9]),
+																	float.Parse(strValues[10]),
+																	float.Parse(strValues[11]));
+										_monoAssetPath = "";
+									}
+									
 
 
 								}
@@ -1386,31 +1865,73 @@ namespace AnyPortrait
 							{
 								try
 								{
-									string[] strValues = strValue.Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
-									if (strValues.Length < 12)
+									//변경 21.3.6 : 파싱 버그때문에 구분자가 /로 바뀌었다.
+									//STR_CORRECTED_VERSION로 시작된다면 > 개선된 버전으로 디코딩
+									//STR_CORRECTED_VERSION로 시작되지 않는다면 > 이전 버전으로 디코딩
+
+									if (strValue.StartsWith(STR_CORRECTED_VERSION))
 									{
-										Debug.LogError("Unity GameObject 파싱 실패 [" + strValue + "]");
-										return false;
+										//Debug.Log("신버전 GameObject");
+
+										//개선된 버전으로 디코딩한다.
+										strValue = strValue.Substring(STR_CORRECTED_VERSION.Length);
+
+										string[] strValues = strValue.Split(new string[] { STR_SLASH }, StringSplitOptions.RemoveEmptyEntries);
+										if (strValues.Length < 12)
+										{
+											Debug.LogError("Unity GameObject 파싱 실패 [" + strValue + "]");
+											return false;
+										}
+
+										//Value 대신 Mono 값을 넣자
+										//_value = mat3;
+
+										_monoInstanceID = int.Parse(strValues[0]);
+										_monoName = strValues[1].ToString().Replace(STR_REPLACE_SLASH, STR_SLASH);
+										_monoPosition = new Vector3(	float.Parse(strValues[2].Replace(',', '.')),
+																		float.Parse(strValues[3].Replace(',', '.')),
+																		float.Parse(strValues[4].Replace(',', '.')));
+
+										_monoQuat = new Quaternion(float.Parse(strValues[5].Replace(',', '.')),
+																	float.Parse(strValues[6].Replace(',', '.')),
+																	float.Parse(strValues[7].Replace(',', '.')),
+																	float.Parse(strValues[8].Replace(',', '.')));
+
+										_monoScale = new Vector3(float.Parse(strValues[9].Replace(',', '.')),
+																	float.Parse(strValues[10].Replace(',', '.')),
+																	float.Parse(strValues[11].Replace(',', '.')));
+										_monoAssetPath = "";
 									}
+									else
+									{
+										//이전 버전으로 디코딩
+										string[] strValues = strValue.Split(new string[] { STR_COMMA }, StringSplitOptions.RemoveEmptyEntries);
+										if (strValues.Length < 12)
+										{
+											Debug.LogError("Unity GameObject 파싱 실패 [" + strValue + "]");
+											return false;
+										}
 
-									//Value 대신 Mono 값을 넣자
-									//_value = mat3;
+										//Value 대신 Mono 값을 넣자
+										//_value = mat3;
 
-									_monoInstanceID = int.Parse(strValues[0]);
-									_monoName = strValues[1].ToString();
-									_monoPosition = new Vector3(float.Parse(strValues[2]),
-																	float.Parse(strValues[3]),
-																	float.Parse(strValues[4]));
+										_monoInstanceID = int.Parse(strValues[0]);
+										_monoName = strValues[1].ToString();
+										_monoPosition = new Vector3(float.Parse(strValues[2]),
+																		float.Parse(strValues[3]),
+																		float.Parse(strValues[4]));
 
-									_monoQuat = new Quaternion(float.Parse(strValues[5]),
-																float.Parse(strValues[6]),
-																float.Parse(strValues[7]),
-																float.Parse(strValues[8]));
+										_monoQuat = new Quaternion(float.Parse(strValues[5]),
+																	float.Parse(strValues[6]),
+																	float.Parse(strValues[7]),
+																	float.Parse(strValues[8]));
 
-									_monoScale = new Vector3(float.Parse(strValues[9]),
-																float.Parse(strValues[10]),
-																float.Parse(strValues[11]));
-									_monoAssetPath = "";
+										_monoScale = new Vector3(float.Parse(strValues[9]),
+																	float.Parse(strValues[10]),
+																	float.Parse(strValues[11]));
+										_monoAssetPath = "";
+									}
+									
 
 
 								}
@@ -1456,21 +1977,45 @@ namespace AnyPortrait
 							{
 								try
 								{
-									string[] strValues = strValue.Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
-									if (strValues.Length < 3)
+									//변경 21.3.6 : 파싱 버그때문에 구분자가 /로 바뀌었다.
+									//STR_CORRECTED_VERSION로 시작된다면 > 개선된 버전으로 디코딩
+									//STR_CORRECTED_VERSION로 시작되지 않는다면 > 이전 버전으로 디코딩
+
+									if (strValue.StartsWith(STR_CORRECTED_VERSION))
 									{
-										Debug.LogError("Unity Texture2D/Shader 파싱 실패 [" + strValue + "]");
-										return false;
+										//Debug.Log("신버전 Texture2D/Shader");
+										//개선된 버전으로 디코딩한다.
+										strValue = strValue.Substring(STR_CORRECTED_VERSION.Length);
+
+										string[] strValues = strValue.Split(new string[] { STR_SLASH }, StringSplitOptions.RemoveEmptyEntries);
+										if (strValues.Length < 3)
+										{
+											Debug.LogError("Unity Texture2D/Shader 파싱 실패 [" + strValue + "]");
+											return false;
+										}
+
+										//Value 대신 Mono 값을 넣자
+										//_value = mat3;
+
+										_monoInstanceID =	int.Parse(strValues[0]);
+										_monoName =			strValues[1].ToString().Replace(STR_REPLACE_SLASH, STR_SLASH);
+										_monoAssetPath =	strValues[2].ToString().Replace(STR_REPLACE_SLASH, STR_SLASH);
 									}
+									else
+									{
+										//이전 버전으로 디코딩
+										string[] strValues = strValue.Split(new string[] { STR_COMMA }, StringSplitOptions.RemoveEmptyEntries);
+										if (strValues.Length < 3)
+										{
+											Debug.LogError("Unity Texture2D/Shader 파싱 실패 [" + strValue + "]");
+											return false;
+										}
 
-									//Value 대신 Mono 값을 넣자
-									//_value = mat3;
-
-									_monoInstanceID = int.Parse(strValues[0]);
-									_monoName = strValues[1].ToString();
-									_monoAssetPath = strValues[2].ToString();
-
-
+										//Value 대신 Mono 값을 넣자
+										_monoInstanceID = int.Parse(strValues[0]);
+										_monoName = strValues[1].ToString();
+										_monoAssetPath = strValues[2].ToString();
+									}
 								}
 								catch (Exception exParse)
 								{
@@ -1507,692 +2052,6 @@ namespace AnyPortrait
 			}
 
 			return true;
-
-
-			// 이전 코드
-
-			////Step 1 : {가 나올때 까지 숫자를 저장. => Level
-			////Step 2 : 남은 글자 중에서 {를 찾고 그 다음 글자부터 파싱 시작
-			////Step 3 : "1글자 타입", ":",
-			////Step 4 : "값 길이" -> ":" 
-			////Step 5 : 값 길이만큼 파싱 후 타입별로 값을 처리한다.
-			////-> Step 2부터 반복
-
-			//try
-			//{
-
-			//	//Debug.Log("Decode [" + strEncoded + "]");
-			//	int iStr = 0;
-			//	int iStep = 1;
-
-			//	int strLength = strEncoded.Length;
-			//	string subStr = null;
-
-			//	bool isParse_Level = false;
-			//	bool isParse_Header = false;
-			//	bool isParse_Category = false;
-			//	bool isParse_Type = false;
-			//	bool isParse_Field = false;
-			//	bool isParse_Value = false;
-
-			//	bool isEnd = false;
-
-			//	int iSetType = 0;
-			//	int nValueLength = 0;
-			//	string strValue = null;
-				
-
-			//	while (true)
-			//	{
-			//		if (string.IsNullOrEmpty(strEncoded))
-			//		{
-			//			break;
-			//		}
-
-			//		switch (iStep)
-			//		{
-			//			case 1:
-			//				{
-			//					//Step 1 : {가 나올때 까지 숫자를 저장. => Level
-			//					//Debug.Log("Step1:" + strEncoded);
-
-			//					iStr = strEncoded.IndexOf("{");
-								
-			//					if (iStr <= 0)
-			//					{
-			//						isEnd = true;
-			//						break;
-			//					}
-			//					subStr = strEncoded.Substring(0, iStr);
-			//					try
-			//					{
-			//						_level = Int32.Parse(subStr);
-			//						isParse_Level = true;
-			//					}
-			//					catch (Exception ex)
-			//					{
-			//						Debug.LogError("Level Parse Exception : " + ex);
-			//						isEnd = true;
-			//						break;
-			//					}
-
-			//					//<0, 1, 2>, [3]
-
-			//					strEncoded = strEncoded.Substring(iStr);//"{"를 포함한 그 이후 부분만 남긴다.
-			//					iStep = 2;
-			//				}
-			//				break;
-
-			//			case 2:
-			//				{
-			//					//Step 2 : 남은 글자 중에서 {를 찾고 그 다음 글자부터 파싱 시작
-			//					//Debug.Log("Step2:" + strEncoded);
-
-			//					iStr = strEncoded.IndexOf("{");
-								
-			//					if (iStr < 0)
-			//					{
-			//						isEnd = true;
-			//						break;
-			//					}
-			//					//(0, 1, 2), [3 { ], <4 ...>
-			//					if (iStr + 1 >= strEncoded.Length)
-			//					{
-			//						//더이상 파싱할 길이가 없다.
-			//						isEnd = true;
-			//						break;
-			//					}
-
-
-			//					strEncoded = strEncoded.Substring(iStr + 1);//"{"의 다음 부분만 남긴다.
-			//					iSetType = -1;
-			//					nValueLength = 0;
-			//					iStep = 3;
-
-			//				}
-			//				break;
-
-			//			case 3:
-			//				{
-			//					//Step 3 : "1글자 타입", ":",
-			//					//Debug.Log("Step3:" + strEncoded);
-
-			//					if (strEncoded.Length < 2)
-			//					{
-			//						isEnd = true;
-			//						break;
-			//					}
-			//					subStr = strEncoded.Substring(0, 1);
-
-			//					if (subStr.Equals("H"))
-			//					{
-			//						//Header 값이다.
-			//						iSetType = 0;
-			//						isParse_Header = true;
-
-			//					}
-			//					else if (subStr.Equals("C"))
-			//					{
-			//						//Category 값이다.
-			//						iSetType = 1;
-			//						isParse_Category = true;
-
-			//					}
-			//					else if (subStr.Equals("T"))
-			//					{
-			//						//Type 값이다.
-			//						iSetType = 2;
-			//						isParse_Type = true;
-			//					}
-			//					else if (subStr.Equals("F"))
-			//					{
-			//						//Field 값이다.
-			//						iSetType = 3;
-			//						isParse_Field = true;
-			//					}
-			//					else if (subStr.Equals("V"))
-			//					{
-			//						//Vaule 값이다.
-			//						iSetType = 4;
-			//						isParse_Value = true;
-			//					}
-			//					else
-			//					{
-			//						//?? 알수 없는 타입
-			//						Debug.LogError("Unknown Type : " + subStr);
-			//						isEnd = true;
-			//						break;
-			//					}
-
-			//					// <0>, <1 ":">, 2... 다음 파싱을 위한 위치로 이동
-			//					strEncoded = strEncoded.Substring(2);
-			//					iStep = 4;
-
-			//				}
-			//				break;
-
-			//			case 4:
-			//				{
-			//					//Step 4 : "값 길이" -> ":" 
-			//					//Debug.Log("Step4:" + strEncoded);
-
-			//					iStr = strEncoded.IndexOf(":");
-			//					if (iStr < 0)
-			//					{
-			//						isEnd = true;
-			//						break;
-			//					}
-			//					subStr = strEncoded.Substring(0, iStr);
-			//					try
-			//					{
-			//						nValueLength = Int32.Parse(subStr);
-			//						isParse_Level = true;
-			//					}
-			//					catch (Exception ex)
-			//					{
-			//						Debug.LogError("Length Parse Exception [" + subStr + "] : " + ex);
-			//						isEnd = true;
-			//						break;
-			//					}
-
-			//					//(0, 1, 2), [3 { ], <4 ...>
-			//					strEncoded = strEncoded.Substring(iStr + 1);//":"의 다음 부분만 남긴다.
-			//					iStep = 5;
-
-			//				}
-			//				break;
-
-			//			case 5:
-			//				{
-			//					//Step 5 : 값 길이만큼 파싱 후 타입별로 값을 처리한다.
-			//					//-> Step 2부터 반복
-			//					//Debug.Log("Step5:" + strEncoded);
-
-			//					subStr = strEncoded.Substring(0, nValueLength);
-
-			//					//어떤 타입에 대한 값인가.
-			//					switch (iSetType)
-			//					{
-			//						case 0:
-			//							// H - Header
-			//							if(subStr.Equals("Root"))
-			//							{
-			//								_isRoot = true;
-			//								_isListArrayItem = false;
-			//							}
-			//							else if(subStr.Equals("Item"))
-			//							{
-			//								_isRoot = false;
-			//								_isListArrayItem = true;
-			//							}
-			//							else if(subStr.Equals("None"))
-			//							{
-			//								_isRoot = false;
-			//								_isListArrayItem = false;
-			//							}
-			//							else
-			//							{
-			//								Debug.LogError("알수 없는 헤더 : [" + subStr + "]");
-			//								return false;
-			//							}
-			//							break;
-
-			//						case 1:
-			//							// C - Category
-			//							{
-			//								try
-			//								{
-			//									_fieldCategory = (FIELD_CATEGORY)Enum.Parse(typeof(FIELD_CATEGORY), subStr);
-
-			//									if(_fieldCategory == FIELD_CATEGORY.Instance)
-			//									{
-			//										if(_childFields == null)
-			//										{
-			//											_childFields = new List<apBackupUnit>();
-			//										}
-			//									}
-			//									else if(_fieldCategory == FIELD_CATEGORY.Array ||
-			//										_fieldCategory == FIELD_CATEGORY.List)
-			//									{
-			//										if(_childItems == null)
-			//										{
-			//											_childItems = new List<apBackupUnit>();
-			//										}
-			//									}
-			//								}
-			//								catch(Exception)
-			//								{
-			//									Debug.LogError("Field Category Parse Exception [" + subStr + "]");
-			//									return false;
-			//								}
-			//							}
-			//							break;
-
-			//						case 2:
-			//							// T - Type
-			//							{
-			//								_typeName_Partial = subStr;
-			//							}
-			//							break;
-
-			//						case 3:
-			//							// F - Field
-			//							{
-			//								_fieldName = subStr;
-			//							}
-			//							break;
-
-			//						case 4:
-			//							// V - Value
-			//							{
-			//								_value = null;
-
-			//								strValue = subStr;
-
-			//							}
-			//							break;
-			//					}
-
-			//					strEncoded = strEncoded.Substring(nValueLength + 1);
-			//					iStep = 2;
-			//				}
-			//				break;
-			//		}
-
-			//		if (isEnd)
-			//		{
-			//			break;
-			//		}
-			//	}
-
-			//	//레벨, 헤더가 파싱 안되었다면 실패
-			//	if (!isParse_Level || !isParse_Header)
-			//	{
-			//		return false;
-			//	}
-
-			//	//Root 타입이 아닌데 나머지가 파싱 안되었다면 실패
-			//	if (!_isRoot)
-			//	{
-			//		if (!isParse_Category || !isParse_Type || !isParse_Field || !isParse_Value)
-			//		{
-			//			return false;
-			//		}
-
-			//		//이제 Value 파싱을 하자
-			//		switch (_fieldCategory)
-			//		{
-			//			case FIELD_CATEGORY.Primitive:
-			//				{
-			//					Type parseType = Type.GetType(_typeName_Partial);
-			//					//Debug.Log("Primitive Type [" + _typeName + " >> " + parseType + "]");
-			//					try
-			//					{
-			//						if (parseType.Equals(typeof(bool))) { _value = bool.Parse(strValue); }
-			//						else if (parseType.Equals(typeof(int))) { _value = int.Parse(strValue); }
-			//						else if (parseType.Equals(typeof(float))) { _value = float.Parse(strValue); }
-			//						else if (parseType.Equals(typeof(double))) { _value = double.Parse(strValue); }
-			//						else if (parseType.Equals(typeof(byte))) { _value = byte.Parse(strValue); }
-			//						else if (parseType.Equals(typeof(char))) { _value = char.Parse(strValue); }
-			//						else
-			//						{
-			//							Debug.LogError("알 수 없는 Primitive 타입 : " + _typeName_Partial);
-			//							return false;
-			//						}
-			//					}
-			//					catch (Exception exParse)
-			//					{
-			//						Debug.LogError("Value Parse 실패 [" + strValue + "] - " + exParse);
-			//						return false;
-			//					}
-			//				}
-			//				break;
-
-			//			case FIELD_CATEGORY.Enum:
-			//				{
-			//					_value = int.Parse(strValue);
-			//				}
-			//				break;
-			//			case FIELD_CATEGORY.String:
-			//				{
-			//					_value = strValue.ToString();
-			//				}
-			//				break;
-			//			case FIELD_CATEGORY.Vector2:
-			//				{
-			//					try
-			//					{
-			//						string[] strValues = strValue.Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
-			//						if(strValues.Length < 2)
-			//						{
-			//							Debug.LogError("Vector2 파싱 실패 [" + strValue + "]");
-			//							return false;
-			//						}
-			//						_value = new Vector2(
-			//							float.Parse(strValues[0]),
-			//							float.Parse(strValues[1])
-			//							);
-			//					}
-			//					catch(Exception exParse)
-			//					{
-			//						Debug.LogError("Value Parse 실패 [" + strValue + "] - " + exParse);
-			//						return false;
-			//					}
-			//				}
-			//				break;
-			//			case FIELD_CATEGORY.Vector3:
-			//				{
-			//					try
-			//					{
-			//						string[] strValues = strValue.Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
-			//						if(strValues.Length < 3)
-			//						{
-			//							Debug.LogError("Vector3 파싱 실패 [" + strValue + "]");
-			//							return false;
-			//						}
-			//						_value = new Vector3(
-			//							float.Parse(strValues[0]),
-			//							float.Parse(strValues[1]),
-			//							float.Parse(strValues[2])
-			//							);
-			//					}
-			//					catch(Exception exParse)
-			//					{
-			//						Debug.LogError("Value Parse 실패 [" + strValue + "] - " + exParse);
-			//						return false;
-			//					}
-			//				}
-			//				break;
-			//			case FIELD_CATEGORY.Vector4:
-			//				{
-			//					try
-			//					{
-			//						string[] strValues = strValue.Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
-			//						if(strValues.Length < 4)
-			//						{
-			//							Debug.LogError("Vector4 파싱 실패 [" + strValue + "]");
-			//							return false;
-			//						}
-			//						_value = new Vector4(
-			//							float.Parse(strValues[0]),
-			//							float.Parse(strValues[1]),
-			//							float.Parse(strValues[2]),
-			//							float.Parse(strValues[3])
-			//							);
-			//					}
-			//					catch(Exception exParse)
-			//					{
-			//						Debug.LogError("Value Parse 실패 [" + strValue + "] - " + exParse);
-			//						return false;
-			//					}
-			//				}
-			//				break;
-			//			case FIELD_CATEGORY.Color:
-			//				{
-			//					try
-			//					{
-			//						string[] strValues = strValue.Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
-			//						if(strValues.Length < 4)
-			//						{
-			//							Debug.LogError("Color 파싱 실패 [" + strValue + "]");
-			//							return false;
-			//						}
-			//						_value = new Color(
-			//							float.Parse(strValues[0]),
-			//							float.Parse(strValues[1]),
-			//							float.Parse(strValues[2]),
-			//							float.Parse(strValues[3])
-			//							);
-			//					}
-			//					catch(Exception exParse)
-			//					{
-			//						Debug.LogError("Value Parse 실패 [" + strValue + "] - " + exParse);
-			//						return false;
-			//					}
-			//				}
-			//				break;
-
-			//			case FIELD_CATEGORY.Matrix4x4:
-			//				{
-			//					try
-			//					{
-			//						string[] strValues = strValue.Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
-			//						if(strValues.Length < 16)
-			//						{
-			//							Debug.LogError("Matrix4x4 파싱 실패 [" + strValue + "]");
-			//							return false;
-			//						}
-			//						Matrix4x4 mat4 = new Matrix4x4();
-			//						mat4.m00 = float.Parse(strValues[0]);
-			//						mat4.m10 = float.Parse(strValues[1]);
-			//						mat4.m20 = float.Parse(strValues[2]);
-			//						mat4.m30 = float.Parse(strValues[3]);
-
-			//						mat4.m01 = float.Parse(strValues[4]);
-			//						mat4.m11 = float.Parse(strValues[5]);
-			//						mat4.m21 = float.Parse(strValues[6]);
-			//						mat4.m31 = float.Parse(strValues[7]);
-
-			//						mat4.m02 = float.Parse(strValues[8]);
-			//						mat4.m12 = float.Parse(strValues[9]);
-			//						mat4.m22 = float.Parse(strValues[10]);
-			//						mat4.m32 = float.Parse(strValues[11]);
-
-			//						mat4.m03 = float.Parse(strValues[12]);
-			//						mat4.m13 = float.Parse(strValues[13]);
-			//						mat4.m23 = float.Parse(strValues[14]);
-			//						mat4.m33 = float.Parse(strValues[15]);
-
-			//						_value = mat4;
-			//					}
-			//					catch(Exception exParse)
-			//					{
-			//						Debug.LogError("Value Parse 실패 [" + strValue + "] - " + exParse);
-			//						return false;
-			//					}
-			//				}
-			//				break;
-
-			//			case FIELD_CATEGORY.Matrix3x3:
-			//				{
-			//					try
-			//					{
-			//						string[] strValues = strValue.Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
-			//						if(strValues.Length < 9)
-			//						{
-			//							Debug.LogError("Matrix3x3 파싱 실패 [" + strValue + "]");
-			//							return false;
-			//						}
-			//						apMatrix3x3 mat3 = new apMatrix3x3();
-			//						mat3._m00 = float.Parse(strValues[0]);
-			//						mat3._m10 = float.Parse(strValues[1]);
-			//						mat3._m20 = float.Parse(strValues[2]);
-
-			//						mat3._m01 = float.Parse(strValues[3]);
-			//						mat3._m11 = float.Parse(strValues[4]);
-			//						mat3._m21 = float.Parse(strValues[5]);
-
-			//						mat3._m02 = float.Parse(strValues[6]);
-			//						mat3._m12 = float.Parse(strValues[7]);
-			//						mat3._m22 = float.Parse(strValues[8]);
-									
-			//						_value = mat3;
-			//					}
-			//					catch(Exception exParse)
-			//					{
-			//						Debug.LogError("Value Parse 실패 [" + strValue + "] - " + exParse);
-			//						return false;
-			//					}
-			//				}
-			//				break;
-			//			case FIELD_CATEGORY.UnityMonobehaviour:
-			//				{
-			//					try
-			//					{
-			//						string[] strValues = strValue.Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
-			//						if(strValues.Length < 12)
-			//						{
-			//							Debug.LogError("Unity MonoBehaviour 파싱 실패 [" + strValue + "]");
-			//							return false;
-			//						}
-
-			//						//Value 대신 Mono 값을 넣자
-			//						//_value = mat3;
-
-			//						_monoInstanceID = int.Parse(strValues[0]);
-			//						_monoName = strValues[1].ToString();
-			//						_monoPosition = new Vector3(	float.Parse(strValues[2]),
-			//														float.Parse(strValues[3]),
-			//														float.Parse(strValues[4]));
-
-			//						_monoQuat = new Quaternion(	float.Parse(strValues[5]),
-			//													float.Parse(strValues[6]),
-			//													float.Parse(strValues[7]),
-			//													float.Parse(strValues[8]));
-
-			//						_monoScale = new Vector3(	float.Parse(strValues[9]),
-			//													float.Parse(strValues[10]),
-			//													float.Parse(strValues[11]));
-			//						_monoAssetPath = "";
-									
-									
-			//					}
-			//					catch(Exception exParse)
-			//					{
-			//						Debug.LogError("Value Parse 실패 [" + strValue + "] - " + exParse);
-			//						return false;
-			//					}
-			//				}
-			//				break;
-
-			//			case FIELD_CATEGORY.UnityGameObject:
-			//				{
-			//					try
-			//					{
-			//						string[] strValues = strValue.Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
-			//						if(strValues.Length < 12)
-			//						{
-			//							Debug.LogError("Unity GameObject 파싱 실패 [" + strValue + "]");
-			//							return false;
-			//						}
-
-			//						//Value 대신 Mono 값을 넣자
-			//						//_value = mat3;
-
-			//						_monoInstanceID = int.Parse(strValues[0]);
-			//						_monoName = strValues[1].ToString();
-			//						_monoPosition = new Vector3(	float.Parse(strValues[2]),
-			//														float.Parse(strValues[3]),
-			//														float.Parse(strValues[4]));
-
-			//						_monoQuat = new Quaternion(	float.Parse(strValues[5]),
-			//													float.Parse(strValues[6]),
-			//													float.Parse(strValues[7]),
-			//													float.Parse(strValues[8]));
-
-			//						_monoScale = new Vector3(	float.Parse(strValues[9]),
-			//													float.Parse(strValues[10]),
-			//													float.Parse(strValues[11]));
-			//						_monoAssetPath = "";
-									
-									
-			//					}
-			//					catch(Exception exParse)
-			//					{
-			//						Debug.LogError("Value Parse 실패 [" + strValue + "] - " + exParse);
-			//						return false;
-			//					}
-			//				}
-			//				break;
-
-			//			case FIELD_CATEGORY.UnityObject:
-			//				{
-			//					try
-			//					{
-			//						_monoInstanceID = int.Parse(strValue);
-
-			//						//string[] strValues = strValue.Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
-			//						//if(strValues.Length < 2)
-			//						//{
-			//						//	Debug.LogError("Unity Object 파싱 실패 [" + strValue + "]");
-			//						//	return false;
-			//						//}
-
-			//						////Value 대신 Mono 값을 넣자
-			//						////_value = mat3;
-
-			//						//_monoInstanceID = int.Parse(strValues[0]);
-			//						//_monoName = strValues[1].ToString();
-									
-									
-			//					}
-			//					catch(Exception exParse)
-			//					{
-			//						Debug.LogError("Value Parse 실패 [" + strValue + "] - " + exParse);
-			//						return false;
-			//					}
-			//				}
-			//				break;
-
-			//			case FIELD_CATEGORY.Texture2D:
-			//			case FIELD_CATEGORY.CustomShader:
-			//				{
-			//					try
-			//					{
-			//						string[] strValues = strValue.Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
-			//						if(strValues.Length < 3)
-			//						{
-			//							Debug.LogError("Unity Texture2D/Shader 파싱 실패 [" + strValue + "]");
-			//							return false;
-			//						}
-
-			//						//Value 대신 Mono 값을 넣자
-			//						//_value = mat3;
-
-			//						_monoInstanceID = int.Parse(strValues[0]);
-			//						_monoName = strValues[1].ToString();
-			//						_monoAssetPath = strValues[2].ToString();
-									
-									
-			//					}
-			//					catch(Exception exParse)
-			//					{
-			//						Debug.LogError("Value Parse 실패 [" + strValue + "] - " + exParse);
-			//						return false;
-			//					}
-			//				}
-			//				break;
-
-			//			case FIELD_CATEGORY.Instance:
-			//			case FIELD_CATEGORY.List:
-			//			case FIELD_CATEGORY.Array:
-			//				{
-			//					try
-			//					{
-			//						_parsedNumChild = int.Parse(strValue);
-			//					}
-			//					catch (Exception exParse)
-			//					{
-			//						Debug.LogError("Value Parse 실패 [" + strValue + "] - " + exParse);
-			//						return false;
-			//					}
-			//				}
-			//				break;
-			//		}
-					
-			//	}
-
-
-
-			//	//Debug.Log("Parse Complete (L" + _level + ")[" + _fieldCategory + " / " + _fieldName + "(" + _typeName + ")");
-			//	return true;
-			//}
-			//catch (Exception ex)
-			//{
-			//	Debug.LogError("Decode Exception : " + ex);
-
-			//	return false;
-			//}
 		}
 		
 	}

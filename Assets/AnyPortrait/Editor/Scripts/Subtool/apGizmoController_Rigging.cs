@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -444,13 +443,13 @@ namespace AnyPortrait
 					boneSet = meshGroup._boneListSets[iSet];
 					for (int iRoot = 0; iRoot < boneSet._bones_Root.Count; iRoot++)
 					{
-						bone = CheckBoneClick(boneSet._bones_Root[iRoot], mousePosW, mousePosGL, Editor._boneGUIRenderMode, -1, Editor.Select.IsBoneIKRenderable);
+						bone = CheckBoneClickRecursive(boneSet._bones_Root[iRoot], mousePosW, mousePosGL, Editor._boneGUIRenderMode, -1, Editor.Select.IsBoneIKRenderable, true);
 						if (bone != null)
 						{
 							//추가 : 만약 본을 선택하는데 제약이 있을 수 있다.
 							if(isLimitSelectBones && bone != prevBone && selectType != apGizmos.SELECT_TYPE.Subtract)
 							{
-								if(!Editor.Select.LinkedToModifierBones.Contains(bone))
+								if(!Editor.Select.LinkedToModifierBones.ContainsKey(bone))
 								{
 									//이건 선택에 제한이 있다.
 									continue;
@@ -662,26 +661,27 @@ namespace AnyPortrait
 		//-----------------------------------------------------------------------------------------
 		public void AddHotKeys__Modifier_Rigging(bool isGizmoRenderable, apGizmos.CONTROL_TYPE controlType, bool isFFDMode)
 		{
-			Editor.AddHotKeyEvent(OnHotKeyEvent__Modifier_Rigging__Ctrl_A, apHotKey.LabelText.SelectAllVertices, KeyCode.A, false, false, true, null);
+			//Editor.AddHotKeyEvent(OnHotKeyEvent__Modifier_Rigging__Ctrl_A, apHotKey.LabelText.SelectAllVertices, KeyCode.A, false, false, true, null);
+			Editor.AddHotKeyEvent(OnHotKeyEvent__Modifier_Rigging__Ctrl_A, apHotKeyMapping.KEY_TYPE.SelectAllVertices_EditMod, null);//변경 20.12.3
 		}
 
 		// 단축키 : 버텍스 전체 선택
-		private void OnHotKeyEvent__Modifier_Rigging__Ctrl_A(object paramObject)
+		private apHotKey.HotKeyResult OnHotKeyEvent__Modifier_Rigging__Ctrl_A(object paramObject)
 		{
 			if (Editor.Select.MeshGroup == null || Editor.Select.Modifier == null)
 			{
-				return;
+				return null;
 			}
 
 			if (Editor.Select.ModRenderVerts_All == null)
 			{
-				return;
+				return null;
 			}
 			
 			if(Editor.Gizmos.IsBrushMode || Editor.Select.RiggingBrush_Mode != apSelection.RIGGING_BRUSH_TOOL_MODE.None)
 			{
 				//브러시 모드에서 우클릭했으면 무시
-				return;
+				return null;
 			}
 
 			bool isAnyChanged = false;
@@ -742,6 +742,7 @@ namespace AnyPortrait
 
 				Editor.Select.AutoSelectModMeshOrModBone();
 			}
+			return apHotKey.HotKeyResult.MakeResult();
 		}
 
 

@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -1016,10 +1015,20 @@ namespace AnyPortrait
 				_tmpCurPlayUnit = _animPlayUnits[i];
 				if (_tmpCurPlayUnit._targetRootUnit != usingRootUnit)
 				{
-					_animPlayUnits[i].SetEnd();
+					_tmpCurPlayUnit.SetEnd();
 				}
 			}
 		}
+
+		//추가 21.4.3 : Portrait Hide시 강제로 모든 PlayUnit을 1프레임안에 종료시켜야한다.
+		public void SetAllPlayUnitEnd()
+		{
+			for (int i = 0; i < _nPlayedUnit; i++)
+			{
+				_animPlayUnits[i].SetEnd();
+			}
+		}
+
 
 		public void Pause()
 		{
@@ -1302,8 +1311,6 @@ namespace AnyPortrait
 			{
 				_animPlayUnits[iPlayUnit].UpdateControlParamOpt();
 			}
-			
-
 
 			bool isOrderRefreshable = _isAnyUnitChanged || isAnyRequestChanged;
 

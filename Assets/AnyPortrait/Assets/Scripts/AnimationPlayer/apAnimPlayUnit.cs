@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -618,9 +617,25 @@ namespace AnyPortrait
 			//if(_nextPlayStatus != _playStatus)
 			if (requestedNextPlayStatus != _playStatus)
 			{
+				//-----------------------------------------------
+				//수정 21.4.1 : 애니메이션 재생시 루트유닛이 바뀐다면 다음 프레임에 OnAnimPlayUnitPlayStart를 호출하지 말고 바로 여기서 호출하자
+				if (requestedNextPlayStatus == PLAY_STATUS.Play)
+				{
+					//플레이 시작했다고 알려주자
+					if (!_isPlayStartEventCalled)
+					{
+						_parentQueue.OnAnimPlayUnitPlayStart(this);
+						_isPlayStartEventCalled = true;
+						//추가 > 컨트롤 파라미터가 Ready > Play로 넘어가는 1프레임 업데이트 안되는 문제가 있다.
+						_tmpIsControlParamUpdatable = true;//업데이트 할 수 있게 만들자
+					}
+				}
+				//--------------------------------------------------
+
 				_playStatus = requestedNextPlayStatus;
 				_nextPlayStatus = _playStatus;
 				_isFirstFrame = true;
+
 			}
 			else if (_isFirstFrame)
 			{

@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -65,7 +64,8 @@ namespace AnyPortrait
 									Shader shader_Alpha2White,
 									Shader shader_BoneV2,
 									Shader shader_TextureVColorMul,
-									Shader shader_RigCircleV2)
+									Shader shader_RigCircleV2,
+									Shader shader_Gray_Normal, Shader shader_Gray_Clipped)
 		{
 			//_mat_Color = mat_Color;
 			//_mat_Texture = mat_Texture;
@@ -83,7 +83,8 @@ namespace AnyPortrait
 				shader_Alpha2White,
 				shader_BoneV2, null,
 				shader_TextureVColorMul,
-				shader_RigCircleV2, null);
+				shader_RigCircleV2, null,
+				shader_Gray_Normal, shader_Gray_Clipped);
 		}
 
 		public void SetWindowSize(int windowWidth, int windowHeight, Vector2 scroll, float zoom,
@@ -577,7 +578,7 @@ namespace AnyPortrait
 
 
 		//--------------------------------------------------------------------------------------------------
-		public void DrawRenderUnit(apRenderUnit renderUnit)
+		public void DrawRenderUnit(apRenderUnit renderUnit, apMatrix rootMatrix)
 		{
 			try
 			{
@@ -605,11 +606,24 @@ namespace AnyPortrait
 
 				//미리 GL 좌표를 연산하고, 나중에 중복 연산(World -> GL)을 하지 않도록 하자
 				apRenderVertex rVert = null;
-				for (int i = 0; i < renderUnit._renderVerts.Count; i++)
+				if (rootMatrix == null)
 				{
-					rVert = renderUnit._renderVerts[i];
-					rVert._pos_GL = World2GL(rVert._pos_World_NoMod);//<<Mod 적용 안된걸로
+					for (int i = 0; i < renderUnit._renderVerts.Count; i++)
+					{
+						rVert = renderUnit._renderVerts[i];
+						rVert._pos_GL = World2GL(rVert._pos_World_NoMod);//<<Mod 적용 안된걸로
+					}
 				}
+				else
+				{
+					//추가 21.3.6
+					for (int i = 0; i < renderUnit._renderVerts.Count; i++)
+					{
+						rVert = renderUnit._renderVerts[i];						
+						rVert._pos_GL = World2GL(rootMatrix.InvMulPoint2(rVert._pos_World_NoMod));//<<Mod 적용 안된걸로 + Root Matrix 역연산
+					}
+				}
+				
 
 
 				
@@ -709,7 +723,8 @@ namespace AnyPortrait
 
 		public void DrawRenderUnit_ClippingParent_Renew(apRenderUnit renderUnit,
 																List<apTransform_Mesh.ClipMeshSet> childClippedSet,
-																RenderTexture externalRenderTexture = null)
+																RenderTexture externalRenderTexture = null,
+																apMatrix rootMatrix = null)
 		{
 			//렌더링 순서
 			//Parent - 기본
@@ -805,12 +820,22 @@ namespace AnyPortrait
 						vColor1 = Color.black;
 						vColor2 = Color.black;
 
+
+
+						if (rootMatrix == null)
+						{
+							posGL_0 = World2GL(rVert0._pos_World_NoMod);//<<Mod가 적용 안된걸로
+							posGL_1 = World2GL(rVert1._pos_World_NoMod);
+							posGL_2 = World2GL(rVert2._pos_World_NoMod);
+						}
+						else
+						{
+							//추가 21.3.6 : RootMatrix는 빼야한다.
+							posGL_0 = World2GL(rootMatrix.InvMulPoint2(rVert0._pos_World_NoMod));//<<Mod가 적용 안된걸로
+							posGL_1 = World2GL(rootMatrix.InvMulPoint2(rVert1._pos_World_NoMod));
+							posGL_2 = World2GL(rootMatrix.InvMulPoint2(rVert2._pos_World_NoMod));
+						}
 						
-
-
-						posGL_0 = World2GL(rVert0._pos_World_NoMod);//<<Mod가 적용 안된걸로
-						posGL_1 = World2GL(rVert1._pos_World_NoMod);
-						posGL_2 = World2GL(rVert2._pos_World_NoMod);
 
 						pos_0.x = posGL_0.x;
 						pos_0.y = posGL_0.y;
@@ -909,10 +934,18 @@ namespace AnyPortrait
 
 
 
-
-						posGL_0 = World2GL(rVert0._pos_World_NoMod);//Mod 없는 걸로
-						posGL_1 = World2GL(rVert1._pos_World_NoMod);
-						posGL_2 = World2GL(rVert2._pos_World_NoMod);
+						if (rootMatrix == null)
+						{
+							posGL_0 = World2GL(rVert0._pos_World_NoMod);//Mod 없는 걸로
+							posGL_1 = World2GL(rVert1._pos_World_NoMod);
+							posGL_2 = World2GL(rVert2._pos_World_NoMod);
+						}
+						else
+						{
+							posGL_0 = World2GL(rootMatrix.InvMulPoint2(rVert0._pos_World_NoMod));//Mod 없는 걸로
+							posGL_1 = World2GL(rootMatrix.InvMulPoint2(rVert1._pos_World_NoMod));
+							posGL_2 = World2GL(rootMatrix.InvMulPoint2(rVert2._pos_World_NoMod));
+						}
 
 						pos_0.x = posGL_0.x;
 						pos_0.y = posGL_0.y;

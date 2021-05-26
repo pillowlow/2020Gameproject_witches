@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -279,7 +278,9 @@ namespace AnyPortrait
 							editor._mat_Alpha2White.shader,
 							editor._mat_BoneV2.shader,
 							editor._mat_Texture_VColorMul.shader,
-							editor._mat_RigCircleV2.shader);
+							editor._mat_RigCircleV2.shader,
+							editor._mat_Gray_Normal.shader,
+							editor._mat_Gray_Clipped.shader);
 
 			wantsMouseMove = true;
 
@@ -905,7 +906,17 @@ namespace AnyPortrait
 						//PSD 여는 Dialog
 						try
 						{
-							string filePath = EditorUtility.OpenFilePanel("Open PSD File", _selectedPSDSet._filePath, "psd");
+							//변경 21.3.1 : 이전 파일이 있는 디렉토리 경로를 가져오자
+							string prevFileDir = "";
+							System.IO.FileInfo fi = new FileInfo(_selectedPSDSet._filePath);
+							if(fi.Exists)
+							{
+								prevFileDir = fi.Directory.FullName;
+							}
+
+							//string filePath = EditorUtility.OpenFilePanel("Open PSD File", _selectedPSDSet._filePath, "psd");//이전
+							string filePath = EditorUtility.OpenFilePanel("Open PSD File", prevFileDir, "psd");//변경 21.3.1
+
 							if (!string.IsNullOrEmpty(filePath))
 							{
 								//LoadPsdFile(filePath, _selectedPSDSet);
@@ -1088,7 +1099,7 @@ namespace AnyPortrait
 
 
 		private apGUIContentWrapper _guiContent_Delete = null;
-		
+
 
 		private void GUI_Center_2_FileLoadAndSelectMeshGroup(int width, int height, Rect centerRect)
 		{
@@ -1107,8 +1118,8 @@ namespace AnyPortrait
 			EditorGUILayout.BeginHorizontal(GUILayout.Width(width), GUILayout.Height(height));
 
 			GUI.Box(new Rect(centerRect.xMin, centerRect.yMin, width_Left, height), "");
-			
-			
+
+
 			GUI.backgroundColor = _glBackGroundColor;
 			GUI.Box(new Rect(centerRect.xMin + width_Left + margin, centerRect.yMin, width_Right, height_RightGUI), "");
 			GUI.backgroundColor = prevColor;
@@ -1119,7 +1130,7 @@ namespace AnyPortrait
 
 			//--------------------------------------
 			// <1열 : PSD Set 설정 + MeshGroup, TextureData 연결하기 >
-			
+
 			//- MeshGroup 연결
 			//- 덮어쓰기할 TextureData 연결
 			//- 이전 크기 vs 현재 크기와 비교 (Box)
@@ -1136,7 +1147,7 @@ namespace AnyPortrait
 
 			GUIStyle guiStyle_Label = new GUIStyle(GUI.skin.label);
 			guiStyle_Label.alignment = TextAnchor.MiddleLeft;
-			
+
 			GUIStyle guiStyle_PMBtn = new GUIStyle(GUI.skin.button);
 			guiStyle_PMBtn.margin = GUI.skin.textField.margin;
 
@@ -1157,10 +1168,10 @@ namespace AnyPortrait
 			EditorGUILayout.LabelField(_editor.GetText(TEXT.DLG_PSD_TargetMeshGroup));//Target MeshGroup
 			EditorGUILayout.BeginHorizontal(GUILayout.Width(width_ItemValue), GUILayout.Height(18));//H2
 			string targetMeshGroupName = _editor.GetText(TEXT.DLG_PSD_NoMeshGroup);//No Mesh Group
-			if(_selectedPSDSet._linkedTargetMeshGroup != null)
+			if (_selectedPSDSet._linkedTargetMeshGroup != null)
 			{
 				targetMeshGroupName = _selectedPSDSet._linkedTargetMeshGroup._name;
-				if(targetMeshGroupName.Length > 25)
+				if (targetMeshGroupName.Length > 25)
 				{
 					targetMeshGroupName = targetMeshGroupName.Substring(0, 25) + "..";
 				}
@@ -1173,7 +1184,7 @@ namespace AnyPortrait
 			GUILayout.Box(targetMeshGroupName, guiStyle_Box, GUILayout.Width(width_ItemValue - (90 - 13)), GUILayout.Height(18));
 			GUI.backgroundColor = prevColor;
 
-			if(GUILayout.Button(_editor.GetText(TEXT.DLG_Change), guiStyle_SmallBtn, GUILayout.Width(85), GUILayout.Height(18)))//Change
+			if (GUILayout.Button(_editor.GetText(TEXT.DLG_Change), guiStyle_SmallBtn, GUILayout.Width(85), GUILayout.Height(18)))//Change
 			{
 				_loadKey_SelectMeshGroup = apDialog_SelectLinkedMeshGroup.ShowDialog(_editor, null, OnMeshGroupSelected);
 			}
@@ -1186,15 +1197,15 @@ namespace AnyPortrait
 			//2. TextureData
 			GUILayout.Space(10);
 			EditorGUILayout.LabelField(_editor.GetText(TEXT.DLG_PSD_BakedImages));//Baked Images
-			if(GUILayout.Button(_editor.GetText(TEXT.DLG_PSD_AddImage), GUILayout.Width(width_Left - 15), GUILayout.Height(20)))//Add Image
+			if (GUILayout.Button(_editor.GetText(TEXT.DLG_PSD_AddImage), GUILayout.Width(width_Left - 15), GUILayout.Height(20)))//Add Image
 			{
 				_loadKey_SelectTextureData = apDialog_SelectTextureData.ShowDialog(_editor, null, OnTextureDataSelected);
 			}
-			if(GUILayout.Button(_editor.GetText(TEXT.DLG_PSD_AddImagesAuto), GUILayout.Width(width_Left - 15), GUILayout.Height(30)))//Add Image Automatically
+			if (GUILayout.Button(_editor.GetText(TEXT.DLG_PSD_AddImagesAuto), GUILayout.Width(width_Left - 15), GUILayout.Height(30)))//Add Image Automatically
 			{
 				//_loadKey_SelectTextureData = apDialog_SelectTextureData.ShowDialog(_editor, null, OnTextureDataSelected);
 				//자동으로 TextureData를 추가한다.
-				if(_selectedPSDSet._linkedTargetMeshGroup != null)
+				if (_selectedPSDSet._linkedTargetMeshGroup != null)
 				{
 					AutoSelectTextureData(_selectedPSDSet);
 				}
@@ -1202,7 +1213,7 @@ namespace AnyPortrait
 
 			//GUIContent guiContent_TextureDataIcon = new GUIContent(_editor.ImageSet.Get(apImageSet.PRESET.Hierarchy_Image));
 			Texture2D img_TextureData = _editor.ImageSet.Get(apImageSet.PRESET.Hierarchy_Image);
-			
+
 			//이전
 			//GUIContent guiContent_Delete = new GUIContent(_editor.ImageSet.Get(apImageSet.PRESET.Controller_RemoveRecordKey));
 
@@ -1217,9 +1228,9 @@ namespace AnyPortrait
 			GUI.Box(new Rect(centerRect.xMin, centerRect.yMin + 161 + 10, width_Left, 150), "");
 			GUI.backgroundColor = prevColor;
 			_scroll_Step2_Left = EditorGUILayout.BeginScrollView(_scroll_Step2_Left, false, true, GUILayout.Width(width_Left - 5), GUILayout.Height(150));
-			
+
 			EditorGUILayout.BeginVertical(GUILayout.Width(width_LeftInScroll));//V1
-			
+
 			bool isRemoveTexData = false;
 			int iRemoveTexData = -1;
 
@@ -1227,7 +1238,7 @@ namespace AnyPortrait
 			guiStyle_None.normal.textColor = GUI.skin.label.normal.textColor;
 
 			GUIStyle guiStyle_Selected = new GUIStyle(GUIStyle.none);
-			if(EditorGUIUtility.isProSkin)
+			if (EditorGUIUtility.isProSkin)
 			{
 				guiStyle_Selected.normal.textColor = Color.cyan;
 			}
@@ -1243,10 +1254,10 @@ namespace AnyPortrait
 			for (int iTex = 0; iTex < _selectedPSDSet._targetTextureDataList.Count; iTex++)
 			{
 				apPSDSet.TextureDataSet texDataSet = _selectedPSDSet._targetTextureDataList[iTex];
-				
+
 				GUIStyle curGUIStyle = guiStyle_None;
 
-				if(_selectedTextureData == texDataSet)
+				if (_selectedTextureData == texDataSet)
 				{
 					Rect lastRect = GUILayoutUtility.GetLastRect();
 					if (EditorGUIUtility.isProSkin)
@@ -1264,10 +1275,10 @@ namespace AnyPortrait
 				}
 
 				string texDataName = "";
-				if(texDataSet._linkedTextureData != null)
+				if (texDataSet._linkedTextureData != null)
 				{
 					texDataName = texDataSet._linkedTextureData._name;
-					if(texDataName.Length > 25)
+					if (texDataName.Length > 25)
 					{
 						texDataName = texDataName.Substring(0, 25) + "..";
 					}
@@ -1275,24 +1286,24 @@ namespace AnyPortrait
 
 				EditorGUILayout.BeginHorizontal(GUILayout.Width(width_LeftInScroll), GUILayout.Height(20));
 				GUILayout.Space(15);
-				if(GUILayout.Button(new GUIContent(" " + texDataName, img_TextureData), curGUIStyle, GUILayout.Width(width_LeftInScroll - (15 + 30)), GUILayout.Height(20)))
+				if (GUILayout.Button(new GUIContent(" " + texDataName, img_TextureData), curGUIStyle, GUILayout.Width(width_LeftInScroll - (15 + 30)), GUILayout.Height(20)))
 				{
 					_selectedTextureData = texDataSet;
 				}
 				GUILayout.Space(5);
-				
-				if(GUILayout.Button(_guiContent_Delete.Content, guiStyle_None, GUILayout.Width(20), GUILayout.Height(20)))
+
+				if (GUILayout.Button(_guiContent_Delete.Content, guiStyle_None, GUILayout.Width(20), GUILayout.Height(20)))
 				{
 					//TODO
 					//bool isResult = EditorUtility.DisplayDialog("Detach Image", "Do you want to detach the Image?", "Detach", "Cancel");
 
 					bool isResult = EditorUtility.DisplayDialog(
 						_editor.GetText(TEXT.DLG_PSD_DetachImage_Title),
-						_editor.GetText(TEXT.DLG_PSD_DetachImage_Body), 
-						_editor.GetText(TEXT.DLG_PSD_Detach), 
+						_editor.GetText(TEXT.DLG_PSD_DetachImage_Body),
+						_editor.GetText(TEXT.DLG_PSD_Detach),
 						_editor.GetText(TEXT.DLG_Cancel));
 
-					
+
 					if (isResult)
 					{
 						isRemoveTexData = true;
@@ -1303,14 +1314,14 @@ namespace AnyPortrait
 
 				GUILayout.Space(4);
 			}
-			if(isRemoveTexData)
+			if (isRemoveTexData)
 			{
-				if(_selectedPSDSet._targetTextureDataList[iRemoveTexData] == _selectedTextureData)
+				if (_selectedPSDSet._targetTextureDataList[iRemoveTexData] == _selectedTextureData)
 				{
 					_selectedTextureData = null;
 				}
 				_selectedPSDSet._targetTextureDataList.RemoveAt(iRemoveTexData);
-				
+
 			}
 
 			GUILayout.Space(200);
@@ -1321,10 +1332,10 @@ namespace AnyPortrait
 
 			//3. PSD Bake 설정값들 (여기서 수정할 수 있는건 Bake된 비율. 위치를 맞추기 위해)
 			GUILayout.Space(10);
-			
+
 			EditorGUILayout.LabelField(_editor.GetText(TEXT.DLG_PSD_AtlasBakeSettingsForReimpot));//"Atlas Bake Settings for Reimporting"
 			GUILayout.Space(5);
-			if(!_selectedPSDSet._isLastBaked)
+			if (!_selectedPSDSet._isLastBaked)
 			{
 				GUI.backgroundColor = new Color(1.5f, 0.6f, 0.6f, 1.0f);
 				GUILayout.Box("[ " + _editor.GetText(TEXT.DLG_PSD_ThereAreNoBakeData) + " ]", guiStyle_Box, GUILayout.Width(width_Left - 20), GUILayout.Height(30));//There are no bake data
@@ -1334,7 +1345,7 @@ namespace AnyPortrait
 			int width_InfoLabel = 100;
 			int width_InfoValue = width_Left - (width_InfoLabel + 20);
 			int height_Info = 18;
-			
+
 			if (_selectedPSDSet._isLastBaked)
 			{
 				//Width
@@ -1357,45 +1368,58 @@ namespace AnyPortrait
 			GUILayout.Space(5);
 			EditorGUILayout.LabelField(_editor.GetText(TEXT.DLG_PSD_BakeScale) + " (%) : ", GUILayout.Width(width_InfoLabel));//Bake Scale
 			int nextBakeScale100 = EditorGUILayout.DelayedIntField(_selectedPSDSet._next_meshGroupScaleX100, GUILayout.Width(width_InfoValue - (28 * 6 + 40)));
-			if(nextBakeScale100 != _selectedPSDSet._next_meshGroupScaleX100)
+			if (nextBakeScale100 != _selectedPSDSet._next_meshGroupScaleX100)
 			{
 				_selectedPSDSet._next_meshGroupScaleX100 = Mathf.Clamp(nextBakeScale100, 5, 1000);
 			}
 			GUILayout.Space(10);
-			if(GUILayout.Button("-5", guiStyle_PMBtn, GUILayout.Width(26), GUILayout.Height(16)))
+			if (GUILayout.Button("-5", guiStyle_PMBtn, GUILayout.Width(26), GUILayout.Height(16)))
 			{
 				_selectedPSDSet._next_meshGroupScaleX100 = Mathf.Clamp(_selectedPSDSet._next_meshGroupScaleX100 - 5, 5, 1000);
 				apEditorUtil.ReleaseGUIFocus();
 			}
-			if(GUILayout.Button("-2", guiStyle_PMBtn, GUILayout.Width(26), GUILayout.Height(16)))
+			if (GUILayout.Button("-2", guiStyle_PMBtn, GUILayout.Width(26), GUILayout.Height(16)))
 			{
 				_selectedPSDSet._next_meshGroupScaleX100 = Mathf.Clamp(_selectedPSDSet._next_meshGroupScaleX100 - 2, 5, 1000);
 				apEditorUtil.ReleaseGUIFocus();
 			}
-			
-			if(GUILayout.Button("-1", guiStyle_PMBtn, GUILayout.Width(26), GUILayout.Height(16)))
+
+			if (GUILayout.Button("-1", guiStyle_PMBtn, GUILayout.Width(26), GUILayout.Height(16)))
 			{
 				_selectedPSDSet._next_meshGroupScaleX100 = Mathf.Clamp(_selectedPSDSet._next_meshGroupScaleX100 - 1, 5, 1000);
 				apEditorUtil.ReleaseGUIFocus();
 			}
 			GUILayout.Space(10);
-			if(GUILayout.Button("+1", guiStyle_PMBtn, GUILayout.Width(26), GUILayout.Height(16)))
+			if (GUILayout.Button("+1", guiStyle_PMBtn, GUILayout.Width(26), GUILayout.Height(16)))
 			{
 				_selectedPSDSet._next_meshGroupScaleX100 = Mathf.Clamp(_selectedPSDSet._next_meshGroupScaleX100 + 1, 5, 1000);
 				apEditorUtil.ReleaseGUIFocus();
 			}
-			if(GUILayout.Button("+2", guiStyle_PMBtn, GUILayout.Width(26), GUILayout.Height(16)))
+			if (GUILayout.Button("+2", guiStyle_PMBtn, GUILayout.Width(26), GUILayout.Height(16)))
 			{
 				_selectedPSDSet._next_meshGroupScaleX100 = Mathf.Clamp(_selectedPSDSet._next_meshGroupScaleX100 + 2, 5, 1000);
 				apEditorUtil.ReleaseGUIFocus();
 			}
-			if(GUILayout.Button("+5", guiStyle_PMBtn, GUILayout.Width(26), GUILayout.Height(16)))
+			if (GUILayout.Button("+5", guiStyle_PMBtn, GUILayout.Width(26), GUILayout.Height(16)))
 			{
 				_selectedPSDSet._next_meshGroupScaleX100 = Mathf.Clamp(_selectedPSDSet._next_meshGroupScaleX100 + 5, 5, 1000);
 				apEditorUtil.ReleaseGUIFocus();
 			}
 			EditorGUILayout.EndHorizontal();
-			
+
+			////추가 21.3.6
+			////만약 BakeScale을 변경할 필요가 없는데 Canvas 사이즈가 변경되었다면 Offset을 수정하면 안된다.
+			////이걸 명시해주자
+			//if (_selectedPSDSet._lastBaked_PSDImageWidth != _psdLoader.PSDImageWidth &&
+			//	_selectedPSDSet._lastBaked_PSDImageHeight != _psdLoader.PSDImageHeight)
+			//{
+			//	GUILayout.Space(5);
+			//	//이미지 사이즈가 다르다.
+			//	string strWarning = "Last PSD Size : " + _selectedPSDSet._lastBaked_PSDImageWidth + "x" + _selectedPSDSet._lastBaked_PSDImageHeight + "\n";
+			//	strWarning += "Current PSD Size : " + _psdLoader.PSDImageWidth + "x" + _psdLoader.PSDImageHeight;
+			//	GUILayout.Box(strWarning, apGUIStyleWrapper.I.Box_MiddleCenter, GUILayout.Height(50));
+			//}
+
 
 
 
@@ -4007,7 +4031,17 @@ namespace AnyPortrait
 				return;
 			}
 
+			//중요 > meshGroup의 RootUnit의 Transform을 역으로 만들어야 한다.
+
 			meshGroup.RefreshForce();
+			apMatrix rootMatrix = null;
+			if(meshGroup._rootMeshGroupTransform != null)
+			{
+				//Debug.Log("Root Matrix : " + meshGroup._rootMeshGroupTransform._matrix.ToString());
+				rootMatrix = meshGroup._rootMeshGroupTransform._matrix;
+				
+			}
+			
 			for (int iUnit = 0; iUnit < meshGroup._renderUnits_All.Count; iUnit++)
 			{
 				apRenderUnit renderUnit = meshGroup._renderUnits_All[iUnit];
@@ -4033,7 +4067,7 @@ namespace AnyPortrait
 
 							if (renderUnit._meshTransform._isVisible_Default)
 							{
-								_gl.DrawRenderUnit_ClippingParent_Renew(renderUnit, renderUnit._meshTransform._clipChildMeshes);
+								_gl.DrawRenderUnit_ClippingParent_Renew(renderUnit, renderUnit._meshTransform._clipChildMeshes, null, rootMatrix);
 							}
 						}
 						else if (renderUnit._meshTransform._isClipping_Child)
@@ -4046,7 +4080,7 @@ namespace AnyPortrait
 
 							if (renderUnit._meshTransform._isVisible_Default)
 							{
-								_gl.DrawRenderUnit(renderUnit);
+								_gl.DrawRenderUnit(renderUnit, rootMatrix);
 							}
 						}
 

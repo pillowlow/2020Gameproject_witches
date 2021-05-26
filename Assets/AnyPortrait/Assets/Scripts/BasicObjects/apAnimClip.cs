@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -176,6 +175,27 @@ namespace AnyPortrait
 
 		
 
+		//추가 20.11.26 : Opt용 Control Param Timeline Layer만을 위한 빠른 접근 변수
+		//UpdateControlParam_Opt의 성능을 높인다.
+		public class OptControlParamTimelineLayer
+		{
+			public apAnimTimelineLayer _timelineLayer = null;
+			public apAnimControlKeyLUT _LUT = null;
+
+			public OptControlParamTimelineLayer(apAnimClip animClip, apAnimTimelineLayer timelineLayer)
+			{
+				_timelineLayer = timelineLayer;
+				_LUT = new apAnimControlKeyLUT(animClip, timelineLayer);
+				_LUT.MakeLUT();
+			}
+
+		}
+
+		[NonSerialized]
+		private OptControlParamTimelineLayer[] _optControlParamTimelineLayers = null;
+		[NonSerialized]
+		private int _nOptControlParamTimelineLayers = 0;
+
 
 		// Init
 		//---------------------------------------------
@@ -280,6 +300,38 @@ namespace AnyPortrait
 			{
 				_timelines[i].LinkOpt(this);
 			}
+
+			//추가 20.11.26 : ControlParam과 연결되는 모든 TimelineLayer를 가져오자
+			List<OptControlParamTimelineLayer> optControlParamTimelineLayers = new List<OptControlParamTimelineLayer>();
+			_nOptControlParamTimelineLayers = 0;
+			_optControlParamTimelineLayers = null;
+
+			apAnimTimeline curTimeline = null;
+			apAnimTimelineLayer curLayer = null;
+			for (int iTL = 0; iTL < _timelines.Count; iTL++)
+			{
+				curTimeline = _timelines[iTL];
+				if(curTimeline._linkType != LINK_TYPE.ControlParam)
+				{
+					continue;
+				}
+
+				for (int iL = 0; iL < curTimeline._layers.Count; iL++)
+				{
+					curLayer = curTimeline._layers[iL];
+					optControlParamTimelineLayers.Add(new OptControlParamTimelineLayer(this, curLayer));
+				}
+			}
+			//배열로 저장 (빠른 접근 위해)
+			_nOptControlParamTimelineLayers = optControlParamTimelineLayers.Count;
+			if(_nOptControlParamTimelineLayers > 0)
+			{
+				_optControlParamTimelineLayers = new OptControlParamTimelineLayer[_nOptControlParamTimelineLayers];
+				for (int i = 0; i < _nOptControlParamTimelineLayers; i++)
+				{
+					_optControlParamTimelineLayers[i] = optControlParamTimelineLayers[i];
+				}
+			}
 		}
 
 
@@ -319,6 +371,43 @@ namespace AnyPortrait
 			for (int i = 0; i < _timelines.Count; i++)
 			{
 				yield return _timelines[i].LinkOptAsync(this, asyncTimer);
+			}
+
+			if(asyncTimer.IsYield())
+			{
+				yield return asyncTimer.WaitAndRestart();
+			}
+
+			//추가 20.11.26 : ControlParam과 연결되는 모든 TimelineLayer를 가져오자
+			List<OptControlParamTimelineLayer> optControlParamTimelineLayers = new List<OptControlParamTimelineLayer>();
+			_nOptControlParamTimelineLayers = 0;
+			_optControlParamTimelineLayers = null;
+
+			apAnimTimeline curTimeline = null;
+			apAnimTimelineLayer curLayer = null;
+			for (int iTL = 0; iTL < _timelines.Count; iTL++)
+			{
+				curTimeline = _timelines[iTL];
+				if(curTimeline._linkType != LINK_TYPE.ControlParam)
+				{
+					continue;
+				}
+
+				for (int iL = 0; iL < curTimeline._layers.Count; iL++)
+				{
+					curLayer = curTimeline._layers[iL];
+					optControlParamTimelineLayers.Add(new OptControlParamTimelineLayer(this, curLayer));
+				}
+			}
+			//배열로 저장 (빠른 접근 위해)
+			_nOptControlParamTimelineLayers = optControlParamTimelineLayers.Count;
+			if(_nOptControlParamTimelineLayers > 0)
+			{
+				_optControlParamTimelineLayers = new OptControlParamTimelineLayer[_nOptControlParamTimelineLayers];
+				for (int i = 0; i < _nOptControlParamTimelineLayers; i++)
+				{
+					_optControlParamTimelineLayers[i] = optControlParamTimelineLayers[i];
+				}
 			}
 
 			if(asyncTimer.IsYield())
@@ -424,7 +513,7 @@ namespace AnyPortrait
 				//Debug.Log("Update AnimClip : " + _name);
 
 				//1. Control Param을 먼저 업데이트를 하고 [Control Param]
-				UpdateControlParam(true);
+				UpdateControlParam_Editor();
 
 
 				//2. Mesh를 업데이트한다. [Animated Modifier + Bone]
@@ -462,7 +551,7 @@ namespace AnyPortrait
 
 			if (isRefreshMeshAndControlParam)
 			{
-				UpdateControlParam(true);
+				UpdateControlParam_Editor();
 				UpdateMeshGroup_Editor(true, 0.0f, true);//강제로 업데이트하자
 			}
 		}
@@ -476,7 +565,7 @@ namespace AnyPortrait
 			_isPlaying = false;
 			_curFrame = Mathf.Clamp(_curFrame, _startFrame, _endFrame);
 
-			UpdateControlParam(true);
+			UpdateControlParam_Editor();
 			UpdateMeshGroup_Editor(true, 0.0f, true);//강제로 업데이트하자
 		}
 
@@ -490,7 +579,7 @@ namespace AnyPortrait
 			_tUpdate = 0.0f;
 			_curFrame = Mathf.Clamp(_curFrame, _startFrame, _endFrame);
 
-			UpdateControlParam(true);
+			UpdateControlParam_Editor();
 			UpdateMeshGroup_Editor(true, 0.0f, true);//강제로 업데이트하자
 		}
 
@@ -504,7 +593,7 @@ namespace AnyPortrait
 			_isPlaying = false;//<<Set Frame시에는 자동으로 Pause한다.
 			_tUpdate = 0.0f;
 
-			UpdateControlParam(true);
+			UpdateControlParam_Editor();
 			UpdateMeshGroup_Editor(true, 0.0f, true);//강제로 업데이트하자
 		}
 
@@ -517,17 +606,17 @@ namespace AnyPortrait
 		{
 			_curFrame = frame;
 			
-			UpdateControlParam(true);
+			UpdateControlParam_Editor();
 			UpdateMeshGroup_Editor(true, 0.0f, true);//강제로 업데이트하자
 		}
 
 
 		/// <summary>
 		/// [Editor] 업데이트 중 Control Param 제어 Timeline에 대해 업데이트 후 적용을 한다.
-		/// [Runtime] isAdaptToWeight = false로 두고 나머지 처리를 한다.
+		/// (변경 20.11.26 : 에디터 전용 함수로 변경되었다.)
 		/// </summary>
 		/// <param name="isAdaptToWeight1">[Editor]에서 Weight=1로 두고 적용을 한다</param>
-		public void UpdateControlParam(bool isAdaptToWeight1, int optLayer = 0, float optWeight = 1.0f, apAnimPlayUnit.BLEND_METHOD optBlendMethod = apAnimPlayUnit.BLEND_METHOD.Interpolation)
+		public void UpdateControlParam_Editor(int optLayer = 0, float optWeight = 1.0f, apAnimPlayUnit.BLEND_METHOD optBlendMethod = apAnimPlayUnit.BLEND_METHOD.Interpolation)
 		{
 			if (_controlParamResult.Count == 0)
 			{
@@ -582,6 +671,8 @@ namespace AnyPortrait
 					//firstKeyframe = layer._firstKeyFrame;
 					//lastKeyframe = layer._lastKeyFrame;
 
+
+					
 					for (int iK = 0; iK < layer._keyframes.Count; iK++)
 					{
 						curKeyframe = layer._keyframes[iK];
@@ -654,38 +745,130 @@ namespace AnyPortrait
 
 
 			//Control Param에 적용을 해야한다.
-			if (isAdaptToWeight1)
+			//[Editor] 전용 코드
+			//Editor인 경우 Weight 1로 강제한다.
+			for (int i = 0; i < _controlParamResult.Count; i++)
 			{
-				//Editor인 경우 Weight 1로 강제한다.
-				for (int i = 0; i < _controlParamResult.Count; i++)
-				{
-					_controlParamResult[i].AdaptToControlParam();
-				}
+				_controlParamResult[i].AdaptToControlParam();
 			}
-			else
+		}
+
+
+
+
+		/// <summary>
+		/// 추가 20.11.26 : 기존의 UpdateControlParam함수를 Editor와 Opt로 분리했다.
+		/// LUT 기능이나 변수를 분리 하는 등의 추가적인 처리가 있었다.
+		/// </summary>
+		/// <param name="isAdaptToWeight1">[Editor]에서 Weight=1로 두고 적용을 한다</param>
+		public void UpdateControlParam_Opt(int optLayer = 0, float optWeight = 1.0f, apAnimPlayUnit.BLEND_METHOD optBlendMethod = apAnimPlayUnit.BLEND_METHOD.Interpolation)
+		{
+			if (_controlParamResult.Count == 0)
 			{
-				//Runtime인 경우 지정된 Weight, Layer로 처리한다.
-				//if(optWeight > 0.0f && optWeight < 1.0f)
-				//{
-				//	UnityEngine.Debug.Log("AnimClip [" + _name + "] " + optWeight);
-				//}
-				if (_parentPlayUnit != null)
+				return;
+			}
+
+			for (int i = 0; i < _controlParamResult.Count; i++)
+			{
+				_controlParamResult[i].Init();
+			}
+
+			if(_nOptControlParamTimelineLayers == 0)
+			{
+				return;
+			}
+
+			int curFrame = CurFrame;
+			float curFrameF = CurFrameFloat;
+			int lengthFrames = _endFrame - _startFrame;
+
+			OptControlParamTimelineLayer curCPTL = null;
+			apAnimControlParamResult cpResult = null;
+			apAnimControlKeyLUT.LUTUnit targetLUT = null;
+			apAnimKeyframe keyframe_A = null;
+			apAnimKeyframe keyframe_B = null;
+
+			for (int iTL = 0; iTL < _nOptControlParamTimelineLayers; iTL++)
+			{
+				curCPTL = _optControlParamTimelineLayers[iTL];
+				cpResult = curCPTL._timelineLayer._linkedControlParamResult;//이게 Null일 수도 있지만.. 원래대로라면 이게 Null인 경우는 없을 듯
+
+				targetLUT = curCPTL._LUT.GetLUT(curFrame);
+				
+				if(cpResult == null || targetLUT == null)
 				{
-					for (int i = 0; i < _controlParamResult.Count; i++)
-					{
-						//UnityEngine.Debug.Log("AnimClip [" + _name + " > Control Param : " + _controlParamResult[i]._targetControlParam._keyName + " ]");
-						//_controlParamResult[i].AdaptToControlParam_Opt(optWeight, optBlendMethod);//이전
-						_controlParamResult[i].AdaptToControlParam_Opt(optWeight, optLayer, _parentPlayUnit._playOrder, optBlendMethod);//변경 20.4.19
-					}
+					//조회된 LUT Result가 없거나 Param을 계산할 수 없다.
+					continue;
+				}
+
+				
+				if (targetLUT._keyframe_Cur == targetLUT._keyframe_Next)
+				{
+					//A와 B가 같다 > 한개의 Keyframe의 영향을 100% 받는다.
+					cpResult.SetKeyframeResult(targetLUT._keyframe_Cur, 1.0f);
 				}
 				else
 				{
-					UnityEngine.Debug.LogError("No Play Unit");
-				}
-				
+					//두개의 영역에 들어왔다.
+					int frameInt_ForA = curFrame;
+					int frameInt_ForB = curFrame;
+					float frameFloat_ForA = curFrameF;
+					float frameFloat_ForB = curFrameF;
 
+					keyframe_A = targetLUT._keyframe_Cur;
+					keyframe_B = targetLUT._keyframe_Next;
+
+					if (frameInt_ForA < keyframe_A._frameIndex)
+					{
+						frameInt_ForA += lengthFrames;
+						frameFloat_ForA += lengthFrames;
+					}
+
+					if (frameInt_ForB > keyframe_B._frameIndex)
+					{
+						frameInt_ForB -= lengthFrames;
+					}
+					if (frameFloat_ForB > keyframe_B._frameIndex)
+					{
+						frameFloat_ForB -= lengthFrames;
+					}
+
+					//Key A 계산
+					//cpResult.SetKeyframeResult(keyframe_A, keyframe_A._curveKey.GetItp_Int(frameInt_ForA, false));//Editor에선 Int Frame
+					cpResult.SetKeyframeResult(keyframe_A, keyframe_A._curveKey.GetItp_Float(frameFloat_ForA, false, frameInt_ForA));//Runtime에선 Float Frame
+
+					//Key B 계산
+					//cpResult.SetKeyframeResult(keyframe_B, keyframe_B._curveKey.GetItp_Int(frameInt_ForB, true));//Editor에선 Int Frame
+					cpResult.SetKeyframeResult(keyframe_B, keyframe_B._curveKey.GetItp_Float(frameFloat_ForB, true, frameInt_ForB));//Runtime에선 Float Frame
+				}
 			}
+
+
+			//Control Param에 적용을 해야한다.
+			//Runtime인 경우 지정된 Weight, Layer로 처리한다.
+			//[Runtime 코드]
+			if (_parentPlayUnit != null)
+			{
+				for (int i = 0; i < _controlParamResult.Count; i++)
+				{
+					//UnityEngine.Debug.Log("AnimClip [" + _name + " > Control Param : " + _controlParamResult[i]._targetControlParam._keyName + " ]");
+					//_controlParamResult[i].AdaptToControlParam_Opt(optWeight, optBlendMethod);//이전
+					_controlParamResult[i].AdaptToControlParam_Opt(optWeight, optLayer, _parentPlayUnit._playOrder, optBlendMethod);//변경 20.4.19
+				}
+			}
+			//else
+			//{
+			//	UnityEngine.Debug.LogError("No Play Unit");
+			//}
 		}
+
+
+
+
+
+
+
+
 
 
 		/// <summary>
@@ -862,7 +1045,11 @@ namespace AnyPortrait
 
 		public void UpdateControlParamOpt()
 		{
-			UpdateControlParam(false, _parentPlayUnit._layer, _parentPlayUnit.UnitWeight, _parentPlayUnit.BlendMethod);
+			//이전
+			//UpdateControlParam(false, _parentPlayUnit._layer, _parentPlayUnit.UnitWeight, _parentPlayUnit.BlendMethod);
+
+			//변경 20.11.26 : Opt전용 함수
+			UpdateControlParam_Opt(_parentPlayUnit._layer, _parentPlayUnit.UnitWeight, _parentPlayUnit.BlendMethod);
 		}
 
 
@@ -1006,7 +1193,7 @@ namespace AnyPortrait
 		/// <param name="frame"></param>
 		public void SetFrame_Opt(int frame, bool isResetAnimEventByFrame)
 		{
-			_curFrame = Mathf.Clamp(frame, _startFrame, _endFrame);
+			_curFrame = Mathf.Clamp(frame, _startFrame, _endFrame);			
 			_tUpdate = 0.0f;
 
 			_tUpdateTotal = (_curFrame - _startFrame) * TimePerFrame;

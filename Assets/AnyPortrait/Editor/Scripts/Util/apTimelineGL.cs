@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -118,8 +117,40 @@ namespace AnyPortrait
 		{
 			get
 			{
-				return (_timelineEvent == TIMELINE_EVENT.DragFrame || _timelineEvent == TIMELINE_EVENT.DragPlayBar) 
+				return (_timelineEvent == TIMELINE_EVENT.DragFrame 
+					|| _timelineEvent == TIMELINE_EVENT.DragPlayBar) 
 					&& _leftBtnStatus == apMouse.MouseBtnStatus.Pressed;
+			}
+		}
+
+		public static bool IsAreaSelecting
+		{
+			get
+
+			{
+				if (_timelineEvent == TIMELINE_EVENT.Select
+						//&& _keyframeControlType == KEYFRAME_CONTROL_TYPE.MultipleSelect
+						&& _downClipArea == CLIP_TYPE.Main
+						&& !_isKeyframeClicked
+						&& !_isMouseEventUsed
+						&& _leftBtnStatus == apMouse.MouseBtnStatus.Pressed)
+				{
+					//Debug.Log("IsArea Selecting : Left Button : " + _leftBtnStatus + " / TimelineEvent : " + _timelineEvent + " / IsKeyframeClicked : " + _isKeyframeClicked);
+					return true;
+				}
+				else
+				{
+					//Debug.LogError("IsArea Selecting (False) : Left Button : " + _leftBtnStatus + " / TimelineEvent : " + _timelineEvent + " / IsKeyframeClicked : " + _isKeyframeClicked + " / _keyframeControlType : " + _keyframeControlType + " / _downClipArea : " + _downClipArea);
+					return false;
+				}
+				//return 
+				//	_timelineEvent == TIMELINE_EVENT.Select 
+				//	&& _keyframeControlType == KEYFRAME_CONTROL_TYPE.MultipleSelect 
+				//	&& _downClipArea == CLIP_TYPE.Main 
+				//	&& !_isKeyframeClicked
+				//	//&& !_isMouseEventUsed
+				//	&& _leftBtnStatus == apMouse.MouseBtnStatus.Pressed;
+
 			}
 		}
 
@@ -303,11 +334,12 @@ namespace AnyPortrait
 									Shader shader_Alpha2White,
 									Shader shader_BoneV2,
 									Shader shader_TextureVColorMul,
-									Shader shader_RigCircleV2)
+									Shader shader_RigCircleV2,
+									Shader shader_Gray_Normal, Shader shader_Gray_Clipped)
 		{
-			_matBatch_Total.SetShader(shader_Color, shader_Texture_Normal_Set, shader_Texture_VColorAdd_Set, /*shader_MaskedTexture_Set, */shader_MaskOnly, shader_Clipped_Set, shader_GUITexture, shader_ToneColor_Normal, shader_ToneColor_Clipped, shader_Alpha2White, shader_BoneV2, null, shader_TextureVColorMul, shader_RigCircleV2, null);
-			_matBatch_Main.SetShader(shader_Color, shader_Texture_Normal_Set, shader_Texture_VColorAdd_Set, /*shader_MaskedTexture_Set, */shader_MaskOnly, shader_Clipped_Set, shader_GUITexture, shader_ToneColor_Normal, shader_ToneColor_Clipped, shader_Alpha2White, shader_BoneV2, null, shader_TextureVColorMul, shader_RigCircleV2, null);
-			_matBatch_Header.SetShader(shader_Color, shader_Texture_Normal_Set, shader_Texture_VColorAdd_Set, /*shader_MaskedTexture_Set, */shader_MaskOnly, shader_Clipped_Set, shader_GUITexture, shader_ToneColor_Normal, shader_ToneColor_Clipped, shader_Alpha2White, shader_BoneV2, null, shader_TextureVColorMul, shader_RigCircleV2, null);
+			_matBatch_Total.SetShader(shader_Color, shader_Texture_Normal_Set, shader_Texture_VColorAdd_Set, /*shader_MaskedTexture_Set, */shader_MaskOnly, shader_Clipped_Set, shader_GUITexture, shader_ToneColor_Normal, shader_ToneColor_Clipped, shader_Alpha2White, shader_BoneV2, null, shader_TextureVColorMul, shader_RigCircleV2, null, shader_Gray_Normal, shader_Gray_Clipped);
+			_matBatch_Main.SetShader(shader_Color, shader_Texture_Normal_Set, shader_Texture_VColorAdd_Set, /*shader_MaskedTexture_Set, */shader_MaskOnly, shader_Clipped_Set, shader_GUITexture, shader_ToneColor_Normal, shader_ToneColor_Clipped, shader_Alpha2White, shader_BoneV2, null, shader_TextureVColorMul, shader_RigCircleV2, null, shader_Gray_Normal, shader_Gray_Clipped);
+			_matBatch_Header.SetShader(shader_Color, shader_Texture_Normal_Set, shader_Texture_VColorAdd_Set, /*shader_MaskedTexture_Set, */shader_MaskOnly, shader_Clipped_Set, shader_GUITexture, shader_ToneColor_Normal, shader_ToneColor_Clipped, shader_Alpha2White, shader_BoneV2, null, shader_TextureVColorMul, shader_RigCircleV2, null, shader_Gray_Normal, shader_Gray_Clipped);
 		}
 
 		public static void SetTexture(Texture2D img_KeyFrame,
@@ -685,6 +717,11 @@ namespace AnyPortrait
 			_isMouseEventUsed = true;
 			_isRefreshScrollDown = true;
 			_isMouseIgnored_UpOrUsed = true;
+		}
+
+		public static void SetMoveMouseDownPos(Vector2 moveOffset)
+		{
+			_mousePos_Down += moveOffset;
 		}
 
 		public static void RefreshScrollDown()
@@ -2659,6 +2696,170 @@ namespace AnyPortrait
 
 		}
 
+
+
+		/// <summary>
+		/// 렌더링은 하지 않고, 오직 Area에 의한 선택만 체크
+		/// </summary>
+		/// <param name="timelineLayer"></param>
+		/// <param name="posY"></param>
+		/// <param name="baseColor"></param>
+		/// <param name="isAvailable"></param>
+		/// <param name="lineHeight"></param>
+		/// <param name="curFrame"></param>
+		/// <param name="isSelectedTimelineLayer"></param>
+		/// <param name="isCurveEdit"></param>
+		/// <param name="isSingleCurveEdit"></param>
+		/// <param name="curveEditUIType_SingleEdit"></param>
+		/// <param name="iMultiCurveType"></param>
+		/// <param name="multipleCurve"></param>
+		public static void CheckKeyframesAreaSelectedOnly(	apAnimTimelineLayer timelineLayer,															
+															float posY,
+															bool isAvailable,
+															int lineHeight
+															)
+		{
+			if (!_isMouseEvent || !isAvailable || _isMouseEventUsed)
+			{
+				return;
+			}
+
+			if(_keyframeControlType != KEYFRAME_CONTROL_TYPE.MultipleSelect)
+			{
+				return;
+			}
+
+			if(_downClipArea != CLIP_TYPE.Main)
+			{
+				return;
+			}
+
+			List<apAnimKeyframe> keyFrames = timelineLayer._keyframes;
+			apAnimKeyframe firstFrame = timelineLayer._firstKeyFrame;
+			apAnimKeyframe lastFrame = timelineLayer._lastKeyFrame;
+			bool isDummyFirstFrame = false;
+			bool isDummyLastFrame = false;
+			if (firstFrame != null && firstFrame._isLoopAsStart)
+			{
+				isDummyFirstFrame = true;
+			}
+
+			if (lastFrame != null && lastFrame._isLoopAsEnd)
+			{
+				isDummyLastFrame = true;
+			}
+
+			float sizeH = (lineHeight - 2);
+			float sizeW = (sizeH / 4) + 3;
+
+			apAnimKeyframe curKeyFrame = null;
+
+			posY = (posY + _layoutHeight_Header) - _scrollPos.y;
+			
+
+			//WorkKeyframe이 있는지 확인 (없는 경우도 많다)
+			
+			for (int i = 0; i < keyFrames.Count; i++)
+			{
+				curKeyFrame = keyFrames[i];
+
+				//DrawSingleKeyframe(curKeyFrame, isAvailable, sizeW, sizeH, isDrawY, posY, baseColor, loopIconSize, false, isWorkingKeyframe);
+				CheckSingleKeyframeAreaSelectedOnly(curKeyFrame, sizeW, sizeH, posY, false);
+			}
+
+			if (isDummyLastFrame)
+			{
+				//더미 프레임은 조금 더 신중하게 처리한다.
+				//DrawSingleKeyframe(lastFrame, isAvailable, sizeW, sizeH, isDrawY, posY, baseColor, loopIconSize, true, isDummyLastWorking);
+
+				CheckSingleKeyframeAreaSelectedOnly(lastFrame, sizeW, sizeH, posY, true);
+			}
+
+
+			if (isDummyFirstFrame)
+			{
+				//더미 프레임은 조금 더 신중하게 처리한다.
+				//DrawSingleKeyframe(firstFrame, isAvailable, sizeW, sizeH, isDrawY, posY, baseColor, loopIconSize, true, isDummyFirstWorking);
+				CheckSingleKeyframeAreaSelectedOnly(firstFrame, sizeW, sizeH, posY, true);
+			}
+		}
+
+		/// <summary>
+		/// 렌더링은 안하고 오직 Area 선택을 위해서 호출된다.
+		/// </summary>
+		/// <param name="keyframe"></param>
+		/// <param name="isAvailable"></param>
+		/// <param name="sizeW"></param>
+		/// <param name="sizeH"></param>
+		/// <param name="posY"></param>
+		/// <param name="isDummyFrame"></param>
+		private static void CheckSingleKeyframeAreaSelectedOnly(apAnimKeyframe keyframe,
+												float sizeW, float sizeH,
+												float posY,
+												bool isDummyFrame
+											)
+		{
+			float posX = 0.0f;
+			if (!isDummyFrame)
+			{
+				posX = FrameToPosX_Main(keyframe._frameIndex);
+			}
+			else
+			{
+				posX = FrameToPosX_Main(keyframe._loopFrameIndex);
+			}
+
+			Vector2 keyPos = new Vector2(posX - 0.5f, posY);
+
+
+			bool isAnySelected = false;
+
+
+			if (!_isKeyframeClicked)
+			{
+				if (IsTargetSelectable_Area(_dragAreaStartPos, _dragAreaEndPos, keyPos, sizeW, sizeH))
+				{
+					_selectableKeyframes.Add(keyframe);
+					isAnySelected = true;
+
+					_targetSelectType = TARGET_SELECT_TYPE.Keyframe;
+				}
+			}
+
+			if (!isAnySelected)
+			{
+				//if (_leftBtnStatus == apMouse.MouseBtnStatus.Down || _leftBtnStatus == apMouse.MouseBtnStatus.Pressed)
+				if (_leftBtnStatus == apMouse.MouseBtnStatus.Down)
+				{
+					if (IsTargetSelectable(_dragAreaEndPos, keyPos, sizeW + 6, sizeH + 4) && _mousePos.y > _layoutHeight_Header)
+					{
+						_selectableKeyframes.Add(keyframe);
+
+						if (_selection.IsSelectedKeyframe(keyframe))
+						{
+							_isSelectedKeyframeClick = true;
+						}
+						//_isKeyframeClicked = true;
+						isAnySelected = true;
+
+						if (IsTargetSelectable(_mousePos_Down, keyPos, sizeW + 6, sizeH + 4) && _mousePos.y > _layoutHeight_Header)
+						{
+							//클릭한 위치에서 선택된 것이라면
+							//=> 단순 클릭
+							_isKeyframeClicked = true;
+						}
+
+						_targetSelectType = TARGET_SELECT_TYPE.Keyframe;
+					}
+				}
+			}
+
+
+		}
+
+
+
+
 		private static Color _curveColor_Linear = new Color(1.0f, 0.2f, 0.2f, 1.0f);
 		private static Color _curveColor_Smooth = new Color(0.2f, 0.5f, 1.0f, 1.0f);
 		private static Color _curveColor_Constant = new Color(0.2f, 1.0f, 0.2f, 1.0f);
@@ -3654,6 +3855,33 @@ namespace AnyPortrait
 			}
 		}
 
+
+		/// <summary>
+		/// 드래그로 키프레임을 여러개 선택하고자 할 땐 보이지 않는 키프레임도 선택되어야 한다.
+		/// </summary>
+		/// <returns></returns>
+		public static bool IsSelectingHiddenMultiKeyframesByArea()
+		{
+			if(_timelineEvent == TIMELINE_EVENT.Select 
+				&& _keyframeControlType == KEYFRAME_CONTROL_TYPE.MultipleSelect 
+				&& _downClipArea == CLIP_TYPE.Main 
+				&& !_isKeyframeClicked)
+			{
+				//TODO : 클릭한 영역이 외부에 위치해야한다.
+				Vector2 mainDragPos = _dragAreaStartPos;
+				mainDragPos.y -= _layoutHeight_Header;
+
+				//드래그 위치가 영역 밖으로 나갔는가
+				//Debug.Log("다중 선택 : 시작점(Main) : " + mainDragPos);
+				if(mainDragPos.x < 0.0f || mainDragPos.x > _layoutWidth
+					|| mainDragPos.y < 0.0f || mainDragPos.y > _layoutHeight_Main)
+				{
+					//Debug.LogError("시작점이 밖으로 나갔다.");
+					return true;
+				}
+			}
+			return false;
+		}
 		
 
 		//------------------------------------------------------------------

@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -179,6 +178,10 @@ namespace AnyPortrait
 		private apHotKey _hotKey = new apHotKey();
 		public apHotKey HotKey { get { return _hotKey; } }
 
+		//추가 20.11.30
+		private apHotKeyMapping _hotKeyMap = new apHotKeyMapping();
+		public apHotKeyMapping HotKeyMap { get { return _hotKeyMap; } }
+
 		private apExporter _exporter = null;
 		public apExporter Exporter { get { if (_exporter == null) { _exporter = new apExporter(this); } return _exporter; } }
 
@@ -195,13 +198,65 @@ namespace AnyPortrait
 		private apOnion _onion = new apOnion();
 		public apOnion Onion { get { return _onion; } }
 
-		private apMeshGenerator _meshGenerator = null;
-		public apMeshGenerator MeshGenerator { get { if (_meshGenerator == null) { _meshGenerator = new apMeshGenerator(this); } return _meshGenerator; } }
+		//이전 버전의 MeshGenerator. 삭제될 대상 ㅜㅜ
+		//private apMeshGenerator _meshGenerator = null;
+		//public apMeshGenerator MeshGenerator { get { if (_meshGenerator == null) { _meshGenerator = new apMeshGenerator(this); } return _meshGenerator; } }
+
+		//추가 20.12.9 : 메시 생성기 V2
+		private apMeshGeneratorV2 _meshGeneratorV2 = null;
+		public apMeshGeneratorV2 MeshGeneratorV2 { get { if(_meshGeneratorV2 == null) { _meshGeneratorV2 = new apMeshGeneratorV2(this); } return _meshGeneratorV2; } }
+
+
 
 
 		//추가 20.4.13 : 오브젝트의 Show/Hide를 저장하고 열 수 있는 객체
 		private apVisiblityController _visibilityController = null;
 		public apVisiblityController VisiblityController { get { if(_visibilityController == null) { _visibilityController = new apVisiblityController(); } return _visibilityController; } }
+
+
+		//추가 21.1.27 : 현재 선택된 VisibilityPreset과 Rule
+		public bool _isAdaptVisibilityPreset = false;
+		public apVisibilityPresets.RuleData _selectedVisibilityPresetRule = null;
+
+		//추가 21.2.27
+		private apRotoscoping _rotoscoping = new apRotoscoping();
+		public apRotoscoping Rotoscoping { get { return _rotoscoping; } }
+
+		public bool _isEnableRotoscoping = false;
+		public apRotoscoping.ImageSetData _selectedRotoscopingData = null;
+		public int _iRotoscopingImageFile = 0;
+		//애니메이션과 동기화하여 로토스코핑을 제공하는 경우 : 마지막으로 동기화된 AnimClip 프레임과 동기화 여부 (동기화 이후에는 마음대로 이미지를 변경할 수 있다)
+		private int _iSyncRotoscopingAnimClipFrame = -1;
+		private bool _isSyncRotoscopingToAnimClipFrame = false;
+
+
+
+		//추가 21.1.18 : 제너릭 메뉴를 관리하는 클래스와 버튼들
+		private apGUIMenu _guiMenu = null;
+		public apGUIMenu GUIMenu { get { if (_guiMenu == null) { _guiMenu = new apGUIMenu(this); } return _guiMenu; } }
+
+		private apGUIButton _guiButton_Menu = null;
+		private apGUIButton _guiButton_RecordOnion = null;
+
+		//private Texture2D _imgViewStat_MeshHidden = null;
+		//private Texture2D _imgViewStat_BoneHidden = null;
+		//private Texture2D _imgViewStat_BoneOutline = null;
+		//private Texture2D _imgViewStat_DisablePhysics = null;
+		//private Texture2D _imgViewStat_OnionSkin = null;
+		//private Texture2D _imgViewStat_PresetVisible = null;
+		//private Texture2D _imgViewStat_Rotoscoping = null;
+
+		//추가 21.2.18 : 현재 상태를 아이콘으로 통합적으로 표시하는 객체
+		private apGUIStatBox _guiStatBox = null;
+		private apGUIHowToUseTips _guiHowToUse = null;
+
+		/// <summary>GUI의 정보과 Workspace의 가장자리와의 여백</summary>
+		private const int GUI_STAT_MARGIN = 10;		
+		private const int GUI_STAT_ICON_SIZE = 28;
+		private const int GUI_STAT_MENUBTN_SIZE = 32;
+
+		public bool _option_ShowPrevViewMenuBtns = false;//이전 버전에서의 Top 레이아웃의 View 버튼들
+
 
 
 		public apControlParam.CATEGORY _curParamCategory = apControlParam.CATEGORY.Head |
@@ -268,6 +323,8 @@ namespace AnyPortrait
 		public Material _mat_BoneV2 = null;
 		public Material _mat_Texture_VColorMul = null;
 		public Material _mat_RigCircleV2 = null;
+		public Material _mat_Gray_Normal = null;
+		public Material _mat_Gray_Clipped = null;
 
 		public enum BONE_RENDER_MODE
 		{
@@ -353,6 +410,8 @@ namespace AnyPortrait
 
 		public bool _guiOption_isFPSVisible = true;
 		public bool _guiOption_isStatisticsVisible = false;
+
+		public bool _guiOption_isShowHowToEdit = true;
 
 		//Onion 옵션
 		public bool _onionOption_IsOutlineRender = true;//False일 때는 Solid 렌더
@@ -488,15 +547,21 @@ namespace AnyPortrait
 		public bool _isUseSRP = false;
 
 		//Modifier Lock 옵션
-		public bool _modLockOption_CalculateIfNotAddedOther = false;
-		public bool _modLockOption_ColorPreview_Lock = false;
-		public bool _modLockOption_ColorPreview_Unlock = true;//<<
-		public bool _modLockOption_BonePreview_Lock = false;
-		public bool _modLockOption_BonePreview_Unlock = true;//<<
-															 //public bool _modLockOption_MeshPreview_Lock = false;
-															 //public bool _modLockOption_MeshPreview_Unlock = false;
-		public bool _modLockOption_ModListUI_Lock = false;
-		public bool _modLockOption_ModListUI_Unlock = false;
+		//이전 : Lock/Unlock마다 옵션이 있었다.
+		//public bool _modLockOption_CalculateIfNotAddedOther = false;
+		//public bool _modLockOption_ColorPreview_Lock = false;
+		//public bool _modLockOption_ColorPreview_Unlock = true;//<<
+		//public bool _modLockOption_BonePreview_Lock = false;
+		//public bool _modLockOption_BonePreview_Unlock = true;//<<
+		//													 //public bool _modLockOption_MeshPreview_Lock = false;
+		//													 //public bool _modLockOption_MeshPreview_Unlock = false;
+		//public bool _modLockOption_ModListUI_Lock = false;
+		//public bool _modLockOption_ModListUI_Unlock = false;
+
+		//변경 21.2.13 : ModLock/Unlock 개념이 사라지고, 단일 옵션만 남는다. 일부 옵션은 ExModObjOption으로 변경
+		public bool _modLockOption_ColorPreview = false;//색상 미리보기
+		public bool _modLockOption_BoneResultPreview = false;//본 결과 미리보기
+		public bool _modLockOption_ModListUI = false;//모디파이어 리스트 미리보기
 
 		//public Color _modLockOption_MeshPreviewColor = new Color(1.0f, 0.45f, 0.1f, 0.8f);
 		public Color _modLockOption_BonePreviewColor = new Color(1.0f, 0.8f, 0.1f, 0.8f);
@@ -523,7 +588,7 @@ namespace AnyPortrait
 		}
 
 		private LOW_CPU_STATUS _lowCPUStatus = LOW_CPU_STATUS.None;
-		private Texture2D _imgLowCPUStatus = null;
+		//private Texture2D _imgLowCPUStatus = null;
 
 
 		//추가 3.29 : Ambient 자동 보정 옵션
@@ -539,6 +604,9 @@ namespace AnyPortrait
 		//추가 20.7.6 : PSD 파일로부터 임포트를 할 때, 메시를 선택하면 버텍스를 삭제할지 물어보기
 		//(기본값 : false)
 		public bool _isNeedToAskRemoveVertByPSDImport = false;
+
+		//추가 21.3.6 : 메시 생성시, 이미지가 한개면 자동으로 설정하기 (기본값 True)
+		public bool _option_SetAutoImageToMeshIfOnlyOneImageExist = true;
 
 
 		//추가 19.7.29 : Blur 브러시 인자를 Gizmo에서 Editor로 옮김
@@ -625,19 +693,41 @@ namespace AnyPortrait
 		public float _meshTRSOption_MirrorOffset = 0.5f;
 		public bool _meshTRSOption_MirrorSnapVertOnRuler = false;
 		public bool _meshTRSOption_MirrorRemoved = false;
-		public float _meshAutoGenOption_AlphaCutOff = 0.02f;
-		public int _meshAutoGenOption_GridDivide = 2;//최소 1개
-		public int _meshAutoGenOption_Margin = 2;
-		public int _meshAutoGenOption_numControlPoint_ComplexQuad_X = 3;//최소 3개
-		public int _meshAutoGenOption_numControlPoint_ComplexQuad_Y = 3;//최소 3개
-		public int _meshAutoGenOption_numControlPoint_CircleRing = 4;//최소 4개
-		public bool _meshAutoGenOption_IsLockAxis = false;
+
+		//[사용하지 않음] 메시 자동 생성 V1 옵션
+		//public float _meshAutoGenOption_AlphaCutOff = 0.02f;
+		//public int _meshAutoGenOption_GridDivide = 2;//최소 1개
+		//public int _meshAutoGenOption_Margin = 2;
+		//public int _meshAutoGenOption_numControlPoint_ComplexQuad_X = 3;//최소 3개
+		//public int _meshAutoGenOption_numControlPoint_ComplexQuad_Y = 3;//최소 3개
+		//public int _meshAutoGenOption_numControlPoint_CircleRing = 4;//최소 4개
+		//public bool _meshAutoGenOption_IsLockAxis = false;
+
+		//추가 21.1.4 : 메시 자동 생성 V2 옵션
+		//public int _meshAutoGenV2Option_Outline_Density = 2;//이 값이 커질수록 많이 분할된다. 기본값 2, 1~4의 값을 가진다.
+		//public float _meshAutoGenV2Option_OutlineVertMerge_Radius = 60.0f;//분할된 이후 연속된 버텍스가 이 범위 내에서는 다시 병합된다. (기본 60)
+		//public float _meshAutoGenV2Option_OutlineVertMerge_Angle = 10.0f;//분할된 이후 연속된 버텍스가 이 각도 이내로 연결된 경우 다시 병합된다. (기본 10)		
+		//public float _meshAutoGenV2Option_Out2Inline_Radius = 20.0f;//이 범위 이내의 버텍스들이 합쳐져서 하나의 InLine 버텍스를 생성
+		public int _meshAutoGenV2Option_Inner_Density = 2;//이 값이 커질수록 내부의 점이 많이 생성된다. 기본값 2, 1~10의 값을 가진다.
+		public int _meshAutoGenV2Option_OuterMargin = 10;//외부로의 여백
+		public int _meshAutoGenV2Option_InnerMargin = 5;//내부로의 여백
+		public bool _meshAutoGenV2Option_IsInnerMargin = false;//내부 여백 유무
+		
+		public int _meshAutoGenV2Option_QuickPresetType = 0;//Quick Generate를 할 때의 프리셋 방식 (Simple = 0)
 
 
 		//추가 19.7.31 : 리깅 GUI에 대한 옵션. 일부는 Selection에 있는 값을 가져왔다.
 		public bool _rigViewOption_WeightOnly = false;
 		public bool _rigViewOption_BoneColor = true;
 		public bool _rigViewOption_CircleVert = false;
+
+
+		//추가 21.2.10 : "모디파이어에 등록되지 않은 객체"에 대한 처리에 관한 옵션
+		public bool _exModObjOption_UpdateByOtherMod = false;
+		public bool _exModObjOption_ShowGray = false;
+		public bool _exModObjOption_NotSelectable = false;
+
+
 
 		private List<apPortrait> _portraitsInScene = new List<apPortrait>();
 		private bool _isPortraitListLoaded = false;
@@ -713,7 +803,8 @@ namespace AnyPortrait
 			Depth,//깊이 순서대로 (RenderUnit 한정)
 		}
 		public TIMELINE_INFO_SORT _timelineInfoSortType = TIMELINE_INFO_SORT.Registered;//<<이게 기본값 (저장하자)
-																						//--------------------------------------------------------------
+		
+		//--------------------------------------------------------------
 
 
 		//Left, Right, Middle Mouse
@@ -1009,17 +1100,20 @@ namespace AnyPortrait
 		}
 
 
-		public enum MESH_EDIT_MODE_MAKEMESH
+		public enum MESH_EDIT_MODE_MAKEMESH_TAB
+		{
+			AddTools,
+			TRS,
+			AutoGen
+		}
+
+		public enum MESH_EDIT_MODE_MAKEMESH_ADDTOOLS
 		{
 			//Add Sub Tab일때 (이 값중 하나면 Add SubTab이 켜진다.)
 			VertexAndEdge,
 			VertexOnly,
 			EdgeOnly,
 			Polygon,
-			//Auto Sub Tab일때
-			AutoGenerate,
-			//TRS Sub Tab일때
-			TRS
 		}
 
 		public enum MESH_EDIT_RENDER_MODE
@@ -1028,7 +1122,8 @@ namespace AnyPortrait
 		}
 		public MESH_EDIT_MODE _meshEditMode = MESH_EDIT_MODE.Setting;
 		public MESH_EDIT_RENDER_MODE _meshEditZDepthView = MESH_EDIT_RENDER_MODE.Normal;
-		public MESH_EDIT_MODE_MAKEMESH _meshEditeMode_MakeMesh = MESH_EDIT_MODE_MAKEMESH.VertexAndEdge;
+		public MESH_EDIT_MODE_MAKEMESH_TAB _meshEditeMode_MakeMesh_Tab = MESH_EDIT_MODE_MAKEMESH_TAB.AddTools;
+		public MESH_EDIT_MODE_MAKEMESH_ADDTOOLS _meshEditeMode_MakeMesh_AddTool = MESH_EDIT_MODE_MAKEMESH_ADDTOOLS.VertexAndEdge;
 
 		public enum MESH_EDIT_MIRROR_MODE
 		{
@@ -1039,6 +1134,9 @@ namespace AnyPortrait
 
 		private apMirrorVertexSet _mirrorVertexSet = null;
 		public apMirrorVertexSet MirrorSet { get { if (_mirrorVertexSet == null) { _mirrorVertexSet = new apMirrorVertexSet(this); } return _mirrorVertexSet; } }
+
+		//추가 21.1.6 : Area 편집 중일때
+		public bool _isMeshEdit_AreaEditing = false;
 
 
 		//추가 20.7.6 : 메시를 처음 열때 PSD 파일로부터 열면 바로 Vertex를 리셋하는 기능이 있다.
@@ -1093,6 +1191,9 @@ namespace AnyPortrait
 
 		public bool _isAnimAutoScroll = true;
 		public bool _isAnimAutoKey = false;
+
+		//추가 21.3.7 : AutoKey를 초기화하는 옵션을 주고, 이게 Off인 경우 마지막 값을 유지한다. (그 값은 EdtiorPref에 저장한다. 별도의 변수로 두지 않음)
+		public bool _option_IsTurnOffAnimAutoKey = true;
 
 		//추가 20.1.21 : 애니메이션의 Transform 각도 제한 (+-180도) 설정 (기본값은 true = 잠금)
 		public bool _isAnimRotation180Lock = true;
@@ -1451,7 +1552,7 @@ namespace AnyPortrait
 
 		//EditorController에서 사용될 GUIContent
 		public apGUIContentWrapper _guiContent_EC_SetDefault = null;
-		public apGUIContentWrapper _guiContent_EC_EditParameter = null;
+		//public apGUIContentWrapper _guiContent_EC_EditParameter = null;//삭제 21.2.9 : 컨트롤 파라미터 편집 버튼은 삭제
 		public apGUIContentWrapper _guiContent_EC_MakeKey = null;
 		public apGUIContentWrapper _guiContent_EC_RemoveKey = null;
 
@@ -1467,6 +1568,8 @@ namespace AnyPortrait
 		private apStringWrapper _hotKeyStringWrapper = null;
 		private const string HOTKEY_NOTI_TEXT_1 = "[ ";
 		private const string HOTKEY_NOTI_TEXT_2 = " ] - ";
+		private const string HOTKEY_NOTI_TEXT_CUSTOMLABEL_1 = " (";
+		private const string HOTKEY_NOTI_TEXT_CUSTOMLABEL_2 = ") ";
 		private const string HOTKEY_NOTI_TEXT_Command = "Command+";
 		private const string HOTKEY_NOTI_TEXT_Ctrl = "Ctrl+";
 		private const string HOTKEY_NOTI_TEXT_Alt = "Alt+";
@@ -1502,12 +1605,18 @@ namespace AnyPortrait
 
 		//--------------------------------------------------------------
 		// 추가 20.4.6 : 로딩바
+		public delegate void FUNC_CANCEL_PROGRESS_POPUP();
+
 		private bool _isProgressPopup = false;
 		private bool _isProgressPopup_StartRequest = false;
 		private bool _isProgressPopup_CompleteRequest = false;
 		private float _proogressPopupRatio = 0.0f;
+		private bool _isProogressPopup_Cancelable = false;
+		private FUNC_CANCEL_PROGRESS_POPUP _funcProgressPopupCancel = null;
 		private apStringWrapper _strProgressPopup_Title = null;
 		private apStringWrapper _strProgressPopup_Info = null;
+
+		
 
 		//비동기 로딩 (로딩바 이용)
 		private apPortrait _asyncLoading_Portrait = null;
@@ -1547,6 +1656,14 @@ namespace AnyPortrait
 
 			//비동기 로딩 초기화
 			ClearLoadingPortraitAsync();
+
+			//로토스코핑 초기화 (21.2.28)
+			_isEnableRotoscoping = false;
+			_selectedRotoscopingData = null;
+			if(Rotoscoping != null)
+			{
+				Rotoscoping.DestroyAllImages();
+			}
 		}
 
 
@@ -1616,6 +1733,16 @@ namespace AnyPortrait
 			ControlParamPreset.Load();
 
 
+			//로토스코핑 초기화 (21.2.28)
+			_isEnableRotoscoping = false;
+			_selectedRotoscopingData = null;
+			_iSyncRotoscopingAnimClipFrame = -1;
+			_isSyncRotoscopingToAnimClipFrame = false;
+
+			Rotoscoping.DestroyAllImages();
+			Rotoscoping.Load();//추가 21.2.27
+
+
 		}
 
 
@@ -1627,7 +1754,7 @@ namespace AnyPortrait
 		{
 			apEditorUtil.OnUndoRedoPerformed();
 
-
+			
 			if (_portrait != null)
 			{
 				//실제로 오브젝트가 복원되었거나 추가된게 사라지는 내역이 있는가
@@ -1710,12 +1837,14 @@ namespace AnyPortrait
 						VisiblityController.Save_AllBones(Select.AnimClip._targetMeshGroup);
 					}
 					
-
+					
 					//이전
 					//_portrait.LinkAndRefreshInEditor(restoreResult._isAnyRestored, apUtil.LinkRefresh.Set_AnimClip(Select.AnimClip));
 					
+					//<여기가 문제>
+
 					//변경 20.7.2 : 조금 더 확실하게 복구
-					_portrait.LinkAndRefreshInEditor(true, apUtil.LinkRefresh.Set_AnimClip(Select.AnimClip));
+					_portrait.LinkAndRefreshInEditor(true, apUtil.LinkRefresh.Set_AnimClip(Select.AnimClip));					
 				}
 				else if(Select.SelectionType == apSelection.SELECTION_TYPE.MeshGroup &&
 						Select.MeshGroup != null)
@@ -1778,7 +1907,19 @@ namespace AnyPortrait
 							Hierarchy.SetNeedReset();
 						}
 
+
+						//TODO : 이 코드는 임시 방편이며
+						//(자식 메시 그룹의 Morph 수정 > Undo시 RenderVert가 선택되지 않는 문제)
+						//실제로는 RenderUnit이 재활용될 수 있게 만들어야 한다.
+						//제한적으로 자식 메시 그룹에 한해서 이 코드를 실행시키자
 						//meshGroup.SetDirtyToReset();//문제 생기면 이거 주석 해제 20.4.7
+
+						//단 이 방식은 일시적인 해결 방안이다.
+						if (meshGroup._parentMeshGroup != null)
+						{
+							meshGroup.SetDirtyToReset();//문제 생기면 이거 주석 해제 20.4.7
+						}
+
 						meshGroup.RefreshForce(true, 0.0f, apUtil.LinkRefresh);
 						
 
@@ -1808,6 +1949,9 @@ namespace AnyPortrait
 							meshGroup.LinkBoneListToChildMeshGroupsAndRenderUnits();
 							meshGroup.RefreshForce(true, 0.0f, apUtil.LinkRefresh);
 						}
+
+						//추가 21.1.32 : Rule 가시성 동기화 초기화
+						Controller.ResetVisibilityPresetSync();
 					}
 					//추가 20.7.2 : 혹시 동기화가 풀릴 수 있으니 확인
 					Select.AutoSelectModMeshOrModBone();
@@ -1816,6 +1960,9 @@ namespace AnyPortrait
 				{
 					if (Select.AnimClip != null)
 					{
+						//Debug.LogError("실행취소 중간 B1 >>> ");
+						//DebugAnimModMeshValues();
+
 						apAnimClip animClip = Select.AnimClip;
 						animClip.RefreshTimelines(null, null);//변경 19.5.21 : 전체 Refresh일 경우 null입력
 						animClip.UpdateMeshGroup_Editor(true, 0.0f, true, true);
@@ -1825,21 +1972,37 @@ namespace AnyPortrait
 						if (animClip._targetMeshGroup != null)
 						{
 							apMeshGroup meshGroup = animClip._targetMeshGroup;
+							//if(restoreResult._isAnyRestored)
+							//{
+							//	//Debug.LogError("Undo : AnyRestored");
+							//	apUtil.LinkRefresh.Set_AllObjects(null);
+							//}
+							//else
+							//{
+							//	Debug.LogWarning("Undo : 유지");
+							//}
+
 							if (restoreResult._isAnyRestored)
 							{
 								//meshGroup.SortRenderUnits(true);//삭제 20.4.4
 								meshGroup.SetDirtyToReset();
 							}
 
+							//Debug.LogError("실행취소 중간 B2 >>> ");
+							//DebugAnimModMeshValues();
+
 							//meshGroup.SetDirtyToReset();//문제 생기면 이거 주석 해제 20.4.7
 							meshGroup.RefreshForce(true, 0.0f, apUtil.LinkRefresh);
 							
+
+							//Debug.LogError("실행취소 중간 B3 >>> ");
+							//DebugAnimModMeshValues();
 
 							//추가 : 계층적으로 MeshGroup/Modifier가 연결된 경우 이게 코드들이 추가되어야 함
 							//meshGroup.LinkModMeshRenderUnits();//삭제 20.4.4 : RefreshForce > ResetRenderUnits에 해당 함수가 호출된다.
 							meshGroup.RefreshModifierLink(apUtil.LinkRefresh);
 
-							
+
 							
 							//>> BoneSet으로 변경
 							apMeshGroup.BoneListSet boneSet = null;
@@ -1861,6 +2024,9 @@ namespace AnyPortrait
 							}
 
 						}
+
+						//추가 21.1.32 : Rule 가시성 동기화 초기화
+						Controller.ResetVisibilityPresetSync();
 
 						//추가 3.31 : 공통 커브 갱신
 						Select.AutoRefreshCommonCurve();
@@ -1917,7 +2083,6 @@ namespace AnyPortrait
 				}
 
 				OnAnyObjectAddedOrRemoved();
-
 			}
 
 			if(Select.SelectionType == apSelection.SELECTION_TYPE.MeshGroup ||
@@ -1940,6 +2105,8 @@ namespace AnyPortrait
 				}
 
 				RefreshControllerAndHierarchy(false);
+
+				Select.RefreshMeshGroupExEditingFlags(true);//추가 21.2.17 : Undo이후에 ExFlag가 깨지는것을 막는다.
 			}
 
 			Repaint();
@@ -2111,6 +2278,11 @@ namespace AnyPortrait
 			ControlParamPreset.Load();
 			ControlParamPreset.Save();
 
+			//추가 21.2.27
+			Rotoscoping.DestroyAllImages();
+			Rotoscoping.Load();
+			Rotoscoping.Save();
+
 
 			_isMakePortraitRequest = false;
 			_isMakePortraitRequestFromBackupFile = false;
@@ -2128,12 +2300,17 @@ namespace AnyPortrait
 
 			apDebugLog.I.Clear();
 
+			if(_boneGUIRenderMode == BONE_RENDER_MODE.None)
+			{
+				//본을 숨겨둔 상태라면 보이게 만든다.
+				_boneGUIRenderMode = BONE_RENDER_MODE.Render;
+			}
 			_meshGUIRenderMode = MESH_RENDER_MODE.Render;
 
-			if (_meshGenerator == null)
-			{
-				_meshGenerator = new apMeshGenerator(this);
-			}
+			//if (_meshGenerator == null)
+			//{
+			//	_meshGenerator = new apMeshGenerator(this);
+			//}
 
 			if (_mirrorVertexSet == null)
 			{
@@ -2175,6 +2352,8 @@ namespace AnyPortrait
 			_isProgressPopup_StartRequest = false;
 			_isProgressPopup_CompleteRequest = false;
 			_proogressPopupRatio = 0.0f;
+			_isProogressPopup_Cancelable = false;
+			_funcProgressPopupCancel = null;
 			if(_strProgressPopup_Title == null)
 			{
 				_strProgressPopup_Title = new apStringWrapper(128);
@@ -2693,6 +2872,29 @@ namespace AnyPortrait
 			}
 
 
+			if(_mat_Gray_Normal == null)
+			{
+				if (isGammaColorSpace)
+				{
+					_mat_Gray_Normal = AssetDatabase.LoadAssetAtPath<Material>(apEditorUtil.MakePath_Material("apMat_Texture Gray.mat"));
+				}
+				else
+				{
+					_mat_Gray_Normal = AssetDatabase.LoadAssetAtPath<Material>(apEditorUtil.MakePath_Material("Linear/apMat_L_Texture Gray.mat"));
+				}
+			}
+			if(_mat_Gray_Clipped == null)
+			{
+				if (isGammaColorSpace)
+				{
+					_mat_Gray_Clipped = AssetDatabase.LoadAssetAtPath<Material>(apEditorUtil.MakePath_Material("apMat_ClippedTexture Gray.mat"));
+				}
+				else
+				{
+					_mat_Gray_Clipped = AssetDatabase.LoadAssetAtPath<Material>(apEditorUtil.MakePath_Material("Linear/apMat_L_ClippedTexture Gray.mat"));
+				}
+			}
+
 			if (isResetMat)
 			{
 				Shader[] shaderSet_Normal = new Shader[4];
@@ -2707,12 +2909,12 @@ namespace AnyPortrait
 					shaderSet_Clipped[i] = _mat_Clipped[i].shader;
 				}
 
-				apGL.SetShader(_mat_Color.shader, shaderSet_Normal, shaderSet_VertAdd, /*shaderSet_Mask, */_mat_MaskOnly.shader, shaderSet_Clipped, _mat_GUITexture.shader, _mat_ToneColor_Normal.shader, _mat_ToneColor_Clipped.shader, _mat_Alpha2White.shader, _mat_BoneV2.shader, ImageSet.Get(apImageSet.PRESET.BoneSpriteSheet), _mat_Texture_VColorMul.shader, _mat_RigCircleV2.shader, ImageSet.Get(apImageSet.PRESET.Gizmo_RigCircle));
+				apGL.SetShader(_mat_Color.shader, shaderSet_Normal, shaderSet_VertAdd, /*shaderSet_Mask, */_mat_MaskOnly.shader, shaderSet_Clipped, _mat_GUITexture.shader, _mat_ToneColor_Normal.shader, _mat_ToneColor_Clipped.shader, _mat_Alpha2White.shader, _mat_BoneV2.shader, ImageSet.Get(apImageSet.PRESET.BoneSpriteSheet), _mat_Texture_VColorMul.shader, _mat_RigCircleV2.shader, ImageSet.Get(apImageSet.PRESET.Gizmo_RigCircle), _mat_Gray_Normal.shader, _mat_Gray_Clipped.shader);
 
-				apControllerGL.SetShader(_mat_Color.shader, shaderSet_Normal, shaderSet_VertAdd, /*shaderSet_Mask, */_mat_MaskOnly.shader, shaderSet_Clipped, _mat_GUITexture.shader, _mat_ToneColor_Normal.shader, _mat_ToneColor_Clipped.shader, _mat_Alpha2White.shader, _mat_BoneV2.shader, _mat_Texture_VColorMul.shader, _mat_RigCircleV2.shader);
+				apControllerGL.SetShader(_mat_Color.shader, shaderSet_Normal, shaderSet_VertAdd, /*shaderSet_Mask, */_mat_MaskOnly.shader, shaderSet_Clipped, _mat_GUITexture.shader, _mat_ToneColor_Normal.shader, _mat_ToneColor_Clipped.shader, _mat_Alpha2White.shader, _mat_BoneV2.shader, _mat_Texture_VColorMul.shader, _mat_RigCircleV2.shader, _mat_Gray_Normal.shader, _mat_Gray_Clipped.shader);
 
-				apTimelineGL.SetShader(_mat_Color.shader, shaderSet_Normal, shaderSet_VertAdd, /*shaderSet_Mask, */_mat_MaskOnly.shader, shaderSet_Clipped, _mat_GUITexture.shader, _mat_ToneColor_Normal.shader, _mat_ToneColor_Clipped.shader, _mat_Alpha2White.shader, _mat_BoneV2.shader, _mat_Texture_VColorMul.shader, _mat_RigCircleV2.shader);
-				apAnimCurveGL.SetShader(_mat_Color.shader, shaderSet_Normal, shaderSet_VertAdd, /*shaderSet_Mask, */_mat_MaskOnly.shader, shaderSet_Clipped, _mat_GUITexture.shader, _mat_ToneColor_Normal.shader, _mat_ToneColor_Clipped.shader, _mat_Alpha2White.shader, _mat_BoneV2.shader, _mat_Texture_VColorMul.shader, _mat_RigCircleV2.shader);
+				apTimelineGL.SetShader(_mat_Color.shader, shaderSet_Normal, shaderSet_VertAdd, /*shaderSet_Mask, */_mat_MaskOnly.shader, shaderSet_Clipped, _mat_GUITexture.shader, _mat_ToneColor_Normal.shader, _mat_ToneColor_Clipped.shader, _mat_Alpha2White.shader, _mat_BoneV2.shader, _mat_Texture_VColorMul.shader, _mat_RigCircleV2.shader, _mat_Gray_Normal.shader, _mat_Gray_Clipped.shader);
+				apAnimCurveGL.SetShader(_mat_Color.shader, shaderSet_Normal, shaderSet_VertAdd, /*shaderSet_Mask, */_mat_MaskOnly.shader, shaderSet_Clipped, _mat_GUITexture.shader, _mat_ToneColor_Normal.shader, _mat_ToneColor_Clipped.shader, _mat_Alpha2White.shader, _mat_BoneV2.shader, _mat_Texture_VColorMul.shader, _mat_RigCircleV2.shader, _mat_Gray_Normal.shader, _mat_Gray_Clipped.shader);
 			}
 
 
@@ -2837,6 +3039,31 @@ namespace AnyPortrait
 				_guiStyleWrapper.Init();
 			}
 
+			//추가 21.1.19 : GUI Workspace에 추가되는 버튼들
+			if(_guiButton_Menu == null)
+			{
+				_guiButton_Menu = new apGUIButton(	ImageSet.Get(apImageSet.PRESET.GUI_Button_Menu), 
+													ImageSet.Get(apImageSet.PRESET.GUI_Button_Menu_Roll), 
+													GUI_STAT_MENUBTN_SIZE, GUI_STAT_MENUBTN_SIZE);
+			}
+			if(_guiButton_RecordOnion == null)
+			{
+				_guiButton_RecordOnion = new apGUIButton(	ImageSet.Get(apImageSet.PRESET.GUI_Button_RecordOnion), 
+															ImageSet.Get(apImageSet.PRESET.GUI_Button_RecordOnion_Roll), 
+															GUI_STAT_MENUBTN_SIZE, GUI_STAT_MENUBTN_SIZE);
+			}
+
+			//추가 21.2.18 : GUI에 아이콘을 표시한다.
+			if(_guiStatBox == null)
+			{
+				_guiStatBox = new apGUIStatBox(this);
+			}
+
+			if(_guiHowToUse == null)
+			{
+				_guiHowToUse = new apGUIHowToUseTips(this);
+			}
+
 			//GUIStyle 로드 직후에 Reset 가능
 			_hierarchy.ResetAllUnits();
 
@@ -2920,17 +3147,7 @@ namespace AnyPortrait
 
 				CheckEditorResources();
 
-
-				//테스트
-				//if(Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Space)
-				//{
-				//	StartProgressPopup("Test Message", "Test..");
-				//}
-				//if(Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Return)
-				//{
-				//	SetProgressPopupRatio(true, 1.0f);
-				//}
-
+				
 				//추가 20.4.6 : 로딩 팝업을 보여주고 입력을 제한한다.
 				if(CheckAndShowProgressPopup())
 				{
@@ -2955,6 +3172,13 @@ namespace AnyPortrait
 				if (_isFirstOnGUI)
 				{
 					LoadEditorPref();
+
+					//추가 : HotKey설정을 가져오자
+					if(_hotKeyMap == null)
+					{
+						_hotKeyMap = new apHotKeyMapping();
+					}
+					_hotKeyMap.Load();
 
 #if UNITY_EDITOR_OSX
 					bool isStartScreenShown = false;
@@ -3050,12 +3274,12 @@ namespace AnyPortrait
 				
 				
 
-				//int topHeight = 65;
 				bool isTopVisible = true;
 				bool isLeftVisible = true;
 				bool isRightVisible = true;
 
-				int topHeight = 45;
+				//int topHeight = 45;//이전 v1.2.6 까지
+				int topHeight = 35;//변경 v1.3.0 : 상단 영역을 줄인다.
 
 				//Bottom 레이아웃은 일부 기능에서만 나타난다.
 				int bottomHeight = 0;
@@ -3089,7 +3313,13 @@ namespace AnyPortrait
 
 
 
-				int marginHeight = 10;
+				//int marginHeight = 10;//이전 v1.2.6까지의 여백
+				int marginHeight = 2;//변경 v1.3.0부터의 여백
+
+				//int mainMarginWidth = 5;//이전 v1.2.6까지의 여백
+				int mainMarginWidth = 2;//변경 v1.3.0부터의 여백
+
+
 				int mainHeight = windowHeight - (topHeight + marginHeight * 2 + bottomHeight);
 				if (!isBottomVisible)
 				{
@@ -3106,7 +3336,7 @@ namespace AnyPortrait
 				int mainLeftWidth = 250;
 				int mainRightWidth = 250;
 				int mainRight2Width = 250;
-				int mainMarginWidth = 5;
+				
 				int mainCenterWidth = windowWidth - (mainLeftWidth + mainMarginWidth * 2 + mainRightWidth);
 
 				bool isRight2Visible = false;
@@ -3292,6 +3522,11 @@ namespace AnyPortrait
 
 						EditorGUILayout.EndHorizontal();
 
+
+						//추가 20.12.4 : 단축키로 탭 전환
+						AddHotKeyEvent(OnHotKeyEvent_SwitchLeftTab, apHotKeyMapping.KEY_TYPE.SwitchLeftTab, null);
+
+
 						GUILayout.Space(10);
 
 						int leftUpperHeight = GUI_MainLeft_Upper(mainLeftWidth - 20);
@@ -3336,16 +3571,8 @@ namespace AnyPortrait
 
 						//Profiler.EndSample();
 
-						apControllerGL.EndUpdate();
+						//apControllerGL.EndUpdate();//21.2.9 : 일단 이걸 여기선 제외
 
-						//switch (_tab)
-						//{
-						//	case TAB.ProjectSetting: GUI_MainLeft_ProjectSetting(mainLeftWidth - 20, mainHeight - 20); break;
-						//	case TAB.MeshEdit: GUI_MainLeft_MeshEdit(mainLeftWidth - 20, mainHeight - 20); break;
-						//	case TAB.FaceEdit: GUI_MainLeft_FaceEdit(mainLeftWidth - 20, mainHeight - 20); break;
-						//	case TAB.RigEdit: GUI_MainLeft_RigEdit(mainLeftWidth - 20, mainHeight - 20); break;
-						//	case TAB.Animation: GUI_MainLeft_Animation(mainLeftWidth - 20, mainHeight - 20); break;
-						//}
 						EditorGUILayout.EndVertical();
 
 						GUILayout.Space(50);
@@ -3423,17 +3650,21 @@ namespace AnyPortrait
 
 
 
-				//Alt+W를 눌러서 크기를 바꿀 수 있다.
-				//apStringFactory.I.ToggleWorkspaceSize
-				AddHotKeyEvent(OnHotKeyEvent_FullScreenToggle, apHotKey.LabelText.ToggleWorkspaceSize, KeyCode.W, false, true, false, null);//"Toggle Workspace Size"
+				//Alt+W를 눌러서 크기를 바꿀 수 있다.				
+				//AddHotKeyEvent(OnHotKeyEvent_FullScreenToggle, apHotKey.LabelText.ToggleWorkspaceSize, KeyCode.W, false, true, false, null);//"Toggle Workspace Size"				
+				AddHotKeyEvent(OnHotKeyEvent_FullScreenToggle, apHotKeyMapping.KEY_TYPE.ToggleWorkspaceSize, null);//변경 20.12.3
 
 
+				if(_guiStringWrapper_128 == null)
+				{
+					_guiStringWrapper_128 = new apStringWrapper(128);
+				}
 
-				if (GUI.Button(new Rect(0, rectMainCenter.height - guiViewBtnSize, guiViewBtnSize, guiViewBtnSize),
-					new GUIContent(_imageSet.Get(apImageSet.PRESET.GUI_FullScreen), apStringFactory.I.ToggleWorkspaceSize_HotKey),//"Toogle Workspace Size (Alt+W)"
-																																  //guiStyle_GUIViewBtn
-					GUIStyleWrapper.Button_LabelPadding//변경
-					))
+
+				if (GUI.Button(	new Rect(0, rectMainCenter.height - guiViewBtnSize, guiViewBtnSize, guiViewBtnSize),
+								new GUIContent(_imageSet.Get(apImageSet.PRESET.GUI_FullScreen), apStringFactory.I.GetHotkeyTooltip_ToggleWorkspaceSize(HotKeyMap)),//"Toogle Workspace Size (Alt+W)"
+								GUIStyleWrapper.Button_LabelPadding//변경
+								))
 				{
 					_isFullScreenGUI = !_isFullScreenGUI;
 				}
@@ -3613,7 +3844,8 @@ namespace AnyPortrait
 							if (_uiFoldType_Right1_Upper == UI_FOLD_TYPE.Unfolded)//변경 19.8.18
 							{
 								//상단이 Show일때 : 둘다 보일 때 > 반반
-								rightUpperHeight = mainHeight / 2;
+								//rightUpperHeight = mainHeight / 2;//이전 : 50%씩
+								rightUpperHeight = (int)(mainHeight * 0.4f);//변경 21.3.13 : 40%만 먹어랑
 							}
 							else
 							{
@@ -3704,7 +3936,7 @@ namespace AnyPortrait
 
 						if (isRightUpper_Scroll)
 						{
-							EditorGUILayout.BeginVertical(apGUILOFactory.I.Width(mainRightWidth - 20), apGUILOFactory.I.Height(30));
+							EditorGUILayout.BeginVertical(apGUILOFactory.I.Width(mainRightWidth - 20), apGUILOFactory.I.Height(25));
 
 							GUI_MainRight_Header(mainRightWidth - 8, 20);
 							EditorGUILayout.EndVertical();
@@ -3999,8 +4231,7 @@ namespace AnyPortrait
 				//Event e = Event.current;
 
 				if (EditorWindow.focusedWindow == this)
-				{
-
+				{	
 					if (Event.current.type == EventType.KeyDown ||
 						Event.current.type == EventType.KeyUp)
 					{
@@ -4027,9 +4258,14 @@ namespace AnyPortrait
 							{
 								//일반 단축키 이벤트일때
 								apHotKey.HotKeyEvent hotkeyEvent = HotKey.GetResultEvent();
+								apHotKey.HotKeyResult callbackResult = HotKey.GetResultAfterCallback();
+
 
 								if (hotkeyEvent != null
-									&& hotkeyEvent._labelType != apHotKey.LabelText.None)
+									//&& hotkeyEvent._labelType != apHotKey.LabelText.None//이전
+									&& hotkeyEvent._labelText != null//변경 20.12.3
+									&& callbackResult != null//추가 21.2.8 : 콜백이 성공해야한다.
+									)
 								{
 									//추가 19.12.2 : StringWrapper를 이용해서 최적화
 									if (_hotKeyStringWrapper == null)
@@ -4040,8 +4276,21 @@ namespace AnyPortrait
 									//string strHotKeyEvent = "[ " + hotkeyEvent._label + " ] - ";
 									_hotKeyStringWrapper.Clear();
 									_hotKeyStringWrapper.Append(HOTKEY_NOTI_TEXT_1, false);
-									//_hotKeyStringWrapper.Append(hotkeyEvent._label, false);//이전
-									_hotKeyStringWrapper.Append(HotKey.GetText(hotkeyEvent).ToString(), false);//변경
+
+									//이전
+									//_hotKeyStringWrapper.Append(HotKey.GetText(hotkeyEvent).ToString(), false);
+
+									//변경
+									_hotKeyStringWrapper.Append(hotkeyEvent._labelText.ToString(), false);
+
+									//만약, 콜백 결과에서 커스텀 레이블이 있다면, 그걸 반영하자
+									if(!string.IsNullOrEmpty(callbackResult._customLabel))
+									{
+										_hotKeyStringWrapper.Append(HOTKEY_NOTI_TEXT_CUSTOMLABEL_1, false);
+										_hotKeyStringWrapper.Append(callbackResult._customLabel, false);
+										_hotKeyStringWrapper.Append(HOTKEY_NOTI_TEXT_CUSTOMLABEL_2, false);
+									}
+
 									_hotKeyStringWrapper.Append(HOTKEY_NOTI_TEXT_2, false);
 
 
@@ -4083,6 +4332,14 @@ namespace AnyPortrait
 								Event.current.Use();
 								//Repaint();
 							}
+						}
+					}
+					else
+					{
+						//추가 21.2.9 : 만약 키 입력 이벤트가 아닌데, Shift 키가 변경되었다면, 그것만 따로 체크하자
+						if (GUIUtility.keyboardControl == 0)
+						{
+							HotKey.OnShiftKeyEvent(Event.current.shift);
 						}
 					}
 
@@ -4164,8 +4421,32 @@ namespace AnyPortrait
 
 		}
 
+
+
+		//추가 20.12.4 : 단축키로 탭 전환
+		private apHotKey.HotKeyResult OnHotKeyEvent_SwitchLeftTab(object paramObject)
+		{
+			if(_tabLeft == TAB_LEFT.Controller)
+			{
+				_tabLeft = TAB_LEFT.Hierarchy;
+			}
+			else
+			{
+				_tabLeft = TAB_LEFT.Controller;
+			}
+
+			//성공 리턴
+			return apHotKey.HotKeyResult.MakeResult();
+				
+		}
+
+
 		//--------------------------------------------------------------
 
+
+
+
+		
 		private bool _isGizmoGUIVisible_VTF_FFD_Prev = false;
 		// Top UI : Tab Buttons / Basic Toolbar
 		private void GUI_Top(int width, int height)
@@ -4174,18 +4455,25 @@ namespace AnyPortrait
 			Texture2D imbTabFolded = ImageSet.Get(apImageSet.PRESET.ToolBtn_TabFolded);
 
 
-			EditorGUILayout.BeginHorizontal(apGUILOFactory.I.Height(height - 10));
+			//EditorGUILayout.BeginHorizontal(apGUILOFactory.I.Height(height - 10));//이전
+			EditorGUILayout.BeginHorizontal(apGUILOFactory.I.Height(height));//변경 21.1.20 (v1.3.0)
 
 			GUILayout.Space(5);
 
-
-
+			
+			int paddingY_Height24 = ((height - 2) - 24) / 2;
+			int paddingY_Height20 = ((height - 2) - 20) / 2;
+			int height_Btn = height - 8;//기존엔 height - 14
 
 			if (_portrait == null)
 			{
 				GUILayout.Space(15);
 				EditorGUILayout.BeginVertical(apGUILOFactory.I.Width(250));
-				EditorGUILayout.LabelField(GetUIWord(UIWORD.SelectPortraitFromScene), apGUILOFactory.I.Width(200));//"Select Portrait From Scene"
+				
+				//삭제 21.1.20
+				//EditorGUILayout.LabelField(GetUIWord(UIWORD.SelectPortraitFromScene), apGUILOFactory.I.Width(200));//"Select Portrait From Scene"
+
+				GUILayout.Space(paddingY_Height20);//추가 21.1.20
 				apPortrait nextPortrait = EditorGUILayout.ObjectField(_portrait, typeof(apPortrait), true, apGUILOFactory.I.Width(200)) as apPortrait;
 
 				//바뀌었다.
@@ -4201,6 +4489,7 @@ namespace AnyPortrait
 					}
 					else
 					{
+						#region [미사용 코드]
 						//동기 로딩
 						//_portrait = nextPortrait;//선택!
 
@@ -4219,7 +4508,8 @@ namespace AnyPortrait
 						////시작은 RootUnit
 						//_selection.SetOverallDefault();
 
-						//OnAnyObjectAddedOrRemoved();
+						//OnAnyObjectAddedOrRemoved(); 
+						#endregion
 
 						//비동기 로딩
 						Selection.activeGameObject = null;
@@ -4242,9 +4532,13 @@ namespace AnyPortrait
 
 				if (isGUITab_BakeAndSetting)
 				{
-					EditorGUILayout.BeginVertical(apGUILOFactory.I.Width(140));
-					EditorGUILayout.LabelField(GetUIWord(UIWORD.Portrait), apGUILOFactory.I.Width(140));//"Portrait"
-					apPortrait nextPortrait = EditorGUILayout.ObjectField(_portrait, typeof(apPortrait), true, apGUILOFactory.I.Width(140)) as apPortrait;
+					EditorGUILayout.BeginVertical(apGUILOFactory.I.Width(100));//이전은 140 > 100 (21.1.20)
+					//이전
+					//EditorGUILayout.LabelField(GetUIWord(UIWORD.Portrait), apGUILOFactory.I.Width(140));//"Portrait"
+
+					//변경 21.1.20 / 여백 추가, 길이 감소 140 > 100
+					GUILayout.Space(paddingY_Height20);//추가 21.1.20
+					apPortrait nextPortrait = EditorGUILayout.ObjectField(_portrait, typeof(apPortrait), true, apGUILOFactory.I.Width(100)) as apPortrait;
 
 					if (_portrait != nextPortrait)
 					{
@@ -4261,6 +4555,7 @@ namespace AnyPortrait
 							else
 							{
 								//NextPortrait를 선택
+								#region [미사용 코드]
 
 								//동기 로딩
 								//_portrait = nextPortrait;
@@ -4269,9 +4564,6 @@ namespace AnyPortrait
 
 								////Portrait의 레퍼런스들을 연결해주자
 								//Controller.PortraitReadyToEdit();//화면 좌상단 오브젝트 필드에서 교체할 때 <편집 중인 Portrait가 있을때 교체>
-
-
-
 
 								////Selection.activeGameObject = _portrait.gameObject;
 								//Selection.activeGameObject = null;//<<선택을 해제해준다. 프로파일러를 도와줘야져
@@ -4285,7 +4577,8 @@ namespace AnyPortrait
 
 								//_hierarchy.ResetAllUnits();
 								//_hierarchy_MeshGroup.ResetSubUnits();
-								//_hierarchy_AnimClip.ResetSubUnits();
+								//_hierarchy_AnimClip.ResetSubUnits(); 
+								#endregion
 
 								//비동기 로딩
 								Selection.activeGameObject = null;
@@ -4304,8 +4597,6 @@ namespace AnyPortrait
 							_hierarchy_MeshGroup.ResetSubUnits();
 							_hierarchy_AnimClip.ResetSubUnits();
 						}
-
-						
 					}
 					EditorGUILayout.EndVertical();
 
@@ -4321,14 +4612,16 @@ namespace AnyPortrait
 						_guiContent_TopBtn_Bake = apGUIContentWrapper.Make(_guiStringWrapper_32.ToString(), false, ImageSet.Get(apImageSet.PRESET.ToolBtn_Bake), apStringFactory.I.BakeToScene);//"Bake to Scene"
 					}
 
-
-					if (GUILayout.Button(_guiContent_TopBtn_Setting.Content, apGUILOFactory.I.Width(height - 14), apGUILOFactory.I.Height(height - 14)))
+					//변경 21.1.20 : 크기가 변경되었다. height-14 > height_Btn(height - 4)
+					if (GUILayout.Button(_guiContent_TopBtn_Setting.Content, apGUIStyleWrapper.I.Button_VerticalMargin0, apGUILOFactory.I.Width(height_Btn), apGUILOFactory.I.Height(height_Btn)))
 					{
 						_dialogShowCall = DIALOG_SHOW_CALL.Setting;//<<Delay된 호출을 한다.
 					}
 
+					GUILayout.Space(2);
+
 					//"  Bake"
-					if (GUILayout.Button(_guiContent_TopBtn_Bake.Content, apGUILOFactory.I.Width(90), apGUILOFactory.I.Height(height - 14)))
+					if (GUILayout.Button(_guiContent_TopBtn_Bake.Content, apGUIStyleWrapper.I.Button_VerticalMargin0, apGUILOFactory.I.Width(90), apGUILOFactory.I.Height(height_Btn)))
 					{
 						_dialogShowCall = DIALOG_SHOW_CALL.Bake;
 						//apDialog_Bake.ShowDialog(this, _portrait);//<<이건 Delay 해야한다.
@@ -4336,49 +4629,61 @@ namespace AnyPortrait
 				}
 			}
 
-			int tabBtnHeight = height - (15);
+			//int tabBtnHeight = height - (15);//이전
+			int tabBtnHeight = height_Btn;//변경 21.1.20
 			int tabBtnWidth = tabBtnHeight + 10;
 
 			bool isGizmoUpdatable = Gizmos.IsUpdatable;
-
-			//미사용 코드 > apStringFactory.I.GetCtrlOrCommand를 사용하자
-			//			string strCtrlKey = "Ctrl";
-
-			//#if UNITY_EDITOR_OSX
-			//			strCtrlKey = "Command";
-			//#endif
 
 			//>>>>>>>>>>>> Tab2_TRS Tools >>>>>>>>>>>>>>>>>>>
 			bool isGUITab_TRSTools = DrawAndCheckGUITopTab(GUITOP_TAB.Tab2_TRSTools, imbTabOpen, imbTabFolded, height - 10);
 
 			if (isGUITab_TRSTools)
 			{
-				//if (Gizmos.IsUpdatable)
-				if (apEditorUtil.ToggledButton(ImageSet.Get(apImageSet.PRESET.ToolBtn_Select), (_gizmos.ControlType == apGizmos.CONTROL_TYPE.Select), isGizmoUpdatable, tabBtnWidth, tabBtnHeight, "Select Tool (Q)"))
+				if (apEditorUtil.ToggledButton_VerticalMargin0(	ImageSet.Get(apImageSet.PRESET.ToolBtn_Select), 
+																(_gizmos.ControlType == apGizmos.CONTROL_TYPE.Select), 
+																isGizmoUpdatable, tabBtnWidth, tabBtnHeight, 
+																apStringFactory.I.GetHotkeyTooltip_SelectTool(HotKeyMap)//"Select Tool (Q)"//TODO
+																))
 				{
 					_gizmos.SetControlType(apGizmos.CONTROL_TYPE.Select);
 				}
-				if (apEditorUtil.ToggledButton(ImageSet.Get(apImageSet.PRESET.ToolBtn_Move), (_gizmos.ControlType == apGizmos.CONTROL_TYPE.Move), isGizmoUpdatable, tabBtnWidth, tabBtnHeight, "Move Tool (W)"))
+				if (apEditorUtil.ToggledButton_VerticalMargin0(	ImageSet.Get(apImageSet.PRESET.ToolBtn_Move), 
+																(_gizmos.ControlType == apGizmos.CONTROL_TYPE.Move), 
+																isGizmoUpdatable, tabBtnWidth, tabBtnHeight, 
+																apStringFactory.I.GetHotkeyTooltip_MoveTool(HotKeyMap)//"Move Tool (W)"//TODO
+																))
 				{
 					_gizmos.SetControlType(apGizmos.CONTROL_TYPE.Move);
 				}
-				if (apEditorUtil.ToggledButton(ImageSet.Get(apImageSet.PRESET.ToolBtn_Rotate), (_gizmos.ControlType == apGizmos.CONTROL_TYPE.Rotate), isGizmoUpdatable, tabBtnWidth, tabBtnHeight, "Rotate Tool (E)"))
+				if (apEditorUtil.ToggledButton_VerticalMargin0(	ImageSet.Get(apImageSet.PRESET.ToolBtn_Rotate), 
+																(_gizmos.ControlType == apGizmos.CONTROL_TYPE.Rotate), 
+																isGizmoUpdatable, tabBtnWidth, tabBtnHeight, 
+																apStringFactory.I.GetHotkeyTooltip_RotateTool(HotKeyMap)//"Rotate Tool (E)"//TODO
+																))
 				{
 					_gizmos.SetControlType(apGizmos.CONTROL_TYPE.Rotate);
 				}
-				if (apEditorUtil.ToggledButton(ImageSet.Get(apImageSet.PRESET.ToolBtn_Scale), (_gizmos.ControlType == apGizmos.CONTROL_TYPE.Scale), isGizmoUpdatable, tabBtnWidth, tabBtnHeight, "Scale Tool (R)"))
+				if (apEditorUtil.ToggledButton_VerticalMargin0(	ImageSet.Get(apImageSet.PRESET.ToolBtn_Scale), 
+																(_gizmos.ControlType == apGizmos.CONTROL_TYPE.Scale), 
+																isGizmoUpdatable, tabBtnWidth, tabBtnHeight, 
+																apStringFactory.I.GetHotkeyTooltip_ScaleTool(HotKeyMap)//"Scale Tool (R)"//TODO
+																))
 				{
 					_gizmos.SetControlType(apGizmos.CONTROL_TYPE.Scale);
 				}
 
 
 
-				GUILayout.Space(5);
+				//GUILayout.Space(5);
 
-				EditorGUILayout.BeginVertical(apGUILOFactory.I.Width(95));
-
-				EditorGUILayout.LabelField(GetUIWord(UIWORD.Coordinate), apGUILOFactory.I.Width(95));//"Coordinate"
-				apGizmos.COORDINATE_TYPE nextCoordinate = (apGizmos.COORDINATE_TYPE)EditorGUILayout.EnumPopup(Gizmos.Coordinate, apGUILOFactory.I.Width(95));
+				//변경 21.1.20 : 텍스트 삭제후, Width를 95 > 70으로
+				EditorGUILayout.BeginVertical(apGUILOFactory.I.Width(70));
+				//이전
+				//EditorGUILayout.LabelField(GetUIWord(UIWORD.Coordinate), apGUILOFactory.I.Width(95));//"Coordinate"
+				//변경 21.1.20
+				GUILayout.Space(paddingY_Height20);
+				apGizmos.COORDINATE_TYPE nextCoordinate = (apGizmos.COORDINATE_TYPE)EditorGUILayout.EnumPopup(Gizmos.Coordinate, apGUILOFactory.I.Width(70));
 				if (nextCoordinate != Gizmos.Coordinate)
 				{
 					Gizmos.SetCoordinateType(nextCoordinate);
@@ -4389,187 +4694,210 @@ namespace AnyPortrait
 			//GUILayout.Space(5);
 
 			//>>>>>>>>>>>> Tab3_Visibility >>>>>>>>>>>>>>>>>>>
-			bool isGUITab_Visibility = DrawAndCheckGUITopTab(GUITOP_TAB.Tab3_Visibility, imbTabOpen, imbTabFolded, height - 10);
+			//변경 21.1.20 : 이 버튼들은 신버전에서는 옵션으로 열기 전에는 보이지 않는다.
 
-			if (isGUITab_Visibility)
+			if (_option_ShowPrevViewMenuBtns)
 			{
-				// Onion 버튼.
-				bool isOnionButtonAvailable = false;
-				bool isOnionButtonRecordable = false;
-				if (Select.SelectionType == apSelection.SELECTION_TYPE.Animation ||
-					Select.SelectionType == apSelection.SELECTION_TYPE.MeshGroup)
+				bool isGUITab_Visibility = DrawAndCheckGUITopTab(GUITOP_TAB.Tab3_Visibility, imbTabOpen, imbTabFolded, height - 10);
+
+				if (isGUITab_Visibility)
 				{
-					isOnionButtonAvailable = true;
-					if (!_onionOption_IsRenderAnimFrames || Select.SelectionType == apSelection.SELECTION_TYPE.MeshGroup)
+					// Onion 버튼.
+					bool isOnionButtonAvailable = false;
+					bool isOnionButtonRecordable = false;
+					if (Select.SelectionType == apSelection.SELECTION_TYPE.Animation ||
+						Select.SelectionType == apSelection.SELECTION_TYPE.MeshGroup)
 					{
-						isOnionButtonRecordable = true;
+						isOnionButtonAvailable = true;
+						if (!_onionOption_IsRenderAnimFrames || Select.SelectionType == apSelection.SELECTION_TYPE.MeshGroup)
+						{
+							isOnionButtonRecordable = true;
+						}
 					}
-				}
-				if (apEditorUtil.ToggledButton_2Side_Ctrl(ImageSet.Get(apImageSet.PRESET.ToolBtn_OnionView),
-													Onion.IsVisible, isOnionButtonAvailable, tabBtnWidth, tabBtnHeight,
-													"Show/Hide Onion Skin (O)", Event.current.control, Event.current.command))
-				{
-#if UNITY_EDITOR_OSX
-				if(Event.current.command)
-#else
-					if (Event.current.control)
-#endif
+					if (apEditorUtil.ToggledButton_2Side_Ctrl_VerticalMargin0(	
+																ImageSet.Get(apImageSet.PRESET.ToolBtn_OnionView),
+																Onion.IsVisible, isOnionButtonAvailable, tabBtnWidth, tabBtnHeight,
+																apStringFactory.I.GetHotkeyTooltip_ToggleOnionSkin(HotKeyMap),//"Show/Hide Onion Skin (O)",
+																Event.current.control, Event.current.command))
 					{
-						apDialog_OnionSetting.ShowDialog(this, _portrait);//<<Onion 설정 다이얼로그를 호출
+#if UNITY_EDITOR_OSX
+						if(Event.current.command)
+#else
+						if (Event.current.control)
+#endif
+						{
+							apDialog_OnionSetting.ShowDialog(this, _portrait);//<<Onion 설정 다이얼로그를 호출
+						}
+						else
+						{
+							Onion.SetVisible(!Onion.IsVisible);
+						}
+
+					}
+
+
+
+
+					//만약 Onion이 켜졌다면 => Record 버튼이 활성화된다.
+					bool isOnionRecordable = isOnionButtonAvailable && Onion.IsVisible && isOnionButtonRecordable;
+
+					//SetGUIVisible("GUI Top Onion Visible", isOnionRecordable);
+					SetGUIVisible(DELAYED_UI_TYPE.GUI_Top_Onion_Visible, isOnionRecordable);
+
+					//if (IsDelayedGUIVisible("GUI Top Onion Visible"))
+					if (IsDelayedGUIVisible(DELAYED_UI_TYPE.GUI_Top_Onion_Visible))
+					{
+						if (apEditorUtil.ToggledButton_2Side_VerticalMargin0(
+														ImageSet.Get(apImageSet.PRESET.ToolBtn_OnionRecord),
+														false, true, 
+														tabBtnWidth, tabBtnHeight, 
+														apStringFactory.I.RecordOnionSkin//"Record Onion Skin"//TODO
+														))
+						{
+							//현재 상태를 기록한다.
+							Onion.Record(this);
+						}
+
+						GUILayout.Space(5);
+					}
+
+
+
+					// Bone Visible 여부 버튼
+					Texture2D iconImg_boneGUI = null;
+					if (_boneGUIRenderMode == BONE_RENDER_MODE.RenderOutline)
+					{
+						iconImg_boneGUI = ImageSet.Get(apImageSet.PRESET.ToolBtn_BoneVisibleOutlineOnly);
 					}
 					else
 					{
-						Onion.SetVisible(!Onion.IsVisible);
+						iconImg_boneGUI = ImageSet.Get(apImageSet.PRESET.ToolBtn_BoneVisible);
 					}
 
-				}
+
+					bool isBoneVisibleButtonAvailable = _selection.SelectionType == apSelection.SELECTION_TYPE.MeshGroup ||
+						_selection.SelectionType == apSelection.SELECTION_TYPE.Animation ||
+						_selection.SelectionType == apSelection.SELECTION_TYPE.Overall;
 
 
+					//이전
+					////텍스트를 StringWrapper를 이용해서 만들자
+					//_guiStringWrapper_256.Clear();
+					//_guiStringWrapper_256.Append(apStringFactory.I.BoneGUIToolTip_1, false);
+					//_guiStringWrapper_256.Append(apStringFactory.I.GetCtrlOrCommand(), false);
+					//_guiStringWrapper_256.Append(apStringFactory.I.BoneGUIToolTip_2, true);
 
+					//변경 21.1.21 : 툴팁 가져오는 방식이 간편하게 되었다.
 
-				//만약 Onion이 켜졌다면 => Record 버튼이 활성화된다.
-				bool isOnionRecordable = isOnionButtonAvailable && Onion.IsVisible && isOnionButtonRecordable;
-
-				//SetGUIVisible("GUI Top Onion Visible", isOnionRecordable);
-				SetGUIVisible(DELAYED_UI_TYPE.GUI_Top_Onion_Visible, isOnionRecordable);
-
-				//if (IsDelayedGUIVisible("GUI Top Onion Visible"))
-				if (IsDelayedGUIVisible(DELAYED_UI_TYPE.GUI_Top_Onion_Visible))
-				{
-					if (apEditorUtil.ToggledButton_2Side(ImageSet.Get(apImageSet.PRESET.ToolBtn_OnionRecord),
-													false, true, tabBtnWidth, tabBtnHeight, "Record Onion Skin"))
+					if (apEditorUtil.ToggledButton_2Side_Ctrl_VerticalMargin0(
+													iconImg_boneGUI,
+													_boneGUIRenderMode != BONE_RENDER_MODE.None,
+													isBoneVisibleButtonAvailable, tabBtnWidth, tabBtnHeight,
+													//"Change Bone Visiblity (B) / If you press the button while holding down [" + strCtrlKey + "], the function works in reverse.",//이전
+													//_guiStringWrapper_256.ToString(),
+													apStringFactory.I.GetHotkeyTooltip_BoneVisibility(HotKeyMap),
+													Event.current.control,
+													Event.current.command))
 					{
-						//현재 상태를 기록한다.
-						Onion.Record(this);
-					}
-
-					GUILayout.Space(5);
-				}
-
-
-
-				// Bone Visible 여부 버튼
-				Texture2D iconImg_boneGUI = null;
-				if (_boneGUIRenderMode == BONE_RENDER_MODE.RenderOutline)
-				{
-					iconImg_boneGUI = ImageSet.Get(apImageSet.PRESET.ToolBtn_BoneVisibleOutlineOnly);
-				}
-				else
-				{
-					iconImg_boneGUI = ImageSet.Get(apImageSet.PRESET.ToolBtn_BoneVisible);
-				}
-
-
-				bool isBoneVisibleButtonAvailable = _selection.SelectionType == apSelection.SELECTION_TYPE.MeshGroup ||
-					_selection.SelectionType == apSelection.SELECTION_TYPE.Animation ||
-					_selection.SelectionType == apSelection.SELECTION_TYPE.Overall;
-
-
-				//텍스트를 StringWrapper를 이용해서 만들자
-				_guiStringWrapper_256.Clear();
-				_guiStringWrapper_256.Append(apStringFactory.I.BoneGUIToolTip_1, false);
-				_guiStringWrapper_256.Append(apStringFactory.I.GetCtrlOrCommand(), false);
-				_guiStringWrapper_256.Append(apStringFactory.I.BoneGUIToolTip_2, true);
-
-				if (apEditorUtil.ToggledButton_2Side_Ctrl(iconImg_boneGUI,
-					_boneGUIRenderMode != BONE_RENDER_MODE.None,
-					isBoneVisibleButtonAvailable, tabBtnWidth, tabBtnHeight,
-					//"Change Bone Visiblity (B) / If you press the button while holding down [" + strCtrlKey + "], the function works in reverse.",//이전
-					_guiStringWrapper_256.ToString(),//변경 : String 최적화
-					Event.current.control,
-					Event.current.command))
-				{
 #if UNITY_EDITOR_OSX
 				bool isCtrl = Event.current.command;
 #else
-					bool isCtrl = Event.current.control;
+						bool isCtrl = Event.current.control;
 #endif
 
-					//Control 키를 누르면 그냥 누른 것과 반대로 변경된다.
-					//Ctrl : Outline -> Render -> None -> Outline
-					//그냥 : None -> Render -> Outline -> None
+						//Control 키를 누르면 그냥 누른 것과 반대로 변경된다.
+						//Ctrl : Outline -> Render -> None -> Outline
+						//그냥 : None -> Render -> Outline -> None
 
 
-					switch (_boneGUIRenderMode)
-					{
-						case BONE_RENDER_MODE.None:
-							{
-								if (isCtrl) { _boneGUIRenderMode = BONE_RENDER_MODE.RenderOutline; }
-								else { _boneGUIRenderMode = BONE_RENDER_MODE.Render; }
-							}
-							break;
-
-						case BONE_RENDER_MODE.Render:
-							{
-								if (isCtrl) { _boneGUIRenderMode = BONE_RENDER_MODE.None; }
-								else { _boneGUIRenderMode = BONE_RENDER_MODE.RenderOutline; }
-							}
-							break;
-
-						case BONE_RENDER_MODE.RenderOutline:
-							{
-								if (isCtrl) { _boneGUIRenderMode = BONE_RENDER_MODE.Render; }
-								else { _boneGUIRenderMode = BONE_RENDER_MODE.None; }
-							}
-							break;
-
-					}
-					SaveEditorPref();
-				}
-
-
-				//추가 : 메시 렌더링
-				if (apEditorUtil.ToggledButton_2Side(ImageSet.Get(apImageSet.PRESET.ToolBtn_MeshVisible),
-					_meshGUIRenderMode == MESH_RENDER_MODE.Render,
-					_selection.SelectionType == apSelection.SELECTION_TYPE.MeshGroup ||
-					_selection.SelectionType == apSelection.SELECTION_TYPE.Animation ||
-					_selection.SelectionType == apSelection.SELECTION_TYPE.Overall, tabBtnWidth, tabBtnHeight,
-					//"Enable/Disable Mesh Visiblity"
-					apStringFactory.I.MeshVisibilityToolTip
-					))
-				{
-					if (_meshGUIRenderMode == MESH_RENDER_MODE.None)
-					{
-						_meshGUIRenderMode = MESH_RENDER_MODE.Render;
-					}
-					else
-					{
-						_meshGUIRenderMode = MESH_RENDER_MODE.None;
-					}
-				}
-
-
-				//물리 적용 여부
-				bool isPhysic = false;
-
-				if (_portrait != null)
-				{
-					isPhysic = _portrait._isPhysicsPlay_Editor;
-				}
-
-				if (apEditorUtil.ToggledButton_2Side(ImageSet.Get(apImageSet.PRESET.ToolBtn_Physic),
-					isPhysic,
-					_selection.SelectionType == apSelection.SELECTION_TYPE.MeshGroup ||
-					_selection.SelectionType == apSelection.SELECTION_TYPE.Animation ||
-					_selection.SelectionType == apSelection.SELECTION_TYPE.Overall, tabBtnWidth, tabBtnHeight,
-					//"Enable/Disable Physical Effect"//이전
-					apStringFactory.I.PhysicsFxEnableToolTop//변경
-					))
-				{
-					if (_portrait != null)
-					{
-						//물리 기능 토글
-						_portrait._isPhysicsPlay_Editor = !isPhysic;
-						if (_portrait._isPhysicsPlay_Editor)
+						switch (_boneGUIRenderMode)
 						{
-							//물리 값을 리셋합시다.
-							Controller.ResetPhysicsValues();
+							case BONE_RENDER_MODE.None:
+								{
+									if (isCtrl)
+									{ _boneGUIRenderMode = BONE_RENDER_MODE.RenderOutline; }
+									else
+									{ _boneGUIRenderMode = BONE_RENDER_MODE.Render; }
+								}
+								break;
+
+							case BONE_RENDER_MODE.Render:
+								{
+									if (isCtrl)
+									{ _boneGUIRenderMode = BONE_RENDER_MODE.None; }
+									else
+									{ _boneGUIRenderMode = BONE_RENDER_MODE.RenderOutline; }
+								}
+								break;
+
+							case BONE_RENDER_MODE.RenderOutline:
+								{
+									if (isCtrl)
+									{ _boneGUIRenderMode = BONE_RENDER_MODE.Render; }
+									else
+									{ _boneGUIRenderMode = BONE_RENDER_MODE.None; }
+								}
+								break;
+
+						}
+						SaveEditorPref();
+					}
+
+
+					//메시 렌더링
+					if (apEditorUtil.ToggledButton_2Side_VerticalMargin0(ImageSet.Get(apImageSet.PRESET.ToolBtn_MeshVisible),
+						_meshGUIRenderMode == MESH_RENDER_MODE.Render,
+						_selection.SelectionType == apSelection.SELECTION_TYPE.MeshGroup ||
+						_selection.SelectionType == apSelection.SELECTION_TYPE.Animation ||
+						_selection.SelectionType == apSelection.SELECTION_TYPE.Overall, tabBtnWidth, tabBtnHeight,
+						//"Enable/Disable Mesh Visiblity"
+						apStringFactory.I.GetHotkeyTooltip_MeshVisibility(HotKeyMap)
+						))
+					{
+						if (_meshGUIRenderMode == MESH_RENDER_MODE.None)
+						{
+							_meshGUIRenderMode = MESH_RENDER_MODE.Render;
+						}
+						else
+						{
+							_meshGUIRenderMode = MESH_RENDER_MODE.None;
 						}
 					}
+
+
+					//물리 적용 여부
+					bool isPhysic = false;
+
+					if (_portrait != null)
+					{
+						isPhysic = _portrait._isPhysicsPlay_Editor;
+					}
+
+					if (apEditorUtil.ToggledButton_2Side_VerticalMargin0(ImageSet.Get(apImageSet.PRESET.ToolBtn_Physic),
+						isPhysic,
+						_selection.SelectionType == apSelection.SELECTION_TYPE.MeshGroup ||
+						_selection.SelectionType == apSelection.SELECTION_TYPE.Animation ||
+						_selection.SelectionType == apSelection.SELECTION_TYPE.Overall, tabBtnWidth, tabBtnHeight,
+						//"Enable/Disable Physical Effect"//이전
+						apStringFactory.I.GetHotkeyTooltip_PhysicsFxEnable(HotKeyMap)
+						))
+					{
+						if (_portrait != null)
+						{
+							//물리 기능 토글
+							_portrait._isPhysicsPlay_Editor = !isPhysic;
+							if (_portrait._isPhysicsPlay_Editor)
+							{
+								//물리 값을 리셋합시다.
+								Controller.ResetPhysicsValues();
+							}
+						}
+					}
+
 				}
 
 			}
-
+			
 
 			//GUILayout.Space(15);
 
@@ -4660,12 +4988,11 @@ namespace AnyPortrait
 					_guiStringWrapper_256.Append(apStringFactory.I.GetCtrlOrCommand(), false);
 					_guiStringWrapper_256.Append(apStringFactory.I.FFDModeToolTip_2, true);
 
-					if (apEditorUtil.ToggledButton_Ctrl(ImageSet.Get(apImageSet.PRESET.ToolBtn_Transform),
-						Gizmos.IsFFDMode, Gizmos.IsFFDModeAvailable, tabBtnWidth, tabBtnHeight,
-						//"Free Form Deformation / If you press the button while holding down [" + strCtrlKey + "], a dialog appears allowing you to change the number of control points.",//이전
-						_guiStringWrapper_256.ToString(),//변경
-						Event.current.control,
-						Event.current.command))
+					if (apEditorUtil.ToggledButton_Ctrl_VerticalMargin0(	ImageSet.Get(apImageSet.PRESET.ToolBtn_Transform),
+																			Gizmos.IsFFDMode, Gizmos.IsFFDModeAvailable, tabBtnWidth, tabBtnHeight,
+																			_guiStringWrapper_256.ToString(),//변경
+																			Event.current.control,
+																			Event.current.command))
 					{
 
 #if UNITY_EDITOR_OSX
@@ -4690,19 +5017,21 @@ namespace AnyPortrait
 					//2-1) FFD
 					if (isGizmoGUIVisible_VTF_FFD)
 					{
-						if (apEditorUtil.ToggledButton(ImageSet.Get(apImageSet.PRESET.ToolBtn_TransformAdapt),
-							false, Gizmos.IsFFDMode, tabBtnWidth, tabBtnHeight, apStringFactory.I.ApplyFFD))//"Apply FFD"
+						if (apEditorUtil.ToggledButton_VerticalMargin0(	ImageSet.Get(apImageSet.PRESET.ToolBtn_TransformAdapt),
+																		false, Gizmos.IsFFDMode, 
+																		tabBtnWidth, tabBtnHeight, 
+																		apStringFactory.I.ApplyFFD))//"Apply FFD"
 						{
-							//_gizmos.SetControlType(apGizmos.CONTROL_TYPE.Transform);
-							//Gizmos.StartTransformMode();
 							if (Gizmos.IsFFDMode)
 							{
 								Gizmos.AdaptTransformObjects(this);
 							}
 						}
 
-						if (apEditorUtil.ToggledButton(ImageSet.Get(apImageSet.PRESET.ToolBtn_TransformRevert),
-							false, Gizmos.IsFFDMode, tabBtnWidth, tabBtnHeight, apStringFactory.I.RevertFFD))//"Revert FFD"
+						if (apEditorUtil.ToggledButton_VerticalMargin0(	ImageSet.Get(apImageSet.PRESET.ToolBtn_TransformRevert),
+																		false, Gizmos.IsFFDMode, 
+																		tabBtnWidth, tabBtnHeight, 
+																		apStringFactory.I.RevertFFD))//"Revert FFD"
 						{
 							//_gizmos.SetControlType(apGizmos.CONTROL_TYPE.Transform);
 							//Gizmos.StartTransformMode();
@@ -4720,9 +5049,8 @@ namespace AnyPortrait
 					{
 						//만약 Layout이 아닌 이전 이벤트에서 FFD 편집 중이었는데
 						//갑자기 사라지는 경우 -> 더미를 출력하자
-						apEditorUtil.ToggledButton(ImageSet.Get(apImageSet.PRESET.ToolBtn_TransformAdapt), false, Gizmos.IsFFDMode, tabBtnWidth, tabBtnHeight, apStringFactory.I.ApplyFFD);//"Apply FFD"
-
-						apEditorUtil.ToggledButton(ImageSet.Get(apImageSet.PRESET.ToolBtn_TransformRevert), false, Gizmos.IsFFDMode, tabBtnWidth, tabBtnHeight, apStringFactory.I.RevertFFD);//"Revert FFD"
+						apEditorUtil.ToggledButton_VerticalMargin0(ImageSet.Get(apImageSet.PRESET.ToolBtn_TransformAdapt), false, Gizmos.IsFFDMode, tabBtnWidth, tabBtnHeight, apStringFactory.I.ApplyFFD);//"Apply FFD"
+						apEditorUtil.ToggledButton_VerticalMargin0(ImageSet.Get(apImageSet.PRESET.ToolBtn_TransformRevert), false, Gizmos.IsFFDMode, tabBtnWidth, tabBtnHeight, apStringFactory.I.RevertFFD);//"Revert FFD"
 
 						GUILayout.Space(10);
 					}
@@ -4732,12 +5060,12 @@ namespace AnyPortrait
 						_isGizmoGUIVisible_VTF_FFD_Prev = isGizmoGUIVisible_VTF_FFD;
 					}
 
-					GUILayout.Space(10);
+					GUILayout.Space(4);
 
-					if (apEditorUtil.ToggledButton_2Side(ImageSet.Get(apImageSet.PRESET.ToolBtn_SoftSelection),
-						Gizmos.IsSoftSelectionMode, Gizmos.IsSoftSelectionModeAvailable, tabBtnWidth, tabBtnHeight,
-						apStringFactory.I.SoftSelectionToolTip//"Soft Selection (Adjust brush size with [, ])"
-						))
+					if (apEditorUtil.ToggledButton_2Side_VerticalMargin0(	ImageSet.Get(apImageSet.PRESET.ToolBtn_SoftSelection),
+																			Gizmos.IsSoftSelectionMode, Gizmos.IsSoftSelectionModeAvailable, tabBtnWidth, tabBtnHeight,
+																			apStringFactory.I.GetHotkeyTooltip_SoftSelectionToolTip(HotKeyMap)//"Soft Selection (Adjust brush size with [, ])"
+																		))
 					{
 						if (Gizmos.IsSoftSelectionMode)
 						{
@@ -4750,31 +5078,87 @@ namespace AnyPortrait
 					}
 
 
-					int labelSize = 70;
-					int sliderSize = 200;
-					int sliderSetSize = labelSize + sliderSize + 4;
+					
+					//이전
+					//int labelSize = 70;
+					//int sliderSize = 200;
+					//int sliderSetSize = labelSize + sliderSize + 4;
+
+					//변경 : 슬라이더가 좌우로 배치되면서 길이 짧아짐 (Radius와 Curve 길이 다르게 처리)
+					
+					int labelSize_Radius = 50;
+					int labelSize_Curve_Soft = 40;
+					int labelSize_Curve_Blur = 60;
+					switch (_language)
+					{
+						case LANGUAGE.Korean:
+						case LANGUAGE.Japanese:
+						case LANGUAGE.Chinese_Simplified:
+						case LANGUAGE.Chinese_Traditional:
+							//Radius / Curve 글자 길이를 줄일 수 있다.
+							labelSize_Radius = 30;
+							labelSize_Curve_Soft = 30;
+							labelSize_Curve_Blur = 30;
+							break;
+
+						case LANGUAGE.Spanish:
+						case LANGUAGE.Polish:
+							//이건 글자를 더 길게
+							labelSize_Curve_Blur = 70;
+							break;
+					}
+					
+					int sliderValueWidth = 35;
+
+					int sliderSize_Radius = 120 - sliderValueWidth;
+					int sliderSetSize_Radius = labelSize_Radius + sliderSize_Radius + sliderValueWidth + 6;
+
+					
+					int sliderSize_Curve_Soft = 80 - sliderValueWidth;
+					int sliderSetSize_Curve_Soft = labelSize_Curve_Soft + sliderSize_Curve_Soft + sliderValueWidth + 6;
+
+					int sliderSize_Curve_Blur = 80 - sliderValueWidth;
+					int sliderSetSize_Curve_Blur = labelSize_Curve_Blur + sliderSize_Curve_Blur + sliderValueWidth + 6;
 
 					//2-2) Soft Selection
 					if (isGizmoGUIVisible_VTF_Soft)
 					{
 						//Radius와 Curve
-						EditorGUILayout.BeginVertical(apGUILOFactory.I.Width(sliderSetSize));
+						//레이아웃 변경 21.1.20 : Radius와 Curve가 세로로 배치되던걸 좌우로 배치
+						//EditorGUILayout.BeginVertical(apGUILOFactory.I.Width(sliderSetSize));
 						int softRadius = Gizmos.SoftSelectionRadius;
 						int softCurveRatio = Gizmos.SoftSelectionCurveRatio;
 
-						EditorGUILayout.BeginHorizontal(apGUILOFactory.I.Width(sliderSetSize));
-						EditorGUILayout.LabelField(GetUIWord(UIWORD.Radius), apGUILOFactory.I.Width(labelSize));//"Radius"
-						softRadius = EditorGUILayout.IntSlider(softRadius, 1, apGizmos.MAX_SOFT_SELECTION_RADIUS, apGUILOFactory.I.Width(sliderSize));
-						EditorGUILayout.EndHorizontal();
-
-						//string strCurveLabel = "Curve";
-						string strCurveLabel = GetUIWord(UIWORD.Curve);
-						EditorGUILayout.BeginHorizontal(apGUILOFactory.I.Width(sliderSetSize));
-						EditorGUILayout.LabelField(strCurveLabel, apGUILOFactory.I.Width(labelSize));
-						softCurveRatio = EditorGUILayout.IntSlider(softCurveRatio, -100, 100, apGUILOFactory.I.Width(sliderSize));
+						EditorGUILayout.BeginVertical(apGUILOFactory.I.Width(sliderSetSize_Radius));
+						GUILayout.Space(paddingY_Height24);
+						EditorGUILayout.BeginHorizontal(apGUILOFactory.I.Width(sliderSetSize_Radius), apGUILOFactory.I.Height(20));
+						EditorGUILayout.LabelField(GetUIWord(UIWORD.Radius), apGUILOFactory.I.Width(labelSize_Radius));//"Radius"
+						//softRadius = EditorGUILayout.IntSlider(softRadius, 1, apGizmos.MAX_SOFT_SELECTION_RADIUS, apGUILOFactory.I.Width(sliderSize_Radius));
+						softRadius = (int)GUILayout.HorizontalSlider(softRadius, 1, apGizmos.MAX_SOFT_SELECTION_RADIUS, apGUILOFactory.I.Width(sliderSize_Radius));
+						softRadius = EditorGUILayout.IntField(softRadius, apGUILOFactory.I.Width(sliderValueWidth));
+						softRadius = Mathf.Clamp(softRadius, 1, apGizmos.MAX_SOFT_SELECTION_RADIUS);
 						EditorGUILayout.EndHorizontal();
 
 						EditorGUILayout.EndVertical();
+
+
+						EditorGUILayout.BeginVertical(apGUILOFactory.I.Width(sliderSetSize_Curve_Soft));
+						GUILayout.Space(paddingY_Height24);
+
+						//string strCurveLabel = "Curve";
+						string strCurveLabel = GetUIWord(UIWORD.Curve);
+
+						EditorGUILayout.BeginHorizontal(apGUILOFactory.I.Width(sliderSetSize_Curve_Soft));
+						EditorGUILayout.LabelField(strCurveLabel, apGUILOFactory.I.Width(labelSize_Curve_Soft));
+						//softCurveRatio = EditorGUILayout.IntSlider(softCurveRatio, -100, 100, apGUILOFactory.I.Width(sliderSize_Curve));
+						softCurveRatio = (int)GUILayout.HorizontalSlider(softCurveRatio, -100, 100, apGUILOFactory.I.Width(sliderSize_Curve_Soft));
+						softCurveRatio = EditorGUILayout.IntField(softCurveRatio, apGUILOFactory.I.Width(sliderValueWidth));
+						softCurveRatio = Mathf.Clamp(softCurveRatio, -100, 100);
+						EditorGUILayout.EndHorizontal();
+
+						EditorGUILayout.EndVertical();
+
+						//EditorGUILayout.EndVertical();
 
 						GUILayout.Space(10);
 
@@ -4786,14 +5170,14 @@ namespace AnyPortrait
 					}
 
 
-					GUILayout.Space(10);
+					GUILayout.Space(4);
 
-					if (apEditorUtil.ToggledButton_2Side(ImageSet.Get(apImageSet.PRESET.ToolBtn_Blur),
-						//Gizmos.IsBrushMode, 
-						_blurEnabled,
-						Gizmos.IsBrushModeAvailable, tabBtnWidth, tabBtnHeight,
-						apStringFactory.I.BlurToolTip//"Blur (Adjust brush size with [, ]"
-						))
+					if (apEditorUtil.ToggledButton_2Side_VerticalMargin0(	ImageSet.Get(apImageSet.PRESET.ToolBtn_Blur),
+																			//Gizmos.IsBrushMode, 
+																			_blurEnabled,
+																			Gizmos.IsBrushModeAvailable, tabBtnWidth, tabBtnHeight,
+																			apStringFactory.I.GetHotkeyTooltip_BlurToolTip(HotKeyMap)//"Blur (Adjust brush size with [, ]"
+																			))
 					{
 						if (_blurEnabled)
 						//if (Gizmos.IsBrushMode)
@@ -4813,22 +5197,37 @@ namespace AnyPortrait
 					{
 						//Range와 Intensity
 						//Radius와 Curve
-						EditorGUILayout.BeginVertical(apGUILOFactory.I.Width(sliderSetSize));
+						//레이아웃 변경 21.1.20 : Radius와 Curve가 세로로 배치되던걸 좌우로 배치
+						//EditorGUILayout.BeginVertical(apGUILOFactory.I.Width(sliderSetSize));
 
 						//int blurRadius = Gizmos.BrushRadius;
 						//int blurIntensity = Gizmos.BrushIntensity;
 
-						EditorGUILayout.BeginHorizontal(apGUILOFactory.I.Width(sliderSetSize));
-						EditorGUILayout.LabelField(GetUIWord(UIWORD.Radius), apGUILOFactory.I.Width(labelSize));//"Radius"
-						_blurRadius = EditorGUILayout.IntSlider(_blurRadius, 1, apGizmos.MAX_BRUSH_RADIUS, apGUILOFactory.I.Width(sliderSize));
-						EditorGUILayout.EndHorizontal();
+						EditorGUILayout.BeginVertical(apGUILOFactory.I.Width(sliderSetSize_Radius));
+						GUILayout.Space(paddingY_Height24);
 
-						EditorGUILayout.BeginHorizontal(apGUILOFactory.I.Width(sliderSetSize));
-						EditorGUILayout.LabelField(GetUIWord(UIWORD.Intensity), apGUILOFactory.I.Width(labelSize));//"Intensity"
-						_blurIntensity = EditorGUILayout.IntSlider(_blurIntensity, 0, 100, apGUILOFactory.I.Width(sliderSize));
+						EditorGUILayout.BeginHorizontal(apGUILOFactory.I.Width(sliderSetSize_Radius));
+						EditorGUILayout.LabelField(GetUIWord(UIWORD.Radius), apGUILOFactory.I.Width(labelSize_Radius));//"Radius"
+						_blurRadius = (int)GUILayout.HorizontalSlider(_blurRadius, 1, apGizmos.MAX_BRUSH_RADIUS, apGUILOFactory.I.Width(sliderSize_Radius));
+						_blurRadius = EditorGUILayout.IntField(_blurRadius, apGUILOFactory.I.Width(sliderValueWidth));
+						_blurRadius = Mathf.Clamp(_blurRadius, 1, apGizmos.MAX_BRUSH_RADIUS);
+						EditorGUILayout.EndHorizontal();
+						EditorGUILayout.EndVertical();
+
+
+						EditorGUILayout.BeginVertical(apGUILOFactory.I.Width(sliderSetSize_Radius));
+						GUILayout.Space(paddingY_Height24);
+
+						EditorGUILayout.BeginHorizontal(apGUILOFactory.I.Width(sliderSetSize_Curve_Blur));
+						EditorGUILayout.LabelField(GetUIWord(UIWORD.Intensity), apGUILOFactory.I.Width(labelSize_Curve_Blur));//"Intensity"
+						_blurIntensity = (int)GUILayout.HorizontalSlider(_blurIntensity, 0, 100, apGUILOFactory.I.Width(sliderSize_Curve_Blur));
+						_blurIntensity = EditorGUILayout.IntField(_blurIntensity, apGUILOFactory.I.Width(sliderValueWidth));
+						_blurIntensity = Mathf.Clamp(_blurIntensity, 0, 100);
 						EditorGUILayout.EndHorizontal();
 
 						EditorGUILayout.EndVertical();
+
+						//EditorGUILayout.EndVertical();
 
 					}
 
@@ -4905,29 +5304,22 @@ namespace AnyPortrait
 					if (_guiContent_Top_GizmoIcon_Color == null) { _guiContent_Top_GizmoIcon_Color = apGUIContentWrapper.Make(ImageSet.Get(apImageSet.PRESET.Transform_Color)); }
 					if (_guiContent_Top_GizmoIcon_Extra == null) { _guiContent_Top_GizmoIcon_Extra = apGUIContentWrapper.Make(ImageSet.Get(apImageSet.PRESET.Transform_ExtraOption)); }
 
+
 					if (isGizmoGUIVisible_Position2D)
 					{
-						//이전
-						//GUIStyle guiStyle_Label = new GUIStyle(GUI.skin.label);
-						//if (gizmoUI_Position2D != apGizmos.TRANSFORM_UI_VALID.ShowAndEnabled)
-						//{
-						//	guiStyle_Label.normal.textColor = Color.gray;
-						//}
-
-
-						//EditorGUILayout.LabelField(new GUIContent(ImageSet.Get(apImageSet.PRESET.Transform_Move)), GUILayout.Width(30), GUILayout.Height(30));
-						EditorGUILayout.LabelField(_guiContent_Top_GizmoIcon_Move.Content, apGUILOFactory.I.Width(30), apGUILOFactory.I.Height(30));
+						//아이콘 크기 변경 (21.1.20) : 30 > height_Btn
+						EditorGUILayout.LabelField(_guiContent_Top_GizmoIcon_Move.Content, apGUILOFactory.I.Width(height_Btn), apGUILOFactory.I.Height(height_Btn));
 
 						EditorGUILayout.BeginVertical(apGUILOFactory.I.Width(130));
 
+						//텍스트 삭제 21.1.20
 						//"Position"
-						//이전
-						//EditorGUILayout.LabelField(GetUIWord(UIWORD.Position), guiStyle_Label, GUILayout.Width(130));
+						//EditorGUILayout.LabelField(	GetUIWord(UIWORD.Position),
+						//							(gizmoUI_Position2D != apGizmos.TRANSFORM_UI_VALID.ShowAndEnabled ? GUIStyleWrapper.Label_GrayColor : GUIStyleWrapper.Label),
+						//							apGUILOFactory.I.Width(130));
 
-						//변경
-						EditorGUILayout.LabelField(GetUIWord(UIWORD.Position),
-							(gizmoUI_Position2D != apGizmos.TRANSFORM_UI_VALID.ShowAndEnabled ? GUIStyleWrapper.Label_GrayColor : GUIStyleWrapper.Label),
-							apGUILOFactory.I.Width(130));
+						//추가 21.1.20
+						GUILayout.Space(paddingY_Height24);
 
 						if (gizmoUI_Position2D == apGizmos.TRANSFORM_UI_VALID.ShowAndEnabled)
 						{
@@ -4947,27 +5339,19 @@ namespace AnyPortrait
 					if (isGizmoGUIVisible_Depth)
 					{
 						//Depth와 Position은 같이 묶인다. > Depth는 따로 분리한다. (11.26)
-						//이전
-						//GUIStyle guiStyle_Label = new GUIStyle(GUI.skin.label);
-						//if (gizmoUI_Depth != apGizmos.TRANSFORM_UI_VALID.ShowAndEnabled)
-						//{
-						//	guiStyle_Label.normal.textColor = Color.gray;
-						//}
-
-						//EditorGUILayout.LabelField(new GUIContent(ImageSet.Get(apImageSet.PRESET.Transform_Depth)), GUILayout.Width(30), GUILayout.Height(30));
-						EditorGUILayout.LabelField(_guiContent_Top_GizmoIcon_Depth.Content, apGUILOFactory.I.Width(30), apGUILOFactory.I.Height(30));
+						EditorGUILayout.LabelField(	_guiContent_Top_GizmoIcon_Depth.Content, 
+													apGUILOFactory.I.Width(height_Btn), apGUILOFactory.I.Height(height_Btn));
 
 						EditorGUILayout.BeginVertical(apGUILOFactory.I.Width(70));
 
 						//"Depth"
-						//이전
-						//EditorGUILayout.LabelField(GetUIWord(UIWORD.Depth), guiStyle_Label, GUILayout.Width(70));
+						//텍스트 삭제 21.1.20
+						//EditorGUILayout.LabelField(GetUIWord(UIWORD.Depth),
+						//	(gizmoUI_Depth != apGizmos.TRANSFORM_UI_VALID.ShowAndEnabled ? GUIStyleWrapper.Label_GrayColor : GUIStyleWrapper.Label),
+						//	apGUILOFactory.I.Width(70));//"Depth"
 
-						//변경
-						EditorGUILayout.LabelField(GetUIWord(UIWORD.Depth),
-							(gizmoUI_Depth != apGizmos.TRANSFORM_UI_VALID.ShowAndEnabled ? GUIStyleWrapper.Label_GrayColor : GUIStyleWrapper.Label),
-							apGUILOFactory.I.Width(70));//"Depth"
-
+						//변경 21.1.20
+						GUILayout.Space(paddingY_Height20);
 
 						if (gizmoUI_Depth == apGizmos.TRANSFORM_UI_VALID.ShowAndEnabled)
 						{
@@ -4984,26 +5368,19 @@ namespace AnyPortrait
 
 					if (isGizmoGUIVisible_Rotation)
 					{
-						//이전
-						//GUIStyle guiStyle_Label = new GUIStyle(GUI.skin.label);
-						//if (gizmoUI_Rotation != apGizmos.TRANSFORM_UI_VALID.ShowAndEnabled)
-						//{
-						//	guiStyle_Label.normal.textColor = Color.gray;
-						//}
-
-
-						//EditorGUILayout.LabelField(new GUIContent(ImageSet.Get(apImageSet.PRESET.Transform_Rotate)), GUILayout.Width(30), GUILayout.Height(30));
-						EditorGUILayout.LabelField(_guiContent_Top_GizmoIcon_Rotation.Content, apGUILOFactory.I.Width(30), apGUILOFactory.I.Height(30));
+						EditorGUILayout.LabelField(	_guiContent_Top_GizmoIcon_Rotation.Content, 
+													apGUILOFactory.I.Width(height_Btn), apGUILOFactory.I.Height(height_Btn));
 
 						EditorGUILayout.BeginVertical(apGUILOFactory.I.Width(70));
-						//"Rotation"
-						//이전
-						//EditorGUILayout.LabelField(GetUIWord(UIWORD.Rotation), guiStyle_Label, GUILayout.Width(70));
 
-						//변경
-						EditorGUILayout.LabelField(GetUIWord(UIWORD.Rotation),
-							(gizmoUI_Rotation != apGizmos.TRANSFORM_UI_VALID.ShowAndEnabled ? GUIStyleWrapper.Label_GrayColor : GUIStyleWrapper.Label),
-							apGUILOFactory.I.Width(70));
+						//텍스트 삭제 21.1.20
+						//"Rotation"
+						//EditorGUILayout.LabelField(GetUIWord(UIWORD.Rotation),
+						//	(gizmoUI_Rotation != apGizmos.TRANSFORM_UI_VALID.ShowAndEnabled ? GUIStyleWrapper.Label_GrayColor : GUIStyleWrapper.Label),
+						//	apGUILOFactory.I.Width(70));
+
+						//변경 21.1.20
+						GUILayout.Space(paddingY_Height20);
 
 						if (gizmoUI_Rotation == apGizmos.TRANSFORM_UI_VALID.ShowAndEnabled)
 						{
@@ -5020,39 +5397,36 @@ namespace AnyPortrait
 
 					if (isGizmoGUIVisible_Scale)
 					{
-						//이전
-						//GUIStyle guiStyle_Label = new GUIStyle(GUI.skin.label);
-						//if (gizmoUI_Scale != apGizmos.TRANSFORM_UI_VALID.ShowAndEnabled)
-						//{
-						//	guiStyle_Label.normal.textColor = Color.gray;
-						//}
-
-						//EditorGUILayout.LabelField(new GUIContent(ImageSet.Get(apImageSet.PRESET.Transform_Scale)), GUILayout.Width(30), GUILayout.Height(30));
-						EditorGUILayout.LabelField(_guiContent_Top_GizmoIcon_Scale.Content, apGUILOFactory.I.Width(30), apGUILOFactory.I.Height(30));
+						EditorGUILayout.LabelField(	_guiContent_Top_GizmoIcon_Scale.Content, 
+													apGUILOFactory.I.Width(height_Btn), apGUILOFactory.I.Height(height_Btn));
 
 						EditorGUILayout.BeginVertical(apGUILOFactory.I.Width(120));
-						//"Scaling"
-						//이전
-						//EditorGUILayout.LabelField(GetUIWord(UIWORD.Scaling), guiStyle_Label, GUILayout.Width(120));
-						//변경
-						EditorGUILayout.LabelField(GetUIWord(UIWORD.Scaling),
-							(gizmoUI_Scale != apGizmos.TRANSFORM_UI_VALID.ShowAndEnabled ? GUIStyleWrapper.Label_GrayColor : GUIStyleWrapper.Label),
-							apGUILOFactory.I.Width(120));
 
+						//텍스트 삭제 21.1.20
+						//"Scaling"
+						//EditorGUILayout.LabelField(GetUIWord(UIWORD.Scaling),
+						//	(gizmoUI_Scale != apGizmos.TRANSFORM_UI_VALID.ShowAndEnabled ? GUIStyleWrapper.Label_GrayColor : GUIStyleWrapper.Label),
+						//	apGUILOFactory.I.Width(120));
+
+
+						//변경 21.1.20
+						GUILayout.Space(paddingY_Height24);
 
 						if (gizmoUI_Scale == apGizmos.TRANSFORM_UI_VALID.ShowAndEnabled)
 						{
-							EditorGUILayout.BeginHorizontal(apGUILOFactory.I.Width(120));
-							curScale.x = EditorGUILayout.DelayedFloatField(prevScale2.x, apGUILOFactory.I.Width(60 - 2));
-							curScale.y = EditorGUILayout.DelayedFloatField(prevScale2.y, apGUILOFactory.I.Width(60 - 2));
-							EditorGUILayout.EndHorizontal();
+							curScale = apEditorUtil.DelayedVector2Field(prevScale2, 120);
+							//EditorGUILayout.BeginHorizontal(apGUILOFactory.I.Width(120), apGUILOFactory.I.Height(20));
+							//curScale.x = EditorGUILayout.DelayedFloatField(prevScale2.x, apGUILOFactory.I.Width(60 - 2));
+							//curScale.y = EditorGUILayout.DelayedFloatField(prevScale2.y, apGUILOFactory.I.Width(60 - 2));
+							//EditorGUILayout.EndHorizontal();
 						}
 						else
 						{
-							EditorGUILayout.BeginHorizontal(apGUILOFactory.I.Width(120));
-							EditorGUILayout.DelayedFloatField(0, apGUILOFactory.I.Width(60 - 2));
-							EditorGUILayout.DelayedFloatField(0, apGUILOFactory.I.Width(60 - 2));
-							EditorGUILayout.EndHorizontal();
+							apEditorUtil.DelayedVector2Field(Vector2.zero, 120);
+							//EditorGUILayout.BeginHorizontal(apGUILOFactory.I.Width(120));
+							//EditorGUILayout.DelayedFloatField(0, apGUILOFactory.I.Width(60 - 2));
+							//EditorGUILayout.DelayedFloatField(0, apGUILOFactory.I.Width(60 - 2));
+							//EditorGUILayout.EndHorizontal();
 						}
 						EditorGUILayout.EndVertical();
 
@@ -5062,23 +5436,20 @@ namespace AnyPortrait
 
 					if (isGizmoGUIVisible_Color)
 					{
-						//이전
-						//GUIStyle guiStyle_Label = new GUIStyle(GUI.skin.label);
-						//if (gizmoUI_Color != apGizmos.TRANSFORM_UI_VALID.ShowAndEnabled)
-						//{
-						//	guiStyle_Label.normal.textColor = Color.gray;
-						//}
-
-						EditorGUILayout.LabelField(_guiContent_Top_GizmoIcon_Color.Content, apGUILOFactory.I.Width(30), apGUILOFactory.I.Height(30));
+						EditorGUILayout.LabelField(	_guiContent_Top_GizmoIcon_Color.Content, 
+													apGUILOFactory.I.Width(height_Btn), apGUILOFactory.I.Height(height_Btn));
 
 						EditorGUILayout.BeginVertical(apGUILOFactory.I.Width(70));
+						
+						//변경 21.1.20
 						//"Color"
-						//이전
-						//EditorGUILayout.LabelField(GetUIWord(UIWORD.Color), guiStyle_Label, GUILayout.Width(70));
-						//변경
-						EditorGUILayout.LabelField(GetUIWord(UIWORD.Color),
-							(gizmoUI_Color != apGizmos.TRANSFORM_UI_VALID.ShowAndEnabled ? GUIStyleWrapper.Label_GrayColor : GUIStyleWrapper.Label),
-							apGUILOFactory.I.Width(70));
+						//EditorGUILayout.LabelField(GetUIWord(UIWORD.Color),
+						//	(gizmoUI_Color != apGizmos.TRANSFORM_UI_VALID.ShowAndEnabled ? GUIStyleWrapper.Label_GrayColor : GUIStyleWrapper.Label),
+						//	apGUILOFactory.I.Width(70));
+
+						//변경 21.1.20
+						GUILayout.Space(paddingY_Height20);
+
 
 						if (gizmoUI_Color == apGizmos.TRANSFORM_UI_VALID.ShowAndEnabled)
 						{
@@ -5089,49 +5460,59 @@ namespace AnyPortrait
 							EditorGUILayout.ColorField(apStringFactory.I.None, Color.black, apGUILOFactory.I.Width(70));
 						}
 						EditorGUILayout.EndVertical();
-						EditorGUILayout.BeginVertical(apGUILOFactory.I.Width(45));
 
+						//변경 21.1.20 : Visible을 ToggleBox에서 버튼으로 변경 (길이도 45에서 60으로 길어짐)
+						EditorGUILayout.BeginVertical(apGUILOFactory.I.Width(60));
+
+						//텍스트 삭제 21.1.20
 						//"Visible"
-						//이전
-						//EditorGUILayout.LabelField(GetUIWord(UIWORD.Visible), guiStyle_Label, GUILayout.Width(45));
-						//변경
-						EditorGUILayout.LabelField(GetUIWord(UIWORD.Visible),
-							(gizmoUI_Color != apGizmos.TRANSFORM_UI_VALID.ShowAndEnabled ? GUIStyleWrapper.Label_GrayColor : GUIStyleWrapper.Label),
-							apGUILOFactory.I.Width(45));
+						//EditorGUILayout.LabelField(GetUIWord(UIWORD.Visible),
+						//	(gizmoUI_Color != apGizmos.TRANSFORM_UI_VALID.ShowAndEnabled ? GUIStyleWrapper.Label_GrayColor : GUIStyleWrapper.Label),
+						//	apGUILOFactory.I.Width(45));
 
+						//변경 21.1.20
+						GUILayout.Space(paddingY_Height20);
 
 						if (gizmoUI_Color == apGizmos.TRANSFORM_UI_VALID.ShowAndEnabled)
 						{
-							curVisible = EditorGUILayout.Toggle(prevVisible, apGUILOFactory.I.Width(45));
+							//이전 : Toggle 박스
+							//curVisible = EditorGUILayout.Toggle(prevVisible, apGUILOFactory.I.Width(45));
 						}
 						else
 						{
-							EditorGUILayout.Toggle(false, apGUILOFactory.I.Width(45));
+							//이전 : Toggle 박스
+							//EditorGUILayout.Toggle(false, apGUILOFactory.I.Width(45));
 						}
+						//변경 : Visible이라는 텍스트의 버튼
+						if (apEditorUtil.ToggledButton_2Side(	GetUIWord(UIWORD.Visible), GetUIWord(UIWORD.Visible), 
+																prevVisible, 
+																gizmoUI_Color == apGizmos.TRANSFORM_UI_VALID.ShowAndEnabled, 
+																60, 18))
+						{
+							curVisible = !prevVisible;
+						}
+
 						EditorGUILayout.EndVertical();
 
 						GUILayout.Space(10);
 					}
 
+
 					if (isGizmoGUIVisible_Extra)
 					{
-						//이전
-						//GUIStyle guiStyle_Label = new GUIStyle(GUI.skin.label);
-						//if (gizmoUI_Extra != apGizmos.TRANSFORM_UI_VALID.ShowAndEnabled)
-						//{
-						//	guiStyle_Label.normal.textColor = Color.gray;
-						//}
-
-						EditorGUILayout.LabelField(_guiContent_Top_GizmoIcon_Extra.Content, apGUILOFactory.I.Width(30), apGUILOFactory.I.Height(30));
+						EditorGUILayout.LabelField(	_guiContent_Top_GizmoIcon_Extra.Content, 
+													apGUILOFactory.I.Width(height_Btn), apGUILOFactory.I.Height(height_Btn));
 
 						EditorGUILayout.BeginVertical(apGUILOFactory.I.Width(70));
+						
+						//텍스트 삭제 21.1.20
 						//"Extra"
-						//이전
-						//EditorGUILayout.LabelField(GetUIWord(UIWORD.Extra), guiStyle_Label, GUILayout.Width(70));
-						//변경
-						EditorGUILayout.LabelField(GetUIWord(UIWORD.Extra),
-							(gizmoUI_Extra != apGizmos.TRANSFORM_UI_VALID.ShowAndEnabled ? GUIStyleWrapper.Label_GrayColor : GUIStyleWrapper.Label),
-							apGUILOFactory.I.Width(70));
+						//EditorGUILayout.LabelField(GetUIWord(UIWORD.Extra),
+						//	(gizmoUI_Extra != apGizmos.TRANSFORM_UI_VALID.ShowAndEnabled ? GUIStyleWrapper.Label_GrayColor : GUIStyleWrapper.Label),
+						//	apGUILOFactory.I.Width(70));
+
+						//추가 21.1.20
+						GUILayout.Space(paddingY_Height20);
 
 						if (apEditorUtil.ToggledButton_2Side(GetUIWord(UIWORD.Set), GetUIWord(UIWORD.Set), false, (gizmoUI_Extra == apGizmos.TRANSFORM_UI_VALID.ShowAndEnabled), 65, 18))
 						{
@@ -5203,7 +5584,7 @@ namespace AnyPortrait
 					_guiStringWrapper_32.Append(GetUIWord(UIWORD.ShowFrame), true);
 
 					//"Show Frame", "Show Frame"
-					if (apEditorUtil.ToggledButton_2Side(ImageSet.Get(apImageSet.PRESET.Capture_Frame),
+					if (apEditorUtil.ToggledButton_2Side_VerticalMargin0(ImageSet.Get(apImageSet.PRESET.Capture_Frame),
 															_guiStringWrapper_32.ToString(),//"  " + GetUIWord(UIWORD.ShowFrame),
 															_guiStringWrapper_32.ToString(),//"  " + GetUIWord(UIWORD.ShowFrame),
 															_isShowCaptureFrame, true, 130, tabBtnHeight))
@@ -5228,7 +5609,7 @@ namespace AnyPortrait
 					_guiStringWrapper_32.Append(GetUIWord(UIWORD.MaterialLibrary), true);
 
 					//"  Material Library"
-					if (apEditorUtil.ToggledButton_2Side(ImageSet.Get(apImageSet.PRESET.ToolBtn_MaterialLibrary),
+					if (apEditorUtil.ToggledButton_2Side_VerticalMargin0(ImageSet.Get(apImageSet.PRESET.ToolBtn_MaterialLibrary),
 															_guiStringWrapper_32.ToString(),//"  " + GetUIWord(UIWORD.MaterialLibrary),
 															_guiStringWrapper_32.ToString(),//"  " + GetUIWord(UIWORD.MaterialLibrary),
 															false, true, 150, tabBtnHeight))
@@ -5302,10 +5683,16 @@ namespace AnyPortrait
 				//AddHotKeyEvent(Controller.OnHotKeyEvent_GizmoScale, apHotKey.LabelText.Scale, KeyCode.R, false, false, false, null);//"Scale"
 
 				//변경
-				AddHotKeyEventIgnoreCtrlShift(Controller.OnHotKeyEvent_GizmoSelect, apHotKey.LabelText.Select, KeyCode.Q, null);//Select
-				AddHotKeyEventIgnoreCtrlShift(Controller.OnHotKeyEvent_GizmoMove, apHotKey.LabelText.Move, KeyCode.W, null);//Move
-				AddHotKeyEventIgnoreCtrlShift(Controller.OnHotKeyEvent_GizmoRotate, apHotKey.LabelText.Rotate, KeyCode.E, null);//Rotate
-				AddHotKeyEventIgnoreCtrlShift(Controller.OnHotKeyEvent_GizmoScale, apHotKey.LabelText.Scale, KeyCode.R, null);//"Scale"
+				//AddHotKeyEventIgnoreCtrlShift(Controller.OnHotKeyEvent_GizmoSelect, apHotKey.LabelText.Select, KeyCode.Q, null);//Select
+				//AddHotKeyEventIgnoreCtrlShift(Controller.OnHotKeyEvent_GizmoMove, apHotKey.LabelText.Move, KeyCode.W, null);//Move
+				//AddHotKeyEventIgnoreCtrlShift(Controller.OnHotKeyEvent_GizmoRotate, apHotKey.LabelText.Rotate, KeyCode.E, null);//Rotate
+				//AddHotKeyEventIgnoreCtrlShift(Controller.OnHotKeyEvent_GizmoScale, apHotKey.LabelText.Scale, KeyCode.R, null);//"Scale"
+
+				//다시 변경 20.12.3
+				AddHotKeyEvent(Controller.OnHotKeyEvent_GizmoSelect,	apHotKeyMapping.KEY_TYPE.Gizmo_Select, null);
+				AddHotKeyEvent(Controller.OnHotKeyEvent_GizmoMove,		apHotKeyMapping.KEY_TYPE.Gizmo_Move, null);
+				AddHotKeyEvent(Controller.OnHotKeyEvent_GizmoRotate,	apHotKeyMapping.KEY_TYPE.Gizmo_Rotate, null);
+				AddHotKeyEvent(Controller.OnHotKeyEvent_GizmoScale,		apHotKeyMapping.KEY_TYPE.Gizmo_Scale, null);
 			}
 
 			//Onion
@@ -5319,19 +5706,54 @@ namespace AnyPortrait
 			//Onion 단축키
 			if (isOnionButtonAvailable)
 			{
-				AddHotKeyEvent(Controller.OnHotKeyEvent_OnionVisibleToggle, apHotKey.LabelText.OnionSkinToggle, KeyCode.O, false, false, false, null);//"Onion Skin Toggle"
+				//AddHotKeyEvent(Controller.OnHotKeyEvent_OnionVisibleToggle, apHotKey.LabelText.OnionSkinToggle, KeyCode.O, false, false, false, null);//"Onion Skin Toggle"
+				AddHotKeyEvent(Controller.OnHotKeyEvent_OnionVisibleToggle, apHotKeyMapping.KEY_TYPE.ToggleOnionSkin, null);//변경 20.12.3
 			}
 
 			//Bone Visible
-			bool isBoneVisibleButtonAvailable = _selection.SelectionType == apSelection.SELECTION_TYPE.MeshGroup ||
+			bool isBoneMeshVisibleButtonAvailable = _selection.SelectionType == apSelection.SELECTION_TYPE.MeshGroup ||
 				_selection.SelectionType == apSelection.SELECTION_TYPE.Animation ||
 				_selection.SelectionType == apSelection.SELECTION_TYPE.Overall;
 
-			if (isBoneVisibleButtonAvailable)
+			if (isBoneMeshVisibleButtonAvailable)
 			{
 				//단축키 B로 Bone 렌더링 정보를 토글할 수 있다.
-				AddHotKeyEvent(OnHotKeyEvent_BoneVisibleToggle, apHotKey.LabelText.ChangeBoneVisiblity, KeyCode.B, false, false, false, null);//"Change Bone Visiblity"
+				//AddHotKeyEvent(OnHotKeyEvent_BoneVisibleToggle, apHotKey.LabelText.ChangeBoneVisiblity, KeyCode.B, false, false, false, null);//"Change Bone Visiblity"
+				AddHotKeyEvent(OnHotKeyEvent_BoneVisibleToggle, apHotKeyMapping.KEY_TYPE.ToggleBoneVisibility, null);//변경 20.12.3
+				AddHotKeyEvent(OnHotKeyEvent_MeshVisibleToggle, apHotKeyMapping.KEY_TYPE.ToggleMeshVisibility, null);//추가 21.1.21 : 메시 가시성 전환
+				AddHotKeyEvent(OnHotKeyEvent_PhysicsToggle, apHotKeyMapping.KEY_TYPE.TogglePhysicsPreview, null);//추가 21.1.21 : 물리 미리보기 전환
+
+				//추가 21.1.21 : 가시성 관련으로 옵션을 추가한다.
+				AddHotKeyEvent(OnHotKey_ToggleVisiblityPreset, apHotKeyMapping.KEY_TYPE.TogglePresetVisibility, null);
+				AddHotKeyEvent(OnHotKey_SelectVisibilitPresetRule, apHotKeyMapping.KEY_TYPE.PresetVisibilityCustomRule1, apVisibilityPresets.HOTKEY.Hotkey1);
+				AddHotKeyEvent(OnHotKey_SelectVisibilitPresetRule, apHotKeyMapping.KEY_TYPE.PresetVisibilityCustomRule2, apVisibilityPresets.HOTKEY.Hotkey2);
+				AddHotKeyEvent(OnHotKey_SelectVisibilitPresetRule, apHotKeyMapping.KEY_TYPE.PresetVisibilityCustomRule3, apVisibilityPresets.HOTKEY.Hotkey3);
+				AddHotKeyEvent(OnHotKey_SelectVisibilitPresetRule, apHotKeyMapping.KEY_TYPE.PresetVisibilityCustomRule4, apVisibilityPresets.HOTKEY.Hotkey4);
+				AddHotKeyEvent(OnHotKey_SelectVisibilitPresetRule, apHotKeyMapping.KEY_TYPE.PresetVisibilityCustomRule5, apVisibilityPresets.HOTKEY.Hotkey5);
+
+				//추가 21.2.28 : 로토스코핑 옵션 추가
+				AddHotKeyEvent(OnHotKey_ToggleRotoscoping, apHotKeyMapping.KEY_TYPE.ToggleRotoscoping, null);
+				AddHotKeyEvent(OnHotKey_RotoscopingSwitchingImage, apHotKeyMapping.KEY_TYPE.RotoscopingPrev, false);
+				AddHotKeyEvent(OnHotKey_RotoscopingSwitchingImage, apHotKeyMapping.KEY_TYPE.RotoscopingNext, true);
 			}
+
+
+
+			if (_selection.SelectionType == apSelection.SELECTION_TYPE.MeshGroup || _selection.SelectionType == apSelection.SELECTION_TYPE.Animation)
+			{
+				//변경 21.2.13 : 기존의 모디파이어 잠금 기능의 단축키가 나뉘어졌다.
+				AddHotKeyEvent(OnHotKeyEvent_ExModOptions, apHotKeyMapping.KEY_TYPE.ExObj_UpdateByOtherMod, 0);
+				AddHotKeyEvent(OnHotKeyEvent_ExModOptions, apHotKeyMapping.KEY_TYPE.ExObj_ShowAsGray, 1);
+				AddHotKeyEvent(OnHotKeyEvent_ExModOptions, apHotKeyMapping.KEY_TYPE.ExObj_ToggleSelectionSemiLock, 2);
+				
+				AddHotKeyEvent(OnHotKeyEvent_ShowCalculatedBones, apHotKeyMapping.KEY_TYPE.PreviewModBoneResult, null);
+				AddHotKeyEvent(OnHotKeyEvent_ShowCalculatedColor, apHotKeyMapping.KEY_TYPE.PreviewModColorResult, null);
+				AddHotKeyEvent(OnHotKeyEvent_ShowModifierListUI, apHotKeyMapping.KEY_TYPE.ShowModifierListUI, null);
+			}
+			
+
+			
+
 
 			//Vertex 제어시 단축키
 			apGizmos.TRANSFORM_UI_VALID gizmoUI_VetexTF = Gizmos.TransformUI_VertexTransform;
@@ -5340,24 +5762,34 @@ namespace AnyPortrait
 			{
 				//Vertex Transform - Soft 툴
 				//크기 조절 단축키
-				AddHotKeyEvent(Gizmos.IncreaseSoftSelectionRadius, apHotKey.LabelText.IncreaseBrushSize, KeyCode.RightBracket, false, false, false, null);//"Increase Brush Size"
-				AddHotKeyEvent(Gizmos.DecreaseSoftSelectionRadius, apHotKey.LabelText.DecreaseBrushSize, KeyCode.LeftBracket, false, false, false, null);//"Decrease Brush Size"
+				//AddHotKeyEvent(Gizmos.IncreaseSoftSelectionRadius, apHotKey.LabelText.IncreaseBrushSize, KeyCode.RightBracket, false, false, false, null);//"Increase Brush Size"
+				//AddHotKeyEvent(Gizmos.DecreaseSoftSelectionRadius, apHotKey.LabelText.DecreaseBrushSize, KeyCode.LeftBracket, false, false, false, null);//"Decrease Brush Size"
+
+				//변경 20.12.3
+				AddHotKeyEvent(Gizmos.IncreaseSoftSelectionRadius, apHotKeyMapping.KEY_TYPE.IncreaseModToolBrushSize, null);//"Increase Brush Size"
+				AddHotKeyEvent(Gizmos.DecreaseSoftSelectionRadius, apHotKeyMapping.KEY_TYPE.DecreaseModToolBrushSize, null);//"Decrease Brush Size"
 			}
 			else if (gizmoUI_VetexTF != apGizmos.TRANSFORM_UI_VALID.Hide && Gizmos.IsBrushMode)
 			{
 				//Vertex Transform - Blur 툴
-				AddHotKeyEvent(OnHotKey_IncBlurBrushRadius, apHotKey.LabelText.IncreaseBrushSize, KeyCode.RightBracket, false, false, false, null);//"Increase Brush Size"
-				AddHotKeyEvent(OnHotKey_DecBlurBrushRadius, apHotKey.LabelText.DecreaseBrushSize, KeyCode.LeftBracket, false, false, false, null);//"Decreash Brush Size"
+				//AddHotKeyEvent(OnHotKey_IncBlurBrushRadius, apHotKey.LabelText.IncreaseBrushSize, KeyCode.RightBracket, false, false, false, null);//"Increase Brush Size"
+				//AddHotKeyEvent(OnHotKey_DecBlurBrushRadius, apHotKey.LabelText.DecreaseBrushSize, KeyCode.LeftBracket, false, false, false, null);//"Decreash Brush Size"
+
+				//변경 20.12.3
+				AddHotKeyEvent(OnHotKey_IncBlurBrushRadius, apHotKeyMapping.KEY_TYPE.IncreaseModToolBrushSize, null);//"Increase Brush Size"
+				AddHotKeyEvent(OnHotKey_DecBlurBrushRadius, apHotKeyMapping.KEY_TYPE.DecreaseModToolBrushSize, null);//"Decreash Brush Size"
 			}
 
 
 			if (Select.SelectionType == apSelection.SELECTION_TYPE.Mesh
 				&& Select.Mesh != null
 				&& _meshEditMode == MESH_EDIT_MODE.MakeMesh
-				&& _meshEditeMode_MakeMesh == MESH_EDIT_MODE_MAKEMESH.Polygon)
+				&& _meshEditeMode_MakeMesh_Tab == MESH_EDIT_MODE_MAKEMESH_TAB.AddTools
+				&& _meshEditeMode_MakeMesh_AddTool == MESH_EDIT_MODE_MAKEMESH_ADDTOOLS.Polygon)
 			{
 				//Delete 키로 Polygon을 삭제하는 단축키
-				AddHotKeyEvent(Controller.RemoveSelectedMeshPolygon, apHotKey.LabelText.RemovePolygon, KeyCode.Delete, false, false, false, null);//"Remove Polygon"
+				//AddHotKeyEvent(Controller.RemoveSelectedMeshPolygon, apHotKey.LabelText.RemovePolygon, KeyCode.Delete, false, false, false, null);//"Remove Polygon"
+				AddHotKeyEvent(Controller.RemoveSelectedMeshPolygon, apHotKeyMapping.KEY_TYPE.MakeMesh_RemovePolygon, null);//변경 20.12.3
 			}
 		}
 
@@ -5367,7 +5799,7 @@ namespace AnyPortrait
 		/// 단축키 B를 눌러서 Bone Visible을 바꾼다.
 		/// </summary>
 		/// <param name="paramObject"></param>
-		private void OnHotKeyEvent_BoneVisibleToggle(object paramObject)
+		private apHotKey.HotKeyResult OnHotKeyEvent_BoneVisibleToggle(object paramObject)
 		{
 			switch (_boneGUIRenderMode)
 			{
@@ -5375,26 +5807,709 @@ namespace AnyPortrait
 				case BONE_RENDER_MODE.Render: _boneGUIRenderMode = BONE_RENDER_MODE.RenderOutline; break;
 				case BONE_RENDER_MODE.RenderOutline: _boneGUIRenderMode = BONE_RENDER_MODE.None; break;
 			}
+
 			SaveEditorPref();
+
+			//본 보여주기 상태를 전달하자
+			switch (_boneGUIRenderMode)
+			{
+				case BONE_RENDER_MODE.None: return apHotKey.HotKeyResult.MakeResult(apStringFactory.I.Hide);
+				case BONE_RENDER_MODE.Render: return apHotKey.HotKeyResult.MakeResult(apStringFactory.I.Show);
+				case BONE_RENDER_MODE.RenderOutline: return apHotKey.HotKeyResult.MakeResult(apStringFactory.I.Outline);
+			}
+			return null;
 		}
+
+		/// <summary>
+		/// 추가 21.1.21 : 
+		/// </summary>
+		/// <param name="paramObject"></param>
+		private apHotKey.HotKeyResult OnHotKeyEvent_MeshVisibleToggle(object paramObject)
+		{
+			if(_meshGUIRenderMode == MESH_RENDER_MODE.Render)	{ _meshGUIRenderMode = MESH_RENDER_MODE.None; }
+			else												{ _meshGUIRenderMode = MESH_RENDER_MODE.Render; }
+
+			return apHotKey.HotKeyResult.MakeResult(_meshGUIRenderMode == MESH_RENDER_MODE.None ? apStringFactory.I.Hide : apStringFactory.I.Show);
+		}
+
+		private apHotKey.HotKeyResult OnHotKeyEvent_PhysicsToggle(object paramObject)
+		{
+			if(_portrait != null)
+			{
+				_portrait._isPhysicsPlay_Editor = !_portrait._isPhysicsPlay_Editor;
+
+				return apHotKey.HotKeyResult.MakeResult(_portrait._isPhysicsPlay_Editor ? apStringFactory.I.ON : apStringFactory.I.OFF);
+			}
+
+			return null;
+		}
+
 
 		/// <summary>
 		/// 단축키 Alt+W를 눌러서 FullScreen 모드를 바꾼다.
 		/// </summary>
 		/// <param name="paramObject"></param>
-		private void OnHotKeyEvent_FullScreenToggle(object paramObject)
+		private apHotKey.HotKeyResult OnHotKeyEvent_FullScreenToggle(object paramObject)
 		{
 			_isFullScreenGUI = !_isFullScreenGUI;
+
+			return apHotKey.HotKeyResult.MakeResult(_isFullScreenGUI ? apStringFactory.I.ON : apStringFactory.I.OFF);
 		}
 
-		private void OnHotKey_IncBlurBrushRadius(object paramObject)
+
+
+
+		private apHotKey.HotKeyResult OnHotKey_IncBlurBrushRadius(object paramObject)
 		{
 			_blurRadius = Mathf.Clamp(_blurRadius + 10, 1, apGizmos.MAX_BRUSH_RADIUS);
+			return apHotKey.HotKeyResult.MakeResult();
 		}
-		private void OnHotKey_DecBlurBrushRadius(object paramObject)
+
+		private apHotKey.HotKeyResult OnHotKey_DecBlurBrushRadius(object paramObject)
 		{
 			_blurRadius = Mathf.Clamp(_blurRadius - 10, 1, apGizmos.MAX_BRUSH_RADIUS);
+			return apHotKey.HotKeyResult.MakeResult();
 		}
+
+
+		private apHotKey.HotKeyResult OnHotKey_ToggleVisiblityPreset(object paramObject)
+		{
+			bool prevIsVP = _isAdaptVisibilityPreset;
+			_isAdaptVisibilityPreset = !_isAdaptVisibilityPreset;
+
+			int nRules = 0;
+			if (_portrait != null && _portrait.VisiblePreset != null)
+			{
+				nRules = _portrait.VisiblePreset._rules != null ? _portrait.VisiblePreset._rules.Count : 0;
+			}
+
+			if (nRules == 0)
+			{
+				//규칙이 없다면 항상 비활성
+				_isAdaptVisibilityPreset = false;
+			}
+			//규칙을 선택한게 없다면
+			if (_selectedVisibilityPresetRule == null)
+			{
+				if (nRules > 0)
+				{
+					//첫번째것을 선택한다.
+					_selectedVisibilityPresetRule = _portrait.VisiblePreset._rules[0];
+				}
+			}
+			if(_selectedVisibilityPresetRule == null)
+			{
+				//선택한 규칙이 없다면
+				_isAdaptVisibilityPreset = false;
+			}
+
+
+			if(prevIsVP != _isAdaptVisibilityPreset)
+			{
+				//변경이 된 경우에
+				if(_isAdaptVisibilityPreset)
+				{
+					//규칙 켜짐
+					return apHotKey.HotKeyResult.MakeResult(_selectedVisibilityPresetRule._name);
+				}
+				else
+				{
+					//설정 꺼짐
+					return apHotKey.HotKeyResult.MakeResult(apStringFactory.I.OFF);
+				}
+				
+			}
+			return null;
+
+			
+		}
+
+		private apHotKey.HotKeyResult OnHotKey_SelectVisibilitPresetRule(object paramObject)
+		{
+			//단축키로 보기 규칙을 변경할 수 있다.
+			
+			if(paramObject != null)
+			{
+				apVisibilityPresets.HOTKEY hotKey = (apVisibilityPresets.HOTKEY)paramObject;
+				if(_portrait != null && _portrait.VisiblePreset != null && hotKey != apVisibilityPresets.HOTKEY.None)
+				{
+					_selectedVisibilityPresetRule = _portrait.VisiblePreset.GetRuleByHotkey(hotKey);
+					if(!_isAdaptVisibilityPreset && _selectedVisibilityPresetRule != null)
+					{
+						//Rule 바꿀때 자동으로 프리셋 활성
+						_isAdaptVisibilityPreset = true;
+					}
+
+					if(_selectedVisibilityPresetRule != null)
+					{
+						//켜졌을 때
+						return apHotKey.HotKeyResult.MakeResult(_selectedVisibilityPresetRule._name);
+					}
+				}
+			}
+			return null;
+		}
+
+
+		private apHotKey.HotKeyResult OnHotKey_ToggleRotoscoping(object paramObject)
+		{
+			int nData = Rotoscoping._imageSetDataList != null ? Rotoscoping._imageSetDataList.Count : 0;
+
+			bool prevRoto = _isEnableRotoscoping;
+			_isEnableRotoscoping = !_isEnableRotoscoping;
+
+			
+			if(_isEnableRotoscoping && nData == 0)
+			{
+				_isEnableRotoscoping = false;
+			}
+
+
+			if(_isEnableRotoscoping && _selectedRotoscopingData == null)
+			{	
+				if(nData > 0)
+				{
+					_selectedRotoscopingData = Rotoscoping._imageSetDataList[0];
+					_selectedRotoscopingData.LoadImages();//이미지들을 열자
+					_iRotoscopingImageFile = 0;
+				}
+				else
+				{
+					_isEnableRotoscoping = false;
+				}
+			}
+
+			_iSyncRotoscopingAnimClipFrame = -1;
+			_isSyncRotoscopingToAnimClipFrame = false;
+			
+
+			//변경이 된 경우에
+			if(prevRoto != _isEnableRotoscoping)
+			{
+				if(_isEnableRotoscoping)
+				{
+					return apHotKey.HotKeyResult.MakeResult(_selectedRotoscopingData._name);
+				}
+				else
+				{	
+					Rotoscoping.DestroyAllImages();//끝때는 이미지를 모두 삭제하자
+					return apHotKey.HotKeyResult.MakeResult(apStringFactory.I.OFF);
+				}
+			}
+			return null;
+			
+		}
+
+		private apHotKey.HotKeyResult OnHotKey_RotoscopingSwitchingImage(object paramObject)
+		{
+			if(paramObject != null && _isEnableRotoscoping && _selectedRotoscopingData != null)
+			{
+				bool isNextImage = (bool)paramObject;
+				if (!isNextImage)
+				{
+					//이전 이미지
+					int nImageFiles = _selectedRotoscopingData._filePathList != null ? _selectedRotoscopingData._filePathList.Count : 0;
+					if (nImageFiles == 0)
+					{
+						_iRotoscopingImageFile = 0;
+					}
+					else
+					{
+						_iRotoscopingImageFile--;
+						if (_iRotoscopingImageFile < 0)
+						{
+							_iRotoscopingImageFile = nImageFiles - 1;
+						}
+					}
+
+					return apHotKey.HotKeyResult.MakeResult();
+				}
+				else
+				{
+					//다음 이미지
+					int nImageFiles = _selectedRotoscopingData._filePathList != null ? _selectedRotoscopingData._filePathList.Count : 0;
+					if (nImageFiles == 0)
+					{
+						_iRotoscopingImageFile = 0;
+					}
+					else
+					{
+						_iRotoscopingImageFile++;
+						if (_iRotoscopingImageFile >= nImageFiles)
+						{
+							_iRotoscopingImageFile = 0;
+						}
+					}
+
+					return apHotKey.HotKeyResult.MakeResult();
+				}
+			}
+			return null;
+			
+		}
+
+
+
+
+
+		private apHotKey.HotKeyResult OnHotKeyEvent_ExModOptions(object paramObject)
+		{
+			if(Select == null || 
+				(Select.SelectionType != apSelection.SELECTION_TYPE.MeshGroup && Select.SelectionType != apSelection.SELECTION_TYPE.Animation))
+			{
+				return null;
+			}
+
+			if(paramObject == null
+				|| !(paramObject is int))
+			{
+				return null;
+			}
+			int iOption = (int)paramObject;
+			bool isOptionResult = false;
+
+			if(iOption == 0)
+			{
+				//ExObj_UpdateByOtherMod
+				_exModObjOption_UpdateByOtherMod = !_exModObjOption_UpdateByOtherMod;
+				isOptionResult = _exModObjOption_UpdateByOtherMod;
+
+				//FFD 모드는 취소한다.
+				if(Gizmos.IsFFDMode)
+				{
+					Gizmos.RevertFFDTransformForce();
+				}
+			}
+			else if(iOption == 1)
+			{
+				//ExObj_ShowAsGray
+				_exModObjOption_ShowGray = !_exModObjOption_ShowGray;
+				isOptionResult = _exModObjOption_ShowGray;
+			}
+			else if(iOption == 2)
+			{
+				//ExObj_ToggleSelectionSemiLock
+				_exModObjOption_NotSelectable = !_exModObjOption_NotSelectable;
+				isOptionResult = _exModObjOption_NotSelectable;
+			}
+			else
+			{
+				//에잉 모르겠다.
+				return null;
+			}
+			
+			SaveEditorPref();
+			Select.RefreshModifierExclusiveEditing();
+			Select.RefreshAnimEditingLayerLock();
+
+			return apHotKey.HotKeyResult.MakeResult(isOptionResult ? apStringFactory.I.ON : apStringFactory.I.OFF);
+		}
+
+
+		//추가 21.2.13 : 계산된 본 미리보기 단축키
+		private apHotKey.HotKeyResult OnHotKeyEvent_ShowCalculatedBones(object paramObject)
+		{
+			if(Select == null || 
+				(Select.SelectionType != apSelection.SELECTION_TYPE.MeshGroup && Select.SelectionType != apSelection.SELECTION_TYPE.Animation))
+			{
+				return null;
+			}
+
+			_modLockOption_BoneResultPreview = !_modLockOption_BoneResultPreview;
+			SaveEditorPref();
+			Select.RefreshModifierExclusiveEditing();
+			Select.RefreshAnimEditingLayerLock();
+
+			return apHotKey.HotKeyResult.MakeResult(_modLockOption_BoneResultPreview ? apStringFactory.I.ON : apStringFactory.I.OFF);
+		}
+
+		//추가 21.2.13 : 계산된 색상 미리보기 단축키
+		private apHotKey.HotKeyResult OnHotKeyEvent_ShowCalculatedColor(object paramObject)
+		{
+			if(Select == null || 
+				(Select.SelectionType != apSelection.SELECTION_TYPE.MeshGroup && Select.SelectionType != apSelection.SELECTION_TYPE.Animation))
+			{
+				return null;
+			}
+
+			_modLockOption_ColorPreview = !_modLockOption_ColorPreview;
+			SaveEditorPref();
+			Select.RefreshModifierExclusiveEditing();
+			Select.RefreshAnimEditingLayerLock();
+
+			return apHotKey.HotKeyResult.MakeResult(_modLockOption_ColorPreview ? apStringFactory.I.ON : apStringFactory.I.OFF);
+		}
+
+		//추가 21.2.13 : 모디파이어 UI 출력하기
+		private apHotKey.HotKeyResult OnHotKeyEvent_ShowModifierListUI(object paramObject)
+		{
+			if(Select == null || 
+				(Select.SelectionType != apSelection.SELECTION_TYPE.MeshGroup && Select.SelectionType != apSelection.SELECTION_TYPE.Animation))
+			{
+				return null;
+			}
+
+			_modLockOption_ModListUI = !_modLockOption_ModListUI;
+			SaveEditorPref();
+			return apHotKey.HotKeyResult.MakeResult(_modLockOption_ModListUI ? apStringFactory.I.ON : apStringFactory.I.OFF);
+		}
+
+
+
+
+
+
+
+
+		//추가 21.1.19 : GUI Menu의 View 버튼을 눌렀을 때
+		private void OnGUIMenu_GUIView(object obj)
+		{	
+			if(obj == null)
+			{
+				return;
+			}
+			apGUIMenu.MenuCallBackParam guiParam = obj as apGUIMenu.MenuCallBackParam;
+			if(guiParam == null)
+			{
+				//파라미터 타입이 맞지 않는다.
+				return;
+			}
+
+			apGUIMenu.MENU_ITEM__GUIVIEW menuType = guiParam._menuType;
+			object subParam = guiParam._objParam;
+
+			switch (menuType)
+			{
+				case apGUIMenu.MENU_ITEM__GUIVIEW.FPS:
+					_guiOption_isFPSVisible = !_guiOption_isFPSVisible;
+					SaveEditorPref();
+					break;
+				case apGUIMenu.MENU_ITEM__GUIVIEW.Statistics:
+					_guiOption_isStatisticsVisible = !_guiOption_isStatisticsVisible;
+					SaveEditorPref();
+					break;
+
+				case apGUIMenu.MENU_ITEM__GUIVIEW.MaximizeWorkspace:
+					_isFullScreenGUI = !_isFullScreenGUI;
+					break;
+
+				case apGUIMenu.MENU_ITEM__GUIVIEW.Mesh:
+					if(_meshGUIRenderMode == MESH_RENDER_MODE.Render)	{ _meshGUIRenderMode = MESH_RENDER_MODE.None; }
+					else												{ _meshGUIRenderMode = MESH_RENDER_MODE.Render; }
+					break;
+
+				case apGUIMenu.MENU_ITEM__GUIVIEW.Bone_Show:
+					if(_boneGUIRenderMode == apEditor.BONE_RENDER_MODE.Render)	{ _boneGUIRenderMode = BONE_RENDER_MODE.None; }
+					else														{ _boneGUIRenderMode = BONE_RENDER_MODE.Render; }
+					SaveEditorPref();
+					break;
+
+				case apGUIMenu.MENU_ITEM__GUIVIEW.Bone_Outline:
+					if(_boneGUIRenderMode == apEditor.BONE_RENDER_MODE.RenderOutline)	{ _boneGUIRenderMode = BONE_RENDER_MODE.None; }
+					else																{ _boneGUIRenderMode = BONE_RENDER_MODE.RenderOutline; }
+					SaveEditorPref();
+					break;
+
+				case apGUIMenu.MENU_ITEM__GUIVIEW.Physics:
+					if(_portrait != null)
+					{
+						_portrait._isPhysicsPlay_Editor = !_portrait._isPhysicsPlay_Editor;
+					}
+					break;
+
+				case apGUIMenu.MENU_ITEM__GUIVIEW.ToggleOnionSkin:
+					Onion.SetVisible(!Onion.IsVisible);
+					break;
+
+				case apGUIMenu.MENU_ITEM__GUIVIEW.OnionSkinSetting:
+					apDialog_OnionSetting.ShowDialog(this, _portrait);//<<Onion 설정 다이얼로그를 호출
+					break;
+
+				case apGUIMenu.MENU_ITEM__GUIVIEW.ToggleVisibilityPreset:
+					_isAdaptVisibilityPreset = !_isAdaptVisibilityPreset;
+					//만약 규칙이 없다면, 맨 위에있는 규칙을 선택하자
+					if(_selectedVisibilityPresetRule == null)
+					{
+						if(_portrait != null && _portrait.VisiblePreset != null)
+						{
+							int nRules = _portrait.VisiblePreset._rules != null ? _portrait.VisiblePreset._rules.Count : 0;
+							if(nRules > 0)
+							{
+								//첫번째것을 선택한다.
+								_selectedVisibilityPresetRule = _portrait.VisiblePreset._rules[0];
+							}
+						}
+					}
+
+					if(_selectedVisibilityPresetRule == null)
+					{
+						//선택한 규칙이 없다면
+						_isAdaptVisibilityPreset = false;
+					}
+					
+
+
+					break;
+
+				case apGUIMenu.MENU_ITEM__GUIVIEW.VisibilityPresetSettings:
+					if(_portrait != null)
+					{
+						apMeshGroup curSelectedMeshGroup = null;
+						if(Select.SelectionType == apSelection.SELECTION_TYPE.MeshGroup)
+						{
+							curSelectedMeshGroup = Select.MeshGroup;
+						}
+						else if(Select.SelectionType == apSelection.SELECTION_TYPE.Animation)
+						{
+							if(Select.AnimClip != null)
+							{
+								curSelectedMeshGroup = Select.AnimClip._targetMeshGroup;
+							}
+						}
+						apDialog_VisibilityPresets.ShowDialog(this, _portrait.VisiblePreset, curSelectedMeshGroup);//추가 21.1.22 : VisibilityPreset 설정창
+					}
+					break;
+
+				case apGUIMenu.MENU_ITEM__GUIVIEW.VisibilityRule:
+					//Sub Param으로 선택
+					if(subParam != null 
+						&& _portrait != null 
+						&& _portrait.VisiblePreset != null
+						&& subParam is apVisibilityPresets.RuleData)
+					{
+						apVisibilityPresets.RuleData nextRuleData = subParam as apVisibilityPresets.RuleData;
+						if(_portrait.VisiblePreset.IsContains(nextRuleData))
+						{
+							//유효한 규칙이라면
+							_selectedVisibilityPresetRule = nextRuleData;
+
+							if(!_isAdaptVisibilityPreset && _selectedVisibilityPresetRule != null)
+							{
+								//Rule 바꿀때 자동으로 프리셋 활성
+								_isAdaptVisibilityPreset = true;
+							}
+						}
+					}
+					else
+					{
+						_selectedVisibilityPresetRule = null;
+					}
+					break;
+
+				case apGUIMenu.MENU_ITEM__GUIVIEW.ToggleRotoscoping:
+					{
+						int nData = Rotoscoping._imageSetDataList != null ? Rotoscoping._imageSetDataList.Count : 0;
+						bool prevRoto = _isEnableRotoscoping;
+						_isEnableRotoscoping = !_isEnableRotoscoping;
+
+						if(_isEnableRotoscoping && nData == 0)
+						{
+							_isEnableRotoscoping = false;
+						}
+
+						//만약 데이터가 없다면, 맨 위에있는 데이터를 선택하자
+						if(_isEnableRotoscoping && _selectedRotoscopingData == null)
+						{	
+							if(nData > 0)
+							{
+								_selectedRotoscopingData = Rotoscoping._imageSetDataList[0];
+								_selectedRotoscopingData.LoadImages();//이미지들을 열자
+								_iRotoscopingImageFile = 0;
+							}
+
+							if(_selectedRotoscopingData == null)
+							{
+								_isEnableRotoscoping = false;
+								_iRotoscopingImageFile = 0;
+							}
+						}
+
+						if(prevRoto != _isEnableRotoscoping && !_isEnableRotoscoping)
+						{
+							//ON > OFF로 바뀐거라면 이미지파일 모두 해제
+							Rotoscoping.DestroyAllImages();
+						}
+
+						_iSyncRotoscopingAnimClipFrame = -1;
+						_isSyncRotoscopingToAnimClipFrame = false;
+					}
+					break;
+
+				case apGUIMenu.MENU_ITEM__GUIVIEW.PrevRotoscopingImage:
+					{
+						//이미지 파일 인덱스를 이전으로 옮긴다. (유효한 경우에만)
+						if(_isEnableRotoscoping && _selectedRotoscopingData != null)
+						{
+							int nImageFiles = _selectedRotoscopingData._filePathList != null ? _selectedRotoscopingData._filePathList.Count : 0;
+							if (nImageFiles == 0)
+							{
+								_iRotoscopingImageFile = 0;
+							}
+							else
+							{
+								_iRotoscopingImageFile--;
+								if (_iRotoscopingImageFile < 0)
+								{
+									_iRotoscopingImageFile = nImageFiles - 1;
+								}
+							}
+						}
+					}
+					break;
+
+				case apGUIMenu.MENU_ITEM__GUIVIEW.NextRotoscopingImage:
+					{
+						//이미지 파일 인덱스를 다음으로 옮긴다. (유효한 경우에만)
+						if(_isEnableRotoscoping && _selectedRotoscopingData != null)
+						{
+							int nImageFiles = _selectedRotoscopingData._filePathList != null ? _selectedRotoscopingData._filePathList.Count : 0;
+							if (nImageFiles == 0)
+							{
+								_iRotoscopingImageFile = 0;
+							}
+							else
+							{
+								_iRotoscopingImageFile++;
+								if (_iRotoscopingImageFile >= nImageFiles)
+								{
+									_iRotoscopingImageFile = 0;
+								}
+							}
+						}
+					}
+					break;
+
+				case apGUIMenu.MENU_ITEM__GUIVIEW.RotoscopingSettings:
+					{
+						// 로토스코핑 설정 열기
+						apDialog_Rotoscoping.ShowDialog(this);
+					}
+					break;
+
+				case apGUIMenu.MENU_ITEM__GUIVIEW.RotoscopingData:
+					{
+						//로토스코핑 데이터를 바꾸자
+						if (subParam != null && subParam is apRotoscoping.ImageSetData)
+						{
+							apRotoscoping.ImageSetData nextData = subParam as apRotoscoping.ImageSetData;
+							if(_selectedRotoscopingData != nextData)
+							{
+								//기존 이미지는 해제
+								if(_selectedRotoscopingData != null)
+								{
+									_selectedRotoscopingData.DestroyImages();
+								}
+								
+								//바꾸자
+								_selectedRotoscopingData = nextData;
+								_selectedRotoscopingData.LoadImages();//이미지 열기
+								
+								//바꿀때는 인덱스 초기화
+								_iRotoscopingImageFile = 0;
+								
+							}
+							_isEnableRotoscoping = true;
+
+							_iSyncRotoscopingAnimClipFrame = -1;
+							_isSyncRotoscopingToAnimClipFrame = false;
+						}
+						else
+						{
+							_selectedRotoscopingData = null;
+							_isEnableRotoscoping = false;
+
+							_iSyncRotoscopingAnimClipFrame = -1;
+							_isSyncRotoscopingToAnimClipFrame = false;
+
+							Rotoscoping.DestroyAllImages();//이미지 모두 해제
+						}
+					}
+					break;
+
+				case apGUIMenu.MENU_ITEM__GUIVIEW.ModEditingSettings:
+					{
+						// 편집 모드 설정
+						apDialog_ModifierLockSetting.ShowDialog(this, _portrait);
+					}
+					break;
+
+				case apGUIMenu.MENU_ITEM__GUIVIEW.ExModObj_UpdateByOtherModifiers:
+					{
+						//비편집 > 다른 모디파이어로 업데이트
+						_exModObjOption_UpdateByOtherMod = !_exModObjOption_UpdateByOtherMod;
+
+						//FFD 모드는 취소한다.
+						if(Gizmos.IsFFDMode)
+						{
+							Gizmos.RevertFFDTransformForce();
+						}
+
+						Select.RefreshModifierExclusiveEditing();
+						Select.RefreshAnimEditingLayerLock();
+						SaveEditorPref();
+					}
+					break;
+
+				case apGUIMenu.MENU_ITEM__GUIVIEW.ExModObj_ShowAsGray:
+					{
+						//비편집 > 회색으로 표시
+						_exModObjOption_ShowGray = !_exModObjOption_ShowGray;
+						Select.RefreshModifierExclusiveEditing();
+						Select.RefreshAnimEditingLayerLock();
+						SaveEditorPref();
+					}
+					break;
+
+				case apGUIMenu.MENU_ITEM__GUIVIEW.ExModObj_NotSelectable:
+					{
+						//비편집 > 선택 불가
+						_exModObjOption_NotSelectable = !_exModObjOption_NotSelectable;
+						Select.RefreshModifierExclusiveEditing();
+						Select.RefreshAnimEditingLayerLock();
+						SaveEditorPref();
+					}
+					break;
+
+				case apGUIMenu.MENU_ITEM__GUIVIEW.ExModObj_PreviewColorResult:
+					{
+						//색상 처리 결과 미리보기
+						_modLockOption_ColorPreview = !_modLockOption_ColorPreview;
+						Select.RefreshModifierExclusiveEditing();
+						Select.RefreshAnimEditingLayerLock();
+						SaveEditorPref();
+					}
+					break;
+				case apGUIMenu.MENU_ITEM__GUIVIEW.ExModObj_PreviewBoneResult:
+					{
+						//본 처리 결과 미리보기
+						_modLockOption_BoneResultPreview = !_modLockOption_BoneResultPreview;
+						Select.RefreshModifierExclusiveEditing();
+						Select.RefreshAnimEditingLayerLock();
+						SaveEditorPref();
+					}
+					break;
+				case apGUIMenu.MENU_ITEM__GUIVIEW.ExModObj_ShowModifierList:
+					{
+						_modLockOption_ModListUI = !_modLockOption_ModListUI;
+						SaveEditorPref();
+					}
+					break;
+
+				case apGUIMenu.MENU_ITEM__GUIVIEW.HowToEdit:
+					{
+						//추가 21.3.13 : 편집 방법 알려주는 UI 보이기
+						_guiOption_isShowHowToEdit = !_guiOption_isShowHowToEdit;
+						SaveEditorPref();
+					}
+					break;
+			}
+		}
+
+
+
+
+
+
 
 
 		public void ResetHierarchyAll()
@@ -5534,9 +6649,7 @@ namespace AnyPortrait
 				curAnimClip.RefreshTimelines(targetTimelineLayer, targetTimelineLayers);
 			}
 
-			//이전
-			//if (isReset || _timelineInfoList.Count == 0)
-
+			
 			//조건문 변경 19.5.21
 			if (isRequest_ResetTimelineInfo || _timelineInfoList.Count == 0)
 			{
@@ -5570,25 +6683,87 @@ namespace AnyPortrait
 							{
 								//Modifier가 Transform을 지원하는 경우
 								//Bone이 위쪽에 속한다.
-								subLayers.Sort(delegate (apTimelineLayerInfo a, apTimelineLayerInfo b)
+
+								if (curAnimClip._targetMeshGroup == null)
 								{
-									if (a._layerType == b._layerType)
+									//기존 방식
+									subLayers.Sort(delegate (apTimelineLayerInfo a, apTimelineLayerInfo b)
 									{
-										if (a._layerType == apTimelineLayerInfo.LAYER_TYPE.Transform)
+										if (a._layerType == b._layerType)
 										{
-											return b.Depth - a.Depth;
+											if (a._layerType == apTimelineLayerInfo.LAYER_TYPE.Transform)
+											{
+												return b.Depth - a.Depth;
+											}
+											else
+											{
+												return a.Depth - b.Depth;
+											}
+
 										}
 										else
 										{
-											return a.Depth - b.Depth;
+											return (int)a._layerType - (int)b._layerType;
 										}
-
-									}
-									else
+									});
+								}
+								else
+								{
+									List<object> sortedObjects = Controller.GetSortedSubObjectsAsHierarchy(curAnimClip._targetMeshGroup, true, true);
+									subLayers.Sort(delegate (apTimelineLayerInfo a, apTimelineLayerInfo b)
 									{
-										return (int)a._layerType - (int)b._layerType;
-									}
-								});
+										if (a._layerType == b._layerType)
+										{
+											//변경 sortedObject의 값을 이용하자
+											object objA = null;
+											object objB = null;
+											if(a._layer._linkedMeshTransform != null)
+											{
+												objA = a._layer._linkedMeshTransform;
+											}
+											else if(a._layer._linkedMeshGroupTransform != null)
+											{
+												objA = a._layer._linkedMeshGroupTransform;
+											}
+											else if(a._layer._linkedBone != null)
+											{
+												objA = a._layer._linkedBone;
+											}
+
+											if(b._layer._linkedMeshTransform != null)
+											{
+												objB = b._layer._linkedMeshTransform;
+											}
+											else if(b._layer._linkedMeshGroupTransform != null)
+											{
+												objB = b._layer._linkedMeshGroupTransform;
+											}
+											else if(b._layer._linkedBone != null)
+											{
+												objB = b._layer._linkedBone;
+											}
+
+											return sortedObjects.IndexOf(objA) - sortedObjects.IndexOf(objB);
+
+											//if (a._layerType == apTimelineLayerInfo.LAYER_TYPE.Transform)
+											//{
+											//	return b.Depth - a.Depth;
+											//}
+											//else
+											//{
+											//	return a.Depth - b.Depth;
+											//}
+
+										}
+										else
+										{
+											return (int)a._layerType - (int)b._layerType;
+										}
+									});
+								}
+								
+
+								
 							}
 							break;
 
@@ -5935,13 +7110,16 @@ namespace AnyPortrait
 					}
 					else
 					{
-						string strPath = EditorUtility.OpenFilePanel("Load Backup File", "", "bck");
+						//추가 21.3.1 : apEditorUtil.GetLastOpenFileDirectoryPath() 함수 이용해서 경로 초기화 막음
+						string strPath = EditorUtility.OpenFilePanel("Load Backup File", apEditorUtil.GetLastOpenSaveFileDirectoryPath(apEditorUtil.SAVED_LAST_FILE_PATH.BackupFile), "bck");//추가 21.3.6 : 실행 환경에 따른 문제 개선 포맷인 bck+corrected 가 추가되었다. 
 						if (!string.IsNullOrEmpty(strPath))
 						{
 							//Debug.Log("Load Backup File [" + strPath + "]");
 
 							_isMakePortraitRequestFromBackupFile = true;
 							_requestedLoadedBackupPortraitFilePath = strPath;
+
+							apEditorUtil.SetLastExternalOpenSaveFilePath(strPath, apEditorUtil.SAVED_LAST_FILE_PATH.BackupFile);//추가 21.3.1
 						}
 					}
 				}
@@ -6228,8 +7406,11 @@ namespace AnyPortrait
 				}
 				else
 				{
+
+					//Debug.Log("Mouse Raw Pos : " + _mouseSet.PosNotBound + " / " + Event.current.rawType);
+
 					//2. Control Parameter 탭
-					apControllerGL.SetMouseState(
+					apControllerGL.ReadyToUpdate(
 						_mouseSet.GetStatus(apMouseSet.Button.LeftNoBound, apMouseSet.ACTION.ControllerGL),
 						_mouseSet.PosNotBound,
 						Event.current.isMouse
@@ -6239,6 +7420,10 @@ namespace AnyPortrait
 					//컨트롤 파라미터를 처리하자
 					Controller.GUI_Controller(width, height, (int)scroll.y);
 					//Profiler.EndSample();
+
+
+					//위치 변경 21.2.9 : 이게 왜 밖에 있었지?
+					apControllerGL.EndUpdate();
 
 				}
 			}
@@ -6256,10 +7441,10 @@ namespace AnyPortrait
 			//변경 : 일부 이벤트는 Ignored가 발생했지만 마우스 이벤트로서 작동을 해야한다.
 			//마우스 업 이벤트가 발생했지만, 다른 Area로 이동하면서 Ignored로 바뀐 경우는 특별히 처리해야한다.
 			bool isIgnoredMouseUpEvent = false;
-			
 
-			if (Event.current.type != EventType.Repaint 
-				&& !Event.current.isMouse 
+
+			if (Event.current.type != EventType.Repaint
+				&& !Event.current.isMouse
 				&& !Event.current.isKey)
 			{
 				//추가 : 20.3.31 : 만약 이 경우에 마우스 이벤트는 맞는데, 위에서 Ignored가 발생했다면 리턴하면 안된다.
@@ -6269,7 +7454,7 @@ namespace AnyPortrait
 									|| Event.current.rawType == EventType.MouseMove
 									|| Event.current.rawType == EventType.MouseUp;
 
-				if(Mouse.IsAnyButtonUpEvent
+				if (Mouse.IsAnyButtonUpEvent
 					&& Event.current.type == EventType.Ignore
 					&& isMouseEvent
 					)
@@ -6283,7 +7468,7 @@ namespace AnyPortrait
 					//Raw 마우스 타입도 아니다.
 					return;
 				}
-				
+
 			}
 
 			float deltaTime = 0.0f;
@@ -6292,7 +7477,7 @@ namespace AnyPortrait
 				deltaTime = DeltaTime_Repaint;
 			}
 
-			
+
 
 
 			//--------------------------------------------------------
@@ -6328,6 +7513,59 @@ namespace AnyPortrait
 
 			//클릭 후 GUIFocust를 릴리즈하자
 			Controller.GUI_Input_CheckClickInCenter();
+
+
+			//--------------------------------------------------
+			//추가 21.1.19 : GUI 버튼 업데이트
+			//Menu 버튼은 항상 나온다.
+			//Margin 5에 크기 32이니까 5 + 16 = 21
+
+			int guiMenuPosX = GUI_STAT_MARGIN + (GUI_STAT_MENUBTN_SIZE / 2);
+			int guiMenuPosY = GUI_STAT_MARGIN + (GUI_STAT_MENUBTN_SIZE / 2);
+			if (_guiButton_Menu.Update( new Vector2(guiMenuPosX, guiMenuPosY), 
+										Mouse.Pos, Mouse.GetStatus(apMouseSet.Button.Left, apMouseSet.ACTION.GUIMenu)))
+			{
+				//메뉴가 보여야 한다.
+				GUIMenu.ShowMenu_GUIView(OnGUIMenu_GUIView,
+					//new Rect(_mainGUIRect.x + _guiButton_Menu._pos.x - (_guiButton_Menu._width / 2),
+					//		_mainGUIRect.y + _guiButton_Menu._pos.y + (_guiButton_Menu._height / 2),
+					new Rect(_guiButton_Menu._pos.x - (_guiButton_Menu._width / 2),
+							_guiButton_Menu._pos.y + (_guiButton_Menu._height / 2),
+							500, 0));
+				//Event.current.Use();
+				Mouse.UseMouseButton(apMouseSet.Button.Left, apMouseSet.ACTION.GUIMenu);
+				Mouse.UseMouseButton(apMouseSet.Button.LeftNoBound, apMouseSet.ACTION.GUIMenu);
+				Mouse.Update_ReleaseForce();
+			}
+			//커서 이동
+			guiMenuPosX += GUI_STAT_MENUBTN_SIZE + 4;//Width + 약간의 Margin
+
+			//OnionSkin Record 버튼도 추가할 수 있다.
+			if (Onion.IsVisible
+				&& ((Select.SelectionType == apSelection.SELECTION_TYPE.Animation && !_onionOption_IsRenderAnimFrames)
+					|| Select.SelectionType == apSelection.SELECTION_TYPE.MeshGroup))
+			{
+				if (_guiButton_RecordOnion.Update(	new Vector2(guiMenuPosX, guiMenuPosY), 
+													Mouse.Pos, Mouse.GetStatus(apMouseSet.Button.Left, apMouseSet.ACTION.GUIMenu)))
+				{
+					//현재 상태를 기록한다.
+					Onion.Record(this);
+
+					//마우스 이벤트 종료
+					Mouse.UseMouseButton(apMouseSet.Button.Left, apMouseSet.ACTION.GUIMenu);
+					Mouse.UseMouseButton(apMouseSet.Button.LeftNoBound, apMouseSet.ACTION.GUIMenu);
+					Mouse.Update_ReleaseForce();
+				}
+			}
+			else
+			{
+				_guiButton_RecordOnion.Hide();
+			}
+			//--------------------------------------------------
+
+
+
+
 
 			switch (_selection.SelectionType)
 			{
@@ -6405,6 +7643,20 @@ namespace AnyPortrait
 						switch (_meshEditMode)
 						{
 							case MESH_EDIT_MODE.Setting:
+								//GUI이벤트 추가 21.1.6
+								//Area를 편집하는 GUI 도구 추가
+								if (_selection.Mesh._isPSDParsed
+									&& _isMeshEdit_AreaEditing)
+								{
+									Controller.GUI_Input_MakeMesh_AtlasAreaEdit();
+
+
+								}
+
+								if (_meshGeneratorV2 != null && _meshGeneratorV2.IsProcessing)
+								{
+									_meshGeneratorV2.Update();
+								}
 								break;
 
 							case MESH_EDIT_MODE.Modify:
@@ -6412,16 +7664,31 @@ namespace AnyPortrait
 								break;
 
 							case MESH_EDIT_MODE.MakeMesh:
-								if (_meshEditeMode_MakeMesh == MESH_EDIT_MODE_MAKEMESH.TRS
-									|| _meshEditeMode_MakeMesh == MESH_EDIT_MODE_MAKEMESH.AutoGenerate)
+								if (_meshEditeMode_MakeMesh_Tab == MESH_EDIT_MODE_MAKEMESH_TAB.TRS)
 								{
-									//자동 생성은 별도의 입력
-									Controller.GUI_Input_MakeMesh_AutoGen_TRS(deltaTime, isIgnoredMouseUpEvent);
+									Controller.GUI_Input_MakeMesh_TRS(deltaTime, isIgnoredMouseUpEvent);
 
+								}
+								else if (_meshEditeMode_MakeMesh_Tab == MESH_EDIT_MODE_MAKEMESH_TAB.AutoGen)
+								{
+									//Area를 편집하는 GUI 도구 추가 21.1.6
+									if (_selection.Mesh._isPSDParsed && _isMeshEdit_AreaEditing)
+									{
+										Controller.GUI_Input_MakeMesh_AtlasAreaEdit();
+									}
 								}
 								else
 								{
-									Controller.GUI_Input_MakeMesh(_meshEditeMode_MakeMesh);
+									Controller.GUI_Input_MakeMesh(_meshEditeMode_MakeMesh_AddTool);
+								}
+
+								//추가 20.12.9 : 자동 생성 기능 업데이트
+								if (_meshEditeMode_MakeMesh_Tab == MESH_EDIT_MODE_MAKEMESH_TAB.AutoGen)
+								{
+									if (_meshGeneratorV2 != null && _meshGeneratorV2.IsProcessing)
+									{
+										_meshGeneratorV2.Update();
+									}
 								}
 								break;
 
@@ -6562,9 +7829,25 @@ namespace AnyPortrait
 				apGL.RefreshScreenSizeToBatch();
 			}
 
+			//추가 21.1.29 : Visibility Preset을 호출한다.
+			CheckAndSyncVisiblityPreset(false, false);
+
+
+			//그리드 그리기
 			apGL.DrawGrid(_colorOption_GridCenter, _colorOption_Grid);
 
 
+			//테스트 : 로토스코핑 그리기
+			//Rotoscoping.CheckAndLoadExternalImage();
+			//if(Rotoscoping.TestImage != null)
+			//{
+			//	apGL.DrawTextureGL(Rotoscoping.TestImage, 
+			//		apGL.WindowSizeHalf,
+			//		Rotoscoping.TestImage.width, 
+			//		Rotoscoping.TestImage.height, 
+			//		new Color(0.5f, 0.5f, 0.5f, 0.5f), 0.0f);
+			//}
+			RenderRotoscoping();
 
 			switch (_selection.SelectionType)
 			{
@@ -6580,7 +7863,7 @@ namespace AnyPortrait
 							if (Select.RootUnit._childMeshGroup != null)
 							{
 								apMeshGroup rootMeshGroup = Select.RootUnit._childMeshGroup;
-#region [미사용 코드] 함수로 대체한다.
+								#region [미사용 코드] 함수로 대체한다.
 								//for (int iUnit = 0; iUnit < rootMeshGroup._renderUnits_All.Count; iUnit++)
 								//{
 								//	apRenderUnit renderUnit = rootMeshGroup._renderUnits_All[iUnit];
@@ -6613,13 +7896,13 @@ namespace AnyPortrait
 								//		}
 								//	}
 								//} 
-#endregion
+								#endregion
 
-								RenderMeshGroup(	rootMeshGroup, 
-													apGL.RENDER_TYPE.Default, 
-													apGL.RENDER_TYPE.Default, 
-													null, null, null, null, 
-													true, _boneGUIRenderMode, _meshGUIRenderMode, isRender_BoneIK, 
+								RenderMeshGroup(rootMeshGroup,
+													apGL.RENDER_TYPE.Default,
+													apGL.RENDER_TYPE.Default,
+													null, null, null, null,
+													true, _boneGUIRenderMode, _meshGUIRenderMode, isRender_BoneIK,
 													BONE_RENDER_TARGET.AllBones);
 
 								//Debug.Log("<<<<<<<<<<<<<<<<<<<<<<<<<<");
@@ -6661,6 +7944,12 @@ namespace AnyPortrait
 						{
 							case MESH_EDIT_MODE.Setting:
 								renderType |= apGL.RENDER_TYPE.Outlines;
+								if (_selection.Mesh._isPSDParsed &&
+									_isMeshEdit_AreaEditing)
+								{
+									//Area 편집중에는 전부 보여야 함
+									renderType |= apGL.RENDER_TYPE.AllMesh;
+								}
 								break;
 
 							case MESH_EDIT_MODE.Modify:
@@ -6677,30 +7966,49 @@ namespace AnyPortrait
 							case MESH_EDIT_MODE.MakeMesh:
 								//case MESH_EDIT_MODE.AddVertex:
 								//Controller.GUI_Input_AddVertex();
-								if (_meshEditeMode_MakeMesh == MESH_EDIT_MODE_MAKEMESH.Polygon)
+								if (_meshEditeMode_MakeMesh_Tab == MESH_EDIT_MODE_MAKEMESH_TAB.AddTools)
 								{
-									renderType |= apGL.RENDER_TYPE.Vertex;
-									renderType |= apGL.RENDER_TYPE.AllEdges;
-									renderType |= apGL.RENDER_TYPE.ShadeAllMesh;
-									renderType |= apGL.RENDER_TYPE.PolygonOutline;
+									if (_meshEditeMode_MakeMesh_AddTool == MESH_EDIT_MODE_MAKEMESH_ADDTOOLS.Polygon)
+									{
+										renderType |= apGL.RENDER_TYPE.Vertex;
+										renderType |= apGL.RENDER_TYPE.AllEdges;
+										renderType |= apGL.RENDER_TYPE.ShadeAllMesh;
+										renderType |= apGL.RENDER_TYPE.PolygonOutline;
+									}
+									else
+									{
+										renderType |= apGL.RENDER_TYPE.Vertex;
+										renderType |= apGL.RENDER_TYPE.AllEdges;
+										renderType |= apGL.RENDER_TYPE.ShadeAllMesh;
+										if (_meshEditeMode_MakeMesh_AddTool == MESH_EDIT_MODE_MAKEMESH_ADDTOOLS.VertexAndEdge ||
+											_meshEditeMode_MakeMesh_AddTool == MESH_EDIT_MODE_MAKEMESH_ADDTOOLS.EdgeOnly)
+										{
+											isEdgeExpectRender = true;
+										}
+										if (_meshEditeMode_MakeMesh_AddTool == MESH_EDIT_MODE_MAKEMESH_ADDTOOLS.VertexAndEdge ||
+											_meshEditeMode_MakeMesh_AddTool == MESH_EDIT_MODE_MAKEMESH_ADDTOOLS.VertexOnly)
+										{
+											isEdgeExpectRenderSnapToEdge = true;
+										}
+										isEdgeExpectRenderSnapToVertex = true;
+									}
 								}
 								else
 								{
+									//TRS와 AutoGen
 									renderType |= apGL.RENDER_TYPE.Vertex;
 									renderType |= apGL.RENDER_TYPE.AllEdges;
-									renderType |= apGL.RENDER_TYPE.ShadeAllMesh;
-									if (_meshEditeMode_MakeMesh == MESH_EDIT_MODE_MAKEMESH.VertexAndEdge ||
-										_meshEditeMode_MakeMesh == MESH_EDIT_MODE_MAKEMESH.EdgeOnly)
+									if (_selection.Mesh._isPSDParsed && _isMeshEdit_AreaEditing)
 									{
-										isEdgeExpectRender = true;
+										renderType |= apGL.RENDER_TYPE.AllMesh;
 									}
-									if (_meshEditeMode_MakeMesh == MESH_EDIT_MODE_MAKEMESH.VertexAndEdge ||
-										_meshEditeMode_MakeMesh == MESH_EDIT_MODE_MAKEMESH.VertexOnly)
+									else
 									{
-										isEdgeExpectRenderSnapToEdge = true;
+										renderType |= apGL.RENDER_TYPE.ShadeAllMesh;
 									}
-									isEdgeExpectRenderSnapToVertex = true;
+
 								}
+
 								break;
 
 							case MESH_EDIT_MODE.PivotEdit:
@@ -6720,31 +8028,34 @@ namespace AnyPortrait
 								renderType,
 								VertController, this,
 								//apMouse.Pos//<<이전
-								_mouseSet.Pos//<<변경
+								_mouseSet.Pos,//<<변경
+								_isMeshEdit_AreaEditing
 								);
 
 						if (_meshEditMode == MESH_EDIT_MODE.MakeMesh && _meshEditMirrorMode == MESH_EDIT_MIRROR_MODE.Mirror)
 						{
 							MirrorSet.Refresh(Select.Mesh, false);
-							if (_meshEditeMode_MakeMesh == MESH_EDIT_MODE_MAKEMESH.TRS)
+							if (_meshEditeMode_MakeMesh_Tab == MESH_EDIT_MODE_MAKEMESH_TAB.TRS)
 							{
 								apGL.DrawMirrorMeshPreview(Select.Mesh, MirrorSet, this, VertController);
 							}
 						}
 
 						//추가 8.24 : 메시 자동 생성 기능 미리보기
-						if (_meshEditMode == MESH_EDIT_MODE.MakeMesh
-							&& _meshEditeMode_MakeMesh == MESH_EDIT_MODE_MAKEMESH.AutoGenerate)
-						{
-							//자동 생성 기능
-							if (MeshGenerator.IsScanned)
-							{
-								//스캔된 상태
-								apGL.DrawMeshAutoGenerationPreview(_selection.Mesh,
-															apMatrix3x3.identity,
-															this, MeshGenerator);
-							}
-						}
+						//삭제 21.1.4 : V2로 바뀌었다.
+						//if (_meshEditMode == MESH_EDIT_MODE.MakeMesh
+						//	&& _meshEditeMode_MakeMesh == MESH_EDIT_MODE_MAKEMESH.AutoGenerate)
+						//{
+						//	//자동 생성 기능
+						//	if (MeshGenerator.IsScanned)
+						//	{
+						//		//스캔된 상태
+						//		apGL.DrawMeshAutoGenerationPreview(_selection.Mesh,
+						//									apMatrix3x3.identity,
+						//									this, MeshGenerator);
+						//	}
+						//}
+
 
 						if (_meshEditMode == MESH_EDIT_MODE.PivotEdit)
 						{
@@ -6777,9 +8088,10 @@ namespace AnyPortrait
 								apGL.DrawMeshWorkEdgeWire(_selection.Mesh, apMatrix3x3.identity, VertController, VertController.IsEdgeWireCross(), VertController.IsEdgeWireMultipleCross());
 
 								if (_meshEditMirrorMode == MESH_EDIT_MIRROR_MODE.Mirror
-								&& (_meshEditeMode_MakeMesh == MESH_EDIT_MODE_MAKEMESH.VertexAndEdge
-									|| _meshEditeMode_MakeMesh == MESH_EDIT_MODE_MAKEMESH.VertexOnly
-									|| _meshEditeMode_MakeMesh == MESH_EDIT_MODE_MAKEMESH.EdgeOnly)
+									&& _meshEditeMode_MakeMesh_Tab == MESH_EDIT_MODE_MAKEMESH_TAB.AddTools
+								&& (_meshEditeMode_MakeMesh_AddTool == MESH_EDIT_MODE_MAKEMESH_ADDTOOLS.VertexAndEdge
+									|| _meshEditeMode_MakeMesh_AddTool == MESH_EDIT_MODE_MAKEMESH_ADDTOOLS.VertexOnly
+									|| _meshEditeMode_MakeMesh_AddTool == MESH_EDIT_MODE_MAKEMESH_ADDTOOLS.EdgeOnly)
 									)
 								{
 									//여기서 한번 더 -> 반전되서 처리 가능한 Mesh Edge Work를 계산한다.
@@ -6788,11 +8100,19 @@ namespace AnyPortrait
 									apGL.DrawMeshWorkMirrorEdgeWire(_selection.Mesh, MirrorSet);
 								}
 							}
+						}
 
+						//추가 21.1.6 : Area 편집시 (Setting 또는 AutoGen)
+						if (_isMeshEdit_AreaEditing
+							&& Select.Mesh._isPSDParsed
+							&& (_meshEditMode == MESH_EDIT_MODE.Setting || (_meshEditMode == MESH_EDIT_MODE.MakeMesh && _meshEditeMode_MakeMesh_Tab == MESH_EDIT_MODE_MAKEMESH_TAB.AutoGen))
+							)
+						{
+							apGL.DrawMeshAreaEditing(Select.Mesh, apMatrix3x3.identity, this, _mouseSet.Pos);
 						}
 
 						//추가 20.7.6 : 메시가 출력된 이후, PSD 임포트 메시의 버텍스를 삭제할지 묻는 메시지가 출력될 수 있다.
-						if(_isRequestRemoveVerticesIfImportedFromPSD_Step1)
+						if (_isRequestRemoveVerticesIfImportedFromPSD_Step1)
 						{
 							_isRequestRemoveVerticesIfImportedFromPSD_Step2 = true;
 						}
@@ -6900,7 +8220,7 @@ namespace AnyPortrait
 						}
 
 						if (Select.MeshGroup != null)
-						{	
+						{
 							//이전
 							//_tmpSelectedMeshTransform.Clear();
 							//_tmpSelectedMeshGroupTransform.Clear();
@@ -6920,7 +8240,7 @@ namespace AnyPortrait
 							_tmpSelectedSubMeshTFs = Select.GetSubSeletedMeshTFs(true);
 							_tmpSelectedMainBone = Select.Bone;
 							_tmpSelectedSubBones = Select.GetSubSeletedBones(true);
-							
+
 
 							//Onion - Behind인 경우
 							//if(Onion.IsVisible && Onion.IsRecorded && Event.current.type == EventType.Repaint && _onionOption_IsRenderBehind)
@@ -6992,8 +8312,11 @@ namespace AnyPortrait
 									if (Select.Modifier.ModifierType != apModifierBase.MODIFIER_TYPE.Rigging)
 									{
 										//리깅은 안된다.
-										bool isBonePreivew = GetModLockOption_BonePreview(Select.ExEditingMode);
-										if (isBonePreivew)
+										//bool isBonePreivew = GetModLockOption_BonePreview(Select.ExEditingMode);
+										//bool isBonePreivew = GetModLockOption_BonePreview();//변경 21.2.13
+
+										//if (isBonePreivew)
+										if(_modLockOption_BoneResultPreview)
 										{
 											//Bone Preview를 하자
 											RenderExEditBonePreview_Modifier(Select.MeshGroup, GetModLockOption_BonePreviewColor());
@@ -7016,7 +8339,8 @@ namespace AnyPortrait
 
 						if (_meshGroupEditMode == MESHGROUP_EDIT_MODE.Modifier)
 						{
-							if (GetModLockOption_ListUI(Select.ExEditingMode))
+							//if (GetModLockOption_ListUI(Select.ExEditingMode))
+							if (GetModLockOption_ListUI())//변경 21.2.13
 							{
 								//추가 3.22
 								//현재 상태에 대해서 ListUI를 출력하자
@@ -7176,8 +8500,10 @@ namespace AnyPortrait
 								if (Select.AnimClip != null && Select.AnimClip._targetMeshGroup != null)
 								{
 									//리깅은 안된다.
-									bool isBonePreivew = GetModLockOption_BonePreview(Select.ExAnimEditingMode);
-									if (isBonePreivew)
+									//bool isBonePreivew = GetModLockOption_BonePreview(Select.ExAnimEditingMode);
+									//bool isBonePreivew = GetModLockOption_BonePreview();//변경 21.2.13
+									//if (isBonePreivew)
+									if(_modLockOption_BoneResultPreview)
 									{
 										//Bone Preview를 하자
 										RenderExEditBonePreview_Animation(Select.AnimClip, Select.AnimClip._targetMeshGroup, GetModLockOption_BonePreviewColor());
@@ -7188,7 +8514,8 @@ namespace AnyPortrait
 							}
 						}
 
-						if (GetModLockOption_ListUI(Select.ExAnimEditingMode))
+						//if (GetModLockOption_ListUI(Select.ExAnimEditingMode))
+						if (GetModLockOption_ListUI())//변경 21.2.13
 						{
 							//추가 3.22
 							//현재 상태에 대해서 ListUI를 출력하자
@@ -7264,8 +8591,129 @@ namespace AnyPortrait
 				apGL.EndBatch();
 			}
 
+			//이후에 나올 아이콘의 크기들
+			float scaledIconSize = (float)GUI_STAT_ICON_SIZE / apGL.Zoom;
 
-			int guiLabelY = 20;
+			//--------------------------------------------------
+			//추가 21.1.19 : GUI 버튼 + 상태 그리기
+			_guiButton_Menu.Draw();
+			_guiButton_RecordOnion.Draw();
+
+			//순서
+			//LowCPU / Mesh / Bone / Physics / Onion Skin / Preset Visible / Rotoscoping
+			//int iconPosY = GUI_STAT_MARGIN + GUI_STAT_MENUBTN_SIZE + 2 + (GUI_STAT_ICON_SIZE / 2); //32 + 14 + 4(여백)
+			//int iconPosX = GUI_STAT_MARGIN + (GUI_STAT_ICON_SIZE / 2);//5 + 14
+			
+			bool isAnyStatIcons = false;
+
+			#region [미사용 코드] 아이콘들 표시하지 않기로. apGUIStatBox에서 일괄 처리하기로 했다.
+			////추가 3.1 : Low CPU모드일때 아이콘 표시
+			//if (_lowCPUStatus == LOW_CPU_STATUS.LowCPU_Low || _lowCPUStatus == LOW_CPU_STATUS.LowCPU_Mid)
+			//{
+			//	if (_imgLowCPUStatus == null)
+			//	{
+			//		_imgLowCPUStatus = ImageSet.Get(apImageSet.PRESET.LowCPU);
+			//	}
+
+			//	apGL.DrawTextureGL(_imgLowCPUStatus, new Vector2(iconPosX, iconPosY), scaledIconSize, scaledIconSize, Color.gray, 0.0f);
+			//	iconPosX += GUI_STAT_ICON_SIZE;
+			//	isAnyStatIcons = true;
+			//}
+
+			////Mesh
+			//if (_meshGUIRenderMode != MESH_RENDER_MODE.Render)
+			//{
+			//	if (_imgViewStat_MeshHidden == null)
+			//	{
+			//		_imgViewStat_MeshHidden = ImageSet.Get(apImageSet.PRESET.GUI_ViewStat_MeshHidden);
+			//	}
+			//	apGL.DrawTextureGL(_imgViewStat_MeshHidden, new Vector2(iconPosX, iconPosY), scaledIconSize, scaledIconSize, Color.gray, 0.0f);
+			//	iconPosX += GUI_STAT_ICON_SIZE;
+			//	isAnyStatIcons = true;
+			//}
+			////Bone - Hidden/Outline
+			//if (_boneGUIRenderMode == BONE_RENDER_MODE.None)
+			//{
+			//	if (_imgViewStat_BoneHidden == null)
+			//	{
+			//		_imgViewStat_BoneHidden = ImageSet.Get(apImageSet.PRESET.GUI_ViewStat_BoneHidden);
+			//	}
+			//	apGL.DrawTextureGL(_imgViewStat_BoneHidden, new Vector2(iconPosX, iconPosY), scaledIconSize, scaledIconSize, Color.gray, 0.0f);
+			//	iconPosX += GUI_STAT_ICON_SIZE;
+			//	isAnyStatIcons = true;
+			//}
+			//else if (_boneGUIRenderMode == BONE_RENDER_MODE.RenderOutline)
+			//{
+			//	if (_imgViewStat_BoneOutline == null)
+			//	{
+			//		_imgViewStat_BoneOutline = ImageSet.Get(apImageSet.PRESET.GUI_ViewStat_BoneOutline);
+			//	}
+			//	apGL.DrawTextureGL(_imgViewStat_BoneOutline, new Vector2(iconPosX, iconPosY), scaledIconSize, scaledIconSize, Color.gray, 0.0f);
+			//	iconPosX += GUI_STAT_ICON_SIZE;
+			//	isAnyStatIcons = true;
+			//}
+
+			////물리 효과 - Disabled
+			//if (_portrait != null && !_portrait._isPhysicsPlay_Editor)
+			//{
+			//	if (_imgViewStat_DisablePhysics == null)
+			//	{
+			//		_imgViewStat_DisablePhysics = ImageSet.Get(apImageSet.PRESET.GUI_ViewStat_DisablePhysics);
+			//	}
+			//	apGL.DrawTextureGL(_imgViewStat_DisablePhysics, new Vector2(iconPosX, iconPosY), scaledIconSize, scaledIconSize, Color.gray, 0.0f);
+			//	iconPosX += GUI_STAT_ICON_SIZE;
+			//	isAnyStatIcons = true;
+			//}
+
+			////OnionSkin
+			//if (Onion.IsVisible
+			//	&& (Select.SelectionType == apSelection.SELECTION_TYPE.Animation ||
+			//		Select.SelectionType == apSelection.SELECTION_TYPE.MeshGroup))
+			//{	
+			//	if(_imgViewStat_OnionSkin == null)
+			//	{
+			//		_imgViewStat_OnionSkin = ImageSet.Get(apImageSet.PRESET.GUI_ViewStat_OnionSkin);
+			//	}
+			//	apGL.DrawTextureGL(_imgViewStat_OnionSkin, new Vector2(iconPosX, iconPosY), scaledIconSize, scaledIconSize, Color.gray, 0.0f);
+			//	iconPosX += GUI_STAT_ICON_SIZE;
+			//	isAnyStatIcons = true;
+			//}
+
+			////TODO : 상태 추가시 아이콘 추가
+			//if(_isAdaptVisibilityPreset)
+			//{
+			//	//프리셋 Visibility 추가
+			//	if(_imgViewStat_PresetVisible == null)
+			//	{
+			//		_imgViewStat_PresetVisible = ImageSet.Get(apImageSet.PRESET.GUI_ViewStat_PresetVisible);
+			//	}
+			//	apGL.DrawTextureGL(_imgViewStat_PresetVisible, new Vector2(iconPosX, iconPosY), scaledIconSize, scaledIconSize, Color.gray, 0.0f);
+			//	iconPosX += GUI_STAT_ICON_SIZE;
+			//	isAnyStatIcons = true;
+			//}
+
+			//if(true)
+			//{
+			//	//로토스코핑
+			//	if(_imgViewStat_Rotoscoping == null)
+			//	{
+			//		_imgViewStat_Rotoscoping = ImageSet.Get(apImageSet.PRESET.GUI_ViewStat_Rotoscoping);
+			//	}
+			//	apGL.DrawTextureGL(_imgViewStat_Rotoscoping, new Vector2(iconPosX, iconPosY), scaledIconSize, scaledIconSize, Color.gray, 0.0f);
+			//	iconPosX += GUI_STAT_ICON_SIZE;
+			//	isAnyStatIcons = true;
+			//} 
+			#endregion
+
+
+			//--------------------------------------------------
+
+
+			//int guiLabelY = 20;//기존
+			//int guiLabelY = 48;//변경 21.1.19 : 16 + 32 : GUI Menu 추가
+			//int guiLabelY = 66;//변경 21.1.19 : 16 + 50: GUI Menu / Icon
+			//아이콘에 따라서 기본 위치 다름
+			int guiLabelY = isAnyStatIcons ? (GUI_STAT_MARGIN + GUI_STAT_MENUBTN_SIZE + 2 + GUI_STAT_ICON_SIZE + 2) : (GUI_STAT_MARGIN + GUI_STAT_MENUBTN_SIZE + 2);
 			if (_guiOption_isFPSVisible)
 			{
 				//이전 : 최적화 코드 아님
@@ -7282,13 +8730,8 @@ namespace AnyPortrait
 				_fpsString.AppendPreset(0, false);
 				//_fpsString.Append(FPS, true);
 				_fpsString.Append(_fpsCounter.AvgFPS, true);
-				//FPS 확인용
-				//_fpsString.AppendPreset(1, false);
-				//_fpsString.Append(_fpsCounter.LowFPS, true);
-				//_fpsString.AppendPreset(2, false);
-				//_fpsString.Append(_fpsCounter.HighFPS, true);
 
-				apGL.DrawTextGL(_fpsString.ToString(), new Vector2(10, guiLabelY), 150, Color.yellow);
+				apGL.DrawTextGL(_fpsString.ToString(), new Vector2(GUI_STAT_MARGIN, guiLabelY), 150, Color.yellow);
 
 				guiLabelY += 15;
 			}
@@ -7300,7 +8743,7 @@ namespace AnyPortrait
 				{
 					notiColor.a = _tNotification_GUI;
 				}
-				apGL.DrawTextGL(_strNotification_GUI, new Vector2(10, guiLabelY), 400, notiColor);
+				apGL.DrawTextGL(_strNotification_GUI, new Vector2(GUI_STAT_MARGIN, guiLabelY), 400, notiColor);
 				guiLabelY += 15;
 			}
 
@@ -7309,17 +8752,15 @@ namespace AnyPortrait
 			if (Backup.IsAutoSaveWorking() && _isBackupProcessing)
 			{
 				//자동 저장 중일때
-				int iconSize = 28;
-				float scaledIconSize = (float)iconSize / apGL.Zoom;
-
+				
 				//int yPos = 35 + 8 + iconSize / 2;
 				//if(_isNotification_GUI)
 				//{
 				//	yPos += 15;
 				//}
 
-				int yPos = guiLabelY + 8 + iconSize / 2;
-				guiLabelY += iconSize + 4;
+				int yPos = guiLabelY + 8 + GUI_STAT_ICON_SIZE / 2;
+				guiLabelY += GUI_STAT_ICON_SIZE + 4;
 
 
 				Color labelColor = Color.yellow;
@@ -7340,39 +8781,35 @@ namespace AnyPortrait
 
 				if (_tBackupProcessing_Icon < BACKUP_ICON_TIME_LENGTH * 0.5f)
 				{
-					apGL.DrawTextureGL(_imgBackupIcon_Frame1, new Vector2(10 + iconSize / 2, yPos), scaledIconSize, scaledIconSize, Color.gray, 0.0f);
+					apGL.DrawTextureGL(_imgBackupIcon_Frame1, new Vector2(GUI_STAT_MARGIN + GUI_STAT_ICON_SIZE / 2, yPos), scaledIconSize, scaledIconSize, Color.gray, 0.0f);
 				}
 				else
 				{
-					apGL.DrawTextureGL(_imgBackupIcon_Frame2, new Vector2(10 + iconSize / 2, yPos), scaledIconSize, scaledIconSize, Color.gray, 0.0f);
+					apGL.DrawTextureGL(_imgBackupIcon_Frame2, new Vector2(GUI_STAT_MARGIN + GUI_STAT_ICON_SIZE / 2, yPos), scaledIconSize, scaledIconSize, Color.gray, 0.0f);
 				}
-				apGL.DrawTextGL(Backup.Label, new Vector2(10 + iconSize + 10, yPos - 6), 400, labelColor);
+				apGL.DrawTextGL(Backup.Label, new Vector2(GUI_STAT_MARGIN + GUI_STAT_ICON_SIZE + 10, yPos - 6), 400, labelColor);
 			}
 
-			//추가 3.1 : Low CPU모드일때 아이콘 표시
-			if (_lowCPUStatus == LOW_CPU_STATUS.LowCPU_Low || _lowCPUStatus == LOW_CPU_STATUS.LowCPU_Mid)
+			
+
+			//이전에 선택 잠금만 표시하던 영역
+			//if (Select.IsSelectionLockGUI)
+			//{
+			//	apGL.DrawTextureGL(ImageSet.Get(apImageSet.PRESET.GUI_SelectionLock), new Vector2(width - 20, 30), scaledIconSize, scaledIconSize, Color.gray, 0.0f);
+			//}
+
+			//변경 21.2.18 : 아이콘들을 통합적으로 관리
+			if(_guiStatBox != null)
 			{
-				int iconSize = 28;
-
-				int yPos = guiLabelY + 8 + iconSize / 2;
-				guiLabelY += iconSize + 4;
-
-				float scaledIconSize = (float)iconSize / apGL.Zoom;
-
-				if (_imgLowCPUStatus == null)
-				{
-					_imgLowCPUStatus = ImageSet.Get(apImageSet.PRESET.LowCPU);
-				}
-
-				apGL.DrawTextureGL(_imgLowCPUStatus, new Vector2(10 + iconSize / 2, yPos), scaledIconSize, scaledIconSize, Color.gray, 0.0f);
+				_guiStatBox.UpdateAndRender(new Vector2(width - 20, 30), Mouse.Pos);
 			}
 
-
-			if (Select.IsSelectionLockGUI)
+			if(_guiHowToUse != null)
 			{
-				float scaledIconSize = (float)28 / apGL.Zoom;
-				apGL.DrawTextureGL(ImageSet.Get(apImageSet.PRESET.GUI_SelectionLock), new Vector2(width - 20, 30), scaledIconSize, scaledIconSize, Color.gray, 0.0f);
+				_guiHowToUse.DrawTips(new Vector2(width, height / 2));
 			}
+
+
 
 
 			if (_guiOption_isStatisticsVisible)
@@ -7386,13 +8823,13 @@ namespace AnyPortrait
 					int posY = height - 30;
 					if (Select.Statistics_NumKeyframe >= 0)
 					{
-						apGL.DrawTextGL(apStringFactory.I.Keyframes, new Vector2(10, posY), 120, Color.yellow);//"Keyframes"
+						apGL.DrawTextGL(apStringFactory.I.Keyframes, new Vector2(GUI_STAT_MARGIN, posY), 120, Color.yellow);//"Keyframes"
 						apGL.DrawTextGL(Select.Statistics_NumKeyframe.ToString(), new Vector2(120, posY), 150, Color.yellow);
 						posY -= 15;
 					}
 					if (Select.Statistics_NumTimelineLayer >= 0)
 					{
-						apGL.DrawTextGL(apStringFactory.I.TimelineLayers, new Vector2(10, posY), 120, Color.yellow);//"Timeline Layers"
+						apGL.DrawTextGL(apStringFactory.I.TimelineLayers, new Vector2(GUI_STAT_MARGIN, posY), 120, Color.yellow);//"Timeline Layers"
 						apGL.DrawTextGL(Select.Statistics_NumTimelineLayer.ToString(), new Vector2(120, posY), 150, Color.yellow);
 						posY -= 15;
 					}
@@ -7400,37 +8837,37 @@ namespace AnyPortrait
 					//TODO : Bone 개수도 보여주자
 					if(Select.Statistics_NumBone > 0)
 					{
-						apGL.DrawTextGL(apStringFactory.I.Bones, new Vector2(10, posY), 120, Color.yellow);//"Bones"
+						apGL.DrawTextGL(apStringFactory.I.Bones, new Vector2(GUI_STAT_MARGIN, posY), 120, Color.yellow);//"Bones"
 						apGL.DrawTextGL(Select.Statistics_NumBone.ToString(), new Vector2(120, posY), 150, Color.yellow);
 						posY -= 15;
 					}
 
 					if (Select.Statistics_NumClippedMesh >= 0)
 					{
-						apGL.DrawTextGL(apStringFactory.I.ClippedVertices, new Vector2(10, posY), 120, Color.yellow);//"Clipped Vertices"
+						apGL.DrawTextGL(apStringFactory.I.ClippedVertices, new Vector2(GUI_STAT_MARGIN, posY), 120, Color.yellow);//"Clipped Vertices"
 						apGL.DrawTextGL(Select.Statistics_NumClippedVertex.ToString(), new Vector2(120, posY), 150, Color.yellow);
 						posY -= 15;
 
-						apGL.DrawTextGL(apStringFactory.I.ClippedMeshes, new Vector2(10, posY), 120, Color.yellow);//"Clipped Meshes"
+						apGL.DrawTextGL(apStringFactory.I.ClippedMeshes, new Vector2(GUI_STAT_MARGIN, posY), 120, Color.yellow);//"Clipped Meshes"
 						apGL.DrawTextGL(Select.Statistics_NumClippedMesh.ToString(), new Vector2(120, posY), 150, Color.yellow);
 						posY -= 15;
 					}
 
-					apGL.DrawTextGL(apStringFactory.I.Triangles, new Vector2(10, posY), 120, Color.yellow);//"Triangles"
+					apGL.DrawTextGL(apStringFactory.I.Triangles, new Vector2(GUI_STAT_MARGIN, posY), 120, Color.yellow);//"Triangles"
 					apGL.DrawTextGL(Select.Statistics_NumTri.ToString(), new Vector2(120, posY), 150, Color.yellow);
 					posY -= 15;
 
-					apGL.DrawTextGL(apStringFactory.I.Edges, new Vector2(10, posY), 120, Color.yellow);//"Edges"
+					apGL.DrawTextGL(apStringFactory.I.Edges, new Vector2(GUI_STAT_MARGIN, posY), 120, Color.yellow);//"Edges"
 					apGL.DrawTextGL(Select.Statistics_NumEdge.ToString(), new Vector2(120, posY), 150, Color.yellow);
 					posY -= 15;
 
-					apGL.DrawTextGL(apStringFactory.I.Vertices, new Vector2(10, posY), 120, Color.yellow);//"Vertices"
+					apGL.DrawTextGL(apStringFactory.I.Vertices, new Vector2(GUI_STAT_MARGIN, posY), 120, Color.yellow);//"Vertices"
 					apGL.DrawTextGL(Select.Statistics_NumVertex.ToString(), new Vector2(120, posY), 150, Color.yellow);
 					posY -= 15;
 
 					if (Select.Statistics_NumMesh >= 0)
 					{
-						apGL.DrawTextGL(apStringFactory.I.Meshes, new Vector2(10, posY), 120, Color.yellow);//"Meshes"
+						apGL.DrawTextGL(apStringFactory.I.Meshes, new Vector2(GUI_STAT_MARGIN, posY), 120, Color.yellow);//"Meshes"
 						apGL.DrawTextGL(Select.Statistics_NumMesh.ToString(), new Vector2(120, posY), 150, Color.yellow);
 						posY -= 15;
 					}
@@ -7439,7 +8876,7 @@ namespace AnyPortrait
 
 
 					posY -= 5;
-					apGL.DrawTextGL(apStringFactory.I.Statistics, new Vector2(10, posY), 120, Color.yellow);//"Statistics"
+					apGL.DrawTextGL(apStringFactory.I.Statistics, new Vector2(GUI_STAT_MARGIN, posY), 120, Color.yellow);//"Statistics"
 				}
 			}
 
@@ -7547,30 +8984,6 @@ namespace AnyPortrait
 					{
 						//apRenderUnit renderUnit = meshGroup._renderUnits_All[iUnit];//>>이전 코드
 						apRenderUnit renderUnit = renderUnits[iUnit];//<<변경
-
-						//이전 코드
-						//if (renderUnit._unitType == apRenderUnit.UNIT_TYPE.Mesh)
-						//{
-						//	if (renderUnit._meshTransform != null)
-						//	{
-						//		if (selectedMeshes != null && selectedMeshes.Count > 0)
-						//		{
-						//			if (selectedMeshes.Contains(renderUnit._meshTransform))
-						//			{
-						//				//현재 선택중인 메시다.
-						//				_tmpSelectedRenderUnits.Add(renderUnit);
-						//			}
-						//		}
-
-						//		if (selectedMeshGroups != null && selectedMeshGroups.Count > 0)
-						//		{
-						//			if (selectedMeshGroups.Contains(renderUnit._meshGroupTransform))
-						//			{
-						//				_tmpSelectedRenderUnits.Add(renderUnit);
-						//			}
-						//		}
-						//	}
-						//}
 
 						//변경 20.5.28
 						//메인과 서브를 구분하자
@@ -7816,6 +9229,10 @@ namespace AnyPortrait
 
 				//추가 20.3.28 : 리깅 중일때 > 현재 선택된 ModMesh에 등록된 본 외에는 반투명으로 만드는 기능이 있다.
 				NOLINKED_BONE_VISIBILITY linkedBonesVisibility = NOLINKED_BONE_VISIBILITY.Opaque;//작업 중이지 않은 본은 반투명으로 표시되는 옵션
+				bool isRiggingWorks = (Select.SelectionType == apSelection.SELECTION_TYPE.MeshGroup
+										&& Select.Modifier != null
+										&& Select.Modifier.ModifierType == apModifierBase.MODIFIER_TYPE.Rigging
+										&& Select.IsRigEditBinding);
 				if (_rigGUIOption_NoLinkedBoneVisibility != NOLINKED_BONE_VISIBILITY.Opaque)
 				{
 					//옵션이 켜진 경우
@@ -7880,7 +9297,7 @@ namespace AnyPortrait
 
 								for (int iRoot = 0; iRoot < boneSet._bones_Root.Count; iRoot++)
 								{
-									DrawBoneRecursive_V2(boneSet._bones_Root[iRoot], isDrawBoneOutline, isBoneIKUsing, isUseBoneToneColor, isSubBoneSelectable, linkedBonesVisibility);
+									DrawBoneRecursive_V2(boneSet._bones_Root[iRoot], isDrawBoneOutline, isBoneIKUsing, isUseBoneToneColor, isSubBoneSelectable, isRiggingWorks, linkedBonesVisibility);
 								}
 
 								apGL.EndBatch();
@@ -7910,7 +9327,7 @@ namespace AnyPortrait
 							for (int iRoot = 0; iRoot < meshGroup._boneList_Root.Count; iRoot++)
 							{
 								//Root 렌더링을 한다.
-								DrawBoneRecursive_V2(meshGroup._boneList_Root[iRoot], isDrawBoneOutline, isBoneIKUsing, isUseBoneToneColor, true, linkedBonesVisibility);
+								DrawBoneRecursive_V2(meshGroup._boneList_Root[iRoot], isDrawBoneOutline, isBoneIKUsing, isUseBoneToneColor, true, isRiggingWorks, linkedBonesVisibility);
 							}
 
 							apGL.EndBatch();
@@ -7952,7 +9369,9 @@ namespace AnyPortrait
 							if (curSubBone == selectedBone) { continue; }
 
 							curSubBone.GUIUpdate(false, isBoneIKUsing);
-							if (curSubBone.IsGUIVisible)
+							
+							//if (curSubBone.IsGUIVisible)//이전
+							if (curSubBone.IsVisibleInGUI)//변경 21.1.28
 							{
 								if (_boneGUIOption_RenderType == BONE_DISPLAY_METHOD.Version1)
 								{
@@ -7972,7 +9391,10 @@ namespace AnyPortrait
 					if (selectedBone != null)
 					{
 						selectedBone.GUIUpdate(false, isBoneIKUsing);
-						if (selectedBone.IsGUIVisible)
+						
+						
+						//if (selectedBone.IsGUIVisible)//이전
+						if (selectedBone.IsVisibleInGUI)//변경 21.1.28
 						{
 							if (_boneGUIOption_RenderType == BONE_DISPLAY_METHOD.Version1)
 							{
@@ -8226,10 +9648,7 @@ namespace AnyPortrait
 					}
 					apGL.EndBatch();
 				}
-				
 			}
-
-
 		}
 
 		private void DrawBoneRecursive_V1(apBone targetBone, bool isDrawOutline, bool isBoneIKUsing, bool isUseBoneToneColor, bool isBoneAvailable)
@@ -8237,7 +9656,8 @@ namespace AnyPortrait
 			targetBone.GUIUpdate(false, isBoneIKUsing);
 			//apGL.DrawBone(targetBone, _selection);
 
-			if (targetBone.IsGUIVisible)
+			//if (targetBone.IsGUIVisible)//이전
+			if (targetBone.IsVisibleInGUI)//변경 21.1.28
 			{
 				apGL.DrawBone_V1(targetBone, isDrawOutline, isBoneIKUsing, isUseBoneToneColor, isBoneAvailable);
 			}
@@ -8250,42 +9670,65 @@ namespace AnyPortrait
 
 
 
-		private void DrawBoneRecursive_V2(apBone targetBone, bool isDrawOutline, bool isBoneIKUsing, bool isUseBoneToneColor, bool isBoneAvailable, NOLINKED_BONE_VISIBILITY noLinkedBoneVisibility)
+		private void DrawBoneRecursive_V2(apBone targetBone, bool isDrawOutline, bool isBoneIKUsing, bool isUseBoneToneColor, bool isBoneAvailable, 
+										bool isRiggingWorks, NOLINKED_BONE_VISIBILITY noLinkedBoneVisibility)
 		{
 			targetBone.GUIUpdate(false, isBoneIKUsing);
-			//apGL.DrawBone(targetBone, _selection);
 
-			if (targetBone.IsGUIVisible)
+			if (targetBone.IsVisibleInGUI)//변경 21.1.28
 			{
-				switch (noLinkedBoneVisibility)
+				if (isRiggingWorks)
 				{
-					case NOLINKED_BONE_VISIBILITY.Opaque:
-						//연결 여부에 상관없이 온전히 출력
-						apGL.DrawBone_V2(targetBone, isDrawOutline, isBoneIKUsing, isUseBoneToneColor, isBoneAvailable, false, false);
-						break;
-
-					case NOLINKED_BONE_VISIBILITY.Translucent:
-						//모디파이어에 연결되지 않은 본은 반투명 출력
-						apGL.DrawBone_V2(targetBone, isDrawOutline, isBoneIKUsing, isUseBoneToneColor, isBoneAvailable, false, !_selection.LinkedToModifierBones.Contains(targetBone));
-						break;
-
-					case NOLINKED_BONE_VISIBILITY.Hidden:
-						//모디파이어에 연결되지 않은 본은 출력하지 않음 (선택된 본은 반투명으로 출력한다.)
-						if(_selection.LinkedToModifierBones.Contains(targetBone))
-						{
+					//리깅 작업 중일땐
+					switch (noLinkedBoneVisibility)
+					{
+						case NOLINKED_BONE_VISIBILITY.Opaque:
+							//연결 여부에 상관없이 온전히 출력
 							apGL.DrawBone_V2(targetBone, isDrawOutline, isBoneIKUsing, isUseBoneToneColor, isBoneAvailable, false, false);
-						}
-						else if(_selection.Bone == targetBone)
-						{
-							apGL.DrawBone_V2(targetBone, isDrawOutline, isBoneIKUsing, isUseBoneToneColor, isBoneAvailable, false, true);
-						}
-						break;
+							break;
+
+						case NOLINKED_BONE_VISIBILITY.Translucent:
+							//모디파이어에 연결되지 않은 본은 반투명 출력
+							apGL.DrawBone_V2(targetBone, isDrawOutline, isBoneIKUsing, isUseBoneToneColor, isBoneAvailable, false, !_selection.LinkedToModifierBones.ContainsKey(targetBone));
+							break;
+
+						case NOLINKED_BONE_VISIBILITY.Hidden:
+							//모디파이어에 연결되지 않은 본은 출력하지 않음 (선택된 본은 반투명으로 출력한다.)
+							if (_selection.LinkedToModifierBones.ContainsKey(targetBone))
+							{
+								apGL.DrawBone_V2(targetBone, isDrawOutline, isBoneIKUsing, isUseBoneToneColor, isBoneAvailable, false, false);
+							}
+							else if (_selection.Bone == targetBone)
+							{
+								apGL.DrawBone_V2(targetBone, isDrawOutline, isBoneIKUsing, isUseBoneToneColor, isBoneAvailable, false, true);
+							}
+							break;
+					}
+				}
+				else
+				{
+					//그 외의 작업 중일땐
+					if (_exModObjOption_ShowGray &&
+						(targetBone._exCalculateMode == apBone.EX_CALCULATE.Disabled_NotEdit ||
+						targetBone._exCalculateMode == apBone.EX_CALCULATE.Disabled_ExRun)
+						)
+					{
+						//반투명으로 출력한다.
+						apGL.DrawBone_V2(targetBone, isDrawOutline, isBoneIKUsing, isUseBoneToneColor, isBoneAvailable, false, true);
+					}
+					else
+					{
+						//그냥 출력한다.
+						apGL.DrawBone_V2(targetBone, isDrawOutline, isBoneIKUsing, isUseBoneToneColor, isBoneAvailable, false, false);
+					}
 				}
 			}
+			
+			
 
 			for (int i = 0; i < targetBone._childBones.Count; i++)
 			{
-				DrawBoneRecursive_V2(targetBone._childBones[i], isDrawOutline, isBoneIKUsing, isUseBoneToneColor, isBoneAvailable, noLinkedBoneVisibility);
+				DrawBoneRecursive_V2(targetBone._childBones[i], isDrawOutline, isBoneIKUsing, isUseBoneToneColor, isBoneAvailable, isRiggingWorks, noLinkedBoneVisibility);
 			}
 		}
 
@@ -8294,7 +9737,8 @@ namespace AnyPortrait
 		{
 			targetBone.GUIUpdate(false, isBoneIKUsing);
 
-			if (targetBone.IsGUIVisible)
+			//if (targetBone.IsGUIVisible)
+			if (targetBone.IsVisibleInGUI)//변경 21.1.28
 			{
 				apGL.DrawBoneOutline_V1(targetBone, boneOutlineColor, isBoneIKUsing);
 			}
@@ -8310,7 +9754,8 @@ namespace AnyPortrait
 		{
 			targetBone.GUIUpdate(false, isBoneIKUsing);
 
-			if (targetBone.IsGUIVisible)
+			//if (targetBone.IsGUIVisible)
+			if (targetBone.IsVisibleInGUI)//변경 21.1.28
 			{
 				apGL.DrawBoneOutline_V2(targetBone, boneOutlineColor, isBoneIKUsing, false);
 			}
@@ -8686,6 +10131,84 @@ namespace AnyPortrait
 		}
 
 
+
+		/// <summary>
+		/// 추가 21.2.28 : 로토스코핑을 그리자
+		/// </summary>
+		/// <param name="screenWidth"></param>
+		/// <param name="screenHeight"></param>
+		private void RenderRotoscoping()
+		{
+			if(!_isEnableRotoscoping || _selectedRotoscopingData == null)
+			{
+				return;
+			}
+
+			//애니메이션과 동기화되었는지 체크한다. (옵션 적용시 필요)
+			if(Select.SelectionType == apSelection.SELECTION_TYPE.Animation
+				&& Select.AnimClip != null
+				&& _selectedRotoscopingData._isSyncToAnimation)
+			{
+				if(!_isSyncRotoscopingToAnimClipFrame || Select.AnimClip.CurFrame != _iSyncRotoscopingAnimClipFrame)
+				{
+					//동기화가 필요하다면
+					_isSyncRotoscopingToAnimClipFrame = true;
+					_iSyncRotoscopingAnimClipFrame = Select.AnimClip.CurFrame;
+
+					//Index를 동기화하자
+					//iRoto = (iFrame - Offset) / FramePerImage
+					int biasedFrame = _iSyncRotoscopingAnimClipFrame - _selectedRotoscopingData._frameOffsetToSwitch;
+					if(biasedFrame >= 0)
+					{
+						_iRotoscopingImageFile = biasedFrame / _selectedRotoscopingData._framePerSwitch;
+					}
+					else
+					{
+						_iRotoscopingImageFile = ((Mathf.Abs(biasedFrame) / _selectedRotoscopingData._framePerSwitch) + 1) * -1;
+					}
+
+					
+					int nFiles = _selectedRotoscopingData._filePathList != null ? _selectedRotoscopingData._filePathList.Count : 0;
+					if(nFiles > 0)
+					{
+						while(_iRotoscopingImageFile < 0)
+						{
+							_iRotoscopingImageFile += nFiles;
+						}
+
+						_iRotoscopingImageFile %= nFiles;
+					}
+					
+				}
+			}
+			else
+			{
+				_isSyncRotoscopingToAnimClipFrame = false;
+				_iSyncRotoscopingAnimClipFrame = -1;
+			}
+
+			Texture2D rotoImage = _selectedRotoscopingData.GetImage(_iRotoscopingImageFile);
+			if(rotoImage == null)
+			{
+				//이미지가 없다.
+				return;
+			}
+
+			//이미지 위치를 정하자
+			Vector2 posGL = apGL.WindowSizeHalf + new Vector2(Rotoscoping._posOffset_X, -Rotoscoping._posOffset_Y);
+			//Height가 Screen의 Ratio에 맞게 만들자
+			float scaleRatio = (((float)Rotoscoping._scaleWithinScreen * 0.01f) * apGL.WindowSize.y) / rotoImage.height;
+			scaleRatio /= apGL.Zoom;
+
+			int scaledImageWidth = (int)(rotoImage.width * scaleRatio);
+			int scaledImageHeight = (int)(rotoImage.height * scaleRatio);
+			Color rotoColor = new Color(0.5f, 0.5f, 0.5f, (float)Rotoscoping._opacity / 255.0f);
+
+			apGL.DrawTextureGL(rotoImage, posGL, scaledImageWidth, scaledImageHeight, rotoColor, 0.0f);
+		}
+
+
+
 		/// <summary>
 		/// Bone Preview를 위해서 ExMode를 변형해서 Rendering하는 부분
 		/// </summary>
@@ -8702,7 +10225,12 @@ namespace AnyPortrait
 			{
 				return;
 			}
-			Select.RefreshMeshGroupExEditingFlags(meshGroup, null, null, null, true);//<<일단 초기화
+			
+			//이전
+			//Select.RefreshMeshGroupExEditingFlags(meshGroup, null, null, null, true);//<<일단 초기화
+			
+			//변경 21.2.15 : 초기화시에는 다른 함수를 사용하자
+			Select.SetEnableMeshGroupExEditingFlagsForce();
 
 			meshGroup.SetBoneIKEnabled(true, false);
 
@@ -8737,21 +10265,28 @@ namespace AnyPortrait
 				return;
 			}
 
-			apModifierBase curModifier = null;
-			if (Select.AnimTimeline != null)
-			{
-				curModifier = Select.AnimTimeline._linkedModifier;
-			}
+			//apModifierBase curModifier = null;
+			//if (Select.AnimTimeline != null)
+			//{
+			//	curModifier = Select.AnimTimeline._linkedModifier;
+			//}
 			//Debug.Log("Is Modifier Valid : " + (curModifier != null));
 
-			Select.RefreshMeshGroupExEditingFlags(meshGroup, null, null, animClip, true);//<<일단 초기화
+			//이전
+			//Select.RefreshMeshGroupExEditingFlags(meshGroup, null, null, animClip, true);//<<일단 초기화
+
+			//변경 21.2.15 : 초기화시에는 다른 함수를 사용하자
+			Select.SetEnableMeshGroupExEditingFlagsForce();
 
 			////meshGroup.RefreshForce();//<ExCalculate를 Ignore한다.
 			animClip.Update_Editor(0.0f, true, true, false);
 			RenderBoneOutlineOnly(meshGroup, boneOutlineColor, true);
 
 			Select.SetAnimExclusiveEditing_Tmp(prevExEditMode, false);
-			Select.RefreshMeshGroupExEditingFlags(meshGroup, curModifier, null, animClip, true);//<<일단 초기화
+
+			//Debug.Log("TODO : 이 부분 코드 삭제했는데 문제 확인 필요");
+			//Select.RefreshMeshGroupExEditingFlags(meshGroup, curModifier, null, animClip, true);//이거 호출할 필요가 있나?
+			
 
 			animClip.Update_Editor(0.0f, true, false, false);
 
@@ -8867,17 +10402,30 @@ namespace AnyPortrait
 
 				switch (mod._editorExclusiveActiveMod)
 				{
-					case apModifierBase.MOD_EDITOR_ACTIVE.Disabled:
-					case apModifierBase.MOD_EDITOR_ACTIVE.OnlyColorEnabled:
+					//이전
+					//case apModifierBase.MOD_EDITOR_ACTIVE.Disabled:
+					//case apModifierBase.MOD_EDITOR_ACTIVE.OnlyColorEnabled:
+					//변경 21.2.15
+					case apModifierBase.MOD_EDITOR_ACTIVE.Disabled_NotEdit:
+					case apModifierBase.MOD_EDITOR_ACTIVE.Disabled_Force:
+					case apModifierBase.MOD_EDITOR_ACTIVE.Disabled_ExceptColor:
 						imgEx = ImageSet.Get(apImageSet.PRESET.SmallMod_ExDisabled);
 						break;
 
-					case apModifierBase.MOD_EDITOR_ACTIVE.ExclusiveEnabled:
-					case apModifierBase.MOD_EDITOR_ACTIVE.Enabled:
+					//case apModifierBase.MOD_EDITOR_ACTIVE.ExclusiveEnabled:
+					//case apModifierBase.MOD_EDITOR_ACTIVE.Enabled:
+
+					//변경 21.2.15
+					case apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Run:
+					case apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Edit:
 						imgEx = ImageSet.Get(apImageSet.PRESET.SmallMod_ExEnabled);
 						break;
 
-					case apModifierBase.MOD_EDITOR_ACTIVE.SubExEnabled:
+					//이전
+					//case apModifierBase.MOD_EDITOR_ACTIVE.SubExEnabled:
+					//변경 21.2.15
+					case apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Background:
+						//TODO : SubEdit는 여기서 구분할 수 없다. 
 						imgEx = ImageSet.Get(apImageSet.PRESET.SmallMod_ExSubEnabled);
 						break;
 
@@ -8894,7 +10442,10 @@ namespace AnyPortrait
 				if (mod._isColorPropertyEnabled &&
 					(int)(mod.CalculatedValueType & apCalculatedResultParam.CALCULATED_VALUE_TYPE.Color) != 0)
 				{
-					if (mod._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled)
+					//if (mod._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled)//이전
+					//변경 21.2.15
+					if (mod._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_Force
+						|| mod._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_NotEdit)
 					{
 						imgColor = ImageSet.Get(apImageSet.PRESET.SmallMod_ColorDisabled);
 					}
@@ -8910,6 +10461,153 @@ namespace AnyPortrait
 				curPosY -= textHeight;
 			}
 		}
+
+
+
+		/// <summary>
+		/// 추가 21.1.29 : Visibility Preset 기능을 확인하고 동기화하는 함수.
+		/// 플레이 중에도 바뀔 수 있으므로, 렌더링 함수에서 체크하되, 이전 상황과 동일하면 불필요한 처리는 하지 않도록 하자
+		/// 메뉴 바꿀때나, 오브젝트가 추가된 경우(인자 true)도 이 함수를 호출하면 렌더링시 불필요한 프레임 드랍을 막을 수 있다.
+		/// </summary>
+		private void CheckAndSyncVisiblityPreset(bool isCheckLink, bool isForceSync)
+		{
+			if(_portrait == null)
+			{
+				return;
+			}
+
+			if(Select.SelectionType != apSelection.SELECTION_TYPE.MeshGroup 
+				&& Select.SelectionType != apSelection.SELECTION_TYPE.Animation)
+			{
+				return;
+			}
+
+			//[ 링크 ]
+			// isCheckLink가 true일때 링크를 시도한다. (무조건)
+			// - VisiblityPreset과 RenderUnit/Bone을 연결한다.
+
+			//[ 동기화 조건 체크 ]
+			//체크할 것 (하나라도 바뀌면 동기화 시도)
+			// (공통)
+			// - Preset 사용 여부
+			// - 현재 Rule
+			// - 메인 메시 그룹
+
+			// (모디파이어에 의한 규칙)
+			// - 현재 모디파이어 / ParamKeySet
+
+			// (자식 메시 그룹의 가시성과 본 가시성 연계)
+			// - 본을 가지고 있는 서브 메시 그룹들의 가시성 정보 모두
+			
+			
+			//[ 동기화 ]
+			// 동기화 
+			apMeshGroup meshGroup = null;
+			apModifierBase modifier = null;
+			apModifierParamSetGroup modParamSetGroup = null;
+			apAnimTimeline animTimeline = null;
+
+			if(Select.SelectionType == apSelection.SELECTION_TYPE.MeshGroup)
+			{
+				//메시 그룹 메뉴에서
+				meshGroup = Select.MeshGroup;
+				modifier = Select.Modifier;
+				if(modifier != null)
+				{
+					modParamSetGroup = Select.SubEditedParamSetGroup;
+				}
+			}
+			else
+			{
+				//애니메이션 메뉴에서
+				if(Select.AnimClip != null)
+				{
+					meshGroup = Select.AnimClip._targetMeshGroup;
+				}
+				if(meshGroup != null)
+				{
+					animTimeline = Select.AnimTimeline;
+					if(animTimeline != null && animTimeline._linkType == apAnimClip.LINK_TYPE.AnimatedModifier)
+					{
+						modifier = animTimeline._linkedModifier;
+					}
+				}
+			}
+
+			if(meshGroup == null)
+			{
+				return;
+			}
+
+			bool isNeedToSync = _portrait.VisiblePreset.CheckSync(	_isAdaptVisibilityPreset,
+																	meshGroup,
+																	modifier,
+																	modParamSetGroup,
+																	animTimeline,
+																	_selectedVisibilityPresetRule);
+			if(!isNeedToSync && !isForceSync)
+			{
+				//더 동기화를 할 필요가 없으니 종료
+				return;
+			}
+
+			//동기화를 하자
+			//프리셋 규칙을 사용할지 여부부터
+			//사용하지 않으면 모두 초기화를 해야한다.
+			
+			if(_isAdaptVisibilityPreset 
+				&& _selectedVisibilityPresetRule != null)
+			{
+				//선택된 규칙이 있고 보기 프리셋이 켜진 상태이다.
+				//Rule을 이용해서 동기화를 하자
+				_portrait.VisiblePreset.Sync(Select.SelectionType == apSelection.SELECTION_TYPE.Animation);
+			}
+			else
+			{
+				//Debug.LogWarning("동기화 해제");
+				//리셋을 하자
+				int nRenderUnits = meshGroup._renderUnits_All.Count;
+				for (int i = 0; i < nRenderUnits; i++)
+				{
+					meshGroup._renderUnits_All[i]._workVisible_Rule = apRenderUnit.WORK_VISIBLE_TYPE.None;
+				}
+
+				//본 초기화
+				if (meshGroup._boneListSets != null && meshGroup._boneListSets.Count > 0)
+				{
+					List<apBone> boneRootList = null;
+					for (int iBontSet = 0; iBontSet < meshGroup._boneListSets.Count; iBontSet++)
+					{	
+						boneRootList = meshGroup._boneListSets[iBontSet]._bones_All;
+						if (boneRootList != null && boneRootList.Count > 0)
+						{
+							for (int iBone = 0; iBone < boneRootList.Count; iBone++)
+							{
+								boneRootList[iBone].SetGUIVisible_Rule(apBone.GUI_VISIBLE_TYPE.None);
+							}
+						}
+					}
+				}
+			}
+
+			//동기화시 Hierarchy의 보기 여부를 갱신해야한다.
+			_hierarchy_MeshGroup.RefreshUnits();
+			_hierarchy_AnimClip.RefreshUnits();
+		}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -9372,7 +11070,10 @@ namespace AnyPortrait
 				savedMeshGroup = savedObject as apMeshGroup;
 			}
 
-			if (Select.MeshGroup == null || savedMeshGroup == null || Select.MeshGroup != savedMeshGroup || selectedObjects.Count == 0)
+			if (Select.MeshGroup == null 
+				|| savedMeshGroup == null 
+				|| Select.MeshGroup != savedMeshGroup 
+				|| selectedObjects.Count == 0)
 			{
 				return;
 			}
@@ -9460,6 +11161,9 @@ namespace AnyPortrait
 				EditorUtility.DisplayDialog(GetText(TEXT.DLG_AttachMeshGroupInfo_Title), strMsg, GetText(TEXT.Okay));
 			}
 			
+
+			//추가 21.1.32 : Rule 가시성 동기화 초기화
+			Controller.ResetVisibilityPresetSync();
 
 			//추가 / 삭제시 요청한다.
 			OnAnyObjectAddedOrRemoved();
@@ -9881,13 +11585,21 @@ namespace AnyPortrait
 						switch (_meshEditMode)
 						{
 							case MESH_EDIT_MODE.Setting:
-								_lowCPUStatus = LOW_CPU_STATUS.LowCPU_Low;
+								if (_isMeshEdit_AreaEditing)
+								{
+									//Area 편집 시에는 CPU가 올라가야 한다.
+									_lowCPUStatus = LOW_CPU_STATUS.Full;
+								}
+								else
+								{
+									_lowCPUStatus = LOW_CPU_STATUS.LowCPU_Low;
+								}
 								break;
 
 							case MESH_EDIT_MODE.MakeMesh:
-								if (_meshEditeMode_MakeMesh == MESH_EDIT_MODE_MAKEMESH.AutoGenerate)
+								if (_isMeshEdit_AreaEditing)
 								{
-									_lowCPUStatus = LOW_CPU_STATUS.LowCPU_Low;
+									_lowCPUStatus = LOW_CPU_STATUS.Full;
 								}
 								else
 								{
@@ -10199,29 +11911,63 @@ namespace AnyPortrait
 		//------------------------------------------------------------------------
 		// Hot Key
 		//------------------------------------------------------------------------
-		/// <summary>
-		/// HotKey 이벤트를 등록합니다.
-		/// </summary>
-		/// <param name="funcEvent"></param>
-		/// <param name="keyCode"></param>
-		/// <param name="isShift"></param>
-		/// <param name="isAlt"></param>
-		/// <param name="isCtrl"></param>
-		public void AddHotKeyEvent(apHotKey.FUNC_HOTKEY_EVENT funcEvent, apHotKey.LabelText labelType, KeyCode keyCode, bool isShift, bool isAlt, bool isCtrl, object paramObject)
-		{
-			HotKey.AddHotKeyEvent(funcEvent, labelType, keyCode, isShift, isAlt, isCtrl, paramObject);
-		}
+		//변경 20.12.3 : 기존의 단축키 로직을 매핑 로직으로 변경
+		///// <summary>
+		///// HotKey 이벤트를 등록합니다.
+		///// </summary>
+		///// <param name="funcEvent"></param>
+		///// <param name="keyCode"></param>
+		///// <param name="isShift"></param>
+		///// <param name="isAlt"></param>
+		///// <param name="isCtrl"></param>
+		//public void AddHotKeyEvent(apHotKey.FUNC_HOTKEY_EVENT funcEvent, apHotKey.LabelText labelType, KeyCode keyCode, bool isShift, bool isAlt, bool isCtrl, object paramObject)
+		//{
+		//	HotKey.AddHotKeyEvent(funcEvent, labelType, keyCode, isShift, isAlt, isCtrl, paramObject);
+		//}
 
 
-		public void AddHotKeyEventIgnoreCtrlShift(apHotKey.FUNC_HOTKEY_EVENT funcEvent, apHotKey.LabelText labelType, KeyCode keyCode, object paramObject)
-		{
-			HotKey.AddHotKeyEventIgnoreCtrlShift(funcEvent, labelType, keyCode, paramObject);
-		}
+		//public void AddHotKeyEventIgnoreCtrlShift(apHotKey.FUNC_HOTKEY_EVENT funcEvent, apHotKey.LabelText labelType, KeyCode keyCode, object paramObject)
+		//{
+		//	HotKey.AddHotKeyEventIgnoreCtrlShift(funcEvent, labelType, keyCode, paramObject);
+		//}
 
 		public void AddReservedHotKeyEvent(apHotKey.FUNC_RESV_HOTKEY_EVENT funcEvent, apHotKey.RESERVED_KEY keyType, object paramObject)
 		{
 			HotKey.AddReservedHotKey(funcEvent, keyType, paramObject);
 		}
+
+		/// <summary>
+		/// 추가 20.12.3 : 단축키 설정에 의한 단축키 등록
+		/// </summary>
+		public void AddHotKeyEvent(	apHotKey.FUNC_HOTKEY_EVENT funcEvent, 
+									apHotKeyMapping.KEY_TYPE hotkeyType, object paramObject)
+		{
+			apHotKeyMapping.HotkeyMapUnit unit = HotKeyMap.GetHotkey(hotkeyType);
+			if(unit == null
+				|| !unit._isAvailable_Cur
+				|| unit._keyCode_Cur == apHotKeyMapping.EST_KEYCODE.Unknown)
+			{
+				//유효하지 않은 단축키이다.
+				return;
+			}
+
+			if(unit._isIgnoreSpecialKey)
+			{
+				HotKey.AddHotKeyEventIgnoreCtrlShift(	funcEvent,
+														unit,
+														paramObject);
+			}
+			else
+			{
+				HotKey.AddHotKeyEvent(	funcEvent, 
+										unit,
+										paramObject);
+			}
+		}
+
+		
+
+
 
 		//------------------------------------------------------------------------
 		// Hierarchy Filter 제어.
@@ -10456,194 +12202,220 @@ namespace AnyPortrait
 		//----------------------------------------------------------------------------------
 		public void SaveEditorPref()
 		{
-			//Debug.Log("Save Editor Pref");
+			//변경 21.2.10
+			//EditorPrefs.SetInt 류의 함수를 SavePref_Int로 변경한다. 기본값을 필요로 한다.
 
-			EditorPrefs.SetInt("AnyPortrait_HierarchyFilter", (int)_hierarchyFilter);
+			SavePref_Int("AnyPortrait_HierarchyFilter", (int)_hierarchyFilter, (int)HIERARCHY_FILTER.All);//EditorPrefs.SetInt("AnyPortrait_HierarchyFilter", (int)_hierarchyFilter);
 
 			if (_selection != null)
-			{
-				EditorPrefs.SetBool("AnyPortrait_IsAutoNormalize", Select._rigEdit_isAutoNormalize);
-				//EditorPrefs.SetBool("AnyPortrait_IsBoneColorView", Select._rigEdit_isBoneColorView);
-				//EditorPrefs.SetInt("AnyPortrait_ViewMode", (int)Select._rigEdit_viewMode);
+			{	
+				SavePref_Bool("AnyPortrait_IsAutoNormalize", Select._rigEdit_isAutoNormalize, true);//EditorPrefs.SetBool("AnyPortrait_IsAutoNormalize", Select._rigEdit_isAutoNormalize);
 			}
 
-			EditorPrefs.SetInt("AnyPortrait_Language", (int)_language);
-			SaveColorPref("AnyPortrait_Color_Backgroud", _colorOption_Background);
-			SaveColorPref("AnyPortrait_Color_GridCenter", _colorOption_GridCenter);
-			SaveColorPref("AnyPortrait_Color_Grid", _colorOption_Grid);
+			SavePref_Int("AnyPortrait_Language", (int)_language, (int)DefaultLanguage);//EditorPrefs.SetInt("AnyPortrait_Language", (int)_language);
+			
+			SaveColorPref("AnyPortrait_Color_Backgroud",	_colorOption_Background,	DefaultColor_Background);
+			SaveColorPref("AnyPortrait_Color_GridCenter",	_colorOption_GridCenter,	DefaultColor_GridCenter);
+			SaveColorPref("AnyPortrait_Color_Grid",			_colorOption_Grid,			DefaultColor_Grid);
 
-			SaveColorPref("AnyPortrait_Color_MeshEdge", _colorOption_MeshEdge);
-			SaveColorPref("AnyPortrait_Color_MeshHiddenEdge", _colorOption_MeshHiddenEdge);
-			SaveColorPref("AnyPortrait_Color_Outline", _colorOption_Outline);
-			SaveColorPref("AnyPortrait_Color_TFBorder", _colorOption_TransformBorder);
+			SaveColorPref("AnyPortrait_Color_MeshEdge",			_colorOption_MeshEdge,			DefaultColor_MeshEdge);
+			SaveColorPref("AnyPortrait_Color_MeshHiddenEdge",	_colorOption_MeshHiddenEdge,	DefaultColor_MeshHiddenEdge);
+			SaveColorPref("AnyPortrait_Color_Outline",			_colorOption_Outline,			DefaultColor_Outline);
+			SaveColorPref("AnyPortrait_Color_TFBorder",			_colorOption_TransformBorder,	DefaultColor_TransformBorder);
 
-			SaveColorPref("AnyPortrait_Color_VertNotSelected", _colorOption_VertColor_NotSelected);
-			SaveColorPref("AnyPortrait_Color_VertSelected", _colorOption_VertColor_Selected);
+			SaveColorPref("AnyPortrait_Color_VertNotSelected",	_colorOption_VertColor_NotSelected,		DefaultColor_VertNotSelected);
+			SaveColorPref("AnyPortrait_Color_VertSelected",		_colorOption_VertColor_Selected,		DefaultColor_VertSelected);
 
-			SaveColorPref("AnyPortrait_Color_GizmoFFDLine", _colorOption_GizmoFFDLine);
-			SaveColorPref("AnyPortrait_Color_GizmoFFDInnerLine", _colorOption_GizmoFFDInnerLine);
+			SaveColorPref("AnyPortrait_Color_GizmoFFDLine",			_colorOption_GizmoFFDLine,		DefaultColor_GizmoFFDLine);
+			SaveColorPref("AnyPortrait_Color_GizmoFFDInnerLine",	_colorOption_GizmoFFDInnerLine, DefaultColor_GizmoFFDInnerLine);
 
-			SaveColorPref("AnyPortrait_Color_OnionToneColor", _colorOption_OnionToneColor);
-			SaveColorPref("AnyPortrait_Color_OnionAnimPrevColor", _colorOption_OnionAnimPrevColor);
-			SaveColorPref("AnyPortrait_Color_OnionAnimNextColor", _colorOption_OnionAnimNextColor);
-			SaveColorPref("AnyPortrait_Color_OnionBoneColor", _colorOption_OnionBoneColor);
-			SaveColorPref("AnyPortrait_Color_OnionBonePrevColor", _colorOption_OnionBonePrevColor);
-			SaveColorPref("AnyPortrait_Color_OnionBoneNextColor", _colorOption_OnionBoneNextColor);
+			SaveColorPref("AnyPortrait_Color_OnionToneColor",		_colorOption_OnionToneColor,		DefaultColor_OnionToneColor);
+			SaveColorPref("AnyPortrait_Color_OnionAnimPrevColor",	_colorOption_OnionAnimPrevColor,	DefaultColor_OnionAnimPrevColor);
+			SaveColorPref("AnyPortrait_Color_OnionAnimNextColor",	_colorOption_OnionAnimNextColor,	DefaultColor_OnionAnimNextColor);
+			SaveColorPref("AnyPortrait_Color_OnionBoneColor",		_colorOption_OnionBoneColor,		DefaultColor_OnionBoneColor);
+			SaveColorPref("AnyPortrait_Color_OnionBonePrevColor",	_colorOption_OnionBonePrevColor,	DefaultColor_OnionBonePrevColor);
+			SaveColorPref("AnyPortrait_Color_OnionBoneNextColor",	_colorOption_OnionBoneNextColor,	DefaultColor_OnionBoneNextColor);
 
-			EditorPrefs.SetBool("AnyPortrait_Onion_OutlineRender", _onionOption_IsOutlineRender);
-			EditorPrefs.SetFloat("AnyPortrait_Onion_OutlineThickness", _onionOption_OutlineThickness);
-			EditorPrefs.SetBool("AnyPortrait_Onion_RenderOnlySelected", _onionOption_IsRenderOnlySelected);
-			EditorPrefs.SetBool("AnyPortrait_Onion_RenderBehind", _onionOption_IsRenderBehind);
-			EditorPrefs.SetBool("AnyPortrait_Onion_RenderAnimFrames", _onionOption_IsRenderAnimFrames);
-			EditorPrefs.SetInt("AnyPortrait_Onion_PrevRange", _onionOption_PrevRange);
-			EditorPrefs.SetInt("AnyPortrait_Onion_NextRange", _onionOption_NextRange);
-			EditorPrefs.SetInt("AnyPortrait_Onion_RenderPerFrame", _onionOption_RenderPerFrame);
-			EditorPrefs.SetFloat("AnyPortrait_Onion_PosOffsetX", _onionOption_PosOffsetX);
-			EditorPrefs.SetFloat("AnyPortrait_Onion_PosOffsetY", _onionOption_PosOffsetY);
-			EditorPrefs.SetBool("AnyPortrait_Onion_IKCalculate", _onionOption_IKCalculateForce);
+			SavePref_Bool("AnyPortrait_Onion_OutlineRender",		_onionOption_IsOutlineRender,	true);
+			SavePref_Float("AnyPortrait_Onion_OutlineThickness",	_onionOption_OutlineThickness,	0.5f);
+			SavePref_Bool("AnyPortrait_Onion_RenderOnlySelected",	_onionOption_IsRenderOnlySelected, false);
+			SavePref_Bool("AnyPortrait_Onion_RenderBehind",			_onionOption_IsRenderBehind,	false);
+			SavePref_Bool("AnyPortrait_Onion_RenderAnimFrames",		_onionOption_IsRenderAnimFrames, false);
+			SavePref_Int("AnyPortrait_Onion_PrevRange",				_onionOption_PrevRange,			1);
+			SavePref_Int("AnyPortrait_Onion_NextRange",				_onionOption_NextRange,			1);
+			SavePref_Int("AnyPortrait_Onion_RenderPerFrame",		_onionOption_RenderPerFrame,	1);
+			SavePref_Float("AnyPortrait_Onion_PosOffsetX",			_onionOption_PosOffsetX,		0.0f);
+			SavePref_Float("AnyPortrait_Onion_PosOffsetY",			_onionOption_PosOffsetY,		0.0f);
+			SavePref_Bool("AnyPortrait_Onion_IKCalculate",			_onionOption_IKCalculateForce,	false);
 
 
-			EditorPrefs.SetInt("AnyPortrait_AnimTimelineLayerSort", (int)_timelineInfoSortType);
+			SavePref_Int("AnyPortrait_AnimTimelineLayerSort", (int)_timelineInfoSortType, (int)TIMELINE_INFO_SORT.Registered);
 
-			EditorPrefs.SetInt("AnyPortrait_Capture_PosX", _captureFrame_PosX);
-			EditorPrefs.SetInt("AnyPortrait_Capture_PosY", _captureFrame_PosY);
-			EditorPrefs.SetInt("AnyPortrait_Capture_SrcWidth", _captureFrame_SrcWidth);
-			EditorPrefs.SetInt("AnyPortrait_Capture_SrcHeight", _captureFrame_SrcHeight);
-			EditorPrefs.SetInt("AnyPortrait_Capture_DstWidth", _captureFrame_DstWidth);
-			EditorPrefs.SetInt("AnyPortrait_Capture_DstHeight", _captureFrame_DstHeight);
+			SavePref_Int("AnyPortrait_Capture_PosX",		_captureFrame_PosX,	0);
+			SavePref_Int("AnyPortrait_Capture_PosY",		_captureFrame_PosY,	0);
+			SavePref_Int("AnyPortrait_Capture_SrcWidth",	_captureFrame_SrcWidth,		500);
+			SavePref_Int("AnyPortrait_Capture_SrcHeight",	_captureFrame_SrcHeight,	500);
+			SavePref_Int("AnyPortrait_Capture_DstWidth",	_captureFrame_DstWidth,		500);
+			SavePref_Int("AnyPortrait_Capture_DstHeight",	_captureFrame_DstHeight,	500);
 
-			EditorPrefs.SetInt("AnyPortrait_Capture_SpriteUnitWidth", _captureFrame_SpriteUnitWidth);
-			EditorPrefs.SetInt("AnyPortrait_Capture_SpriteUnitHeight", _captureFrame_SpriteUnitHeight);
-			EditorPrefs.SetInt("AnyPortrait_Capture_SpriteMargin", _captureFrame_SpriteMargin);
+			SavePref_Int("AnyPortrait_Capture_SpriteUnitWidth",		_captureFrame_SpriteUnitWidth, 100);
+			SavePref_Int("AnyPortrait_Capture_SpriteUnitHeight",	_captureFrame_SpriteUnitHeight, 100);
+			SavePref_Int("AnyPortrait_Capture_SpriteMargin",		_captureFrame_SpriteMargin, 0);
 			
 
-			EditorPrefs.SetBool("AnyPortrait_Capture_IsShowFrame", _isShowCaptureFrame);
-			SaveColorPref("AnyPortrait_Capture_BGColor", _captureFrame_Color);
-			EditorPrefs.SetBool("AnyPortrait_Capture_IsPhysics", _captureFrame_IsPhysics);
+			SavePref_Bool("AnyPortrait_Capture_IsShowFrame",	_isShowCaptureFrame, true);
+			SaveColorPref("AnyPortrait_Capture_BGColor",		_captureFrame_Color, Color.black);
+			SavePref_Bool("AnyPortrait_Capture_IsPhysics",		_captureFrame_IsPhysics, false);
 
-			EditorPrefs.SetBool("AnyPortrait_Capture_IsAspectRatioFixed", _isCaptureAspectRatioFixed);
-			//EditorPrefs.SetInt("AnyPortrait_Capture_GIFSample", _captureFrame_GIFSampleQuality);
-			EditorPrefs.SetInt("AnyPortrait_Capture_GIFQuality", (int)_captureFrame_GIFQuality);
-			
-			EditorPrefs.SetInt("AnyPortrait_Capture_GIFLoopCount", _captureFrame_GIFSampleLoopCount);
+			SavePref_Bool("AnyPortrait_Capture_IsAspectRatioFixed",		_isCaptureAspectRatioFixed, true);
+			SavePref_Int("AnyPortrait_Capture_GIFQuality",				(int)_captureFrame_GIFQuality, (int)CAPTURE_GIF_QUALITY.High);			
+			SavePref_Int("AnyPortrait_Capture_GIFLoopCount",			_captureFrame_GIFSampleLoopCount, 1);
 
-			EditorPrefs.SetInt("AnyPortrait_Capture_SpritePackImageWidth", (int)_captureSpritePackImageWidth);
-			EditorPrefs.SetInt("AnyPortrait_Capture_SpritePackImageHeight", (int)_captureSpritePackImageHeight);
-			EditorPrefs.SetInt("AnyPortrait_Capture_SpriteTrimSize", (int)_captureSpriteTrimSize);
-			EditorPrefs.SetBool("AnyPortrait_Capture_SpriteMeta_XML", _captureSpriteMeta_XML);
-			EditorPrefs.SetBool("AnyPortrait_Capture_SpriteMeta_JSON", _captureSpriteMeta_JSON);
-			EditorPrefs.SetBool("AnyPortrait_Capture_SpriteMeta_TXT", _captureSpriteMeta_TXT);
+			SavePref_Int("AnyPortrait_Capture_SpritePackImageWidth",	(int)_captureSpritePackImageWidth,	(int)(CAPTURE_SPRITE_PACK_IMAGE_SIZE.s1024));
+			SavePref_Int("AnyPortrait_Capture_SpritePackImageHeight",	(int)_captureSpritePackImageHeight, (int)(CAPTURE_SPRITE_PACK_IMAGE_SIZE.s1024));
+			SavePref_Int("AnyPortrait_Capture_SpriteTrimSize",			(int)_captureSpriteTrimSize,		(int)(CAPTURE_SPRITE_TRIM_METHOD.Fixed));
+			SavePref_Bool("AnyPortrait_Capture_SpriteMeta_XML",			_captureSpriteMeta_XML,		false);
+			SavePref_Bool("AnyPortrait_Capture_SpriteMeta_JSON",		_captureSpriteMeta_JSON,	false);
+			SavePref_Bool("AnyPortrait_Capture_SpriteMeta_TXT",			_captureSpriteMeta_TXT,		false);
 			
-			EditorPrefs.SetFloat("AnyPortrait_Capture_SpriteScreenPosX", _captureSprite_ScreenPos.x);
-			EditorPrefs.SetFloat("AnyPortrait_Capture_SpriteScreenPosY", _captureSprite_ScreenPos.y);
-			EditorPrefs.SetInt("AnyPortrait_Capture_SpriteScreenZoomIndex", _captureSprite_ScreenZoom);
+			SavePref_Float("AnyPortrait_Capture_SpriteScreenPosX",		_captureSprite_ScreenPos.x, 0.0f);
+			SavePref_Float("AnyPortrait_Capture_SpriteScreenPosY",		_captureSprite_ScreenPos.y, 0.0f);
+			SavePref_Int("AnyPortrait_Capture_SpriteScreenZoomIndex",	_captureSprite_ScreenZoom, ZOOM_INDEX_DEFAULT);
 
-			
 		
-			EditorPrefs.SetInt("AnyPortrait_BoneRenderMode", (int)_boneGUIRenderMode);
+			SavePref_Int("AnyPortrait_BoneRenderMode",			(int)_boneGUIRenderMode,		(int)BONE_RENDER_MODE.Render);
+			
+			
+			SavePref_Bool("AnyPortrait_GUI_FPSVisible",			_guiOption_isFPSVisible,		DefaultGUIOption_ShowFPS);
+			SavePref_Bool("AnyPortrait_GUI_StatisticsVisible",	_guiOption_isStatisticsVisible, DefaultGUIOption_ShowStatistics);
 
-			EditorPrefs.SetBool("AnyPortrait_GUI_FPSVisible", _guiOption_isFPSVisible);
-			EditorPrefs.SetBool("AnyPortrait_GUI_StatisticsVisible", _guiOption_isStatisticsVisible);
 
+			SavePref_Bool("AnyPortrait_AutoBackup_Enabled",		_backupOption_IsAutoSave,		DefaultBackupOption_IsAutoSave);
+			SavePref_String("AnyPortrait_AutoBackup_Path",		_backupOption_BaseFolderName,	DefaultBackupOption_BaseFolderName);
+			SavePref_Int("AnyPortrait_AutoBackup_Time",			_backupOption_Minute,			DefaultBackupOption_Minute);
 
-			EditorPrefs.SetBool("AnyPortrait_AutoBackup_Enabled", _backupOption_IsAutoSave);
-			EditorPrefs.SetString("AnyPortrait_AutoBackup_Path", _backupOption_BaseFolderName);
-			EditorPrefs.SetInt("AnyPortrait_AutoBackup_Time", _backupOption_Minute);
+			SavePref_String("AnyPortrait_BonePose_Path", _bonePose_BaseFolderName, DefaultBonePoseOption_BaseFolderName);
 
-			EditorPrefs.SetString("AnyPortrait_BonePose_Path", _bonePose_BaseFolderName);
-
-			EditorPrefs.SetBool("AnyPortrait_StartScreen_IsShow", _startScreenOption_IsShowStartup);
-			EditorPrefs.SetInt("AnyPortrait_StartScreen_LastMonth", _startScreenOption_LastMonth);
-			EditorPrefs.SetInt("AnyPortrait_StartScreen_LastDay", _startScreenOption_LastDay);
-			EditorPrefs.SetInt("AnyPortrait_UpdateLogScreen_LastVersion", _updateLogScreen_LastVersion);
+			SavePref_Bool("AnyPortrait_StartScreen_IsShow",			_startScreenOption_IsShowStartup,	DefaultStartScreenOption_IsShowStartup);
+			SavePref_Int("AnyPortrait_StartScreen_LastMonth",		_startScreenOption_LastMonth,		0);
+			SavePref_Int("AnyPortrait_StartScreen_LastDay",			_startScreenOption_LastDay,			0);
+			SavePref_Int("AnyPortrait_UpdateLogScreen_LastVersion", _updateLogScreen_LastVersion,		0);
 			
 
-			EditorPrefs.SetBool("AnyPortrait_IsBakeColorSpace_ToGamma", _isBakeColorSpaceToGamma);
-			EditorPrefs.SetBool("AnyPortrait_IsUseLWRPShader", _isUseSRP);
+			SavePref_Bool("AnyPortrait_IsBakeColorSpace_ToGamma",	_isBakeColorSpaceToGamma,	true);
+			SavePref_Bool("AnyPortrait_IsUseLWRPShader",			_isUseSRP,					false);
+
+			//이전
+			//SavePref_Bool("AnyPortrait_ModLockOp_CalculateIfNotAddedOther",	_modLockOption_CalculateIfNotAddedOther,	false);
+			//SavePref_Bool("AnyPortrait_ModLockOp_ColorPreview_Lock",		_modLockOption_ColorPreview_Lock,			false);
+			//SavePref_Bool("AnyPortrait_ModLockOp_ColorPreview_Unlock",		_modLockOption_ColorPreview_Unlock,			true);
+			//SavePref_Bool("AnyPortrait_ModLockOp_BonePreview_Lock",			_modLockOption_BonePreview_Lock,			false);
+			//SavePref_Bool("AnyPortrait_ModLockOp_BonePreview_Unlock",		_modLockOption_BonePreview_Unlock,			true);
+			//SavePref_Bool("AnyPortrait_ModLockOp_ModListUI_Lock",			_modLockOption_ModListUI_Lock,				false);
+			//SavePref_Bool("AnyPortrait_ModLockOp_ModListUI_Unlock",			_modLockOption_ModListUI_Unlock,			false);
+
+			//변경 21.2.13 : 기존 키 삭제 후, 새로운 옵션 추가
+			EditorPrefs.DeleteKey("AnyPortrait_ModLockOp_CalculateIfNotAddedOther");
+			EditorPrefs.DeleteKey("AnyPortrait_ModLockOp_ColorPreview_Lock");
+			EditorPrefs.DeleteKey("AnyPortrait_ModLockOp_ColorPreview_Unlock");
+			EditorPrefs.DeleteKey("AnyPortrait_ModLockOp_BonePreview_Lock");
+			EditorPrefs.DeleteKey("AnyPortrait_ModLockOp_BonePreview_Unlock");
+			EditorPrefs.DeleteKey("AnyPortrait_ModLockOp_ModListUI_Lock");
+			EditorPrefs.DeleteKey("AnyPortrait_ModLockOp_ModListUI_Unlock");
+
+			SavePref_Bool("AnyPortrait_ModLockOption_ColorPreview",			_modLockOption_ColorPreview,		false);
+			SavePref_Bool("AnyPortrait_ModLockOption_BoneResultPreview",	_modLockOption_BoneResultPreview,	false);
+			SavePref_Bool("AnyPortrait_ModLockOption_ModListUI",			_modLockOption_ModListUI,			false);
 
 
-			EditorPrefs.SetBool("AnyPortrait_ModLockOp_CalculateIfNotAddedOther",	_modLockOption_CalculateIfNotAddedOther);
-			EditorPrefs.SetBool("AnyPortrait_ModLockOp_ColorPreview_Lock",			_modLockOption_ColorPreview_Lock);
-			EditorPrefs.SetBool("AnyPortrait_ModLockOp_ColorPreview_Unlock",		_modLockOption_ColorPreview_Unlock);
-			EditorPrefs.SetBool("AnyPortrait_ModLockOp_BonePreview_Lock",			_modLockOption_BonePreview_Lock);
-			EditorPrefs.SetBool("AnyPortrait_ModLockOp_BonePreview_Unlock",			_modLockOption_BonePreview_Unlock);
-			//EditorPrefs.SetBool("AnyPortrait_ModLockOp_MeshPreview_Lock",			_modLockOption_MeshPreview_Lock);
-			//EditorPrefs.SetBool("AnyPortrait_ModLockOp_MeshPreview_Unlock",			_modLockOption_MeshPreview_Unlock);
-			EditorPrefs.SetBool("AnyPortrait_ModLockOp_ModListUI_Lock",				_modLockOption_ModListUI_Lock);
-			EditorPrefs.SetBool("AnyPortrait_ModLockOp_ModListUI_Unlock",			_modLockOption_ModListUI_Unlock);
+			SaveColorPref("AnyPortrait_ModLockOp_BonePreviewColor", _modLockOption_BonePreviewColor, DefauleColor_ModLockOpt_BonePreview);
 
-			//SaveColorPref("AnyPortrait_ModLockOp_MeshPreviewColor", _modLockOption_MeshPreviewColor);
-			SaveColorPref("AnyPortrait_ModLockOp_BonePreviewColor", _modLockOption_BonePreviewColor);
-			//public Color _modLockOption_MeshPreviewColor = new Color(1.0f, 0.45f, 0.1f, 0.8f);
-			//public Color _modLockOption_BonePreviewColor = new Color(1.0f, 0.8f, 0.1f, 0.8f);
+			SavePref_Int("AnyPortrait_LastCheckLiveVersion_Day",	_lastCheckLiveVersion_Day,		0);
+			SavePref_Int("AnyPortrait_LastCheckLiveVersion_Month",	_lastCheckLiveVersion_Month,	0);
+			SavePref_String("AnyPortrait_LastCheckLiveVersion",		_currentLiveVersion,			"");
+			SavePref_Bool("AnyPortrait_CheckLiveVersionEnabled",	_isCheckLiveVersion_Option,		DefaultCheckLiverVersionOption);
 
-			EditorPrefs.SetInt("AnyPortrait_LastCheckLiveVersion_Day", _lastCheckLiveVersion_Day);
-			EditorPrefs.SetInt("AnyPortrait_LastCheckLiveVersion_Month", _lastCheckLiveVersion_Month);
-			EditorPrefs.SetString("AnyPortrait_LastCheckLiveVersion", _currentLiveVersion);
-			EditorPrefs.SetBool("AnyPortrait_CheckLiveVersionEnabled", _isCheckLiveVersion_Option);
-
-			EditorPrefs.SetBool("AnyPortrait_IsVersionCheckIgnored", _isVersionNoticeIgnored);
-			EditorPrefs.SetInt("AnyPortrait_VersionCheckIgnored_Year", _versionNoticeIvnored_Year);
-			EditorPrefs.SetInt("AnyPortrait_VersionCheckIgnored_Month", _versionNoticeIvnored_Month);
-			EditorPrefs.SetInt("AnyPortrait_VersionCheckIgnored_Day", _versionNoticeIvnored_Day);
+			SavePref_Bool("AnyPortrait_IsVersionCheckIgnored",		_isVersionNoticeIgnored,		false);
+			SavePref_Int("AnyPortrait_VersionCheckIgnored_Year",	_versionNoticeIvnored_Year,		0);
+			SavePref_Int("AnyPortrait_VersionCheckIgnored_Month",	_versionNoticeIvnored_Month,	0);
+			SavePref_Int("AnyPortrait_VersionCheckIgnored_Day",		_versionNoticeIvnored_Day,		0);
 
 
-			EditorPrefs.SetFloat("AnyPortrait_MeshTRSOption_MirrorOffset", _meshTRSOption_MirrorOffset);
-			EditorPrefs.SetBool("AnyPortrait_MeshTRSOption_MirrorAddVertOnRuler", _meshTRSOption_MirrorSnapVertOnRuler);
-			EditorPrefs.SetBool("AnyPortrait_MeshTRSOption_MirrorRemoved", _meshTRSOption_MirrorRemoved);
+			SavePref_Float("AnyPortrait_MeshTRSOption_MirrorOffset",			_meshTRSOption_MirrorOffset,			0.5f);
+			SavePref_Bool("AnyPortrait_MeshTRSOption_MirrorAddVertOnRuler",		_meshTRSOption_MirrorSnapVertOnRuler,	false);
+			SavePref_Bool("AnyPortrait_MeshTRSOption_MirrorRemoved",			_meshTRSOption_MirrorRemoved,			false);
 			
-			EditorPrefs.SetFloat("AnyPortrait_MeshAutoGenOption_AlphaCutOff", _meshAutoGenOption_AlphaCutOff);
-			EditorPrefs.SetInt("AnyPortrait_MeshAutoGenOption_GridSize", _meshAutoGenOption_GridDivide);
-			EditorPrefs.SetInt("AnyPortrait_MeshAutoGenOption_Margin", _meshAutoGenOption_Margin);
-			EditorPrefs.SetInt("AnyPortrait_MeshAutoGenOption_NumPoint_QuadX", _meshAutoGenOption_numControlPoint_ComplexQuad_X);
-			EditorPrefs.SetInt("AnyPortrait_MeshAutoGenOption_NumPoint_QuadY", _meshAutoGenOption_numControlPoint_ComplexQuad_Y);
-			EditorPrefs.SetInt("AnyPortrait_MeshAutoGenOption_NumPoint_Circle", _meshAutoGenOption_numControlPoint_CircleRing);
-			EditorPrefs.SetBool("AnyPortrait_MeshAutoGenOption_IsLockAxis", _meshAutoGenOption_IsLockAxis);
+			//AutoMesh V1에 대한 키는 지우자
+			EditorPrefs.DeleteKey("AnyPortrait_MeshAutoGenOption_AlphaCutOff");
+			EditorPrefs.DeleteKey("AnyPortrait_MeshAutoGenOption_GridSize");
+			EditorPrefs.DeleteKey("AnyPortrait_MeshAutoGenOption_Margin");
+			EditorPrefs.DeleteKey("AnyPortrait_MeshAutoGenOption_NumPoint_QuadX");
+			EditorPrefs.DeleteKey("AnyPortrait_MeshAutoGenOption_NumPoint_QuadY");
+			EditorPrefs.DeleteKey("AnyPortrait_MeshAutoGenOption_NumPoint_Circle");
+			EditorPrefs.DeleteKey("AnyPortrait_MeshAutoGenOption_IsLockAxis");
+
+			//V2
+			SavePref_Int("AnyPortrait_MeshAutoV2_Inner_Density", _meshAutoGenV2Option_Inner_Density, 2);
+			SavePref_Int("AnyPortrait_MeshAutoV2_OuterMargin", _meshAutoGenV2Option_OuterMargin, 10);
+			SavePref_Int("AnyPortrait_MeshAutoV2_InnerMargin", _meshAutoGenV2Option_InnerMargin, 5);
+			SavePref_Bool("AnyPortrait_MeshAutoV2_IsInnerMargin", _meshAutoGenV2Option_IsInnerMargin, false);
+			SavePref_Int("AnyPortrait_MeshAutoV2_QuickPresetType", _meshAutoGenV2Option_QuickPresetType, 0);
 			
-
-			EditorPrefs.SetBool("AnyPortrait_LowCPUOption", _isLowCPUOption);
-
-			EditorPrefs.SetBool("AnyPortrait_SelectionLockOption_RiggingPhysics", _isSelectionLockOption_RiggingPhysics);
-			EditorPrefs.SetBool("AnyPortrait_SelectionLockOption_Morph", _isSelectionLockOption_Morph);
-			EditorPrefs.SetBool("AnyPortrait_SelectionLockOption_Transform", _isSelectionLockOption_Transform);
-			EditorPrefs.SetBool("AnyPortrait_SelectionLockOption_ControlParamTimeline", _isSelectionLockOption_ControlParamTimeline);
 			
-			EditorPrefs.SetInt("AnyPortrait_HierachySortMode", (int)_hierarchySortMode);
+			//추가 21.2.10
+			SavePref_Bool("AnyPortrait_ExModObjOption_UpdateByOtherMod",	_exModObjOption_UpdateByOtherMod,	DefaultExModObjOption_UpdateByOtherMod);
+			SavePref_Bool("AnyPortrait_ExModObjOption_ShowGray",			_exModObjOption_ShowGray,			DefaultExModObjOption_ShowGray);
+			SavePref_Bool("AnyPortrait_ExModObjOption_NotSelectable",		_exModObjOption_NotSelectable,		DefaultExModObjOption_NotSelectable);
+			
+			SavePref_Bool("AnyPortrait_LowCPUOption", _isLowCPUOption, DefaultLowCPUOption);
 
-			EditorPrefs.SetBool("AnyPortrait_AmbientCorrectionOption", _isAmbientCorrectionOption);
+			SavePref_Bool("AnyPortrait_SelectionLockOption_RiggingPhysics",		_isSelectionLockOption_RiggingPhysics,	DefaultSelectionLockOption_RiggingPhysics);
+			SavePref_Bool("AnyPortrait_SelectionLockOption_Morph",				_isSelectionLockOption_Morph,			DefaultSelectionLockOption_Morph);
+			SavePref_Bool("AnyPortrait_SelectionLockOption_Transform",			_isSelectionLockOption_Transform,		DefaultSelectionLockOption_Transform);
+			SavePref_Bool("AnyPortrait_SelectionLockOption_ControlParamTimeline", _isSelectionLockOption_ControlParamTimeline, DefaultSelectionLockOption_ControlParamTimeline);
+			
+			SavePref_Int("AnyPortrait_HierachySortMode", (int)_hierarchySortMode, (int)HIERARCHY_SORT_MODE.RegOrder);
 
-			EditorPrefs.SetBool("AnyPortrait_AutoSwitchControllerTab_Mod", _isAutoSwitchControllerTab_Mod);
-			EditorPrefs.SetBool("AnyPortrait_AutoSwitchControllerTab_Anim", _isAutoSwitchControllerTab_Anim);
+			SavePref_Bool("AnyPortrait_AmbientCorrectionOption",_isAmbientCorrectionOption, DefaultAmbientCorrectionOption);
 
-			EditorPrefs.SetBool("AnyPortrait_RestoreTempMeshVisbility", _isRestoreTempMeshVisibilityWhenTaskEnded);
+			SavePref_Bool("AnyPortrait_AutoSwitchControllerTab_Mod",	_isAutoSwitchControllerTab_Mod,		DefaultAutoSwitchControllerTab_Mod);
+			SavePref_Bool("AnyPortrait_AutoSwitchControllerTab_Anim",	_isAutoSwitchControllerTab_Anim,	DefaultAutoSwitchControllerTab_Anim);
+
+			SavePref_Bool("AnyPortrait_RestoreTempMeshVisbility", _isRestoreTempMeshVisibilityWhenTaskEnded, DefaultRestoreTempMeshVisibiilityWhenTaskEnded);
 
 
-			EditorPrefs.SetBool("AnyPortrait_RigView_WeightOnly", _rigViewOption_WeightOnly);
-			EditorPrefs.SetBool("AnyPortrait_RigView_BoneColor", _rigViewOption_BoneColor);
-			EditorPrefs.SetBool("AnyPortrait_RigView_CircleVert", _rigViewOption_CircleVert);
+			SavePref_Bool("AnyPortrait_RigView_WeightOnly",	_rigViewOption_WeightOnly,	false);
+			SavePref_Bool("AnyPortrait_RigView_BoneColor",	_rigViewOption_BoneColor,	true);
+			SavePref_Bool("AnyPortrait_RigView_CircleVert",	_rigViewOption_CircleVert,	false);
 
+			EditorPrefs.DeleteKey("AnyPortrait_RigOption_ColorLikeParent");//키 삭제
 			//EditorPrefs.SetBool("AnyPortrait_RigOption_ColorLikeParent", _rigOption_NewChildBoneColorIsLikeParent);//>>_boneGUIOption_NewBoneColor 변수로 변경
 			
-			EditorPrefs.SetBool("AnyPortrait_MacOSXOption_ShowStartup", _macOSXInfoScreenOption_IsShowStartup);
-			EditorPrefs.SetInt("AnyPortrait_MacOSXOption_LastMonth", _macOSXInfoScreenOption_LastMonth);
-			EditorPrefs.SetInt("AnyPortrait_MacOSXOption_LastDay", _macOSXInfoScreenOption_LastDay);
+			SavePref_Bool("AnyPortrait_MacOSXOption_ShowStartup", _macOSXInfoScreenOption_IsShowStartup, true);
+			SavePref_Int("AnyPortrait_MacOSXOption_LastMonth", _macOSXInfoScreenOption_LastMonth, 0);
+			SavePref_Int("AnyPortrait_MacOSXOption_LastDay", _macOSXInfoScreenOption_LastDay, 0);
 			
-			EditorPrefs.SetInt("AnyPortrait_BoneGUI_RenderType", (int)_boneGUIOption_RenderType);
-			EditorPrefs.SetInt("AnyPortrait_BoneGUI_SizeRatio_Index", _boneGUIOption_SizeRatio_Index);
-			EditorPrefs.SetBool("AnyPortrait_BoneGUI_ScaledByZoom", _boneGUIOption_ScaledByZoom);
-			EditorPrefs.SetBool("AnyPortrait_RigOption_ColorLikeParent", _boneGUIOption_NewBoneColor == NEW_BONE_COLOR.SimilarColor);
+			SavePref_Int("AnyPortrait_BoneGUI_RenderType", (int)_boneGUIOption_RenderType, (int)DefaultBoneGUIOption_RenderType);
+			SavePref_Int("AnyPortrait_BoneGUI_SizeRatio_Index", _boneGUIOption_SizeRatio_Index, DefaultBoneGUIOption_SizeRatio_Index);
+			SavePref_Bool("AnyPortrait_BoneGUI_ScaledByZoom", _boneGUIOption_ScaledByZoom, DefaultBoneGUIOption_ScaedByZoom);
+			SavePref_Bool("AnyPortrait_RigOption_ColorLikeParent", _boneGUIOption_NewBoneColor == NEW_BONE_COLOR.SimilarColor, DefaultBoneGUIOption_NewBoneColor_Bool);
 
-			EditorPrefs.SetInt("AnyPortrait_RigGUI_SizeRatio_Index", _rigGUIOption_VertRatio_Index);
-			EditorPrefs.SetBool("AnyPortrait_RigGUI_ScaledByZoom", _rigGUIOption_ScaledByZoom);
-			EditorPrefs.SetInt("AnyPortrait_RigGUI_SizeRatioSelected_Index", _rigGUIOption_VertRatio_Selected_Index);
-			EditorPrefs.SetInt("AnyPortrait_RigGUI_SelectedWeightGUIType", (int)_rigGUIOption_SelectedWeightGUIType);
-			EditorPrefs.SetInt("AnyPortrait_RigGUI_NolinkedBoneVisibility", (int)_rigGUIOption_NoLinkedBoneVisibility);
-			EditorPrefs.SetInt("AnyPortrait_RigGUI_WeightGradientColor", (int)_rigGUIOption_WeightGradientColor);
+			SavePref_Int("AnyPortrait_RigGUI_SizeRatio_Index",			_rigGUIOption_VertRatio_Index,				DefaultRigGUIOption_VertRatio_Index);
+			SavePref_Bool("AnyPortrait_RigGUI_ScaledByZoom",			_rigGUIOption_ScaledByZoom,					DefaultRigGUIOption_ScaledByZoom);
+			SavePref_Int("AnyPortrait_RigGUI_SizeRatioSelected_Index",	_rigGUIOption_VertRatio_Selected_Index,		DefaultRigGUIOption_VertRatio_Selected_Index);
+			SavePref_Int("AnyPortrait_RigGUI_SelectedWeightGUIType",	(int)_rigGUIOption_SelectedWeightGUIType,	(int)DefaultRigGUIOption_SelectedWeightGUIType);
+			SavePref_Int("AnyPortrait_RigGUI_NolinkedBoneVisibility",	(int)_rigGUIOption_NoLinkedBoneVisibility,	(int)DefaultRigGUIOption_NoLinkedBoneVisibility);
+			SavePref_Int("AnyPortrait_RigGUI_WeightGradientColor",		(int)_rigGUIOption_WeightGradientColor,		(int)DefaultRigGUIOption_WeightGradientColor);
 
 
-			EditorPrefs.SetBool("AnyPortrait_NeedToAskRemoveVertByPSDImport", _isNeedToAskRemoveVertByPSDImport);
+			SavePref_Bool("AnyPortrait_NeedToAskRemoveVertByPSDImport",	_isNeedToAskRemoveVertByPSDImport, false);
+			SavePref_Bool("AnyPortrait_ShowPrevViewMenuBtns",			_option_ShowPrevViewMenuBtns, false);
+
+			SavePref_Bool("AnyPortrait_SetAutoImageToMeshIfOnlyOneImageExist",			_option_SetAutoImageToMeshIfOnlyOneImageExist, true);
 			
+			SavePref_Bool("AnyPortrait_IsTurnOffAnimAutoKey",			_option_IsTurnOffAnimAutoKey, true);
 
+			SavePref_Bool("AnyPortrait_ShowHowToEdit", _guiOption_isShowHowToEdit, true);
 
 			apGL.SetToneOption(_colorOption_OnionToneColor, _onionOption_OutlineThickness, _onionOption_IsOutlineRender, _onionOption_PosOffsetX, _onionOption_PosOffsetY, _colorOption_OnionBoneColor);
 			apGL.SetRiggingOption(	RigGUIOption_SizeRatioX100, 
@@ -10661,27 +12433,25 @@ namespace AnyPortrait
 
 			if (_selection != null)
 			{
-				Select._rigEdit_isAutoNormalize = EditorPrefs.GetBool("AnyPortrait_IsAutoNormalize", Select._rigEdit_isAutoNormalize);
-				//Select._rigEdit_isBoneColorView = EditorPrefs.GetBool("AnyPortrait_IsBoneColorView", Select._rigEdit_isBoneColorView);
-				//Select._rigEdit_viewMode = (apSelection.RIGGING_EDIT_VIEW_MODE)EditorPrefs.GetInt("AnyPortrait_ViewMode", (int)Select._rigEdit_viewMode);
+				Select._rigEdit_isAutoNormalize = EditorPrefs.GetBool("AnyPortrait_IsAutoNormalize", true);
 			}
 
 			_language = (LANGUAGE)EditorPrefs.GetInt("AnyPortrait_Language", (int)DefaultLanguage);
 
-			_colorOption_Background = LoadColorPref("AnyPortrait_Color_Backgroud", new Color(0.2f, 0.2f, 0.2f, 1.0f));
-			_colorOption_GridCenter = LoadColorPref("AnyPortrait_Color_GridCenter", new Color(0.7f, 0.7f, 0.3f, 1.0f));
-			_colorOption_Grid = LoadColorPref("AnyPortrait_Color_Grid", new Color(0.3f, 0.3f, 0.3f, 1.0f));
+			_colorOption_Background = LoadColorPref("AnyPortrait_Color_Backgroud", DefaultColor_Background);
+			_colorOption_GridCenter = LoadColorPref("AnyPortrait_Color_GridCenter", DefaultColor_GridCenter);
+			_colorOption_Grid = LoadColorPref("AnyPortrait_Color_Grid", DefaultColor_Grid);
 
-			_colorOption_MeshEdge = LoadColorPref("AnyPortrait_Color_MeshEdge", new Color(1.0f, 0.5f, 0.0f, 0.9f));
-			_colorOption_MeshHiddenEdge = LoadColorPref("AnyPortrait_Color_MeshHiddenEdge", new Color(1.0f, 1.0f, 0.0f, 0.7f));
-			_colorOption_Outline = LoadColorPref("AnyPortrait_Color_Outline", new Color(0.0f, 0.5f, 1.0f, 0.7f));
-			_colorOption_TransformBorder = LoadColorPref("AnyPortrait_Color_TFBorder", new Color(0.0f, 1.0f, 1.0f, 1.0f));
+			_colorOption_MeshEdge = LoadColorPref("AnyPortrait_Color_MeshEdge", DefaultColor_MeshEdge);
+			_colorOption_MeshHiddenEdge = LoadColorPref("AnyPortrait_Color_MeshHiddenEdge", DefaultColor_MeshHiddenEdge);
+			_colorOption_Outline = LoadColorPref("AnyPortrait_Color_Outline", DefaultColor_Outline);
+			_colorOption_TransformBorder = LoadColorPref("AnyPortrait_Color_TFBorder", DefaultColor_TransformBorder);
 
-			_colorOption_VertColor_NotSelected = LoadColorPref("AnyPortrait_Color_VertNotSelected", new Color(0.0f, 0.3f, 1.0f, 0.6f));
-			_colorOption_VertColor_Selected = LoadColorPref("AnyPortrait_Color_VertSelected", new Color(1.0f, 0.0f, 0.0f, 1.0f));
+			_colorOption_VertColor_NotSelected = LoadColorPref("AnyPortrait_Color_VertNotSelected", DefaultColor_VertNotSelected);
+			_colorOption_VertColor_Selected = LoadColorPref("AnyPortrait_Color_VertSelected", DefaultColor_VertSelected);
 
-			_colorOption_GizmoFFDLine = LoadColorPref("AnyPortrait_Color_GizmoFFDLine", new Color(1.0f, 0.5f, 0.2f, 0.9f));
-			_colorOption_GizmoFFDInnerLine = LoadColorPref("AnyPortrait_Color_GizmoFFDInnerLine", new Color(1.0f, 0.7f, 0.2f, 0.7f));
+			_colorOption_GizmoFFDLine = LoadColorPref("AnyPortrait_Color_GizmoFFDLine", DefaultColor_GizmoFFDLine);
+			_colorOption_GizmoFFDInnerLine = LoadColorPref("AnyPortrait_Color_GizmoFFDInnerLine", DefaultColor_GizmoFFDInnerLine);
 
 			_colorOption_OnionToneColor = LoadColorPref("AnyPortrait_Color_OnionToneColor", DefaultColor_OnionToneColor);
 			_colorOption_OnionAnimPrevColor = LoadColorPref("AnyPortrait_Color_OnionAnimPrevColor", DefaultColor_OnionAnimPrevColor);
@@ -10717,9 +12487,10 @@ namespace AnyPortrait
 			_captureFrame_SpriteMargin = EditorPrefs.GetInt("AnyPortrait_Capture_SpriteMargin", 0);
 
 			_isShowCaptureFrame = EditorPrefs.GetBool("AnyPortrait_Capture_IsShowFrame", true);
-			//_captureFrame_GIFSampleQuality = EditorPrefs.GetInt("AnyPortrait_Capture_GIFSample", 10);
 			_captureFrame_GIFQuality = (CAPTURE_GIF_QUALITY)EditorPrefs.GetInt("AnyPortrait_Capture_GIFQuality", (int)CAPTURE_GIF_QUALITY.High);
 			_captureFrame_GIFSampleLoopCount = EditorPrefs.GetInt("AnyPortrait_Capture_GIFLoopCount", 1);
+
+			_isCaptureAspectRatioFixed = EditorPrefs.GetBool("AnyPortrait_Capture_IsAspectRatioFixed", true);
 
 			_captureFrame_Color = LoadColorPref("AnyPortrait_Capture_BGColor", Color.black);
 			_captureFrame_IsPhysics = EditorPrefs.GetBool("AnyPortrait_Capture_IsPhysics", false);
@@ -10738,9 +12509,10 @@ namespace AnyPortrait
 			
 
 
-			_isCaptureAspectRatioFixed = EditorPrefs.GetBool("AnyPortrait_Capture_IsAspectRatioFixed", true);
+			
 
 			_boneGUIRenderMode = (BONE_RENDER_MODE)EditorPrefs.GetInt("AnyPortrait_BoneRenderMode", (int)BONE_RENDER_MODE.Render);
+			
 
 			_guiOption_isFPSVisible = EditorPrefs.GetBool("AnyPortrait_GUI_FPSVisible", DefaultGUIOption_ShowFPS);
 			_guiOption_isStatisticsVisible = EditorPrefs.GetBool("AnyPortrait_GUI_StatisticsVisible", DefaultGUIOption_ShowStatistics);
@@ -10760,15 +12532,20 @@ namespace AnyPortrait
 			_isBakeColorSpaceToGamma = EditorPrefs.GetBool("AnyPortrait_IsBakeColorSpace_ToGamma", true);
 			_isUseSRP = EditorPrefs.GetBool("AnyPortrait_IsUseLWRPShader", false);
 
-			_modLockOption_CalculateIfNotAddedOther = EditorPrefs.GetBool("AnyPortrait_ModLockOp_CalculateIfNotAddedOther",	false);			
-			_modLockOption_ColorPreview_Lock =		EditorPrefs.GetBool("AnyPortrait_ModLockOp_ColorPreview_Lock",		false);
-			_modLockOption_ColorPreview_Unlock =	EditorPrefs.GetBool("AnyPortrait_ModLockOp_ColorPreview_Unlock",	true);//<< True 기본값
-			_modLockOption_BonePreview_Lock =		EditorPrefs.GetBool("AnyPortrait_ModLockOp_BonePreview_Lock",		false);
-			_modLockOption_BonePreview_Unlock =		EditorPrefs.GetBool("AnyPortrait_ModLockOp_BonePreview_Unlock",		true);//<< True 기본값
-			//_modLockOption_MeshPreview_Lock =		EditorPrefs.GetBool("AnyPortrait_ModLockOp_MeshPreview_Lock",		false);
-			//_modLockOption_MeshPreview_Unlock =		EditorPrefs.GetBool("AnyPortrait_ModLockOp_MeshPreview_Unlock",		false);
-			_modLockOption_ModListUI_Lock =			EditorPrefs.GetBool("AnyPortrait_ModLockOp_ModListUI_Lock",			false);
-			_modLockOption_ModListUI_Unlock =		EditorPrefs.GetBool("AnyPortrait_ModLockOp_ModListUI_Unlock",		false);
+			//이전 : 이 옵션들을 삭제
+			//_modLockOption_CalculateIfNotAddedOther = EditorPrefs.GetBool("AnyPortrait_ModLockOp_CalculateIfNotAddedOther",	false);			
+			//_modLockOption_ColorPreview_Lock =		EditorPrefs.GetBool("AnyPortrait_ModLockOp_ColorPreview_Lock",		false);
+			//_modLockOption_ColorPreview_Unlock =	EditorPrefs.GetBool("AnyPortrait_ModLockOp_ColorPreview_Unlock",	true);//<< True 기본값
+			//_modLockOption_BonePreview_Lock =		EditorPrefs.GetBool("AnyPortrait_ModLockOp_BonePreview_Lock",		false);
+			//_modLockOption_BonePreview_Unlock =		EditorPrefs.GetBool("AnyPortrait_ModLockOp_BonePreview_Unlock",		true);//<< True 기본값
+			//_modLockOption_ModListUI_Lock =			EditorPrefs.GetBool("AnyPortrait_ModLockOp_ModListUI_Lock",			false);
+			//_modLockOption_ModListUI_Unlock =		EditorPrefs.GetBool("AnyPortrait_ModLockOp_ModListUI_Unlock",		false);
+
+			//변경 21.2.13 : ModLock을 삭제하고 옵션이 모두 통합되었다.
+			_modLockOption_ColorPreview = EditorPrefs.GetBool("AnyPortrait_ModLockOption_ColorPreview", false);
+			_modLockOption_BoneResultPreview = EditorPrefs.GetBool("AnyPortrait_ModLockOption_BoneResultPreview", false);
+			_modLockOption_ModListUI = EditorPrefs.GetBool("AnyPortrait_ModLockOption_ModListUI", false);
+
 
 			//_modLockOption_MeshPreviewColor = LoadColorPref("AnyPortrait_ModLockOp_MeshPreviewColor", DefauleColor_ModLockOpt_MeshPreview);
 			_modLockOption_BonePreviewColor = LoadColorPref("AnyPortrait_ModLockOp_BonePreviewColor", DefauleColor_ModLockOpt_BonePreview);
@@ -10786,13 +12563,35 @@ namespace AnyPortrait
 			_meshTRSOption_MirrorOffset = EditorPrefs.GetFloat("AnyPortrait_MeshTRSOption_MirrorOffset", 0.5f);
 			_meshTRSOption_MirrorSnapVertOnRuler = EditorPrefs.GetBool("AnyPortrait_MeshTRSOption_MirrorAddVertOnRuler", false);
 			_meshTRSOption_MirrorRemoved = EditorPrefs.GetBool("AnyPortrait_MeshTRSOption_MirrorRemoved", false);
-			_meshAutoGenOption_AlphaCutOff = EditorPrefs.GetFloat("AnyPortrait_MeshAutoGenOption_AlphaCutOff", 0.02f);
-			_meshAutoGenOption_GridDivide = EditorPrefs.GetInt("AnyPortrait_MeshAutoGenOption_GridSize", 2);
-			_meshAutoGenOption_Margin = EditorPrefs.GetInt("AnyPortrait_MeshAutoGenOption_Margin", 2);
-			_meshAutoGenOption_numControlPoint_ComplexQuad_X = EditorPrefs.GetInt("AnyPortrait_MeshAutoGenOption_NumPoint_QuadX", 3);
-			_meshAutoGenOption_numControlPoint_ComplexQuad_Y = EditorPrefs.GetInt("AnyPortrait_MeshAutoGenOption_NumPoint_QuadY", 3);
-			_meshAutoGenOption_numControlPoint_CircleRing = EditorPrefs.GetInt("AnyPortrait_MeshAutoGenOption_NumPoint_Circle", 4);
-			_meshAutoGenOption_IsLockAxis = EditorPrefs.GetBool("AnyPortrait_MeshAutoGenOption_IsLockAxis", false);
+			
+			//이전 코드 : AutoMesh V1
+			//_meshAutoGenOption_AlphaCutOff = EditorPrefs.GetFloat("AnyPortrait_MeshAutoGenOption_AlphaCutOff", 0.02f);
+			//_meshAutoGenOption_GridDivide = EditorPrefs.GetInt("AnyPortrait_MeshAutoGenOption_GridSize", 2);
+			//_meshAutoGenOption_Margin = EditorPrefs.GetInt("AnyPortrait_MeshAutoGenOption_Margin", 2);
+			//_meshAutoGenOption_numControlPoint_ComplexQuad_X = EditorPrefs.GetInt("AnyPortrait_MeshAutoGenOption_NumPoint_QuadX", 3);
+			//_meshAutoGenOption_numControlPoint_ComplexQuad_Y = EditorPrefs.GetInt("AnyPortrait_MeshAutoGenOption_NumPoint_QuadY", 3);
+			//_meshAutoGenOption_numControlPoint_CircleRing = EditorPrefs.GetInt("AnyPortrait_MeshAutoGenOption_NumPoint_Circle", 4);
+			//_meshAutoGenOption_IsLockAxis = EditorPrefs.GetBool("AnyPortrait_MeshAutoGenOption_IsLockAxis", false);
+
+			//추가 21.1.4 : AutoMesh V2
+			//_meshAutoGenV2Option_Outline_Density = EditorPrefs.GetInt("AnyPortrait_MeshAutoV2_OutlineDivide_Density", 2);
+			//_meshAutoGenV2Option_OutlineVertMerge_Radius = EditorPrefs.GetFloat("AnyPortrait_MeshAutoV2_OutlineVertMerge_Radius", 60.0f);
+			//_meshAutoGenV2Option_OutlineVertMerge_Angle = EditorPrefs.GetFloat("AnyPortrait_MeshAutoV2_OutlineVertMerge_Angle", 10.0f);
+			//_meshAutoGenV2Option_Out2Inline_Radius = EditorPrefs.GetFloat("AnyPortrait_MeshAutoV2_Out2Inline_Radius", 20.0f);
+			_meshAutoGenV2Option_Inner_Density = EditorPrefs.GetInt("AnyPortrait_MeshAutoV2_Inner_Density", 2);
+			//_meshAutoGenV2Option_Inner_IsRelax = EditorPrefs.GetBool("AnyPortrait_MeshAutoV2_Inner_IsRelax", true);
+			//_meshAutoGenV2Option_Inner_RelaxTry = EditorPrefs.GetInt("AnyPortrait_MeshAutoV2_Inner_RelaxTry", 5);
+			//_meshAutoGenV2Option_Inner_RelaxIntensity = EditorPrefs.GetFloat("AnyPortrait_MeshAutoV2_Inner_RelaxIntensity", 0.2f);
+			_meshAutoGenV2Option_OuterMargin = EditorPrefs.GetInt("AnyPortrait_MeshAutoV2_OuterMargin", 10);
+			_meshAutoGenV2Option_InnerMargin = EditorPrefs.GetInt("AnyPortrait_MeshAutoV2_InnerMargin", 5);
+			_meshAutoGenV2Option_IsInnerMargin = EditorPrefs.GetBool("AnyPortrait_MeshAutoV2_IsInnerMargin", false);
+			_meshAutoGenV2Option_QuickPresetType = EditorPrefs.GetInt("AnyPortrait_MeshAutoV2_QuickPresetType", 0);
+
+			_exModObjOption_UpdateByOtherMod = EditorPrefs.GetBool("AnyPortrait_ExModObjOption_UpdateByOtherMod", DefaultExModObjOption_UpdateByOtherMod);
+			_exModObjOption_ShowGray = EditorPrefs.GetBool("AnyPortrait_ExModObjOption_ShowGray", DefaultExModObjOption_ShowGray);
+			_exModObjOption_NotSelectable = EditorPrefs.GetBool("AnyPortrait_ExModObjOption_NotSelectable", DefaultExModObjOption_NotSelectable);
+			
+
 
 			_isLowCPUOption = EditorPrefs.GetBool("AnyPortrait_LowCPUOption", DefaultLowCPUOption);
 
@@ -10833,6 +12632,7 @@ namespace AnyPortrait
 			_rigGUIOption_NoLinkedBoneVisibility = (NOLINKED_BONE_VISIBILITY)EditorPrefs.GetInt("AnyPortrait_RigGUI_NolinkedBoneVisibility", (int)DefaultRigGUIOption_NoLinkedBoneVisibility);
 			_rigGUIOption_WeightGradientColor = (RIG_WEIGHT_GRADIENT_COLOR)EditorPrefs.GetInt("AnyPortrait_RigGUI_WeightGradientColor", (int)DefaultRigGUIOption_WeightGradientColor);
 
+			
 
 			apGL.SetToneOption(_colorOption_OnionToneColor, _onionOption_OutlineThickness, _onionOption_IsOutlineRender, _onionOption_PosOffsetX, _onionOption_PosOffsetY, _colorOption_OnionBoneColor);
 			
@@ -10843,14 +12643,28 @@ namespace AnyPortrait
 									_rigGUIOption_WeightGradientColor);
 
 			_isNeedToAskRemoveVertByPSDImport = EditorPrefs.GetBool("AnyPortrait_NeedToAskRemoveVertByPSDImport", false);
+			_option_ShowPrevViewMenuBtns = EditorPrefs.GetBool("AnyPortrait_ShowPrevViewMenuBtns", false);
+
+			_option_SetAutoImageToMeshIfOnlyOneImageExist = EditorPrefs.GetBool("AnyPortrait_SetAutoImageToMeshIfOnlyOneImageExist", true);
+
+			_option_IsTurnOffAnimAutoKey = EditorPrefs.GetBool("AnyPortrait_IsTurnOffAnimAutoKey", true);
+
+			_guiOption_isShowHowToEdit = EditorPrefs.GetBool("AnyPortrait_ShowHowToEdit", true);
 		}
 
-		private void SaveColorPref(string label, Color color)
+		private void SaveColorPref(string label, Color color, Color defaultValue)
 		{
-			EditorPrefs.SetFloat(label + "_R", color.r);
-			EditorPrefs.SetFloat(label + "_G", color.g);
-			EditorPrefs.SetFloat(label + "_B", color.b);
-			EditorPrefs.SetFloat(label + "_A", color.a);
+			//이전
+			//EditorPrefs.SetFloat(label + "_R", color.r);
+			//EditorPrefs.SetFloat(label + "_G", color.g);
+			//EditorPrefs.SetFloat(label + "_B", color.b);
+			//EditorPrefs.SetFloat(label + "_A", color.a);
+
+			//변경 21.2.10
+			SavePref_Float(label + "_R", color.r, defaultValue.r);
+			SavePref_Float(label + "_G", color.g, defaultValue.g);
+			SavePref_Float(label + "_B", color.b, defaultValue.b);
+			SavePref_Float(label + "_A", color.a, defaultValue.a);
 		}
 
 		private Color LoadColorPref(string label, Color defaultValue)
@@ -10862,6 +12676,41 @@ namespace AnyPortrait
 			result.a = EditorPrefs.GetFloat(label + "_A", defaultValue.a);
 			return result;
 		}
+
+		//추가 21.2.10
+		//Pref를 저장할 때, 기본값과 동일하다면 저장값을 삭제하자. 그동안 너무 많은 옵션을 사용했던 것 같다. Get은 상관없다.
+		private void SavePref_Bool(string key, bool curValue, bool defaultValue)
+		{
+			if(curValue == defaultValue)	{ EditorPrefs.DeleteKey(key); }
+			else							{ EditorPrefs.SetBool(key, curValue); }
+		}
+
+		private void SavePref_Int(string key, int curValue, int defaultValue)
+		{
+			if(curValue == defaultValue)	{ EditorPrefs.DeleteKey(key); }
+			else							{ EditorPrefs.SetInt(key, curValue); }
+		}
+
+		//Float는 아주 작은 bias를 기준으로 한다.
+		private void SavePref_Float(string key, float curValue, float defaultValue)
+		{
+			if(Mathf.Abs(curValue - defaultValue) < 0.0001f)	{ EditorPrefs.DeleteKey(key); }
+			else												{ EditorPrefs.SetFloat(key, curValue); }
+		}
+
+		private void SavePref_String(string key, string curValue, string defaultValue)
+		{
+			if(string.Equals(curValue, defaultValue))	{ EditorPrefs.DeleteKey(key); }
+			else										{ EditorPrefs.SetString(key, curValue); }
+		}
+
+
+
+
+
+
+
+
 
 		public void RestoreEditorPref()
 		{
@@ -10905,10 +12754,11 @@ namespace AnyPortrait
 			
 			_isLowCPUOption = DefaultLowCPUOption;
 
-			_isSelectionLockOption_RiggingPhysics = DefaultSelectionLockOption_RiggingPhysics;
-			_isSelectionLockOption_Morph = DefaultSelectionLockOption_Morph;
-			_isSelectionLockOption_Transform = DefaultSelectionLockOption_Transform;
-			_isSelectionLockOption_ControlParamTimeline = DefaultSelectionLockOption_ControlParamTimeline;
+			//여기서 복구하지 않음
+			//_isSelectionLockOption_RiggingPhysics = DefaultSelectionLockOption_RiggingPhysics;
+			//_isSelectionLockOption_Morph = DefaultSelectionLockOption_Morph;
+			//_isSelectionLockOption_Transform = DefaultSelectionLockOption_Transform;
+			//_isSelectionLockOption_ControlParamTimeline = DefaultSelectionLockOption_ControlParamTimeline;
 			
 			_isAmbientCorrectionOption = DefaultAmbientCorrectionOption;
 
@@ -10942,6 +12792,11 @@ namespace AnyPortrait
 			_rigGUIOption_WeightGradientColor = DefaultRigGUIOption_WeightGradientColor;
 
 			_isNeedToAskRemoveVertByPSDImport = DefaultNeedToAskRemoveVertByPSDImport;
+			_option_ShowPrevViewMenuBtns = DefaultShowPrevViewMenuBtns;
+
+			_option_SetAutoImageToMeshIfOnlyOneImageExist = DefaultSetAutoImageToMeshIfOnlyOneImageExist;
+
+			_option_IsTurnOffAnimAutoKey = DefaultIsTurnOffAnimAutoKey;
 
 			SaveEditorPref();
 		}
@@ -11012,12 +12867,21 @@ namespace AnyPortrait
 		public static bool DefaultRestoreTempMeshVisibiilityWhenTaskEnded { get { return true; } }
 
 		public static bool DefaultNeedToAskRemoveVertByPSDImport { get { return false; } }
+		public static bool DefaultShowPrevViewMenuBtns { get { return false; } }
+
+		public static bool DefaultSetAutoImageToMeshIfOnlyOneImageExist { get { return true; } }
+		public static bool DefaultIsTurnOffAnimAutoKey { get { return true; } }
 
 
 		public static bool DefaultSelectionLockOption_RiggingPhysics { get { return true; } }
 		public static bool DefaultSelectionLockOption_Morph { get { return true; } }
 		public static bool DefaultSelectionLockOption_Transform { get { return true; } }
 		public static bool DefaultSelectionLockOption_ControlParamTimeline { get { return true; } }
+
+		public static bool DefaultExModObjOption_UpdateByOtherMod { get { return false; } }
+		public static bool DefaultExModObjOption_ShowGray { get { return true; } }
+		public static bool DefaultExModObjOption_NotSelectable { get { return false; } }
+
 
 		//-------------------------------------------------------------------------------
 		public string GetText(TEXT textType)
@@ -11225,43 +13089,52 @@ namespace AnyPortrait
 
 		}
 
-		// Modifier Lock 설정값에 대한 요청
-		public bool GetModLockOption_CalculateIfNotAddedOther(apSelection.EX_EDIT exEdit)
-		{
-			if(exEdit == apSelection.EX_EDIT.General_Edit)
-			{
-				return _modLockOption_CalculateIfNotAddedOther;
-			}
-			return false;
-		}
-
-		public bool GetModLockOption_ColorPreview(apSelection.EX_EDIT exEdit)
-		{
-			if(exEdit == apSelection.EX_EDIT.ExOnly_Edit)		{ return _modLockOption_ColorPreview_Lock; }
-			else if(exEdit == apSelection.EX_EDIT.General_Edit)	{ return _modLockOption_ColorPreview_Unlock; }
-			return false;
-		}
-
-		
-		public bool GetModLockOption_BonePreview(apSelection.EX_EDIT exEdit)
-		{
-			if(exEdit == apSelection.EX_EDIT.ExOnly_Edit)		{ return _modLockOption_BonePreview_Lock; }
-			else if(exEdit == apSelection.EX_EDIT.General_Edit)	{ return _modLockOption_BonePreview_Unlock; }
-			return false;
-		}
-
-		//public bool GetModLockOption_MeshPreview(apSelection.EX_EDIT exEdit)
+		//TODO : 이거 수정해야한다.
+		// Modifier Lock 설정값에 대한 요청 > 삭제 21.2.17 : 옵션이 바뀌었다.
+		//public bool GetModLockOption_CalculateIfNotAddedOther(apSelection.EX_EDIT exEdit)
 		//{
-		//	if(exEdit == apSelection.EX_EDIT.ExOnly_Edit)		{ return _modLockOption_MeshPreview_Lock; }
-		//	else if(exEdit == apSelection.EX_EDIT.General_Edit)	{ return _modLockOption_MeshPreview_Unlock; }
+		//	//if(exEdit == apSelection.EX_EDIT.General_Edit)
+		//	//{
+		//	//	return _modLockOption_CalculateIfNotAddedOther;
+		//	//}
 		//	return false;
 		//}
 
-		public bool GetModLockOption_ListUI(apSelection.EX_EDIT exEdit)
+		//public bool GetModLockOption_ColorPreview(apSelection.EX_EDIT exEdit)//이전 : ModLock 모드를 받아야 한다.
+		//public bool GetModLockOption_ColorPreview()//변경 21.2.13 : ModLock이 없이 공통 설정이다.
+		//{
+		//	//이전
+		//	//if(exEdit == apSelection.EX_EDIT.ExOnly_Edit)		{ return _modLockOption_ColorPreview_Lock; }
+		//	//else if(exEdit == apSelection.EX_EDIT.General_Edit)	{ return _modLockOption_ColorPreview_Unlock; }
+		//	//return false;
+
+		//	//변경 21.2.13
+		//	return _modLockOption_ColorPreview;
+		//}
+
+		
+		////public bool GetModLockOption_BonePreview(apSelection.EX_EDIT exEdit)//이전 : ModLock 설정 필요
+		//public bool GetModLockOption_BonePreview()//변경 21.2.13 : ModLock 삭제
+		//{
+		//	//이전
+		//	//if(exEdit == apSelection.EX_EDIT.ExOnly_Edit)		{ return _modLockOption_BonePreview_Lock; }
+		//	//else if(exEdit == apSelection.EX_EDIT.General_Edit)	{ return _modLockOption_BonePreview_Unlock; }
+		//	//return false;
+
+		//	//변경
+		//	return _modLockOption_BoneResultPreview;
+		//}
+
+		//public bool GetModLockOption_ListUI(apSelection.EX_EDIT exEdit)//이전 : ModLock설정 필요
+		public bool GetModLockOption_ListUI()//변경 21.2.13 : ModLock 삭제
 		{
-			if(exEdit == apSelection.EX_EDIT.ExOnly_Edit)		{ return _modLockOption_ModListUI_Lock; }
-			else if(exEdit == apSelection.EX_EDIT.General_Edit)	{ return _modLockOption_ModListUI_Unlock; }
-			return false;
+			//이전
+			//if(exEdit == apSelection.EX_EDIT.ExOnly_Edit)		{ return _modLockOption_ModListUI_Lock; }
+			//else if(exEdit == apSelection.EX_EDIT.General_Edit)	{ return _modLockOption_ModListUI_Unlock; }
+			//return false;
+
+			//변경
+			return _modLockOption_ModListUI;
 		}
 
 		//public Color GetModLockOption_MeshPreviewColor()
@@ -11444,9 +13317,12 @@ namespace AnyPortrait
 		/// <summary>
 		///로딩 게이지 팝업을 보여준다.
 		/// </summary>
-		/// <param name="title"></param>
-		/// <param name="info"></param>
 		public void StartProgressPopup(string title, string info)
+		{
+			StartProgressPopup(title, info, false, null);
+		}
+		
+		public void StartProgressPopup(string title, string info, bool isCancelable, FUNC_CANCEL_PROGRESS_POPUP funcCancelProgressPopup)
 		{
 			if(_isProgressPopup)
 			{
@@ -11464,6 +13340,9 @@ namespace AnyPortrait
 			{
 				_strProgressPopup_Info = new apStringWrapper(128);
 			}
+
+			_isProogressPopup_Cancelable = isCancelable;
+			_funcProgressPopupCancel = funcCancelProgressPopup;
 
 			_strProgressPopup_Title.SetText(title);
 			_strProgressPopup_Info.SetText(info);
@@ -11507,6 +13386,8 @@ namespace AnyPortrait
 
 				_isProgressPopup_CompleteRequest = false;
 				_isProgressPopup_StartRequest = false;
+				_isProogressPopup_Cancelable = false;
+				_funcProgressPopupCancel = null;
 			}
 			else if (_isProgressPopup_StartRequest)
 			{
@@ -11533,10 +13414,40 @@ namespace AnyPortrait
 			}
 
 			//Progress Popup을 보여주자.
-			EditorUtility.DisplayProgressBar(
-				_strProgressPopup_Title.ToString(),
-				_strProgressPopup_Info.ToString(),
-				_proogressPopupRatio);
+			//변경 21.1.4 : 취소 가능하면 다른걸 보여주자
+			if(_isProogressPopup_Cancelable && _funcProgressPopupCancel != null)
+			{
+				if(EditorUtility.DisplayCancelableProgressBar(	_strProgressPopup_Title.ToString(),
+																_strProgressPopup_Info.ToString(),
+																_proogressPopupRatio))
+				{
+					//취소
+					if(_funcProgressPopupCancel != null)
+					{
+						try
+						{
+							_funcProgressPopupCancel();
+						}
+						catch(Exception)
+						{
+
+						}
+					}
+					_isProogressPopup_Cancelable = false;
+					_funcProgressPopupCancel = null;
+
+					_isProgressPopup_CompleteRequest = true;
+				}
+			}
+			else
+			{
+				EditorUtility.DisplayProgressBar(	_strProgressPopup_Title.ToString(),
+													_strProgressPopup_Info.ToString(),
+													_proogressPopupRatio);
+			}
+			
+			
+			
 			
 			//입력은 무시하도록 하자.
 			//Layout / Repaint 이벤트 외에는 모두 Use 처리
@@ -11841,12 +13752,77 @@ namespace AnyPortrait
 
 			//EditorController에서 사용될 GUIContent
 			_guiContent_EC_SetDefault = null;
-			_guiContent_EC_EditParameter = null;
+			//_guiContent_EC_EditParameter = null;
 			_guiContent_EC_MakeKey = null;
 			_guiContent_EC_RemoveKey = null;
 
 			//UI가 추가시 여기에 코드를 작성하자
 		}
+
+
+
+		//Mod Mesh 버그 테스트 (21.4.18)
+		//public void DebugAnimModMeshValues()
+		//{
+		//	if(_portrait == null)
+		//	{
+		//		return;
+		//	}
+		//	//Debug.Log("--------- Debug Mod Mesh Values ---------");
+		//	int nMeshGroups = _portrait._meshGroups != null ? _portrait._meshGroups.Count : 0;
+		//	for (int iMeshGroup = 0; iMeshGroup < nMeshGroups; iMeshGroup++)
+		//	{
+		//		apMeshGroup curMeshGroup = _portrait._meshGroups[iMeshGroup];
+		//		int nMods = curMeshGroup._modifierStack._modifiers != null ? curMeshGroup._modifierStack._modifiers.Count : 0;
+		//		for (int iMod = 0; iMod < nMods; iMod++)
+		//		{
+		//			apModifierBase curMod = curMeshGroup._modifierStack._modifiers[iMod];
+		//			if(!curMod.IsAnimated)
+		//			{
+		//				continue;
+		//			}
+					
+		//			int nPSG_Anim = curMod._paramSetGroupAnimPacks != null ? curMod._paramSetGroupAnimPacks.Count : 0;
+		//			for (int iPSG_Anim = 0; iPSG_Anim < nPSG_Anim; iPSG_Anim++)
+		//			{
+		//				apModifierParamSetGroupAnimPack modAnimPack = curMod._paramSetGroupAnimPacks[iPSG_Anim];
+		//				//Debug.Log("< Anim : " + (modAnimPack.LinkedAnimClip != null ? modAnimPack.LinkedAnimClip._name : "<Unknow>") + " >");
+		//				int nPSGs = modAnimPack.ParamSetGroups != null ? modAnimPack.ParamSetGroups.Count : 0;
+		//				for (int iPSG = 0; iPSG < nPSGs; iPSG++)
+		//				{
+		//					apModifierParamSetGroup psg = modAnimPack.ParamSetGroups[iPSG];
+		//					if(psg._keyAnimTimelineLayer == null)
+		//					{
+		//						continue;
+		//					}
+		//					//Debug.Log(" > Layer : " + psg._keyAnimTimelineLayer.DisplayName);
+		//					int nPSs = psg._paramSetList != null ? psg._paramSetList.Count : 0;
+		//					string strAnimName = psg._keyAnimClip != null ? psg._keyAnimClip._name : "<None>";
+		//					for (int iPS = 0; iPS < nPSs; iPS++)
+		//					{
+		//						apModifierParamSet ps = psg._paramSetList[iPS];
+		//						if(ps.SyncKeyframe == null)
+		//						{
+		//							Debug.LogError("  - (" + strAnimName + ") 키프레임이 없다. [(" + ps._keyframeUniqueID + ")]");
+		//							continue;
+		//						}
+		//						if(ps._meshData == null || ps._meshData.Count == 0)
+		//						{
+		//							Debug.LogError("  - (" + strAnimName + ") 메시 데이터가 없다. [" + ps.SyncKeyframe._frameIndex + " (" + ps._keyframeUniqueID + ")]");
+		//							continue;
+		//						}
+		//						Debug.Log("  - " + ps._meshData[0]._isVisible + " [" + ps.SyncKeyframe._frameIndex + " (" + ps._keyframeUniqueID + ")]");
+								
+
+		//					}
+							 
+		//				}
+		//			}
+		//		}
+		//	}
+		//	//Debug.Log("-----------------------------------------");
+		//}
+
 	}
 
 }

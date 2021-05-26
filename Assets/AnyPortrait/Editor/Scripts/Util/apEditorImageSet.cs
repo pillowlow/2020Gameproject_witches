@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -105,6 +104,10 @@ namespace AnyPortrait
 			Hierarchy_NonVisible_ModKey,
 			Hierarchy_Visible_Default,
 			Hierarchy_NonVisible_Default,
+			Hierarchy_Visible_Rule,//추가 21.1.27
+			Hierarchy_NonVisible_Rule,
+			Hierarchy_BypassVisible,//추가 21.2.8
+
 			Hierarchy_NoKey,
 			
 			Hierarchy_Clipping,
@@ -189,6 +192,8 @@ namespace AnyPortrait
 			Edit_SelectionLock,
 			Edit_SelectionUnlock,
 
+			Edit_ExModOption,
+
 			Edit_Copy,
 			Edit_Paste,
 
@@ -198,6 +203,7 @@ namespace AnyPortrait
 			Edit_KeyDelete,
 			Edit_KeyCtrl,
 			Edit_KeyShift,
+			Edit_KeyAlt,
 
 			Edit_MeshGroupDefaultTransform,
 
@@ -247,6 +253,10 @@ namespace AnyPortrait
 			MeshEdit_MirrorAxis_Y,
 			MeshEdit_MirrorCopy_X,
 			MeshEdit_MirrorCopy_Y,
+
+			MeshEdit_Area,
+			MeshEdit_AreaEditing,
+			MeshEdit_QuickMake,
 
 
 
@@ -312,6 +322,7 @@ namespace AnyPortrait
 			Anim_AddTimeline,
 			Anim_AddAllBonesToLayer,
 			Anim_AddAllMeshesToLayer,
+			Anim_AddAllControlParamsToLayer,
 			Anim_RemoveTimelineLayer,
 
 			Anim_CurvePreset_Acc,
@@ -471,6 +482,29 @@ namespace AnyPortrait
 			ExtraOption_DepthMidCursor,
 
 			LowCPU,
+
+			GUI_Button_Menu,
+			GUI_Button_Menu_Roll,
+			GUI_Button_RecordOnion,
+			GUI_Button_RecordOnion_Roll,
+			GUI_ViewStat_BoneHidden,
+			GUI_ViewStat_BoneOutline,
+			GUI_ViewStat_DisablePhysics,
+			GUI_ViewStat_MeshHidden,
+			GUI_ViewStat_OnionSkin,
+			GUI_ViewStat_PresetVisible,
+			GUI_ViewStat_Rotoscoping,
+
+			GUI_ViewStat_BG,
+			GUI_EditStat_SingleModifier,
+			GUI_EditStat_MultiModifiers,
+			GUI_EditStat_PreviewBone,
+			GUI_EditStat_PreviewBoneAndColor,
+			GUI_EditStat_PreviewColor,
+			GUI_EditStat_SelectionLock,
+			GUI_EditStat_SelectionUnlock,
+			GUI_EditStat_SemiSelectionLock,
+
 
 			MaterialSet,
 			MaterialSetIcon_Unlit,
@@ -633,6 +667,10 @@ namespace AnyPortrait
 			CheckImageAndLoad(PRESET.Hierarchy_NonVisible_ModKey, "HierarchyIcon_NonVisible_ModKey");
 			CheckImageAndLoad(PRESET.Hierarchy_Visible_Default, "HierarchyIcon_Visible_Default");
 			CheckImageAndLoad(PRESET.Hierarchy_NonVisible_Default, "HierarchyIcon_NonVisible_Default");
+			CheckImageAndLoad(PRESET.Hierarchy_Visible_Rule, "HierarchyIcon_Visible_ByRule");
+			CheckImageAndLoad(PRESET.Hierarchy_NonVisible_Rule, "HierarchyIcon_NonVisible_ByRule");
+			CheckImageAndLoad(PRESET.Hierarchy_BypassVisible, "HierarchyIcon_BypassVisible");
+			
 			CheckImageAndLoad(PRESET.Hierarchy_NoKey, "HierarchyIcon_NoKey");
 
 
@@ -722,20 +760,26 @@ namespace AnyPortrait
 			CheckImageAndLoad(PRESET.Edit_SelectionLock, "Edit_SelectionLock");
 			CheckImageAndLoad(PRESET.Edit_SelectionUnlock, "Edit_SelectionUnlock");
 
+			CheckImageAndLoad(PRESET.Edit_ExModOption, "Edit_ExModOption");
+			
+
 			CheckImageAndLoad(PRESET.Edit_Copy, "Edit_Copy", true);
 			CheckImageAndLoad(PRESET.Edit_Paste, "Edit_Paste", true);
 
-			CheckImageAndLoad(PRESET.Edit_MouseLeft, "Edit_MouseLeft", true);
-			CheckImageAndLoad(PRESET.Edit_MouseMiddle, "Edit_MouseMiddle", true);
-			CheckImageAndLoad(PRESET.Edit_MouseRight, "Edit_MouseRight", true);
-			CheckImageAndLoad(PRESET.Edit_KeyDelete, "Edit_KeyDelete", true);
+
+			CheckImageAndLoad(PRESET.Edit_MouseLeft,	"Edit_MouseLeft");
+			CheckImageAndLoad(PRESET.Edit_MouseMiddle,	"Edit_MouseMiddle");
+			CheckImageAndLoad(PRESET.Edit_MouseRight,	"Edit_MouseRight");
+			CheckImageAndLoad(PRESET.Edit_KeyDelete,	"Edit_KeyDelete");
 			
 #if UNITY_EDITOR_OSX
-			CheckImageAndLoad(PRESET.Edit_KeyCtrl,			"Edit_KeyCommand", true);//Mac에서는 Ctrl대신 Command 단축키를 사용한다.
+			CheckImageAndLoad(PRESET.Edit_KeyCtrl,		"Edit_KeyCommand");//Mac에서는 Ctrl대신 Command 단축키를 사용한다.
+			CheckImageAndLoad(PRESET.Edit_KeyAlt,		"Edit_KeyOption");//Mac에서는 Alt대신 Option 단축키를 사용한다.
 #else
-			CheckImageAndLoad(PRESET.Edit_KeyCtrl, "Edit_KeyCtrl", true);
+			CheckImageAndLoad(PRESET.Edit_KeyCtrl,		"Edit_KeyCtrl");
+			CheckImageAndLoad(PRESET.Edit_KeyAlt,		"Edit_KeyAlt");
 #endif
-			CheckImageAndLoad(PRESET.Edit_KeyShift, "Edit_KeyShift", true);
+			CheckImageAndLoad(PRESET.Edit_KeyShift,		"Edit_KeyShift");
 
 
 			CheckImageAndLoad(PRESET.Edit_MeshGroupDefaultTransform, "Edit_MeshGroupDefaultTransform", true);
@@ -786,6 +830,11 @@ namespace AnyPortrait
 			CheckImageAndLoad(PRESET.MeshEdit_MirrorAxis_Y,		"MeshEdit_MirrorAxis_Y");
 			CheckImageAndLoad(PRESET.MeshEdit_MirrorCopy_X,		"MeshEdit_MirrorCopy_X");
 			CheckImageAndLoad(PRESET.MeshEdit_MirrorCopy_Y,		"MeshEdit_MirrorCopy_Y");
+
+			CheckImageAndLoad(PRESET.MeshEdit_Area,				"MeshEdit_Area");
+			CheckImageAndLoad(PRESET.MeshEdit_AreaEditing,		"MeshEdit_AreaEditing");
+			CheckImageAndLoad(PRESET.MeshEdit_QuickMake,		"MeshEdit_QuickMake");
+			
 
 			CheckImageAndLoad(PRESET.TransformControlPoint, "TransformControlPoint");
 			CheckImageAndLoad(PRESET.TransformAutoGenMapperCtrl, "TransformAutoGenMapperCtrl");
@@ -857,6 +906,7 @@ namespace AnyPortrait
 			CheckImageAndLoad(PRESET.Anim_AddTimeline, "Anim_AddTimeline", true);
 			CheckImageAndLoad(PRESET.Anim_AddAllBonesToLayer, "Anim_AddAllBonesToLayer", true);
 			CheckImageAndLoad(PRESET.Anim_AddAllMeshesToLayer, "Anim_AddAllMeshesToLayer", true);
+			CheckImageAndLoad(PRESET.Anim_AddAllControlParamsToLayer, "Anim_AddAllControlParamsToLayer", true);
 			CheckImageAndLoad(PRESET.Anim_RemoveTimelineLayer, "Anim_RemoveTimelineLayer", true);
 
 			CheckImageAndLoad(PRESET.Anim_CurvePreset_Acc, "Anim_CurvePreset_Acc");
@@ -1022,6 +1072,28 @@ namespace AnyPortrait
 			CheckImageAndLoad(PRESET.ExtraOption_DepthMidCursor,	"ExtraOption_DepthMidCursor");
 
 			CheckImageAndLoad(PRESET.LowCPU,					"LowCPU");
+			CheckImageAndLoad(PRESET.GUI_Button_Menu,				"GUI_Button_Menu");
+			CheckImageAndLoad(PRESET.GUI_Button_Menu_Roll,			"GUI_Button_Menu_Roll");
+			CheckImageAndLoad(PRESET.GUI_Button_RecordOnion,		"GUI_Button_RecordOnion");
+			CheckImageAndLoad(PRESET.GUI_Button_RecordOnion_Roll,	"GUI_Button_RecordOnion_Roll");
+			CheckImageAndLoad(PRESET.GUI_ViewStat_BoneHidden,		"GUI_ViewStat_BoneHidden");
+			CheckImageAndLoad(PRESET.GUI_ViewStat_BoneOutline,		"GUI_ViewStat_BoneOutline");
+			CheckImageAndLoad(PRESET.GUI_ViewStat_DisablePhysics,	"GUI_ViewStat_DisablePhysics");
+			CheckImageAndLoad(PRESET.GUI_ViewStat_MeshHidden,		"GUI_ViewStat_MeshHidden");
+			CheckImageAndLoad(PRESET.GUI_ViewStat_OnionSkin,		"GUI_ViewStat_OnionSkin");
+			CheckImageAndLoad(PRESET.GUI_ViewStat_PresetVisible,	"GUI_ViewStat_PresetVisible");
+			CheckImageAndLoad(PRESET.GUI_ViewStat_Rotoscoping,		"GUI_ViewStat_Rotoscoping");
+
+			
+			CheckImageAndLoad(PRESET.GUI_ViewStat_BG,					"GUI_ViewStat_BG");
+			CheckImageAndLoad(PRESET.GUI_EditStat_SingleModifier,		"GUI_EditStat_SingleModifier");
+			CheckImageAndLoad(PRESET.GUI_EditStat_MultiModifiers,		"GUI_EditStat_MultiModifiers");
+			CheckImageAndLoad(PRESET.GUI_EditStat_PreviewBone,			"GUI_EditStat_PreviewBone");
+			CheckImageAndLoad(PRESET.GUI_EditStat_PreviewBoneAndColor,	"GUI_EditStat_PreviewBoneAndColor");
+			CheckImageAndLoad(PRESET.GUI_EditStat_PreviewColor,			"GUI_EditStat_PreviewColor");
+			CheckImageAndLoad(PRESET.GUI_EditStat_SelectionLock,		"GUI_EditStat_SelectionLock");
+			CheckImageAndLoad(PRESET.GUI_EditStat_SelectionUnlock,		"GUI_EditStat_SelectionUnlock");
+			CheckImageAndLoad(PRESET.GUI_EditStat_SemiSelectionLock,	"GUI_EditStat_SemiSelectionLock");
 
 			CheckImageAndLoad(PRESET.MaterialSet,				"MaterialSet");
 			CheckImageAndLoad(PRESET.MaterialSetIcon_Unlit,		"MaterialSetIcon_Unlit");

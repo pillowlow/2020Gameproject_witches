@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -679,6 +678,51 @@ namespace AnyPortrait
 		DLG_RemoveBone_Multiple_Body = 650,
 		DLG_NoImageMesh_Title = 651,
 		DLG_NoImageMesh_Body = 652,
+		Setting_ShortcutsSettings = 653,
+		ShortcutWarning_Conflict = 654,
+		ShortcutWarning_KeyLimit = 655,
+		RestoreAllShortcuts = 656,
+		OpenShortcutsPage = 657,
+		DLG_RestoreAllShortcuts_Title = 658,
+		DLG_RestoreAllShortcuts_Body = 659,
+		ShortcutSpace_Common = 660,
+		ShortcutSpace_MakeMesh = 661,
+		ShortcutSpace_EditModAnim = 662,
+		ShortcutSpace_Anim = 663,
+		ShortcutSpace_Rigging = 664,
+		Setting_ShowPrevViewMenuBtns = 665,
+		VisibilityRules = 666,
+		Rules = 667,
+		AddNewRule = 668,
+		RuleProperties = 669,
+		Method = 670,
+		ShortcutKey = 671,
+		RuleHotkeyMsg_Invalid = 672,
+		RuleHotkeyMsg_Success1 = 673,
+		RuleHotkeyMsg_Success2 = 674,
+		OrderPerDepth = 675,
+		Setting_EditModeMultipleModOption_Title = 676,
+		Setting_EditModeMultipleModOption_MultipleMod = 677,
+		Setting_ExModObjOption_Title = 678,
+		Setting_ExModObjOption_Gray = 679,
+		Setting_ExModObjOption_NotSelect = 680,
+		EditModeSetting_PreviewResult = 681,
+		DisplayOption = 682,
+		Opacity = 683,
+		ScalePercent = 684,
+		RotoscopingDataList = 685,
+		AddNewRotoscopingData = 686,
+		RotoscopingDataProperties = 687,
+		SyncToAnimation = 688,
+		RemoveRotoscopingData = 689,
+		DLG_RemoveRotoscopingData_Body = 690,
+		RemoveImageFile = 691,
+		DLG_RemoveImageFileFromRotoscoping = 692,
+		AddImageFile = 693,
+		Setting_AutoImageSetToMeshCreation = 694,
+		Setting_InitAutoKeyframeOption = 695,
+		DLG_RenameSyncSubMeshGroupObject_Title = 696,
+		DLG_RenameSyncSubMeshGroupObject_Body = 697,
 	}
 
 
@@ -1094,6 +1138,37 @@ namespace AnyPortrait
 		Objects = 403,
 		Test = 404,
 		NotAbleToBeAdded_RiggedChildMesh = 405,
+		EditArea = 406,
+		EditingArea = 407,
+		Density = 408,
+		Margin = 409,
+		Padding = 410,
+		Default = 411,
+		QuickGenerate = 412,
+		GUIMenu_ShowFPS = 413,
+		GUIMenu_ShowStatistics = 414,
+		GUIMenu_MaximizeWorkspace = 415,
+		GUIMenu_ShowMeshes = 416,
+		GUIMenu_ShowBones = 417,
+		GUIMenu_ShowBonesOutline = 418,
+		GUIMenu_EnablePhysics = 419,
+		GUIMenu_OnionSkin = 420,
+		GUIMenu_ShowOnionSkin = 421,
+		GUIMenu_Settings = 422,
+		GUIMenu_VisibilityPresets = 423,
+		GUIMenu_EnablePreset = 424,
+		GUIMenu_Rotoscoping = 425,
+		GUIMenu_EnableRotoscopingImages = 426,
+		GUIMenu_EditModeOptions = 427,
+		GUIMenu_ExMod_ApplyOtherMod = 428,
+		GUIMenu_ExMod_ShowAsGray = 429,
+		GUIMenu_ExMod_SelectionLock = 430,
+		GUIMenu_PrevImage = 431,
+		GUIMenu_NextImage = 432,
+		SetIn8Directions = 433,
+		GUIMenu_ShowHowToEdit = 434,
+		SelectMore = 435,
+		DeselectAll = 436,
 	}
 
 

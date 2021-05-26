@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -68,6 +67,12 @@ namespace AnyPortrait
 		[SerializeField]
 		public apAnimPlayManager _animPlayManager = new apAnimPlayManager();
 
+		//추가 20.11.23 : 애니메이션 처리 가속화를 위한 별도의 업데이트와 매핑 클래스
+		//실시간으로 생성되며 Opt용이다.
+		/// <summary>[Please do not use it]</summary>
+		[NonSerialized]
+		public apAnimPlayMapping _animPlayMapping = null;
+
 		
 		//RootUnit으로 적용되는 MainMeshGroup을 여러개를 둔다.
 		/// <summary>[Please do not use it]</summary>
@@ -91,6 +96,14 @@ namespace AnyPortrait
 		// 유니크 IDs
 		[NonBackupField]
 		private apIDManager _IDManager = new apIDManager();
+
+
+		//추가 21.1.22 : 편집용 VisibiliePreset을 여기에 추가한다.
+		[NonBackupField, SerializeField]
+		private apVisibilityPresets _visiblePreset = new apVisibilityPresets();
+
+		public apVisibilityPresets VisiblePreset { get { if (_visiblePreset == null) { _visiblePreset = new apVisibilityPresets(); } return _visiblePreset; } }
+
 
 
 
@@ -326,6 +339,11 @@ namespace AnyPortrait
 		}
 		[SerializeField]
 		public SORTING_ORDER_OPTION _sortingOrderOption = SORTING_ORDER_OPTION.SetOrder;
+
+		//추가 21.1.31		
+		[SerializeField]
+		public int _sortingOrderPerDepth = 1;//Depth마다 SortingOrder가 몇씩 증가하는가 (최소 1)
+
 
 
 		// 추가 4.26 : Mecanim 설정
@@ -685,97 +703,110 @@ namespace AnyPortrait
 
 		void LateUpdate()
 		{
-			if (Application.isPlaying)
+#if UNITY_EDITOR
+			if (!Application.isPlaying)
 			{
-				if(_initStatus != INIT_STATUS.Completed)
+				return;
+			}
+#endif
+
+			if (_initStatus != INIT_STATUS.Completed)
+			{
+				//로딩이 다 되지 않았다면 처리를 하지 않는다.
+				return;
+			}
+
+			//추가 21.4.3 : 출력할게 없다면 스크립트를 중단한다.
+			if (_curPlayingOptRootUnit == null)
+			{
+				return;
+			}
+
+			//추가 20.7.9 : 물리에서 공통적으로 사용할 DeltaTime을 계산한다.
+			CalculatePhysicsTimer();
+
+
+			#region [핵심 코드 >>> Update에서 넘어온 코드]
+			//_tDelta += Time.deltaTime;//<<이전 방식 (Important가 아닌 경우)
+
+			#region [사용 : 1프레임 지연 없이 사용하는 경우. 단, 외부 처리에 대해서는 Request 방식으로 처리해야한다.]
+			//힘 관련 업데이트
+			ForceManager.Update(Time.deltaTime);
+
+			//애니메이션 업데이트
+			_animPlayManager.Update(Time.deltaTime);
+
+			//추가 20.11.23 : 애니메이션 정보가 모디파이어 처리에 반영되도록 매핑 클래스를 동작시킨다.
+			_animPlayMapping.Update();
+
+
+			//추가 : 애니메이션 업데이트가 끝났다면 ->
+			//다른 스크립트에서 요청한 ControlParam 수정 정보를 반영한다.
+			_controller.CompleteRequests();
+			#endregion
+
+
+			//if (_tDelta > _timePerFrame)
+			//if(true)
+			if (_curPlayingOptRootUnit != null)
+			{
+				//추가 9.19 : Camera 체크
+				//if(_billboardType != BILLBOARD_TYPE.None)
+				//{
+				//	CheckAndRefreshCameras();
+				//} >> 이전 : 빌보드가 아닌 경우 생략
+
+				//변경 : 언제나
+				CheckAndRefreshCameras();
+
+
+				//전체 업데이트하는 코드
+				//일정 프레임마다 업데이트를 한다.
+				//#if UNITY_EDITOR
+				//					Profiler.BeginSample("Portrait - Update Transform");
+				//#endif
+				if (_isImportant)
 				{
-					//로딩이 다 되지 않았다면 처리를 하지 않는다.
-					return;
+					_curPlayingOptRootUnit.UpdateTransforms(Time.deltaTime);
 				}
-
-				//추가 20.7.9 : 물리에서 공통적으로 사용할 DeltaTime을 계산한다.
-				CalculatePhysicsTimer();
-				
-
-#region [핵심 코드 >>> Update에서 넘어온 코드]
-				//_tDelta += Time.deltaTime;//<<이전 방식 (Important가 아닌 경우)
-
-#region [사용 : 1프레임 지연 없이 사용하는 경우. 단, 외부 처리에 대해서는 Request 방식으로 처리해야한다.]
-				//힘 관련 업데이트
-				ForceManager.Update(Time.deltaTime);
-				
-				//애니메이션 업데이트
-				_animPlayManager.Update(Time.deltaTime);
-
-
-				//추가 : 애니메이션 업데이트가 끝났다면 ->
-				//다른 스크립트에서 요청한 ControlParam 수정 정보를 반영한다.
-				_controller.CompleteRequests();
-#endregion
-
-
-				//if (_tDelta > _timePerFrame)
-				//if(true)
-				if (_curPlayingOptRootUnit != null)
+				else
 				{
-					//추가 9.19 : Camera 체크
-					//if(_billboardType != BILLBOARD_TYPE.None)
+					//이전 방식 : 랜덤값이 포함된 간헐적 업데이트
+					//if (_tDelta > _timePerFrame)
 					//{
-					//	CheckAndRefreshCameras();
-					//} >> 이전 : 빌보드가 아닌 경우 생략
-					
-					//변경 : 언제나
-					CheckAndRefreshCameras();
+					//	//Important가 꺼진다면 프레임 FPS를 나누어서 처리한다.
+					//	_curPlayingOptRootUnit.UpdateTransforms(_timePerFrame);
 
+					//	_tDelta -= _timePerFrame;
+					//}
+					//else
+					//{
+					//	//추가 4.8
+					//	//만약 Important가 꺼진 상태에서 MaskMesh가 있다면
+					//	//Mask Mesh의 RenderTexture가 매 프레임 갱신 안될 수 있다.
+					//	//따라서 RenderTexture 만큼은 매 프레임 갱신해야한다.
+					//	_curPlayingOptRootUnit.UpdateTransformsOnlyMaskMesh();
+					//}
 
-					//전체 업데이트하는 코드
-					//일정 프레임마다 업데이트를 한다.
-//#if UNITY_EDITOR
-//					Profiler.BeginSample("Portrait - Update Transform");
-//#endif
-					if (_isImportant)
+					//새로운 방식 : 중앙에서 관리하는 토큰 업데이트
+					if (apOptUpdateChecker.I.GetUpdatable(_updateToken))
 					{
-						_curPlayingOptRootUnit.UpdateTransforms(Time.deltaTime);
+						_curPlayingOptRootUnit.UpdateTransforms(_updateToken.ResultElapsedTime);
+						//_tDelta -= _timePerFrame;
 					}
 					else
 					{
-						//이전 방식 : 랜덤값이 포함된 간헐적 업데이트
-						//if (_tDelta > _timePerFrame)
-						//{
-						//	//Important가 꺼진다면 프레임 FPS를 나누어서 처리한다.
-						//	_curPlayingOptRootUnit.UpdateTransforms(_timePerFrame);
-
-						//	_tDelta -= _timePerFrame;
-						//}
-						//else
-						//{
-						//	//추가 4.8
-						//	//만약 Important가 꺼진 상태에서 MaskMesh가 있다면
-						//	//Mask Mesh의 RenderTexture가 매 프레임 갱신 안될 수 있다.
-						//	//따라서 RenderTexture 만큼은 매 프레임 갱신해야한다.
-						//	_curPlayingOptRootUnit.UpdateTransformsOnlyMaskMesh();
-						//}
-
-						//새로운 방식 : 중앙에서 관리하는 토큰 업데이트
-						if (apOptUpdateChecker.I.GetUpdatable(_updateToken))
-						{
-							_curPlayingOptRootUnit.UpdateTransforms(_updateToken.ResultElapsedTime);
-							//_tDelta -= _timePerFrame;
-						}
-						else
-						{
-							_curPlayingOptRootUnit.UpdateTransformsOnlyMaskMesh();
-						}
+						_curPlayingOptRootUnit.UpdateTransformsOnlyMaskMesh();
 					}
-
-//#if UNITY_EDITOR
-//					Profiler.EndSample();
-//#endif			
 				}
-				
-				PostUpdate();//추가 20.9.15 : 현재 프레임의 위치등을 저장하자.
-#endregion
+
+				//#if UNITY_EDITOR
+				//					Profiler.EndSample();
+				//#endif			
 			}
+
+			PostUpdate();//추가 20.9.15 : 현재 프레임의 위치등을 저장하자.
+			#endregion
 		}
 
 
@@ -1048,6 +1079,14 @@ namespace AnyPortrait
 			{
 				PlayNoDebug(firstPlayAnimClip._name);
 			}
+
+			//만약 숨어있다가 나타날때 위치가 바뀌어있었다면 워프 가능성이 있다.
+			//이 경우를 대비해서 물리 위치를 현재 위치로 갱신해두자
+			if(_transform != null)
+			{
+				_transform = transform;
+			}
+			_posW_Prev1F = _transform.position;
 		}
 
 		/// <summary>
@@ -1117,6 +1156,14 @@ namespace AnyPortrait
 		{
 			StopAll();
 
+			//추가 21.4.3
+			//StopAll이 적용되려면 업데이트가 한번 되어야 한다.
+			//Hide되면 애니메이션이 업데이트되지 않으므로, 여기서 강제로 업데이트를 한번 더 하자
+			//_animPlayManager.Update(0.0f);
+			_animPlayManager.ReleaseAllPlayUnitAndQueues();
+
+
+			//모두 숨기기
 			_curPlayingOptRootUnit = null;
 
 			for (int i = 0; i < _optRootUnitList.Count; i++)
@@ -1124,6 +1171,32 @@ namespace AnyPortrait
 				_optRootUnitList[i].Hide();
 			}
 		}
+
+
+
+		//추가 21.3.14 : 실행중인 RootUnit을 리턴한다.
+		/// <summary>
+		/// Return the currently playing Root Unit.
+		/// </summary>
+		/// <returns>Root Unit currently playing. If not, return null</returns>
+		public apOptRootUnit GetCurrentRootUnit()
+		{
+			return _curPlayingOptRootUnit;
+		}
+
+		/// <summary>
+		/// Return the index of the currently playing Root Unit.
+		/// </summary>
+		/// <returns>Index of the currently playing Root Unit. If not, return -1</returns>
+		public int GetCurrentRootUnitIndex()
+		{
+			if(_curPlayingOptRootUnit == null)
+			{
+				return -1;
+			}
+			return _optRootUnitList.IndexOf(_curPlayingOptRootUnit);
+		}
+
 
 
 		/// <summary>
@@ -1214,6 +1287,21 @@ namespace AnyPortrait
 			//추가 20.7.5 : 컨트롤 파라미터를 초기화 (이게 왜 없었지)
 			_controller.InitRuntime();
 			
+
+
+			//추가 20.11.23 : 모디파이어 최적화를 위한 애니메이션 매핑 클래스
+			//생성과 동시에 링크가 된다.
+			if(_animPlayMapping == null)
+			{
+				_animPlayMapping = new apAnimPlayMapping(this);
+			}
+			else
+			{
+				//다시 링크를 하자
+				_animPlayMapping.Link(this);
+			}
+			
+
 
 			//추가 12.7 : OptRootUnit도 Link를 해야한다.
 			for (int iOptRootUnit = 0; iOptRootUnit < _optRootUnitList.Count; iOptRootUnit++)
@@ -1380,15 +1468,12 @@ namespace AnyPortrait
 				_animClips[i].LinkOpt(this);
 			}
 
-			//추가) AnimPlayer를 추가했다.
+			//AnimPlayer를 추가했다.
 			_animPlayManager.LinkPortrait(this);
 
-			//추가) Compute Shader를 지정하자.
-			//if (apComputeShader.I.IsComputeShaderNeedToLoad_Opt)
-			//{
-			//	apComputeShader.I.SetComputeShaderAsset_Opt(Resources.Load<ComputeShader>("AnyPortraitShader/apCShader_OptVertWorldTransform"));
-			//}
+			
 
+			
 			//로딩 끝
 			_initStatus = INIT_STATUS.Completed;
 
@@ -1532,6 +1617,19 @@ namespace AnyPortrait
 
 			//추가 20.7.5 : 컨트롤 파라미터를 초기화 (이게 왜 없었지)
 			_controller.InitRuntime();
+
+			//추가 20.11.23 : 모디파이어 최적화를 위한 애니메이션 매핑 클래스
+			//생성과 동시에 링크가 된다.
+			if(_animPlayMapping == null)
+			{
+				_animPlayMapping = new apAnimPlayMapping(this);
+			}
+			else
+			{
+				//다시 링크를 하자
+				_animPlayMapping.Link(this);
+			}
+
 
 			//추가 12.7 : OptRootUnit도 Link를 해야한다.
 			for (int iOptRootUnit = 0; iOptRootUnit < _optRootUnitList.Count; iOptRootUnit++)
@@ -2455,7 +2553,7 @@ namespace AnyPortrait
 				return;
 			}
 
-			_animPlayManager.StopAll(fadeTime);
+			_animPlayManager.StopAll(fadeTime);			
 		}
 		
 
@@ -4938,6 +5036,51 @@ namespace AnyPortrait
 			return _sortingOrder;
 		}
 
+
+		//추가 21.1.31
+		/// <summary>
+		/// Get the Sorting Order of the specified OptTransform.
+		/// </summary>
+		/// <param name="optTransform">Target OptTransform</param>
+		/// <returns>Sorting Order value. -1 is returned if the requested OptTransform does not exist or does not have a mesh.</returns>
+		public int GetSortingOrder(apOptTransform optTransform)
+		{
+			if(optTransform == null)
+			{
+				Debug.LogError("AnyPortrait : GetSortingOrder() Failed. The OptTransform entered as an argument is null.");
+				return -1;
+			}
+			if(optTransform._childMesh == null)
+			{
+				Debug.LogError("AnyPortrait : GetSortingOrder() Failed. The requested OptTransform does not have a mesh.");
+				return -1;
+			}
+			return optTransform._childMesh.GetSortingOrder();
+		}
+		
+		/// <summary>
+		/// Get the Sorting Order of the specified OptTransform.
+		/// </summary>
+		/// <param name="transformName">Name of Opt-Transform with the target Opt-Mesh</param>
+		/// <returns>Sorting Order value. -1 is returned if the requested OptTransform does not exist or does not have a mesh.</returns>
+		public int GetSortingOrder(string transformName)
+		{
+			return GetSortingOrder(GetOptTransform(transformName));
+		}
+
+		/// <summary>
+		/// Get the Sorting Order of the specified OptTransform.
+		/// </summary>
+		/// <param name="rootUnitIndex">Root Unit Index</param>
+		/// <param name="transformName">Name of Opt-Transform with the target Opt-Mesh</param>
+		/// <returns>Sorting Order value. -1 is returned if the requested OptTransform does not exist or does not have a mesh.</returns>
+		public int GetSortingOrder(int rootUnitIndex, string transformName)
+		{
+			return GetSortingOrder(GetOptTransform(rootUnitIndex, transformName));
+		}
+
+
+
 		
 
 		//추가 19.8.19
@@ -4987,7 +5130,7 @@ namespace AnyPortrait
 			}
 			for (int i = 0; i < _optRootUnitList.Count; i++)
 			{
-				_optRootUnitList[i].SetSortingOrderOption(_sortingOrderOption);
+				_optRootUnitList[i].SetSortingOrderOption(_sortingOrderOption, _sortingOrderPerDepth);
 			}
 		}
 #endif
@@ -6425,6 +6568,7 @@ namespace AnyPortrait
 								{
 									//하위의 MeshGroup Transform이 삭제될 수 있도록
 									//적절하지 않은 MeshData를 삭제하자
+									//int nRemoved = modPS._meshData.RemoveAll(delegate (apModifiedMesh a)
 									modPS._meshData.RemoveAll(delegate (apModifiedMesh a)
 									{
 										//if (a._isRecursiveChildTransform)
@@ -6467,7 +6611,8 @@ namespace AnyPortrait
 									});
 									//if (nRemoved > 0)
 									//{
-									//	Debug.Log("Modifier [" + modifier.DisplayName + "] ModMesh " + nRemoved + "개 삭제됨");
+									//	Debug.LogError("Modifier [" + modifier.DisplayName + "] ModMesh " + nRemoved + "개 삭제됨");
+
 									//}
 								}
 
@@ -6957,10 +7102,15 @@ namespace AnyPortrait
 							
 							
 
+							//int nRemove = paramSet._meshData.RemoveAll(delegate (apModifiedMesh a)
 							paramSet._meshData.RemoveAll(delegate (apModifiedMesh a)
 							{
 								return a._meshGroupOfModifier == null || a._meshGroupOfTransform == null;
 							});
+							//if(nRemove > 0)
+							//{
+							//	Debug.LogError("Mesh Data가 삭제되었다. (1)");
+							//}
 
 							
 							//---------------------------------------------------------------------------------
@@ -7110,7 +7260,7 @@ namespace AnyPortrait
 					|| !isLinkAllMeshGroups)
 				{
 					curSelectedMeshGroup.LinkModMeshRenderUnits(linkRefreshRequest);
-				curSelectedMeshGroup.RefreshModifierLink(linkRefreshRequest);
+					curSelectedMeshGroup.RefreshModifierLink(linkRefreshRequest);
 				}
 				
 

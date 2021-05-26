@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -57,9 +56,15 @@ namespace AnyPortrait
 
 		private static bool _isMouseEvent = false;
 		private static bool _isMouseEventUsed = false;
-		private static apControlParam _selectedParam = null;
-		private static int _selectSubParam = 0;//<<평소엔 0이지만, Vec3인 경우 1, 2로 나뉜다.
+		private static apControlParam _selectedControlParam = null;
+		//private static int _selectSubParam = 0;//<<평소엔 0이지만, Vec3인 경우 1, 2로 나뉜다.
+		
+		//이전 : 외부의 마우스 이벤트를 그대로 사용한다.
 		private static apMouse.MouseBtnStatus _leftBtnStatus = apMouse.MouseBtnStatus.Released;
+
+		
+
+
 		private static Vector2 _mousePos = Vector2.zero;
 
 		private static bool _isSnapWhenReleased = false;
@@ -86,7 +91,8 @@ namespace AnyPortrait
 									Shader shader_Alpha2White,
 									Shader shader_BoneV2,
 									Shader shader_TextureVColorMul,
-									Shader shader_RigCircleV2)
+									Shader shader_RigCircleV2,
+									Shader shader_Gray_Normal, Shader shader_Gray_Clipped)
 		{
 			//_matBatch.SetMaterial(mat_Color, mat_Texture, mat_MaskedTexture);
 			//_matBatch = matBatch;
@@ -102,7 +108,8 @@ namespace AnyPortrait
 									shader_Alpha2White,
 									shader_BoneV2, null,
 									shader_TextureVColorMul,
-									shader_RigCircleV2, null);
+									shader_RigCircleV2, null,
+									shader_Gray_Normal, shader_Gray_Clipped);
 		}
 
 		public static void SetLayoutSize(int layoutWidth, int layoutHeight,
@@ -318,67 +325,156 @@ namespace AnyPortrait
 			_isSnapWhenReleased = isSnapWhenReleased;
 		}
 
-		public static void SetMouseState(apMouse.MouseBtnStatus leftBtnStatus, Vector2 mousePos, bool isMouseEvent)
+		//변경 21.2.9 : 함수명 변경 + 외부 마우스 입력 가져오는걸 다르게 처리한다.
+		public static void ReadyToUpdate(apMouse.MouseBtnStatus leftBtnStatus, Vector2 mousePos, bool isMouseEvent)
 		{
-			bool isMouseBtnChanged = (_leftBtnStatus != leftBtnStatus);
-			_leftBtnStatus = leftBtnStatus;
+
+
+			//이전 코드
+			#region [미사용 코드]
+			//bool isMouseBtnChanged = (_leftBtnStatus != leftBtnStatus);
+			//_leftBtnStatus = leftBtnStatus;
+			//_mousePos = mousePos - new Vector2(_layoutPosX, _layoutPosY + 6) + _scrollPos;
+
+			//if (isMouseEvent)
+			//{
+			//	if (
+			//		_leftBtnStatus == apMouse.MouseBtnStatus.Down
+			//		//|| _leftBtnStatus == apMouse.MouseBtnStatus.Pressed
+			//		)
+			//	{
+			//		if (mousePos.x < _layoutPosX || mousePos.x > _layoutPosX + _layoutWidth
+			//			|| mousePos.y < _layoutPosY || mousePos.y > _layoutPosY + _layoutHeight
+			//			|| Event.current.type == EventType.Used)
+			//		{
+			//			//isMouseEvent = false;
+			//			_leftBtnStatus = apMouse.MouseBtnStatus.Up;
+			//			ReleaseSelectedParam();
+			//			_selectedParam = null;
+			//			_isMouseEventUsed = false;
+			//			_selectSubParam = -1;
+			//		}
+			//	}
+			//}
+
+
+			//_isMouseEvent = isMouseEvent;
+
+			//if (_isMouseEvent)
+			//{
+			//	//Debug.Log("CGL Event : " + _leftBtnStatus + " " + mousePos);
+
+			//	if (_leftBtnStatus == apMouse.MouseBtnStatus.Up ||
+			//		_leftBtnStatus == apMouse.MouseBtnStatus.Released)
+			//	{
+			//		if (_selectedParam != null)
+			//		{
+			//			//Debug.LogError("Released");
+			//			ReleaseSelectedParam();
+			//			_selectedParam = null;
+			//			_selectSubParam = -1;
+			//		}
+			//	}
+			//}
+
+			//if (!isMouseEvent &&
+			//	isMouseBtnChanged &&
+			//	(_leftBtnStatus == apMouse.MouseBtnStatus.Up || _leftBtnStatus == apMouse.MouseBtnStatus.Released))
+			//{
+			//	//Debug.Log("ContGL : isMouseEvent : False, _leftBtnStatus : " + _leftBtnStatus);
+			//	//이게 컨트롤러 영역 밖에서 Up이 된 경우
+			//	if (_selectedParam != null)
+			//	{
+			//		//Debug.LogError("Released");
+			//		ReleaseSelectedParam();
+			//		_selectedParam = null;
+			//		_selectSubParam = -1;
+			//	}
+			//}
+			//_isMouseEventUsed = false;
+			#endregion
+
+
+			//위치 보정
 			_mousePos = mousePos - new Vector2(_layoutPosX, _layoutPosY + 6) + _scrollPos;
 
-			if (isMouseEvent)
+			bool isMousePressed = leftBtnStatus == apMouse.MouseBtnStatus.Down || leftBtnStatus == apMouse.MouseBtnStatus.Pressed;
+			bool isMouseRealDown = leftBtnStatus == apMouse.MouseBtnStatus.Down;
+
+			//if (isMouseEvent)
 			{
-				if (
-					_leftBtnStatus == apMouse.MouseBtnStatus.Down
-					//|| _leftBtnStatus == apMouse.MouseBtnStatus.Pressed
-					)
+				//밖에서 클릭(Down)을 하는 경우나 유효하지 않는 입력인 경우
+				//Down > False
+				if (leftBtnStatus == apMouse.MouseBtnStatus.Down)
 				{
 					if (mousePos.x < _layoutPosX || mousePos.x > _layoutPosX + _layoutWidth
 						|| mousePos.y < _layoutPosY || mousePos.y > _layoutPosY + _layoutHeight
 						|| Event.current.type == EventType.Used)
 					{
-						//isMouseEvent = false;
-						_leftBtnStatus = apMouse.MouseBtnStatus.Up;
-						ReleaseSelectedParam();
-						_selectedParam = null;
-						_isMouseEventUsed = false;
-						_selectSubParam = -1;
+						//Debug.LogError("밖에서 눌렸거나 유효하지 않은 이벤트다.");
+						isMousePressed = false;
+						isMouseRealDown = false;
 					}
 				}
 			}
 
+			//마우스 입력 상태에 따라서 입력 상태를 결정하자
+			switch (_leftBtnStatus)
+			{
+				case apMouse.MouseBtnStatus.Down:
+				case apMouse.MouseBtnStatus.Pressed:
+					if (isMousePressed)
+					{
+						if(_leftBtnStatus == apMouse.MouseBtnStatus.Pressed && isMouseRealDown)
+						{
+							//Debug.Log("Pressed 상태에서 Down으로 변경");
+							_leftBtnStatus = apMouse.MouseBtnStatus.Down;
+						}
+						else
+						{
+							_leftBtnStatus = apMouse.MouseBtnStatus.Pressed;
+						}
+						
+					}
+					else
+					{
+						_leftBtnStatus = apMouse.MouseBtnStatus.Up;
+					}
+					break;
+
+				case apMouse.MouseBtnStatus.Up:
+				case apMouse.MouseBtnStatus.Released:
+					if (isMousePressed)
+					{
+						_leftBtnStatus = apMouse.MouseBtnStatus.Down;
+					}
+					else
+					{
+						_leftBtnStatus = apMouse.MouseBtnStatus.Released;
+					}
+					break;
+			}
 
 			_isMouseEvent = isMouseEvent;
 
-			if (_isMouseEvent)
+			//마우스 이벤트에서
+			//눌려지지 않은 상태에서
+			//선택된 Param이 있다면
+			//> 해제
+			if (_selectedControlParam != null
+				&& (_leftBtnStatus == apMouse.MouseBtnStatus.Up || _leftBtnStatus == apMouse.MouseBtnStatus.Released))
 			{
-				//Debug.Log("CGL Event : " + _leftBtnStatus + " " + mousePos);
-
-				if (_leftBtnStatus == apMouse.MouseBtnStatus.Up ||
-					_leftBtnStatus == apMouse.MouseBtnStatus.Released)
-				{
-					if (_selectedParam != null)
-					{
-						//Debug.LogError("Released");
-						ReleaseSelectedParam();
-						_selectedParam = null;
-						_selectSubParam = -1;
-					}
-				}
+				//if(!_isMouseEvent)
+				//{
+				//	Debug.LogError("Mouse 이벤트가 아닌데 Up 이벤트가 발생했다");
+				//}
+				//Debug.LogError("Released");
+				ReleaseSelectedParam();
+				_selectedControlParam = null;
+				//_selectSubParam = -1;
 			}
 
-			if (!isMouseEvent &&
-				isMouseBtnChanged &&
-				(_leftBtnStatus == apMouse.MouseBtnStatus.Up || _leftBtnStatus == apMouse.MouseBtnStatus.Released))
-			{
-				//Debug.Log("ContGL : isMouseEvent : False, _leftBtnStatus : " + _leftBtnStatus);
-				//이게 컨트롤러 영역 밖에서 Up이 된 경우
-				if (_selectedParam != null)
-				{
-					//Debug.LogError("Released");
-					ReleaseSelectedParam();
-					_selectedParam = null;
-					_selectSubParam = -1;
-				}
-			}
+
 			_isMouseEventUsed = false;
 		}
 
@@ -389,17 +485,20 @@ namespace AnyPortrait
 		/// <param name="isAnimEditing"></param>
 		private static void ReleaseSelectedParam()
 		{
-			if (_selectedParam == null)
+			//Debug.LogWarning("ReleaseSelectedParam");
+			if (_selectedControlParam == null)
 			{
 				return;
 			}
+
+			//Debug.LogError("Snap 하기 : " + _leftBtnStatus);
 
 			//if(!_selectedParam._isRange)
 			//{
 			//	return;
 			//}
 
-			switch (_selectedParam._valueType)
+			switch (_selectedControlParam._valueType)
 			{
 				case apControlParam.TYPE.Int:
 					//Int는 자동이므로 교정할 필요가 없다.
@@ -407,20 +506,20 @@ namespace AnyPortrait
 
 				case apControlParam.TYPE.Float:
 					{
-						if (_selectedParam._float_Cur < _selectedParam._float_Min)
+						if (_selectedControlParam._float_Cur < _selectedControlParam._float_Min)
 						{
-							_selectedParam._float_Cur = _selectedParam._float_Min;
+							_selectedControlParam._float_Cur = _selectedControlParam._float_Min;
 						}
-						else if (_selectedParam._float_Cur > _selectedParam._float_Max)
+						else if (_selectedControlParam._float_Cur > _selectedControlParam._float_Max)
 						{
-							_selectedParam._float_Cur = _selectedParam._float_Max;
+							_selectedControlParam._float_Cur = _selectedControlParam._float_Max;
 						}
 						else
 						{	
 							if (_isSnapWhenReleased)
 							{
 								//값을 적절히 스냅핑하자
-								_selectedParam._float_Cur = SnapValue(_selectedParam._float_Cur, _selectedParam._float_Min, _selectedParam._float_Max, _selectedParam._snapSize);
+								_selectedControlParam._float_Cur = SnapValue(_selectedControlParam._float_Cur, _selectedControlParam._float_Min, _selectedControlParam._float_Max, _selectedControlParam._snapSize);
 							}
 						}
 					}
@@ -428,14 +527,14 @@ namespace AnyPortrait
 
 				case apControlParam.TYPE.Vector2:
 					{
-						_selectedParam._vec2_Cur.x = Mathf.Clamp(_selectedParam._vec2_Cur.x, _selectedParam._vec2_Min.x, _selectedParam._vec2_Max.x);
-						_selectedParam._vec2_Cur.y = Mathf.Clamp(_selectedParam._vec2_Cur.y, _selectedParam._vec2_Min.y, _selectedParam._vec2_Max.y);
+						_selectedControlParam._vec2_Cur.x = Mathf.Clamp(_selectedControlParam._vec2_Cur.x, _selectedControlParam._vec2_Min.x, _selectedControlParam._vec2_Max.x);
+						_selectedControlParam._vec2_Cur.y = Mathf.Clamp(_selectedControlParam._vec2_Cur.y, _selectedControlParam._vec2_Min.y, _selectedControlParam._vec2_Max.y);
 
 						if (_isSnapWhenReleased)
 						{
 							//값을 적절히 스냅핑하자
-							_selectedParam._vec2_Cur.x = SnapValue(_selectedParam._vec2_Cur.x, _selectedParam._vec2_Min.x, _selectedParam._vec2_Max.x, _selectedParam._snapSize);
-							_selectedParam._vec2_Cur.y = SnapValue(_selectedParam._vec2_Cur.y, _selectedParam._vec2_Min.y, _selectedParam._vec2_Max.y, _selectedParam._snapSize);
+							_selectedControlParam._vec2_Cur.x = SnapValue(_selectedControlParam._vec2_Cur.x, _selectedControlParam._vec2_Min.x, _selectedControlParam._vec2_Max.x, _selectedControlParam._snapSize);
+							_selectedControlParam._vec2_Cur.y = SnapValue(_selectedControlParam._vec2_Cur.y, _selectedControlParam._vec2_Min.y, _selectedControlParam._vec2_Max.y, _selectedControlParam._snapSize);
 						}
 					}
 					break;
@@ -511,13 +610,26 @@ namespace AnyPortrait
 			}
 			if (!_isMouseEventUsed)
 			{
-				if (_selectedParam != null)
+				if (_selectedControlParam != null)
 				{
 					//Debug.LogError("Released - EndUpdate");
 					ReleaseSelectedParam();
-					_selectedParam = null;
-					_selectSubParam = -1;
+					_selectedControlParam = null;
+					//_selectSubParam = -1;
 				}
+
+				//마우스 입력인데, 마우스 입력 처리가 없었다면
+				if (_leftBtnStatus == apMouse.MouseBtnStatus.Down || _leftBtnStatus == apMouse.MouseBtnStatus.Pressed)
+				{
+					//Debug.Log(">> 입력 없음 : " + _leftBtnStatus + " > Up");
+					_leftBtnStatus = apMouse.MouseBtnStatus.Up;
+				}
+				else if(_leftBtnStatus == apMouse.MouseBtnStatus.Up)
+				{
+					//Debug.Log(">> 입력 없음 : Up > Released");
+					_leftBtnStatus = apMouse.MouseBtnStatus.Released;
+				}
+
 			}
 		}
 
@@ -525,10 +637,10 @@ namespace AnyPortrait
 		{
 			_leftBtnStatus = apMouse.MouseBtnStatus.Up;
 			ReleaseSelectedParam();
-			_selectedParam = null;
+			_selectedControlParam = null;
 			_isMouseEventUsed = false;
 			_isMouseEvent = false;
-			_selectSubParam = -1;
+			//_selectSubParam = -1;
 		}
 
 		//------------------------------------------------------------------------
@@ -550,12 +662,9 @@ namespace AnyPortrait
 		// Draw Slider
 		//------------------------------------------------------------------------
 
-		//public static float DrawFloatSlider(Vector2 pos, int width, apControlParam controlParam, bool _isRecorded, List<apModifierParamSet> recordedParamSet, apModifierParamSet recordedKey)
-		//{
-		//	return DrawFloatSlider(pos, width, controlParam, _isRecorded, recordedParamSet, recordedKey, false);
-		//}
-		//public static float DrawFloatSlider(Vector2 pos, int width, apControlParam controlParam, bool _isRecorded, List<apModifierParamSet> recordedParamSet, apModifierParamSet recordedKey, bool isFromV3Z)
-		public static float DrawFloatSlider(Vector2 pos, int width, apControlParam controlParam, bool _isRecorded, List<apModifierParamSet> recordedParamSet, apModifierParamSet recordedKey)
+		public static float DrawFloatSlider(	Vector2 pos, 
+												int width, int boxWidth, int boxHeight,
+												apControlParam controlParam, bool _isRecorded, List<apModifierParamSet> recordedParamSet, apModifierParamSet recordedKey)
 		{
 			//중간에 이벤트가 날라갔다면
 			if (Event.current.type == EventType.Used)
@@ -563,13 +672,7 @@ namespace AnyPortrait
 				CancelMouseProcess();
 			}
 
-			int subParam = 0;
-			//if(isFromV3Z)
-			//{
-			//	subParam = 2;
-			//}
-
-			bool isSelected = (controlParam == _selectedParam && subParam == _selectSubParam);
+			bool isSelected = (controlParam == _selectedControlParam);
 
 			Color barColor1 = _barColor;
 			Color barColor2 = _barColor2;
@@ -580,17 +683,9 @@ namespace AnyPortrait
 				barColor2 = _barColor2_selected;
 			}
 
-
 			float curValue = controlParam._float_Cur;
 			float minValue = controlParam._float_Min;
 			float maxValue = controlParam._float_Max;
-
-			//if(isFromV3Z)
-			//{
-			//	curValue = controlParam._vec3_Cur.z;
-			//	minValue = controlParam._vec3_Min.z;
-			//	maxValue = controlParam._vec3_Max.z;
-			//}
 
 			if (maxValue - minValue <= 0.0f)
 			{
@@ -607,13 +702,6 @@ namespace AnyPortrait
 			Vector2 barPos = new Vector2(pos.x + width * 0.5f, pos.y + _scrollBtnSize * 0.5f);
 			float barWidth = width - (_scrollBtnSize + _marginSize * 2);
 
-			//if(_isNeedPreRender)
-			//{
-
-			//	DrawBox(barPos, barWidth, _barThickness, barColor1, true);
-			//	//PreRender를 해준다 <- 유니티 버그같은데..
-			//	_isNeedPreRender = false;
-			//}
 			_matBatch.SetPass_Color();
 			_matBatch.SetClippingSize(_glScreenClippingSize);
 			GL.Begin(GL.TRIANGLES);
@@ -622,13 +710,9 @@ namespace AnyPortrait
 			DrawBox(barPos + new Vector2(0, -_barThickness / 4), barWidth, _barThickness / 2, barColor2, false);
 			GL.End();
 
-
-
-
 			float minPosX = (pos.x + width * 0.5f) - (barWidth * 0.5f);
 			float maxPosX = (pos.x + width * 0.5f) + (barWidth * 0.5f);
 			float valueITP = Mathf.Clamp01((curValue - minValue) / (maxValue - minValue));
-
 
 			float curPosX = (minPosX * (1.0f - valueITP)) + (maxPosX * valueITP);
 
@@ -675,13 +759,14 @@ namespace AnyPortrait
 				DrawTexture(_imgScrollBtn_Recorded, btnPos, _scrollBtnSize, _scrollBtnSize, _btnColor, true);
 			}
 
+			
 
 			//다만,
 			//클릭을 했다면
 			//값을 체크해주자
 			if (_isMouseEvent)
 			{
-				if (_selectedParam == null)
+				if (_selectedControlParam == null)
 				{
 					if (_leftBtnStatus == apMouse.MouseBtnStatus.Down)
 					{
@@ -692,7 +777,7 @@ namespace AnyPortrait
 						bool isSelect = false;
 						if (IsMouseIn(_mousePos, btnPos, _scrollBtnSize * 2, _scrollBtnSize * 2))
 						{
-							_selectedParam = controlParam;
+							_selectedControlParam = controlParam;
 							isSelect = true;
 						}
 						else
@@ -704,20 +789,9 @@ namespace AnyPortrait
 									if (IsMouseIn(_mousePos, paramPos.Value, _slotSize * 1.5f, _slotSize * 1.5f))
 									{
 										//저장된 위치에서 클릭을 했다면
-										_selectedParam = controlParam;
-										//if(isFromV3Z)
-										//{
-										//	//V3는 겹치는게 많아서 안좋을 수 있다.
-										//	curValue = paramPos.Key._conSyncValue_Vector3.z;
-										//}
-										//else
-										//{
-										//	curValue = paramPos.Key._conSyncValue_Float;
-										//}
-
+										_selectedControlParam = controlParam;
+										
 										curValue = paramPos.Key._conSyncValue_Float;
-
-
 
 										isSelect = true;
 										break;
@@ -728,9 +802,15 @@ namespace AnyPortrait
 
 						if (!isSelect)
 						{
-							if (IsMouseIn(_mousePos, barPos, barWidth, _barThickness * 2))
+							//영역 안쪽을 클릭했는가
+							Vector2 relativeMousePos = new Vector2(_mousePos.x - pos.x, _mousePos.y - (_scrollBtnSize * 0.5f + pos.y));
+							bool isMouseInBox = relativeMousePos.x > 0.0f && relativeMousePos.x < boxWidth 
+												&& relativeMousePos.y > -boxHeight / 2 && relativeMousePos.y < boxHeight / 2;
+
+							//if (IsMouseIn(_mousePos, barPos, barWidth, _barThickness * 2))//바를 클릭했을 때
+							if(isMouseInBox)//바를 포함한 박스를 클릭했을 때
 							{
-								_selectedParam = controlParam;
+								_selectedControlParam = controlParam;
 
 								//위치에 맞게 curValue를 바꾸자
 								float mousePosX = _mousePos.x;
@@ -753,9 +833,8 @@ namespace AnyPortrait
 							}
 						}
 
-						if (_selectedParam != null)
+						if (_selectedControlParam != null)
 						{
-							_selectSubParam = subParam;
 							_isMouseEventUsed = true;
 							GUI.FocusControl(null);
 						}
@@ -763,12 +842,12 @@ namespace AnyPortrait
 				}
 				else if (isSelected)
 				{
+					//선택한게 있을 때
+					//나갔다 돌아오는건 허용해야한다.
+					//새로 클릭하는건 영역 안쪽에서만 된다.
 					if (_leftBtnStatus == apMouse.MouseBtnStatus.Down ||
 						_leftBtnStatus == apMouse.MouseBtnStatus.Pressed)
-					{
-						//있는데... 같을 때만 처리
-						//마우스 위치에 맞게 이동하자
-
+					{	
 						//위치에 맞게 curValue를 바꾸자
 						float mousePosX = _mousePos.x;
 						if (mousePosX < minPosX)
@@ -802,14 +881,16 @@ namespace AnyPortrait
 
 
 
-		public static int DrawIntSlider(Vector2 pos, int width, apControlParam controlParam, bool _isRecorded, List<apModifierParamSet> recordedParamSet, apModifierParamSet recordedKey)
+		public static int DrawIntSlider(	Vector2 pos, 
+											int width, int boxWidth, int boxHeight,
+											apControlParam controlParam, bool _isRecorded, List<apModifierParamSet> recordedParamSet, apModifierParamSet recordedKey)
 		{
 			//중간에 이벤트가 날라갔다면
 			if (Event.current.type == EventType.Used)
 			{
 				CancelMouseProcess();
 			}
-			bool isSelected = (controlParam == _selectedParam);
+			bool isSelected = (controlParam == _selectedControlParam);
 
 			Color barColor1 = _barColor;
 			Color barColor2 = _barColor2;
@@ -839,14 +920,6 @@ namespace AnyPortrait
 			Vector2 barPos = new Vector2(pos.x + width * 0.5f, pos.y + _scrollBtnSize * 0.5f);
 			float barWidth = width - (_scrollBtnSize + _marginSize * 2);
 
-
-			//if(_isNeedPreRender)
-			//{
-
-			//	DrawBox(barPos, barWidth, _barThickness, barColor1, true);
-			//	//PreRender를 해준다 <- 유니티 버그같은데..
-			//	_isNeedPreRender = false;
-			//}
 			_matBatch.SetPass_Color();
 			_matBatch.SetClippingSize(_glScreenClippingSize);
 			GL.Begin(GL.TRIANGLES);
@@ -907,12 +980,15 @@ namespace AnyPortrait
 			}
 
 
+			
+
+
 			//다만,
 			//클릭을 했다면
 			//값을 체크해주자
 			if (_isMouseEvent)
 			{
-				if (_selectedParam == null)
+				if (_selectedControlParam == null)
 				{
 					if (_leftBtnStatus == apMouse.MouseBtnStatus.Down)
 					{
@@ -923,7 +999,7 @@ namespace AnyPortrait
 						bool isSelect = false;
 						if (IsMouseIn(_mousePos, btnPos, _scrollBtnSize * 2, _scrollBtnSize * 2))
 						{
-							_selectedParam = controlParam;
+							_selectedControlParam = controlParam;
 							isSelect = true;
 						}
 						else
@@ -935,7 +1011,7 @@ namespace AnyPortrait
 									if (IsMouseIn(_mousePos, paramPos.Value, _slotSize * 1.5f, _slotSize * 1.5f))
 									{
 										//저장된 위치에서 클릭을 했다면
-										_selectedParam = controlParam;
+										_selectedControlParam = controlParam;
 
 										curValue = paramPos.Key._conSyncValue_Int;
 
@@ -947,9 +1023,15 @@ namespace AnyPortrait
 						}
 						if (!isSelect)
 						{
-							if (IsMouseIn(_mousePos, barPos, barWidth, _barThickness * 2))
+							//영역 안쪽을 클릭했는가
+							Vector2 relativeMousePos = new Vector2(_mousePos.x - pos.x, _mousePos.y - (_scrollBtnSize * 0.5f + pos.y));
+							bool isMouseInBox = relativeMousePos.x > 0.0f && relativeMousePos.x < boxWidth 
+												&& relativeMousePos.y > -boxHeight / 2 && relativeMousePos.y < boxHeight / 2;
+
+							//if (IsMouseIn(_mousePos, barPos, barWidth, _barThickness * 2))
+							if(isMouseInBox)//바를 포함한 박스를 클릭했을 때
 							{
-								_selectedParam = controlParam;
+								_selectedControlParam = controlParam;
 
 								//위치에 맞게 curValue를 바꾸자
 								float mousePosX = _mousePos.x;
@@ -980,15 +1062,14 @@ namespace AnyPortrait
 							}
 						}
 
-						if (_selectedParam != null)
+						if (_selectedControlParam != null)
 						{
-							_selectSubParam = 0;
 							_isMouseEventUsed = true;
 							GUI.FocusControl(null);
 						}
 					}
 				}
-				else if (_selectedParam == controlParam)
+				else if (isSelected)
 				{
 					if (_leftBtnStatus == apMouse.MouseBtnStatus.Down ||
 						_leftBtnStatus == apMouse.MouseBtnStatus.Pressed)
@@ -1038,7 +1119,10 @@ namespace AnyPortrait
 		//	return DrawVector2Slider(pos, width, height, controlParam, _isRecorded, recordedParamSet, recordedKey, false);
 		//}
 		//public static Vector2 DrawVector2Slider(Vector2 pos, int width, int height, apControlParam controlParam, bool _isRecorded, List<apModifierParamSet> recordedParamSet, apModifierParamSet recordedKey, bool isFromV3)
-		public static Vector2 DrawVector2Slider(Vector2 pos, int width, int height, apControlParam controlParam, bool _isRecorded, List<apModifierParamSet> recordedParamSet, apModifierParamSet recordedKey)
+		public static Vector2 DrawVector2Slider(Vector2 pos, 
+												int width, int height, 
+												int boxWidth, int boxHeight,
+												apControlParam controlParam, bool _isRecorded, List<apModifierParamSet> recordedParamSet, apModifierParamSet recordedKey)
 		{
 			//중간에 이벤트가 날라갔다면
 			if (Event.current.type == EventType.Used)
@@ -1046,15 +1130,9 @@ namespace AnyPortrait
 				CancelMouseProcess();
 			}
 
-			int subParam = 0;
-			//if(isFromV3)
-			//{
-			//	subParam = 1;
-			//}
-
 			height -= (int)_scrollBtnSize;
 
-			bool isSelected = (controlParam == _selectedParam && _selectSubParam == subParam);
+			bool isSelected = (controlParam == _selectedControlParam);
 
 			Color barColor1 = _barColor;
 			Color barColor2 = _barColor2;
@@ -1097,7 +1175,7 @@ namespace AnyPortrait
 			Vector2 barPos_L = barPos_T + new Vector2(-barWidth * 0.5f, height * 0.5f);
 			Vector2 barPos_R = barPos_T + new Vector2(barWidth * 0.5f, height * 0.5f);
 
-			Vector2 centerPos = new Vector2(barPos_T.x, barPos_L.y);
+			//Vector2 centerPos = new Vector2(barPos_T.x, barPos_L.y);
 
 			//T 렌더링
 			//if(_isNeedPreRender)
@@ -1211,7 +1289,7 @@ namespace AnyPortrait
 			//값을 체크해주자
 			if (_isMouseEvent)
 			{
-				if (_selectedParam == null)
+				if (_selectedControlParam == null)
 				{
 					if (_leftBtnStatus == apMouse.MouseBtnStatus.Down)
 					{
@@ -1222,7 +1300,7 @@ namespace AnyPortrait
 						bool isSelect = false;
 						if (IsMouseIn(_mousePos, btnPos, _scrollBtnSize * 2, _scrollBtnSize * 2))
 						{
-							_selectedParam = controlParam;
+							_selectedControlParam = controlParam;
 							isSelect = true;
 						}
 						else
@@ -1234,7 +1312,7 @@ namespace AnyPortrait
 									if (IsMouseIn(_mousePos, paramPos.Value, _slotSize * 1.5f, _slotSize * 1.5f))
 									{
 										//저장된 위치에서 클릭을 했다면
-										_selectedParam = controlParam;
+										_selectedControlParam = controlParam;
 										//if(isFromV3)
 										//{
 										//	//V3는 겹치는게 많아서 안좋을 수 있다.
@@ -1257,9 +1335,18 @@ namespace AnyPortrait
 						}
 						if (!isSelect)
 						{
-							if (IsMouseIn(_mousePos, centerPos, barWidth + _barThickness * 2, barHeight + _barThickness * 2))
+							//영역 안쪽을 클릭했는가
+							Vector2 relativeMousePos = new Vector2(_mousePos.x - pos.x, _mousePos.y - ((_scrollBtnSize + height) * 0.5f + pos.y));
+							bool isMouseInBox = relativeMousePos.x > 0.0f && relativeMousePos.x < boxWidth 
+												&& relativeMousePos.y > -boxHeight / 2 && relativeMousePos.y < boxHeight / 2;
+
+							
+
+							//if (IsMouseIn(_mousePos, centerPos, barWidth + _barThickness * 2, barHeight + _barThickness * 2))
+							if(isMouseInBox)//바를 포함한 박스를 클릭했을 때
 							{
-								_selectedParam = controlParam;
+								//Debug.Log("Mouse Pos In Box : " + relativeMousePos + " / Box : " + boxWidth + "x" + boxHeight);
+								_selectedControlParam = controlParam;
 
 								//위치에 맞게 curValue를 바꾸자
 								float mousePosX = _mousePos.x;
@@ -1299,9 +1386,8 @@ namespace AnyPortrait
 							}
 						}
 
-						if (_selectedParam != null)
+						if (_selectedControlParam != null)
 						{
-							_selectSubParam = subParam;
 							_isMouseEventUsed = true;
 							GUI.FocusControl(null);
 						}

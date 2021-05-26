@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -883,31 +882,62 @@ namespace AnyPortrait
 
 			//추가 3.22
 			//Parent RenderUnit에 대해서
-			bool isExCalculated = false;
-			bool isExEnabledOnly = false;
-			bool isSubExEnabledOnly = false;
+			//이건 애매하다
+			//bool isExCalculated = false;
+			//bool isExEnabledOnly = false;
+			//bool isSubExEnabledOnly = false;
 
-			if (_parentRenderUnit._exCalculateMode != apRenderUnit.EX_CALCULATE.Normal)
-			{
-				isExCalculated = true;
-				//Normal 타입이 아닌 경우
-				if (_parentRenderUnit._exCalculateMode == apRenderUnit.EX_CALCULATE.ExAdded)
-				{
-					//Ex Add 타입이다. : SubExEnabled는 Disabled로 간주한다.
-					isExEnabledOnly = true;
-				}
-				else if (_parentRenderUnit._exCalculateMode == apRenderUnit.EX_CALCULATE.ExNotAdded)
-				{
-					//Ex Not Add 타입이다. : SubExEnabled만 Enabled로 간주한다.
-					isSubExEnabledOnly = true;
-				}
+			//변수를 조금 바꾸었다.
+			//bool isAdaptMod_All = false;//조건에 상관없이 모든 CalParam을 실행한다.
+			//bool isAdaptMod_EditedOnly = false;//현재 편집중인 CalParam을 실행한다. Background를 포함한다.
+			//bool isAdaptMod_NotEditOnly = false;//현재 편집중이 아닌 CalParam을 실행한다. Background를 포함한다.
 
-				//안내
-				//isExCalculated = true인 경우 (Ex Edit가 실행중인 경우)
-				//isExEnabledOnly => Modifier가 ExclusiveEnabled인 것만 실행
-				//isSubExEnabledOnly => Modifier가 SubExEnabled인 것만 실행
-				//그외에는 실행하지 않는다.
-			}
+			//switch (_parentRenderUnit._exCalculateMode)
+			//{
+			//	case apRenderUnit.EX_CALCULATE.Enabled_Run:
+			//		isAdaptMod_All = true;
+			//		break;
+
+			//	case apRenderUnit.EX_CALCULATE.Enabled_Edit:
+			//		isAdaptMod_EditedOnly = true;
+			//		break;
+
+			//	case apRenderUnit.EX_CALCULATE.Disabled_NotEdit:
+			//		isAdaptMod_NotEditOnly = true;
+			//		break;
+
+			//	case apRenderUnit.EX_CALCULATE.Disabled_ExRun:
+			//		break;
+			//}
+
+			#region [미사용 코드] 정리해야한다.
+			////TODO : 이 코드가 핵심. 여기서 어떤 모디파이어를 택할지 확인한다.
+			////if (_parentRenderUnit._exCalculateMode != apRenderUnit.EX_CALCULATE.Normal)
+			//if (_parentRenderUnit._exCalculateMode != apRenderUnit.EX_CALCULATE.Enabled_Run)//값 변경
+			//{
+			//	isExCalculated = true;
+			//	//Normal 타입이 아닌 경우
+			//	//if (_parentRenderUnit._exCalculateMode == apRenderUnit.EX_CALCULATE.ExAdded)
+			//	if (_parentRenderUnit._exCalculateMode == apRenderUnit.EX_CALCULATE.Enabled_Edit)//편집중
+			//	{
+			//		//Ex Add 타입이다. : SubExEnabled는 Disabled로 간주한다.
+			//		isExEnabledOnly = true;
+			//	}
+			//	//else if (_parentRenderUnit._exCalculateMode == apRenderUnit.EX_CALCULATE.ExNotAdded)
+			//	else if (_parentRenderUnit._exCalculateMode == apRenderUnit.EX_CALCULATE.Disabled_NotEdit)//편집중이 아님
+			//	{
+			//		//Ex Not Add 타입이다. : SubExEnabled만 Enabled로 간주한다.
+			//		//오히려 Disabled를 (Force 제외) 선택해서 실행하자. 단 모디파이어 단위가 아니다.
+			//		isSubExEnabledOnly = true;
+			//	}
+
+			//	//안내
+			//	//isExCalculated = true인 경우 (Ex Edit가 실행중인 경우)
+			//	//isExEnabledOnly => Modifier가 ExclusiveEnabled인 것만 실행
+			//	//isSubExEnabledOnly => Modifier가 SubExEnabled인 것만 실행
+			//	//그외에는 실행하지 않는다.
+			//} 
+			#endregion
 
 
 			//--------------------------------------------------------------------
@@ -924,24 +954,83 @@ namespace AnyPortrait
 				for (int iParam = 0; iParam < _resultParams_VertLocal.Count; iParam++)
 				{
 					resultParam = _resultParams_VertLocal[iParam];
-					
+
 					curWeight_Transform = resultParam.ModifierWeight_Transform;
 
 					if (!resultParam.IsModifierAvailable || curWeight_Transform <= 0.001f)
 					{
+						//Debug.LogError("실행 불가 : RenderUnit : " + _parentRenderUnit.Name + " > Modifier : " + resultParam._linkedModifier.DisplayName);
+						//Debug.LogError("실행 불가 : Available : " + resultParam.IsModifierAvailable + " / Weight : " + curWeight_Transform);
 						continue;
 					}
 
 					//추가 Ex Edit 3.22
-					if(isExCalculated)
+					//이전
+					//if(isExCalculated)
+					//{
+					//	//TODO : 이거 확인할 것 21.2.15 : 일단 에러만 없앴지만, 여기서 이걸 수정해야한다.
+					//	//기존 : 모디파이어 단위
+					//	//변경 : PSG 단위 = CalParam 단위로 체크
+					//	//if((isExEnabledOnly && resultParam._linkedModifier._editorExclusiveActiveMod != apModifierBase.MOD_EDITOR_ACTIVE.ExclusiveEnabled)
+					//	//	|| (isSubExEnabledOnly && resultParam._linkedModifier._editorExclusiveActiveMod != apModifierBase.MOD_EDITOR_ACTIVE.SubExEnabled))
+					//	if(
+					//		(
+					//			isExEnabledOnly && 
+					//			(
+					//				resultParam._linkedModifier._editorExclusiveActiveMod != apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Edit
+					//				&& resultParam._linkedModifier._editorExclusiveActiveMod != apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Background
+					//			)
+					//		)
+					//		//|| (isSubExEnabledOnly && resultParam._linkedModifier._editorExclusiveActiveMod != apModifierBase.MOD_EDITOR_ACTIVE.SubExEnabled)//<<??
+					//	)
+					//	{
+					//		//ExEdit 모드에 맞지 않는다.
+					//		continue;
+					//	}
+					//}
+
+					//코드 개선 21.2.15
+					if (resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_Force)
 					{
-						if((isExEnabledOnly && resultParam._linkedModifier._editorExclusiveActiveMod != apModifierBase.MOD_EDITOR_ACTIVE.ExclusiveEnabled)
-							|| (isSubExEnabledOnly && resultParam._linkedModifier._editorExclusiveActiveMod != apModifierBase.MOD_EDITOR_ACTIVE.SubExEnabled))
-						{
-							//ExEdit 모드에 맞지 않는다.
-							continue;
-						}
+						//이 모디파이어는 실행하지 않는다.
+						continue;
 					}
+
+					bool isRunnable = false;
+					switch (_parentRenderUnit._exCalculateMode)
+					{
+						case apRenderUnit.EX_CALCULATE.Enabled_Run:
+							//무조건 실행
+							isRunnable = true;
+							break;
+						case apRenderUnit.EX_CALCULATE.Enabled_Edit:
+							//편집 중인 것만 실행하려면
+							if (resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Run
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Edit
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Background)
+							{
+								isRunnable = true;
+							}
+							break;
+						case apRenderUnit.EX_CALCULATE.Disabled_ExRun:
+							//편집되지 않지만, 그외의 것이 실행되려면 (또는 무시하고 실행하는 것만)
+							if (resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Run
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_NotEdit
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Background
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_ExceptColor)
+							{
+								//Debug.Log("선택되지 않은건데 실행 중 : RenderUnit : " + _parentRenderUnit.Name + " > Modifier : " + resultParam._linkedModifier.DisplayName);
+								isRunnable = true;
+							}
+							break;
+					}
+
+					if(!isRunnable)
+					{
+						continue;
+					}
+
+
 
 					posVerts = resultParam._result_Positions;
 					if (posVerts.Length != _result_VertLocal.Length)
@@ -1016,15 +1105,70 @@ namespace AnyPortrait
 					{ continue; }
 
 					//추가 Ex Edit 3.22
-					if(isExCalculated)
+					//if(isExCalculated)
+					//{
+					//	//TODO : 이거 확인할 것 21.2.15 : 일단 에러만 없앴지만, 여기서 이걸 수정해야한다.
+					//	//기존 : 모디파이어 단위
+					//	//변경 : PSG 단위 = CalParam 단위로 체크
+					//	//if((isExEnabledOnly && resultParam._linkedModifier._editorExclusiveActiveMod != apModifierBase.MOD_EDITOR_ACTIVE.ExclusiveEnabled)
+					//	//	|| (isSubExEnabledOnly && resultParam._linkedModifier._editorExclusiveActiveMod != apModifierBase.MOD_EDITOR_ACTIVE.SubExEnabled))
+					//	if(
+					//		(
+					//			isExEnabledOnly && 
+					//			(
+					//				resultParam._linkedModifier._editorExclusiveActiveMod != apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Edit
+					//				&& resultParam._linkedModifier._editorExclusiveActiveMod != apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Background
+					//			)
+					//		)
+					//		//|| (isSubExEnabledOnly && resultParam._linkedModifier._editorExclusiveActiveMod != apModifierBase.MOD_EDITOR_ACTIVE.SubExEnabled)//<<??
+					//	)
+					//	{
+					//		//ExEdit 모드에 맞지 않는다.
+					//		continue;
+					//	}
+					//}
+
+					//코드 개선 21.2.15
+					if (resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_Force)
 					{
-						if((isExEnabledOnly && resultParam._linkedModifier._editorExclusiveActiveMod != apModifierBase.MOD_EDITOR_ACTIVE.ExclusiveEnabled)
-							|| (isSubExEnabledOnly && resultParam._linkedModifier._editorExclusiveActiveMod != apModifierBase.MOD_EDITOR_ACTIVE.SubExEnabled))
-						{
-							//ExEdit 모드에 맞지 않는다.
-							continue;
-						}
+						//이 모디파이어는 실행하지 않는다.
+						continue;
 					}
+					bool isRunnable = false;
+					switch (_parentRenderUnit._exCalculateMode)
+					{
+						case apRenderUnit.EX_CALCULATE.Enabled_Run:
+							//무조건 실행
+							isRunnable = true;
+							break;
+						case apRenderUnit.EX_CALCULATE.Enabled_Edit:
+							//편집 중인 것만 실행하려면
+							if (resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Run
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Edit
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Background)
+							{
+								isRunnable = true;
+							}
+							break;
+						case apRenderUnit.EX_CALCULATE.Disabled_ExRun:
+							//편집되지 않지만, 그외의 것이 실행되려면 (또는 무시하고 실행하는 것만)
+							if (resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Run
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_NotEdit
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Background
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_ExceptColor)
+							{
+								isRunnable = true;
+							}
+							break;
+					}
+
+					if(!isRunnable)
+					{
+						continue;
+					}
+
+
+
 
 
 					// Blend 방식에 맞게 Matrix를 만들자 하자
@@ -1083,9 +1227,59 @@ namespace AnyPortrait
 					}
 
 					//추가: 색상은 ExMode에서 별도로 취급
+					//코드 개선 21.2.15
+					if (resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_Force)
+					{
+						//이 모디파이어는 실행하지 않는다.
+						continue;
+					}
+					bool isRunnable = false;
+					switch (_parentRenderUnit._exCalculateMode)
+					{
+						case apRenderUnit.EX_CALCULATE.Enabled_Run:
+							//무조건 실행
+							isRunnable = true;
+							break;
+						case apRenderUnit.EX_CALCULATE.Enabled_Edit:
+							//편집 중인 것만 실행하려면
+							if (resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Run
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Edit
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Background
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_ExceptColor)//색상은 이것도 추가
+							{
+								isRunnable = true;
+							}
+							break;
+						case apRenderUnit.EX_CALCULATE.Disabled_ExRun:
+							//편집되지 않지만, 그외의 것이 실행되려면 (또는 무시하고 실행하는 것만)
+							if (resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Run
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_NotEdit
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Background
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_ExceptColor)
+							{
+								isRunnable = true;
+							}
+							break;
+					}
+
+					if(!isRunnable)
+					{
+						continue;
+					}
+
+
+
+
+
+
 
 					// Blend 방식에 맞게 Matrix를 만들자 하자
-					if (resultParam.ModifierBlendMethod == apModifierBase.BLEND_METHOD.Interpolation || iCalculatedParam == 0)
+					
+					//이전
+					//if (resultParam.ModifierBlendMethod == apModifierBase.BLEND_METHOD.Interpolation || iCalculatedParam == 0)
+					
+					//변경 21.4.6 : 색상의 경우 기본 BlendMethod를 사용해야한다. 별도로 알아서 잘 걸러져서 오기 때문
+					if (resultParam._linkedModifier._blendMethod == apModifierBase.BLEND_METHOD.Interpolation || iCalculatedParam == 0)
 					{
 						//_result_Color = BlendColor_ITP(_result_Color, resultParam._result_Color, prevWeight, curWeight);
 						_result_Color = apUtil.BlendColor_ITP(_result_Color, resultParam._result_Color, Mathf.Clamp01(curWeight_Color));
@@ -1133,10 +1327,13 @@ namespace AnyPortrait
 
 				//추가 3.22 ExEdit
 				//본의 경우는 별도로 ExMode를 가진다.
-				bool isExCalculated_Bone = false;
-				bool isExEnabledOnly_Bone = false;
-				bool isExSubEnabledOnly_Bone = false;
 
+				//변수를 다시 정리하자
+				//bool isExCalculated_Bone = false;
+				//bool isExEnabledOnly_Bone = false;
+				//bool isExSubEnabledOnly_Bone = false;
+
+				
 				
 
 				for (int iBonePair = 0; iBonePair < _resultParams_BoneTransform.Count; iBonePair++)
@@ -1154,22 +1351,28 @@ namespace AnyPortrait
 					//_result_BoneIKWeight = 0.0f;
 					//_result_CalculatedBoneIK = false;
 
-					isExCalculated_Bone = false;
-					isExEnabledOnly_Bone = false;
-					isExSubEnabledOnly_Bone = false;
+					//isExCalculated_Bone = false;
+					//isExEnabledOnly_Bone = false;
+					//isExSubEnabledOnly_Bone = false;
 
-					if (targetBone._exCalculateMode != apBone.EX_CALCULATE.Normal)
-					{
-						isExCalculated_Bone = true;
-						if (targetBone._exCalculateMode == apBone.EX_CALCULATE.ExAdded)
-						{
-							isExEnabledOnly_Bone = true;
-						}
-						else if (targetBone._exCalculateMode == apBone.EX_CALCULATE.ExNotAdded)
-						{
-							isExSubEnabledOnly_Bone = true;
-						}
-					}
+					////if (targetBone._exCalculateMode != apBone.EX_CALCULATE.Normal)
+					//if (targetBone._exCalculateMode != apBone.EX_CALCULATE.Enabled_Run)
+					//{
+					//	isExCalculated_Bone = true;
+					//	//if (targetBone._exCalculateMode == apBone.EX_CALCULATE.ExAdded)
+					//	if (targetBone._exCalculateMode == apBone.EX_CALCULATE.Enabled_Edit)
+					//	{
+					//		isExEnabledOnly_Bone = true;
+					//	}
+					//	//else if (targetBone._exCalculateMode == apBone.EX_CALCULATE.ExNotAdded)
+					//	else if (targetBone._exCalculateMode == apBone.EX_CALCULATE.Disabled_ExRun)
+					//	{
+					//		isExSubEnabledOnly_Bone = true;
+					//	}
+					//}
+
+
+
 
 					for (int iModParamPair = 0; iModParamPair < modParamPairs.Count; iModParamPair++)
 					{
@@ -1185,15 +1388,64 @@ namespace AnyPortrait
 
 
 							//추가 Ex Edit 3.22
-							if(isExCalculated_Bone)
+							//TODO 21.2.15 : 이것도 수정할 것
+							//if(isExCalculated_Bone)
+							//{
+							//	if((
+							//		isExEnabledOnly_Bone && 
+							//		//resultParam._linkedModifier._editorExclusiveActiveMod != apModifierBase.MOD_EDITOR_ACTIVE.ExclusiveEnabled
+							//		resultParam._linkedModifier._editorExclusiveActiveMod != apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Edit
+							//		&& resultParam._linkedModifier._editorExclusiveActiveMod != apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Background
+							//		)
+							//		)
+							//		//|| (isExSubEnabledOnly_Bone && resultParam._linkedModifier._editorExclusiveActiveMod != apModifierBase.MOD_EDITOR_ACTIVE.SubExEnabled))
+							//	{
+							//		//ExEdit 모드에 맞지 않는다.
+							//		continue;
+							//	}
+							//}
+							//코드 개선 21.2.15
+							if (resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_Force)
 							{
-								if((isExEnabledOnly_Bone && resultParam._linkedModifier._editorExclusiveActiveMod != apModifierBase.MOD_EDITOR_ACTIVE.ExclusiveEnabled)
-									|| (isExSubEnabledOnly_Bone && resultParam._linkedModifier._editorExclusiveActiveMod != apModifierBase.MOD_EDITOR_ACTIVE.SubExEnabled))
-								{
-									//ExEdit 모드에 맞지 않는다.
-									continue;
-								}
+								continue;
 							}
+							bool isRunnable = false;
+							switch (targetBone._exCalculateMode)
+							{
+								case apBone.EX_CALCULATE.Enabled_Run:
+									//무조건 실행
+									isRunnable = true;
+									break;
+
+								case apBone.EX_CALCULATE.Enabled_Edit:
+									//편집 중인 것만 실행하려면
+									if (resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Run
+										|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Edit
+										|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Background
+										|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_ExceptColor)//색상은 이것도 추가
+									{
+										isRunnable = true;
+									}
+									break;
+
+								case apBone.EX_CALCULATE.Disabled_ExRun:
+									//편집되지 않지만, 그외의 것이 실행되려면 (또는 무시하고 실행하는 것만)
+									if (resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Run
+										|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_NotEdit
+										|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Background
+										|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_ExceptColor)
+									{
+										isRunnable = true;
+									}
+									break;
+							}
+
+							if (!isRunnable)
+							{
+								continue;
+							}
+
+
 
 
 
@@ -1221,7 +1473,7 @@ namespace AnyPortrait
 								//	_result_BoneIKWeight += resultParam._result_BoneIKWeight * curWeight_Transform;//<<추가
 								//	_result_CalculatedBoneIK = true;
 								//}
-								
+
 							}
 
 							iCalculatedParam++;
@@ -1321,8 +1573,12 @@ namespace AnyPortrait
 						continue;
 					}
 
-					
-
+					//코드 개선 21.2.15 : 리깅도 안될때가 있다.
+					if (resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_Force)
+					{
+						//이 모디파이어는 실행하지 않는다.
+						continue;
+					}
 
 					posVerts = resultParam._result_Positions;
 					vertMatrice = resultParam._result_VertMatrices;
@@ -1405,31 +1661,34 @@ namespace AnyPortrait
 
 				//추가 3.22
 				//Parent RenderUnit에 대해서
-				bool isExCalculated = false;
-				bool isExEnabledOnly = false;
-				bool isSubExEnabledOnly = false;
+				//bool isExCalculated = false;
+				//bool isExEnabledOnly = false;
+				//bool isSubExEnabledOnly = false;
 
-				if (_parentRenderUnit._exCalculateMode != apRenderUnit.EX_CALCULATE.Normal)
-				{
-					isExCalculated = true;
-					//Normal 타입이 아닌 경우
-					if (_parentRenderUnit._exCalculateMode == apRenderUnit.EX_CALCULATE.ExAdded)
-					{
-						//Ex Add 타입이다. : SubExEnabled는 Disabled로 간주한다.
-						isExEnabledOnly = true;
-					}
-					else if (_parentRenderUnit._exCalculateMode == apRenderUnit.EX_CALCULATE.ExNotAdded)
-					{
-						//Ex Not Add 타입이다. : SubExEnabled만 Enabled로 간주한다.
-						isSubExEnabledOnly = true;
-					}
+				////if (_parentRenderUnit._exCalculateMode != apRenderUnit.EX_CALCULATE.Normal)
+				//if (_parentRenderUnit._exCalculateMode != apRenderUnit.EX_CALCULATE.Enabled_Run)
+				//{
+				//	isExCalculated = true;
+				//	//Normal 타입이 아닌 경우
+				//	//if (_parentRenderUnit._exCalculateMode == apRenderUnit.EX_CALCULATE.ExAdded)
+				//	if (_parentRenderUnit._exCalculateMode == apRenderUnit.EX_CALCULATE.Enabled_Edit)
+				//	{
+				//		//Ex Add 타입이다. : SubExEnabled는 Disabled로 간주한다.
+				//		isExEnabledOnly = true;
+				//	}
+				//	//else if (_parentRenderUnit._exCalculateMode == apRenderUnit.EX_CALCULATE.ExNotAdded)
+				//	else if (_parentRenderUnit._exCalculateMode == apRenderUnit.EX_CALCULATE.Disabled_NotEdit)
+				//	{
+				//		//Ex Not Add 타입이다. : SubExEnabled만 Enabled로 간주한다.
+				//		isSubExEnabledOnly = true;
+				//	}
 
-					//안내
-					//isExCalculated = true인 경우 (Ex Edit가 실행중인 경우)
-					//isExEnabledOnly => Modifier가 ExclusiveEnabled인 것만 실행
-					//isSubExEnabledOnly => Modifier가 SubExEnabled인 것만 실행
-					//그외에는 실행하지 않는다.
-				}
+				//	//안내
+				//	//isExCalculated = true인 경우 (Ex Edit가 실행중인 경우)
+				//	//isExEnabledOnly => Modifier가 ExclusiveEnabled인 것만 실행
+				//	//isSubExEnabledOnly => Modifier가 SubExEnabled인 것만 실행
+				//	//그외에는 실행하지 않는다.
+				//}
 
 				prevWeight = 0.0f;
 				curWeight_Transform = 0.0f;
@@ -1455,15 +1714,56 @@ namespace AnyPortrait
 					}
 
 					//추가 Ex Edit 3.22
-					if(isExCalculated)
+					//if(isExCalculated)
+					//{
+					//	//TODO  21.2.15 이것도 수정하자
+					//	//if((isExEnabledOnly && resultParam._linkedModifier._editorExclusiveActiveMod != apModifierBase.MOD_EDITOR_ACTIVE.ExclusiveEnabled)
+					//	//	|| (isSubExEnabledOnly && resultParam._linkedModifier._editorExclusiveActiveMod != apModifierBase.MOD_EDITOR_ACTIVE.SubExEnabled))
+					//	{
+					//		//ExEdit 모드에 맞지 않는다.
+					//		continue;
+					//	}
+					//}
+
+					//코드 개선 21.2.15
+					if (resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_Force)
 					{
-						if((isExEnabledOnly && resultParam._linkedModifier._editorExclusiveActiveMod != apModifierBase.MOD_EDITOR_ACTIVE.ExclusiveEnabled)
-							|| (isSubExEnabledOnly && resultParam._linkedModifier._editorExclusiveActiveMod != apModifierBase.MOD_EDITOR_ACTIVE.SubExEnabled))
-						{
-							//ExEdit 모드에 맞지 않는다.
-							continue;
-						}
+						//이 모디파이어는 실행하지 않는다.
+						continue;
 					}
+					bool isRunnable = false;
+					switch (_parentRenderUnit._exCalculateMode)
+					{
+						case apRenderUnit.EX_CALCULATE.Enabled_Run:
+							//무조건 실행
+							isRunnable = true;
+							break;
+						case apRenderUnit.EX_CALCULATE.Enabled_Edit:
+							//편집 중인 것만 실행하려면
+							if (resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Run
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Edit
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Background)
+							{
+								isRunnable = true;
+							}
+							break;
+						case apRenderUnit.EX_CALCULATE.Disabled_ExRun:
+							//편집되지 않지만, 그외의 것이 실행되려면 (또는 무시하고 실행하는 것만)
+							if (resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Run
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_NotEdit
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Background
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_ExceptColor)
+							{
+								isRunnable = true;
+							}
+							break;
+					}
+
+					if(!isRunnable)
+					{
+						continue;
+					}
+
 
 
 					// Blend 방식에 맞게 Pos를 만들자

@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -243,92 +242,100 @@ namespace AnyPortrait
 
 		void OnGUI()
 		{
-			int width = (int)position.width;
-			int height = (int)position.height;
-			width -= 10;
-
-			EditorGUILayout.LabelField(_text_SetEditorPath);
-			GUILayout.Space(10);
-			EditorGUILayout.TextField(_text_CurrentPah);
-
-			GUILayout.Space(5);
-			if (GUILayout.Button(_text_SetPathButton, GUILayout.Height(40)))
+			try
 			{
-				//TODO
-				string strRootPath = EditorUtility.OpenFolderPanel("Set Root Folder of AnyPortrait", "", "");
-				if(!string.IsNullOrEmpty(strRootPath))
+				int width = (int)position.width;
+				int height = (int)position.height;
+				width -= 10;
+
+				EditorGUILayout.LabelField(_text_SetEditorPath);
+				GUILayout.Space(10);
+				EditorGUILayout.TextField(_text_CurrentPah);
+
+				GUILayout.Space(5);
+				if (GUILayout.Button(_text_SetPathButton, GUILayout.Height(40)))
 				{
-					DirectoryInfo di_AssetPath = new DirectoryInfo(Application.dataPath);
-					DirectoryInfo di_SelectedPath = new DirectoryInfo(strRootPath);
-
-					//Debug.LogError("Selected Path [" + strRootPath + "]");
-					//Debug.LogError("DI Path > Assets : " + di_AssetPath.FullName);
-					//Debug.LogError("DI Path > Selected : " + di_SelectedPath.FullName);
-
-					string str_AssetPath = di_AssetPath.FullName;
-					string str_SelectedPath = di_SelectedPath.FullName;
-
-					str_AssetPath = str_AssetPath.Replace("\\", "/");
-					if(!str_AssetPath.EndsWith("/"))
+					//TODO
+					string strRootPath = EditorUtility.OpenFolderPanel("Set Root Folder of AnyPortrait", "", "");
+					if (!string.IsNullOrEmpty(strRootPath))
 					{
-						str_AssetPath += "/";
-					}
-					str_SelectedPath = str_SelectedPath.Replace("\\", "/");
-					if(!str_SelectedPath.EndsWith("/"))
-					{
-						str_SelectedPath += "/";
-					}
+						DirectoryInfo di_AssetPath = new DirectoryInfo(Application.dataPath);
+						DirectoryInfo di_SelectedPath = new DirectoryInfo(strRootPath);
 
-					if(!str_SelectedPath.EndsWith("/AnyPortrait/"))
-					{
-						//AnyPortrait 폴더가 아니다.
-						//"Path Setting", "The selected folder is not where the AnyPortrait package is located.", "Okay"
-						EditorUtility.DisplayDialog(_text_Info_Title, _text_Info_NoPackage, _text_Info_Okay);
-					}
-					else if(str_SelectedPath.Contains(str_AssetPath))
-					{
-						//경로가 포함된게 맞다.
-						//상대 경로를 만들자
-						string relativePath = str_SelectedPath.Substring(str_AssetPath.Length);
-						relativePath = "Assets/" + relativePath;
+						//Debug.LogError("Selected Path [" + strRootPath + "]");
+						//Debug.LogError("DI Path > Assets : " + di_AssetPath.FullName);
+						//Debug.LogError("DI Path > Selected : " + di_SelectedPath.FullName);
 
+						string str_AssetPath = di_AssetPath.FullName;
+						string str_SelectedPath = di_SelectedPath.FullName;
 
-						if(_pathSetting == null)
+						str_AssetPath = str_AssetPath.Replace("\\", "/");
+						if (!str_AssetPath.EndsWith("/"))
 						{
-							_pathSetting = new apPathSetting();
+							str_AssetPath += "/";
 						}
-						_pathSetting.Save(relativePath);
-						_text_CurrentPah = _pathSetting.Load();
-						
-						//Debug.LogError("Relative Path : " + relativePath);
-					}
-					else
-					{
-						//Assets 폴더 내부에 있어야 한다.
-						//"Path Setting", "The path for AnyPortrait must be inside the Assets folder.", "Okay"
-						EditorUtility.DisplayDialog(_text_Info_Title, _text_Info_NoPackage, _text_Info_NoAssetFolder);
-					}
-					
-				}
+						str_SelectedPath = str_SelectedPath.Replace("\\", "/");
+						if (!str_SelectedPath.EndsWith("/"))
+						{
+							str_SelectedPath += "/";
+						}
 
-				apEditorUtil.ReleaseGUIFocus();
-				
-			}
-			if (GUILayout.Button(_text_UseDefaultPathButton, GUILayout.Height(25)))
-			{
-				if(_pathSetting == null)
+						if (!str_SelectedPath.EndsWith("/AnyPortrait/"))
+						{
+							//AnyPortrait 폴더가 아니다.
+							//"Path Setting", "The selected folder is not where the AnyPortrait package is located.", "Okay"
+							EditorUtility.DisplayDialog(_text_Info_Title, _text_Info_NoPackage, _text_Info_Okay);
+						}
+						else if (str_SelectedPath.Contains(str_AssetPath))
+						{
+							//경로가 포함된게 맞다.
+							//상대 경로를 만들자
+							string relativePath = str_SelectedPath.Substring(str_AssetPath.Length);
+							relativePath = "Assets/" + relativePath;
+
+
+							if (_pathSetting == null)
+							{
+								_pathSetting = new apPathSetting();
+							}
+							_pathSetting.Save(relativePath);
+							_text_CurrentPah = _pathSetting.Load();
+
+							//Debug.LogError("Relative Path : " + relativePath);
+						}
+						else
+						{
+							//Assets 폴더 내부에 있어야 한다.
+							//"Path Setting", "The path for AnyPortrait must be inside the Assets folder.", "Okay"
+							EditorUtility.DisplayDialog(_text_Info_Title, _text_Info_NoPackage, _text_Info_NoAssetFolder);
+						}
+
+					}
+
+					apEditorUtil.ReleaseGUIFocus();
+
+				}
+				if (GUILayout.Button(_text_UseDefaultPathButton, GUILayout.Height(25)))
 				{
-					_pathSetting = new apPathSetting();
-				}
-				_pathSetting.SetDefaultPath();
-				_text_CurrentPah = _pathSetting.Load();
+					if (_pathSetting == null)
+					{
+						_pathSetting = new apPathSetting();
+					}
+					_pathSetting.SetDefaultPath();
+					_text_CurrentPah = _pathSetting.Load();
 
-				apEditorUtil.ReleaseGUIFocus();
+					apEditorUtil.ReleaseGUIFocus();
+				}
+				GUILayout.Space(10);
+				if (GUILayout.Button(_text_Close, GUILayout.Height(25)))
+				{
+					CloseDialog();
+				}
 			}
-			GUILayout.Space(10);
-			if (GUILayout.Button(_text_Close, GUILayout.Height(25)))
+			catch (Exception ex)
 			{
-				CloseDialog();
+				//추가 21.3.17 : Try-Catch를 추가했다. Mac에서 에러가 발생할 확률이 높기 때문
+				Debug.LogError("AnyPortrait : Exception occurs : " + ex);
 			}
 		}
 	}

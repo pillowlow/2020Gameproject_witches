@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -69,11 +68,29 @@ namespace AnyPortrait
 
 		public bool _isSocketEnabled = false;
 
+		//추가 21.3.7
+		//지글본 속성을 더 추가한다. (단 파싱은 구버전 호환 가능하게)
+		public bool _isJiggle = false;
+		public float _jiggle_Mass = 1.0f;
+		public float _jiggle_K = 50.0f;
+		public float _jiggle_Drag = 0.8f;
+		public float _jiggle_Damping = 5.0f;
+		public bool _isJiggleAngleConstraint = false;
+		public float _jiggle_AngleLimit_Min = -30.0f;
+		public float _jiggle_AngleLimit_Max = 30.0f;
+
+		public bool _isJigglePropertyImported = false;
+
 		//------------------------------------------------
 		// 로드된 정보를 어떻게 적용할 것인가에 대한 정보
 		public bool _isImportEnabled = true;
 		public bool _isIKEnabled = true;
 		public bool _isShapeEnabled = true;
+
+
+		private const string TEXT_SLASH = "/";
+		private const string TEXT_1_AS_TRUE = "1";
+		private const string TEXT_0_AS_FALSE = "0";
 
 		// Init
 		//---------------------------------------------------
@@ -155,6 +172,16 @@ namespace AnyPortrait
 			_IKAngleRange_Upper = bone._IKAngleRange_Upper;
 			_IKAnglePreferred = bone._IKAnglePreferred;
 			_isSocketEnabled = false;
+
+			//추가 21.3.7 : 지글본도 저장한다.
+			_isJiggle = bone._isJiggle;
+			_jiggle_Mass = bone._jiggle_Mass;
+			_jiggle_K = bone._jiggle_K;
+			_jiggle_Drag = bone._jiggle_Drag;
+			_jiggle_Damping = bone._jiggle_Damping;
+			_isJiggleAngleConstraint = bone._isJiggleAngleConstraint;
+			_jiggle_AngleLimit_Min = bone._jiggle_AngleLimit_Min;
+			_jiggle_AngleLimit_Max = bone._jiggle_AngleLimit_Max;
 		}
 
 
@@ -174,46 +201,58 @@ namespace AnyPortrait
 				sb.Append(_name.Length.ToString());
 			}
 			sb.Append(_name);
-			sb.Append(_unitID);			sb.Append("/");
-			sb.Append(_parentUnitID);	sb.Append("/");
-			sb.Append(_level);			sb.Append("/");
-			sb.Append(_depth);			sb.Append("/");
+			sb.Append(_unitID);			sb.Append(TEXT_SLASH);
+			sb.Append(_parentUnitID);	sb.Append(TEXT_SLASH);
+			sb.Append(_level);			sb.Append(TEXT_SLASH);
+			sb.Append(_depth);			sb.Append(TEXT_SLASH);
 
-			sb.Append(_childUnitID.Count);			sb.Append("/");
+			sb.Append(_childUnitID.Count);			sb.Append(TEXT_SLASH);
 			for (int i = 0; i < _childUnitID.Count; i++)
 			{
 				sb.Append(_childUnitID[i]);
-				sb.Append("/");
+				sb.Append(TEXT_SLASH);
 			}
 
-			sb.Append(_defaultMatrix._pos.x);		sb.Append("/");
-			sb.Append(_defaultMatrix._pos.y);		sb.Append("/");
-			sb.Append(_defaultMatrix._angleDeg);	sb.Append("/");
-			sb.Append(_defaultMatrix._scale.x);		sb.Append("/");
-			sb.Append(_defaultMatrix._scale.y);		sb.Append("/");
+			sb.Append(_defaultMatrix._pos.x);		sb.Append(TEXT_SLASH);
+			sb.Append(_defaultMatrix._pos.y);		sb.Append(TEXT_SLASH);
+			sb.Append(_defaultMatrix._angleDeg);	sb.Append(TEXT_SLASH);
+			sb.Append(_defaultMatrix._scale.x);		sb.Append(TEXT_SLASH);
+			sb.Append(_defaultMatrix._scale.y);		sb.Append(TEXT_SLASH);
 
-			sb.Append(_color.r);	sb.Append("/");
-			sb.Append(_color.g);	sb.Append("/");
-			sb.Append(_color.b);	sb.Append("/");
-			sb.Append(_color.a);	sb.Append("/");
+			sb.Append(_color.r);	sb.Append(TEXT_SLASH);
+			sb.Append(_color.g);	sb.Append(TEXT_SLASH);
+			sb.Append(_color.b);	sb.Append(TEXT_SLASH);
+			sb.Append(_color.a);	sb.Append(TEXT_SLASH);
 
-			sb.Append(_shapeWidth);		sb.Append("/");
-			sb.Append(_shapeLength);	sb.Append("/");
-			sb.Append(_shapeTaper);	sb.Append("/");
+			sb.Append(_shapeWidth);		sb.Append(TEXT_SLASH);
+			sb.Append(_shapeLength);	sb.Append(TEXT_SLASH);
+			sb.Append(_shapeTaper);		sb.Append(TEXT_SLASH);
 
-			sb.Append((int)_optionIK);	sb.Append("/");
-			sb.Append((_isIKTail ? "1" : "0"));	sb.Append("/");
+			sb.Append((int)_optionIK);			sb.Append(TEXT_SLASH);
+			sb.Append((_isIKTail ? TEXT_1_AS_TRUE : TEXT_0_AS_FALSE));	sb.Append(TEXT_SLASH);
 
-			sb.Append(_IKTargetBoneUnitID);			sb.Append("/");
-			sb.Append(_IKNextChainedBoneUnitID);	sb.Append("/");
-			sb.Append(_IKHeaderBoneUnitID);			sb.Append("/");
+			sb.Append(_IKTargetBoneUnitID);			sb.Append(TEXT_SLASH);
+			sb.Append(_IKNextChainedBoneUnitID);	sb.Append(TEXT_SLASH);
+			sb.Append(_IKHeaderBoneUnitID);			sb.Append(TEXT_SLASH);
 
-			sb.Append((_isIKAngleRange ? "1" : "0"));	sb.Append("/");
-			sb.Append(_IKAngleRange_Lower);				sb.Append("/");
-			sb.Append(_IKAngleRange_Upper);				sb.Append("/");
-			sb.Append(_IKAnglePreferred);				sb.Append("/");
+			sb.Append((_isIKAngleRange ? TEXT_1_AS_TRUE : TEXT_0_AS_FALSE));	sb.Append(TEXT_SLASH);
+			sb.Append(_IKAngleRange_Lower);				sb.Append(TEXT_SLASH);
+			sb.Append(_IKAngleRange_Upper);				sb.Append(TEXT_SLASH);
+			sb.Append(_IKAnglePreferred);				sb.Append(TEXT_SLASH);
 
-			sb.Append((_isSocketEnabled ? "1" : "0"));	sb.Append("/");
+			sb.Append((_isSocketEnabled ? TEXT_1_AS_TRUE : TEXT_0_AS_FALSE));	sb.Append(TEXT_SLASH);
+
+			//추가 21.3.7 : 지글본 옵션도 내보내자. 파싱시 조심할 것
+			sb.Append((_isJiggle ? TEXT_1_AS_TRUE : TEXT_0_AS_FALSE));	sb.Append(TEXT_SLASH);
+			sb.Append(_jiggle_Mass);									sb.Append(TEXT_SLASH);
+			sb.Append(_jiggle_K);										sb.Append(TEXT_SLASH);
+			sb.Append(_jiggle_Drag);									sb.Append(TEXT_SLASH);
+			sb.Append(_jiggle_Damping);									sb.Append(TEXT_SLASH);
+			sb.Append((_isJiggleAngleConstraint ? TEXT_1_AS_TRUE : TEXT_0_AS_FALSE));	sb.Append(TEXT_SLASH);
+			sb.Append(_jiggle_AngleLimit_Min);							sb.Append(TEXT_SLASH);
+			sb.Append(_jiggle_AngleLimit_Max);							sb.Append(TEXT_SLASH);
+
+
 
 			return sb.ToString();
 		}
@@ -298,6 +337,30 @@ namespace AnyPortrait
 				iStr += 4;
 
 				_isSocketEnabled = (int.Parse(strUnits[iStr]) == 1) ? true : false;
+				iStr += 1;
+
+				//추가 21.3.7 : 지글본 옵션이 있다면 가져오자
+				//8개가 더 있어야 한다.
+				if(iStr + 7 < strUnits.Length)
+				{
+					_isJigglePropertyImported = true;//Import가 되었다.
+
+					_isJiggle = (int.Parse(strUnits[iStr]) == 1) ? true : false;
+					_jiggle_Mass = float.Parse(strUnits[iStr + 1]);
+					_jiggle_K = float.Parse(strUnits[iStr + 2]);
+					_jiggle_Drag = float.Parse(strUnits[iStr + 3]);
+					_jiggle_Damping = float.Parse(strUnits[iStr + 4]);
+					_isJiggleAngleConstraint = (int.Parse(strUnits[iStr + 5]) == 1) ? true : false;
+					_jiggle_AngleLimit_Min = float.Parse(strUnits[iStr + 6]);
+					_jiggle_AngleLimit_Max = float.Parse(strUnits[iStr + 7]);
+					iStr += 8;
+				}
+				else
+				{
+					//지글본 정보가 없다.
+					_isJigglePropertyImported = false;
+				}
+
 
 				_isImportEnabled = true;
 				_isIKEnabled = true;

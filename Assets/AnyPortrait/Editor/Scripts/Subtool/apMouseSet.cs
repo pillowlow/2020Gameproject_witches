@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -46,6 +45,9 @@ namespace AnyPortrait
 		private Vector2 _mousePos_NotBound = Vector2.zero;
 		private Vector2 _mousePos_Last = Vector2.zero;
 
+		private int _windowWidth = 0;
+		private int _windowHeight = 0;
+
 		private int _wheelValue = 0;
 		private bool _isAnyButtonUpEvent = false;//추가 20.3.31 : 버튼 중 하나라도 Up 이벤트가 있다면 일부 조건문을 통과해야한다.
 		public bool IsAnyButtonUpEvent {  get { return _isAnyButtonUpEvent; } }
@@ -67,12 +69,30 @@ namespace AnyPortrait
 			MeshGroup_Bone,
 			MeshGroup_Modifier,
 			MeshGroup_Animation,
+			GUIMenu,
 			//TODO:여기에 추가해서 사용하자
 		}
 		private ACTION _actionID = ACTION.None;// 0 미만일 때에는 점유중인 액션이 없다.
 
 		private int _curButtonIndex = -1;
 		
+		private enum MOUSE_OUT_OF_WINDOW
+		{
+			None, //밖에 나가지 않았다
+			Outside,//윈도우 밖으로 나갔다.
+			OutsideWithRawEvent,//윈도우 밖으로 나갔지만 RawEvent가 정상적으로 인식되었다.
+			InsideButGhost,//Outside > Inside로 변경되었지만 눌러서 이동해왔는지, 그냥 들어왔는지 모르는 상태.
+		}
+
+		//None -(밖으로 나가면)-> Outside -(RawEvent 입력되면)-> OutsideWithRawEvent
+		//안으로 들어올 때
+		//- Outside : 안에서 움직이는동안 Drag가 발생했다면 Pressed 유지. Move가 발생했거나, 이벤트 없이 마우스가 이동되는게 n차례 발생하면 Up으로 한번 호출 > None
+		//- OutsideWithRawEvent : Raw 이벤트가 잘 발생했으므로, 그냥 None으로 변경
+
+		private MOUSE_OUT_OF_WINDOW _outOfWindowType = MOUSE_OUT_OF_WINDOW.None;
+		private bool _isCurMouseInWindow = false;
+		private int _cntGhostMove = 0;
+		private const int NUM_GHOST_MOVE_LIMIT = 3;//3프레임동안 이벤트 없이 고스트 무브를 했다면, 
 
 		// Init
 		//--------------------------------------
@@ -105,7 +125,8 @@ namespace AnyPortrait
 			_isAnyButtonUpEvent = false;
 		}
 
-		public void ReadyToUpdate()
+		//파라미터 추가 21.2.10 : 윈도우 밖에서 rawEvent가 인식되지 않는 버그가 Unity 2017부터 있다. 이걸 체크하기 위해 윈도우 크기를 매번 받아와야 한다.
+		public void ReadyToUpdate(int windowWidth, int windowHeight)
 		{
 			for (int i = 0; i < NUM_MOUSE_BTN; i++)
 			{
@@ -113,13 +134,66 @@ namespace AnyPortrait
 			}
 			_wheelValue = 0;
 			_isAnyButtonUpEvent = false;
+
+			//추가
+			_windowWidth = windowWidth;
+			_windowHeight = windowHeight;
 		}
 
 		public void SetMousePos(Vector2 mousePos, Vector2 mousePos_NotBound)
 		{
 			_mousePos = mousePos;
 			_mousePos_Last = mousePos;
+
+			bool isMouseMoved_NotBound = ((int)_mousePos_NotBound.x != (int)mousePos_NotBound.x)
+									|| ((int)_mousePos_NotBound.y != (int)mousePos_NotBound.y);
+
 			_mousePos_NotBound = mousePos_NotBound;
+
+			//추가 21.2.10 : 마우스 위치가 윈도우 밖인지 체크한다.
+			_isCurMouseInWindow = 0.0f <= _mousePos_NotBound.x && _mousePos_NotBound.x <= _windowWidth 
+									&& 0.0f <= _mousePos_NotBound.y && _mousePos_NotBound.y <= _windowHeight;
+
+			if(!_isCurMouseInWindow)
+			{
+				//마우스가 윈도우 밖에 있다면
+
+				if(_outOfWindowType == MOUSE_OUT_OF_WINDOW.None 
+					|| _outOfWindowType == MOUSE_OUT_OF_WINDOW.InsideButGhost)
+				{
+					//None/Inside > Outside
+					_outOfWindowType = MOUSE_OUT_OF_WINDOW.Outside;
+					_cntGhostMove = 0;
+				}
+			}
+			else
+			{
+				//마우스가 윈도우 안에 있다면
+				switch (_outOfWindowType)
+				{
+					case MOUSE_OUT_OF_WINDOW.OutsideWithRawEvent:
+						//RawEvent까지 인식했다면 None으로 바로 변경
+						_outOfWindowType = MOUSE_OUT_OF_WINDOW.None;
+						break;
+
+					case MOUSE_OUT_OF_WINDOW.Outside:
+						//Outside상태에서 RawEvent를 받지 않고 들어오면 고스트 상태가 된다.
+						//바로 결정을 못하고 3번의 마우스 이동 체크를 기다려야 한다.
+						_outOfWindowType = MOUSE_OUT_OF_WINDOW.InsideButGhost;
+						_cntGhostMove = 0;
+						break;
+
+					case MOUSE_OUT_OF_WINDOW.InsideButGhost:
+						if(isMouseMoved_NotBound)
+						{
+							//마우스가 Raw이벤트 없이 이동했다면 카운트 증가
+							_cntGhostMove++;
+
+							//리미트보다 많이 이동했다면 강제로 Up을 발생시키는데, 그건 아래의 함수에서..
+						}
+						break;
+				}
+			}
 		}
 
 
@@ -130,6 +204,44 @@ namespace AnyPortrait
 
 		public void Update_Button(EventType mouseEventType, int buttonIndex, bool isMouseInGUI)
 		{
+			//변경 21.2.10 : 윈도우 내부에서의 처리는 다음과 같으며,
+			//만약 윈도우 밖에 있다면 이벤트 타입이 바뀔 수 있다.
+			if(_outOfWindowType == MOUSE_OUT_OF_WINDOW.Outside)
+			{
+				if(_isCurMouseInWindow)
+				{
+					//Raw 입력 없이 윈도우 안에 있다면 > 마우스 이벤트가 있었다면 그대로 유지한다.
+					//Debug.LogError("Raw 없이 외부>내부로 들어온 상태 <복구> : " + mouseEventType);
+					_outOfWindowType = MOUSE_OUT_OF_WINDOW.None;
+				}
+				else
+				{
+					//윈도우 밖에 있는데 마우스 이벤트를 받았다면
+					if(mouseEventType == EventType.MouseDown ||
+						mouseEventType == EventType.MouseDrag ||
+						mouseEventType == EventType.MouseMove ||
+						mouseEventType == EventType.MouseUp)
+					{
+						_outOfWindowType = MOUSE_OUT_OF_WINDOW.OutsideWithRawEvent;
+						_cntGhostMove = 0;
+					}
+				}
+			}
+			else if(_outOfWindowType == MOUSE_OUT_OF_WINDOW.InsideButGhost)
+			{
+				//안에 있었는데 마우스 이벤트를 만났다.
+				//Debug.LogError("고스트 상태에서 실제 이벤트를 만났다 <복구> : " + mouseEventType);
+				if(_isCurMouseInWindow)
+				{
+					_outOfWindowType = MOUSE_OUT_OF_WINDOW.None;
+				}
+				else
+				{
+					_outOfWindowType = MOUSE_OUT_OF_WINDOW.OutsideWithRawEvent;
+				}
+			}
+
+
 			switch (mouseEventType)
 			{
 				case EventType.MouseDown:
@@ -175,7 +287,7 @@ namespace AnyPortrait
 					}
 					break;
 			}
-
+			
 			if(_curButtonIndex != buttonIndex)
 			{
 				//이전에 누른 마우스 버튼과 다르다.
@@ -206,16 +318,35 @@ namespace AnyPortrait
 
 		public void Update_NoEvent()
 		{
-			//현재 마우스 이벤트가 아니라면
-			//이전) 그냥 무시되는 프레임
-			//변경)
-			//- Up 이벤트가 있다면 Released로 모두 전환해야한다. 그 외에는 변환 없음
-			//- 휠값은 0으로 초기화된다.
-			//- 모든 버튼값이 눌리지 않았다면, ActionID를 초기화한다.
-			for (int i = 0; i < NUM_MOUSE_BTN; i++)
+			//추가 21.2.10
+			//만약 고스트 상태였다면 강제로 Up 이벤트를 발생시킨다.
+			//그 외에는 No Event 코드 그대로
+			if (_outOfWindowType == MOUSE_OUT_OF_WINDOW.InsideButGhost && _cntGhostMove >= NUM_GHOST_MOVE_LIMIT)
 			{
-				_mouseBtn[i].SetReleasedIfUpStatus();//<<Up상태일때 Released로 전환하는 함수
+				_outOfWindowType = MOUSE_OUT_OF_WINDOW.None;
+				_cntGhostMove = 0;
+
+				//Debug.LogError("중요. 고스트 입력 한계로 강제로 Up 이벤트 발생");
+				for (int i = 0; i < NUM_MOUSE_BTN; i++)
+				{
+					//모두 Release
+					_mouseBtn[i].Update_Released();
+				}
 			}
+			else
+			{
+				//현재 마우스 이벤트가 아니라면
+				//이전) 그냥 무시되는 프레임
+				//변경)
+				//- Up 이벤트가 있다면 Released로 모두 전환해야한다. 그 외에는 변환 없음
+				//- 휠값은 0으로 초기화된다.
+				//- 모든 버튼값이 눌리지 않았다면, ActionID를 초기화한다.
+				for (int i = 0; i < NUM_MOUSE_BTN; i++)
+				{
+					_mouseBtn[i].SetReleasedIfUpStatus();//<<Up상태일때 Released로 전환하는 함수
+				}
+			}
+			
 
 			bool isAnyPressed = false;
 			isAnyPressed = _mouseBtn[0].IsPressed ? true : isAnyPressed;
@@ -232,6 +363,30 @@ namespace AnyPortrait
 		}
 
 		
+		/// <summary>
+		/// UI로 인하여 강제로 Up/Release 이벤트로 바꾸는 함수.
+		/// </summary>
+		public void Update_ReleaseForce()
+		{
+			for (int i = 0; i < NUM_MOUSE_BTN; i++)
+			{
+				_mouseBtn[i].Update_Released();
+			}
+
+			bool isAnyPressed = false;
+			isAnyPressed = _mouseBtn[0].IsPressed ? true : isAnyPressed;
+			isAnyPressed = _mouseBtn[1].IsPressed ? true : isAnyPressed;
+			isAnyPressed = _mouseBtn[2].IsPressed ? true : isAnyPressed;
+
+			if(!isAnyPressed)
+			{
+				_actionID = ACTION.None;//<<Action ID 초기화
+			}
+
+			_isAnyButtonUpEvent = false;
+		}
+
+
 
 
 		//어떤 액션을 했다면 ActionID를 등록하거나 키값을 갱신해야한다.

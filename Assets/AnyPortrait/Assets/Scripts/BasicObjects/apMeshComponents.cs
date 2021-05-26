@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -111,48 +110,7 @@ namespace AnyPortrait
 			Vector2 v2_A = vert2_A._pos;
 			Vector2 v2_B = vert2_B._pos;
 
-			//Vector2 a = v1_B - v1_A;
-			//Vector2 b = v2_A - v2_B;
-			//Vector2 c = v1_A - v2_A;
-
-			//float alphaNumerator = b.y * c.x - b.x * c.y;
-			//float alphaDenominator = a.y * b.x - a.x * b.y;
-			//float betaNumerator = a.x * c.y - a.y * c.x;
-			//float betaDenominator = alphaDenominator; /*2013/07/05, fix by Deniz*/
-
-			//bool doIntersect = true;
-
-			//if (alphaDenominator == 0 || betaDenominator == 0)
-			//{
-			//	doIntersect = false;
-			//}
-			//else
-			//{
-
-			//	if (alphaDenominator > 0)
-			//	{
-			//		if (alphaNumerator < 0 || alphaNumerator > alphaDenominator)
-			//		{
-			//			doIntersect = false;
-			//		}
-			//	}
-			//	else if (alphaNumerator > 0 || alphaNumerator < alphaDenominator)
-			//	{
-			//		doIntersect = false;
-			//	}
-
-			//	if (doIntersect && betaDenominator > 0)
-			//	{
-			//		if (betaNumerator < 0 || betaNumerator > betaDenominator)
-			//		{
-			//			doIntersect = false;
-			//		}
-			//	}
-			//	else if (betaNumerator > 0 || betaNumerator < betaDenominator)
-			//	{
-			//		doIntersect = false;
-			//	}
-			//}
+			
 
 			//return doIntersect;
 
@@ -1117,11 +1075,51 @@ namespace AnyPortrait
 			}
 		}
 
+
+		private class LinkedVert
+		{
+			public apVertex _vert = null;
+			public LinkedVert _prevData = null;
+			public LinkedVert _nextData = null;
+			public List<apMeshEdge> _linkedEdges = null;
+
+			public float _angleToPrev = 0.0f;
+			public float _angleToNext = 0.0f;
+
+			public bool _isIndent = false;//이게 true면 Concave를 만드는 버텍스이다.
+			public LinkedVert(apVertex vert)
+			{
+				_vert = vert;
+				_linkedEdges = new List<apMeshEdge>();
+			}
+
+			public void Reverse()
+			{
+				LinkedVert tmpData = _prevData;
+				_prevData = _nextData;
+				_nextData = tmpData;
+
+				float tmpAngle = _angleToPrev;
+				_angleToPrev = _angleToNext;
+				_angleToNext = tmpAngle;
+
+				//이건 360도에 맞게
+				if(_angleToPrev > _angleToNext)
+				{
+					_angleToPrev -= 360.0f;
+				}
+
+				_isIndent = !_isIndent;//예각, 둔각 토글
+			}
+		}
+
+
 		public void MakeHiddenEdgeAndTri()
 		{
 			int nVert = _verts.Count;
 			int nNeedHiddenEdge = nVert - 3;
 			int nNeedTri = nVert - 2;
+
 
 			if (_hidddenEdges.Count == nNeedHiddenEdge && _tris.Count == nNeedTri)
 			{
@@ -1136,6 +1134,346 @@ namespace AnyPortrait
 
 			if (nNeedHiddenEdge > 0)
 			{
+
+				//추가 21.1.9 : 버텍스들의 "예각", "둔각" 여부를 따로 저장한다.
+				//- 버텍스들을 임의의 연결 순서대로 Start > End로 연결한다.
+				//- 두개의 Edge로의 각도를 Atan2로 계산한 후 "현재 방향"에서의 각도를 저장한다. (180도 비교 여부도 저장)
+				//- 모든 버텍스의 각도의 합과 그 반대의 각도를 합친 결과를 비교하여, 반대의 각도보다 작으면 정방향, 그렇지 않으면 역방향
+				//- 역방향이라면, 순서를 바꾸고, 예각/둔각 상태를 초기화한다.
+				//이후 HiddenEdge를 지정할 때, LinkedVert를 이용하여 만든다.
+				LinkedVert startLVert = null;
+				LinkedVert curLVert = null;
+
+				List<LinkedVert> linkedVerts = new List<LinkedVert>();
+				Dictionary<apVertex, LinkedVert> vert2LinkedData = new Dictionary<apVertex, LinkedVert>();
+
+				//Edge를 돌면서 버텍스와 연결된 Edge들을 리스트로 저장하자
+				apMeshEdge curEdge = null;
+				for (int i = 0; i < _edges.Count; i++)
+				{
+					curEdge = _edges[i];
+					apVertex vertA = curEdge._vert1;
+					apVertex vertB = curEdge._vert2;
+
+					LinkedVert linkedVertA = null;
+					LinkedVert linkedVertB = null;
+
+					if(vert2LinkedData.ContainsKey(vertA)) { linkedVertA = vert2LinkedData[vertA]; }
+					else
+					{
+						linkedVertA = new LinkedVert(vertA);
+						vert2LinkedData.Add(vertA, linkedVertA);
+						linkedVerts.Add(linkedVertA);
+					}
+					linkedVertA._linkedEdges.Add(curEdge);
+
+					if(vert2LinkedData.ContainsKey(vertB)) { linkedVertB = vert2LinkedData[vertB]; }
+					else
+					{
+						linkedVertB = new LinkedVert(vertB);
+						vert2LinkedData.Add(vertB, linkedVertB);
+						linkedVerts.Add(linkedVertB);
+					}
+					linkedVertB._linkedEdges.Add(curEdge);
+				}
+
+				startLVert = linkedVerts[0];
+				curLVert = startLVert;
+				//이제 순서대로 연결을 하자
+				List<LinkedVert> sortedLinkedVerts = new List<LinkedVert>();
+				List<apMeshEdge> usedEdges = new List<apMeshEdge>();
+				sortedLinkedVerts.Add(startLVert);
+
+				//연결 불가 리스트를 만들자
+				//각도에 의해서 연결 불가능한 조합을 만들어두자
+				Dictionary<apVertex, Dictionary<apVertex, bool>> preventableCondsByAngle = null;
+
+				bool isAnyError = false;
+				while(true)
+				{
+					//연결된 두개의 Edge중 아직 사용 안된 Edge를 꺼내자
+					apMeshEdge nextEdge = null;
+					for (int iEdge = 0; iEdge < curLVert._linkedEdges.Count; iEdge++)
+					{
+						apMeshEdge linkedEdge = curLVert._linkedEdges[iEdge];
+						if(!usedEdges.Contains(linkedEdge))
+						{
+							//아직 사용안된 Edge 발견
+							nextEdge = linkedEdge;
+							break;
+						}
+					}
+					if(nextEdge == null)
+					{
+						//연결 실패
+						isAnyError = true;
+						break;
+					}
+					usedEdges.Add(nextEdge);
+
+					apVertex nextVert = (nextEdge._vert1 == curLVert._vert) ? nextEdge._vert2 : nextEdge._vert1;
+					LinkedVert nextLVert = vert2LinkedData[nextVert];
+
+					//두개를 연결한다.
+					curLVert._nextData = nextLVert;
+					nextLVert._prevData = curLVert;
+
+					if(sortedLinkedVerts.Contains(nextLVert)
+						|| sortedLinkedVerts.Count >= linkedVerts.Count)
+					{
+						//한바퀴 다 돌았다.
+						break;
+					}
+
+					sortedLinkedVerts.Add(nextLVert);
+					curLVert = nextLVert;
+				}
+				
+				//bool isDebug = false;
+				if(!isAnyError)
+				{
+					//에러가 없다면,
+					//이제 연결된 각도들을 Prev > Next 각도를 계산한다.
+					float totalNormalAngles = 0.0f;
+					float totalReversedAngles = 0.0f;
+					bool isAnyIndent = false;
+					for (int i = 0; i < sortedLinkedVerts.Count; i++)
+					{
+						curLVert = sortedLinkedVerts[i];
+						LinkedVert prevLVert = curLVert._prevData;
+						LinkedVert nextLVert = curLVert._nextData;
+
+						Vector2 cur2Prev = prevLVert._vert._pos - curLVert._vert._pos;
+						Vector2 cur2Next = nextLVert._vert._pos - curLVert._vert._pos;
+
+						float prevAngle = apUtil.AngleTo360(Mathf.Atan2(cur2Prev.y, cur2Prev.x) * Mathf.Rad2Deg);
+						float nextAngle = apUtil.AngleTo360(Mathf.Atan2(cur2Next.y, cur2Next.x) * Mathf.Rad2Deg);
+
+						//크기는 항상 nextAngle이 더 커야한다.
+						if(nextAngle < prevAngle)
+						{
+							nextAngle += 360.0f;
+						}	
+
+						float deltaAngle = apUtil.AngleTo360(nextAngle - prevAngle);
+						float reverseAngle = 360.0f - deltaAngle;
+
+						//일단 각도를 넣자
+						curLVert._angleToPrev = prevAngle;
+						curLVert._angleToNext = nextAngle;
+
+						//현재 방향에서 각도가 180도 보다 작다면 예각, 그렇지 않으면 둔각
+						if(deltaAngle < 180.0f)
+						{
+							curLVert._isIndent = false;//False가 예각
+						}
+						else
+						{
+							curLVert._isIndent = true;
+							isAnyIndent = true;
+							//isDebug = true;
+						}
+
+						//방향이 정확한지 확인하기 위한 각도 확인
+						totalNormalAngles += deltaAngle;
+						totalReversedAngles += reverseAngle;
+					}
+
+					//if(isDebug)
+					//{
+					//	Debug.LogWarning("둔각이 있는 폴리곤 발견");
+					//	for (int i = 0; i < sortedLinkedVerts.Count; i++)
+					//	{
+					//		curLVert = sortedLinkedVerts[i];
+					//		if(!curLVert._isIndent)
+					//		{
+					//			Debug.Log("[" + i + "] : " + curLVert._vert._pos + " / Angle : " + curLVert._angleToPrev + " ~ " + curLVert._angleToNext);
+					//		}
+					//		else
+					//		{
+					//			Debug.LogError("[" + i + " - 둔각] : " + curLVert._vert._pos + " / Angle : " + curLVert._angleToPrev + " ~ " + curLVert._angleToNext);
+					//		}
+							
+					//	}
+					//	Debug.Log("---");
+					//}
+
+					//만약 전체 Prev->Next 각도의 합이 Reverse보다 더 크다면, 순서가 반대가 되어야 한다.
+					if(totalNormalAngles > totalReversedAngles)
+					{
+						//if(isDebug)
+						//{
+						//	Debug.LogError("역방향 : 내부 각도 : " + totalNormalAngles + " / 외부 각도 : " + totalReversedAngles);
+						//}
+
+						isAnyIndent = false;
+						for (int i = 0; i < sortedLinkedVerts.Count; i++)
+						{
+							curLVert = sortedLinkedVerts[i];
+							curLVert.Reverse();//뒤집자
+
+							if(curLVert._isIndent)
+							{
+								isAnyIndent = true;
+							}
+
+							//if(!curLVert._isIndent)
+							//{
+							//	Debug.Log("[" + i + "] : " + curLVert._vert._pos + " / Angle : " + curLVert._angleToPrev + " ~ " + curLVert._angleToNext);
+							//}
+							//else
+							//{
+							//	Debug.LogError("[" + i + " - 둔각] : " + curLVert._vert._pos + " / Angle : " + curLVert._angleToPrev + " ~ " + curLVert._angleToNext);
+							//}
+						}
+						//Debug.Log("---");
+					}
+					//else
+					//{
+					//	if(isDebug)
+					//	{
+					//		Debug.Log("정방향 : 내부 각도 : " + totalNormalAngles + " / 외부 각도 : " + totalReversedAngles);
+					//	}
+						
+					//}
+
+					//연결 불가능한 리스트를 만들자
+					//단, 둔각이 하나라도 있는 경우에
+					if(isAnyIndent)
+					{
+						//if(isDebug)
+						//{
+						//	Debug.LogWarning("둔각이 있으니 연결 불가 버텍스 조합 만들기");
+						//}
+
+						preventableCondsByAngle = new Dictionary<apVertex, Dictionary<apVertex, bool>>();
+
+						LinkedVert otherLVert = null;
+						for (int i = 0; i < sortedLinkedVerts.Count - 1; i++)
+						{
+							curLVert = sortedLinkedVerts[i];
+
+							float minAngle_Cur = apUtil.AngleTo360(curLVert._angleToPrev);
+							float maxAngle_Cur = apUtil.AngleTo360(curLVert._angleToNext);
+							if(maxAngle_Cur < minAngle_Cur)
+							{
+								maxAngle_Cur += 360.0f;
+							}
+
+							//다른 모든 점들을 체크한다.
+							for (int iOther = i + 1; iOther < sortedLinkedVerts.Count; iOther++)
+							{
+								otherLVert = sortedLinkedVerts[iOther];
+
+								float minAngle_Other = apUtil.AngleTo360(otherLVert._angleToPrev);
+								float maxAngle_Other = apUtil.AngleTo360(otherLVert._angleToNext);
+								if(maxAngle_Other < minAngle_Other)
+								{
+									maxAngle_Other += 360.0f;
+								}
+
+								//if(isDebug)
+								//{
+								//	Debug.Log("> 선 연결 테스트 " + i + " > " + iOther);
+								//	if (curLVert._isIndent)
+								//	{
+								//		Debug.LogWarning(">> From : " + curLVert._vert._pos + " Angle : " + minAngle_Cur + " ~ " + maxAngle_Cur);
+								//	}
+								//	else
+								//	{
+								//		Debug.Log(">> From : " + curLVert._vert._pos + " Angle : " + minAngle_Cur + " ~ " + maxAngle_Cur);
+								//	}
+									
+								//	if(otherLVert._isIndent)
+								//	{
+								//		Debug.LogWarning(">> To : " + otherLVert._vert._pos + " Angle : " + minAngle_Other + " ~ " + maxAngle_Other);
+								//	}
+								//	else
+								//	{
+								//		Debug.Log(">> To : " + otherLVert._vert._pos + " Angle : " + minAngle_Other + " ~ " + maxAngle_Other);
+								//	}
+								//}
+
+
+								//선분을 연결한다.
+								Vector2 cur2Other = otherLVert._vert._pos - curLVert._vert._pos;
+
+								//벡터의 각도를 구하자
+								float edgeAngle_FromCur = apUtil.AngleTo360(Mathf.Atan2(cur2Other.y, cur2Other.x) * Mathf.Rad2Deg);
+								float edgeAngle_FromOther = apUtil.AngleTo360(edgeAngle_FromCur + 180.0f);
+
+								//if (isDebug)
+								//{
+								//	Debug.Log(">> 연결 선 각도(변환 전) : " + edgeAngle_FromCur + " / R: " + edgeAngle_FromOther);
+								//}
+
+								edgeAngle_FromCur -= 720.0f;
+								edgeAngle_FromOther -= 720.0f;
+
+
+								
+								//이제 edgeAngle_FromCur이 Cur의 Min-Max 범위 밖에 있거나,
+								//edgeAngle_FromOther이 Other의 Min-Max 범위 밖에 있으면, 이 점들은 연결해서는 안된다.
+								while(edgeAngle_FromCur < minAngle_Cur)
+								{
+									edgeAngle_FromCur += 360.0f;//360도 보정을 하고
+								}
+								while(edgeAngle_FromOther < minAngle_Other)
+								{
+									edgeAngle_FromOther += 360.0f;//360도 보정을 하고
+								}
+
+								//if (isDebug)
+								//{
+								//	Debug.Log(">> 연결 선 각도 : " + edgeAngle_FromCur + " / R: " + edgeAngle_FromOther);
+								//}
+
+								if(edgeAngle_FromCur > maxAngle_Cur || edgeAngle_FromOther > maxAngle_Other)
+								{
+									//이 두 점은 연결해서는 안된다.
+									if(!preventableCondsByAngle.ContainsKey(curLVert._vert))
+									{
+										preventableCondsByAngle.Add(curLVert._vert, new Dictionary<apVertex, bool>());
+									}
+
+									if(!preventableCondsByAngle.ContainsKey(otherLVert._vert))
+									{
+										preventableCondsByAngle.Add(otherLVert._vert, new Dictionary<apVertex, bool>());
+									}
+
+									preventableCondsByAngle[curLVert._vert].Add(otherLVert._vert, false);
+									preventableCondsByAngle[otherLVert._vert].Add(curLVert._vert, false);
+
+									//if (isDebug)
+									//{
+									//	Debug.LogError(">> 연결 불가 --------");
+									//}
+								}
+								//else
+								//{
+								//	if (isDebug)
+								//	{
+								//		Debug.Log(">> 연결 가능 --------");
+								//	}
+								//}
+
+							}
+						}
+					}
+				}
+
+
+
+
+				bool isAnyPreventedPair = preventableCondsByAngle != null && preventableCondsByAngle.Count > 0;
+				//if (isAnyPreventedPair)
+				//{
+				//	Debug.Log("금지된 조합이 있다. [" + (preventableCondsByAngle.Count / 2) + "]");
+				//}
+
+
+
+
 				//Debug.Log("히든 엣지 필요 개수 : " + nNeedHiddenEdge);
 				for (int iBaseVert = 0; iBaseVert < nVert; iBaseVert++)
 				{
@@ -1159,6 +1497,19 @@ namespace AnyPortrait
 						if (isExistEdge)
 						{
 							continue;
+						}
+
+						//이 조합이 금지되어 있는가 (21.1.9)
+						if(isAnyPreventedPair)
+						{
+							if(preventableCondsByAngle.ContainsKey(baseVert))
+							{
+								if(preventableCondsByAngle[baseVert].ContainsKey(nextVert))
+								{
+									//Debug.Log("금지된 버텍스 조합을 연결하려고 했다. : " + baseVert._pos + " > " + nextVert._pos);
+									continue;
+								}
+							}
 						}
 
 						if (hiddenData.Exists(delegate (AutoHiddenEdgeData a)
@@ -1189,6 +1540,8 @@ namespace AnyPortrait
 							}
 						}
 
+						//추가 21.1.9 : HiddenEdge와 연결된 버텍스의 양쪽의 Edge의 합과 같아야 한다.
+
 						if (!isAnyCross)
 						{
 							//교차되는 Hidden Edge가 없다.
@@ -1210,10 +1563,11 @@ namespace AnyPortrait
 							}
 
 							hiddenData.Add(newHiddenData);
-
-							//Debug.Log("Make Hidden Edge");
+							//if(isAnyPreventedPair)
+							//{
+							//	Debug.Log("Make Hidden Edge");
+							//}
 						}
-
 					}
 				}
 
@@ -1286,6 +1640,23 @@ namespace AnyPortrait
 								continue;
 							}
 
+
+							//이 조합이 금지되어 있는가 (21.1.9)
+							//bool isPreventedPair = false;
+							if(isAnyPreventedPair)
+							{
+								if(preventableCondsByAngle.ContainsKey(baseVert))
+								{
+									if(preventableCondsByAngle[baseVert].ContainsKey(nextVert))
+									{
+										//Debug.Log("<추가> 금지된 버텍스 조합을 연결하려고 했다. : " + baseVert._pos + " > " + nextVert._pos);
+										//isPreventedPair = true;
+										continue;
+									}
+								}
+							}
+
+
 							//없다 -> HiddenEdge 대상이다.
 							//다른 HiddenEdge와 겹치지 않는지 체크한다.
 							bool isAnyCross = false;
@@ -1311,6 +1682,10 @@ namespace AnyPortrait
 								continue;
 							}
 
+							//if(isPreventedPair)
+							//{
+							//	Debug.LogWarning("잘못된 조합이지만 그냥 추가");
+							//}
 							apMeshEdge newHiddenEdge = new apMeshEdge(baseVert, nextVert);
 							newHiddenEdge._isHidden = true;
 

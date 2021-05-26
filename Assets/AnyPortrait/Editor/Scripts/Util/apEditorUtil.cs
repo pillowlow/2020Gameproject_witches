@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -613,6 +612,7 @@ namespace AnyPortrait
 				Undo.IncrementCurrentGroup();
 				//_lastUndoID = Undo.GetCurrentGroup();
 			}
+			
 
 			//Undo.RecordObject(meshGroup, apUndoGroupData.GetLabel(action));
 			Undo.RegisterCompleteObjectUndo(meshGroup, apUndoGroupData.GetLabel(action));
@@ -895,6 +895,11 @@ namespace AnyPortrait
 			apUndoGroupData.I.Clear();
 		}
 		
+
+
+		
+
+
 		//----------------------------------------------------------------------------------------------------------
 		// Prefab Check
 		//----------------------------------------------------------------------------------------------------------
@@ -1362,6 +1367,49 @@ namespace AnyPortrait
 			GUI.FocusControl(null);
 		}
 
+		/// <summary>
+		/// 원격으로 포커스를 지정하고싶은 텍스트 필드 직전에 이 함수를 호출하고 ID를 입력한다.
+		/// ID는 apStringFactory에 정의하자
+		/// </summary>
+		/// <param name="strGUIID"></param>
+		public static void SetNextGUIID(string strGUIID)
+		{
+			GUI.SetNextControlName(strGUIID);
+		}
+
+		/// <summary>
+		/// 텍스트 필드로 포커스를 지정하고 바로 글을 작성할 수 있게 만든다.
+		/// </summary>
+		/// <param name="strGUIID"></param>
+		public static void SetGUIFocus_TextField(string strGUIID)
+		{
+			ReleaseGUIFocus();
+			EditorGUI.FocusTextInControl(strGUIID);
+		}
+
+		// 추가 20.12.4
+		/// <summary>
+		/// DelayedTextField가 켜진 상태에서 다른 객체로 바뀌었을때,
+		/// GUI가 초기화되면서 변경된 텍스트가 이상한 대상으로 적용되는 경우가 있다.
+		/// 원래는 Enter키를 눌러야 하지만, 그렇지 않고 입력이 취소되는 경우 볼 수 있는 문제
+		/// ID가 있다면 이 문제를 해결할 수 있다.
+		/// </summary>
+		/// <param name="strGUIID"></param>
+		/// <returns></returns>
+		public static bool IsDelayedTextFieldEventValid(string strGUIID)
+		{
+			return string.Equals(GUI.GetNameOfFocusedControl(), strGUIID);
+		}
+
+
+
+
+
+
+
+
+
+
 		public static Color BoxTextColor
 		{
 			get
@@ -1771,6 +1819,48 @@ namespace AnyPortrait
 			}
 		}
 
+
+
+		public static bool ToggledButton_VerticalMargin0(Texture2D texture, bool isSelected, bool isAvailable, int width, int height, string toolTip)
+		{
+			if (isSelected || !isAvailable)
+			{
+				Color prevColor = GUI.backgroundColor;
+				//Color textColor = Color.white;
+
+				if (!isAvailable)
+				{
+					//회색 (Pro는 글자도 진해짐)
+					GUI.backgroundColor = ToggleBoxColor_NotAvailable;
+					
+				}
+				else if (isSelected)
+				{
+					GUI.backgroundColor = ToggleBoxColor_SelectedWithImage;
+				}
+				
+				_sGUIContentWrapper.SetTextImageToolTip(null, texture, toolTip);
+
+				//GUILayout.Box(_sGUIContentWrapper.Content, guiStyle, GUILayout.Width(width), GUILayout.Height(height));
+				GUILayout.Box(_sGUIContentWrapper.Content, 
+								apGUIStyleWrapper.I.Box_MiddleCenter_VerticalMargin0,
+								apGUILOFactory.I.Width(width), apGUILOFactory.I.Height(height));
+
+				GUI.backgroundColor = prevColor;
+				return false;
+			}
+			else
+			{
+				//변경
+				_sGUIContentWrapper.SetTextImageToolTip(null, texture, toolTip);
+				return GUILayout.Button(_sGUIContentWrapper.Content, 
+										apGUIStyleWrapper.I.Button_MiddleCenter_VerticalMargin0, 
+										apGUILOFactory.I.Width(width), apGUILOFactory.I.Height(height));
+			}
+		}
+
+
+
 		public static bool ToggledButton(Texture2D texture, string strText, bool isSelected, bool isAvailable, int width, int height)
 		{
 			if (isSelected || !isAvailable)
@@ -2169,6 +2259,68 @@ namespace AnyPortrait
 
 
 
+		public static bool ToggledButton_Ctrl_VerticalMargin0(Texture2D texture, bool isSelected, bool isAvailable, int width, int height, string toolTip, bool isCtrlKey, bool isCommandKey)
+		{
+			
+			bool isCtrl = isCtrlKey;
+#if UNITY_EDITOR_OSX
+			isCtrl = isCommandKey;
+#endif
+
+			if (isSelected || !isAvailable)
+			{
+				Color prevColor = GUI.backgroundColor;
+				
+				if (!isAvailable)
+				{
+					GUI.backgroundColor = ToggleBoxColor_NotAvailable;
+					
+				}
+				else if (isSelected)
+				{
+					GUI.backgroundColor = ToggleBoxColor_SelectedWithImage;
+				}
+				
+				//변경
+				_sGUIContentWrapper.SetTextImageToolTip(null, texture, toolTip);
+
+				GUILayout.Box(	_sGUIContentWrapper.Content, 
+								apGUIStyleWrapper.I.Box_MiddleCenter_VerticalMargin0_White2Cyan,
+								apGUILOFactory.I.Width(width), apGUILOFactory.I.Height(height));
+
+				GUI.backgroundColor = prevColor;
+				return false;
+			}
+			else
+			{
+				Color prevColor = GUI.backgroundColor;
+				if(isCtrl)
+				{	
+					//Ctrl 키를 누르면 버튼 색이 바뀐다.
+					if (EditorGUIUtility.isProSkin)
+					{
+						GUI.backgroundColor = new Color(1.0f, 0.0f, 1.0f, 1.0f);
+					}
+					else
+					{
+						GUI.backgroundColor = new Color(prevColor.r * 0.2f, prevColor.g * 1.5f, prevColor.b * 0.5f, 1.0f);
+					}
+				}
+				
+				_sGUIContentWrapper.SetTextImageToolTip(null, texture, toolTip);
+
+				bool isBtnResult = GUILayout.Button(_sGUIContentWrapper.Content, apGUIStyleWrapper.I.Button_MiddleCenter_VerticalMargin0, apGUILOFactory.I.Width(width), apGUILOFactory.I.Height(height));
+
+				GUI.backgroundColor = prevColor;
+
+				return isBtnResult;
+			}
+		}
+
+
+
+
+
 
 		public static bool ToggledButton_Ctrl(string strText, bool isSelected, bool isAvailable, int width, int height, string toolTip, bool isCtrlKey, bool isCommandKey)
 		{
@@ -2475,6 +2627,62 @@ namespace AnyPortrait
 			}
 		}
 
+		public static bool ToggledButton_2Side_VerticalMargin0(Texture2D texture, bool isSelected, bool isAvailable, int width, int height, string toolTip)
+		{
+			if (isSelected || !isAvailable)
+			{
+				Color prevColor = GUI.backgroundColor;
+
+				if (!isAvailable)
+				{
+					//회색 (Pro는 글자도 진해짐)
+					if(EditorGUIUtility.isProSkin)
+					{
+						GUI.backgroundColor = new Color(0.4f, 0.4f, 0.4f, 1.0f);
+					}
+					else
+					{
+						GUI.backgroundColor = new Color(0.5f, 0.5f, 0.5f, 1.0f);
+					}
+				}
+				else if (isSelected)
+				{
+					if (EditorGUIUtility.isProSkin)
+					{
+						//밝은 파랑 + 하늘색
+						GUI.backgroundColor = new Color(0.0f, 1.0f, 1.0f, 1.0f);
+					}
+					else
+					{
+						//청록색 + 흰색
+						GUI.backgroundColor = new Color(prevColor.r * 0.2f, prevColor.g * 0.8f, prevColor.b * 1.1f, 1.0f);
+					}					
+				}
+
+				_sGUIContentWrapper.SetTextImageToolTip(null, texture, toolTip);
+				bool isBtn = GUILayout.Button(	_sGUIContentWrapper.Content, 
+												apGUIStyleWrapper.I.Button_MiddleCenter_VerticalMargin0, 
+												apGUILOFactory.I.Width(width), apGUILOFactory.I.Height(height));
+
+				GUI.backgroundColor = prevColor;
+
+				if (!isAvailable)
+				{
+					return false;
+				}
+
+				return isBtn;
+			}
+			else
+			{
+				//변경
+				_sGUIContentWrapper.SetTextImageToolTip(null, texture, toolTip);
+				return GUILayout.Button(	_sGUIContentWrapper.Content, 
+											apGUIStyleWrapper.I.Button_MiddleCenter_VerticalMargin0, 
+											apGUILOFactory.I.Width(width), apGUILOFactory.I.Height(height));
+			}
+		}
+
 
 		public static bool ToggledButton_2Side(Texture2D textureSelected, Texture2D textureNotSelected, bool isSelected, bool isAvailable, int width, int height)
 		{
@@ -2678,6 +2886,64 @@ namespace AnyPortrait
 				//변경
 				_sGUIContentWrapper.SetTextImageToolTip(strTextNotSelected, texture, null);
 				return GUILayout.Button(_sGUIContentWrapper.Content, apGUIStyleWrapper.I.Button_MiddleCenter_BoxPadding, apGUILOFactory.I.Width(width), apGUILOFactory.I.Height(height));
+			}
+		}
+
+
+
+		public static bool ToggledButton_2Side_VerticalMargin0(Texture2D texture, string strTextSelected, string strTextNotSelected, bool isSelected, bool isAvailable, int width, int height)
+		{
+			if (isSelected || !isAvailable)
+			{
+				Color prevColor = GUI.backgroundColor;
+
+				if (!isAvailable)
+				{
+					//회색 (Pro는 글자도 진해짐)
+					if(EditorGUIUtility.isProSkin)
+					{
+						GUI.backgroundColor = new Color(0.4f, 0.4f, 0.4f, 1.0f);
+					}
+					else
+					{
+						GUI.backgroundColor = new Color(0.5f, 0.5f, 0.5f, 1.0f);
+					}
+				}
+				else if (isSelected)
+				{
+					if (EditorGUIUtility.isProSkin)
+					{
+						//밝은 파랑 + 하늘색
+						//textColor = Color.cyan;
+						GUI.backgroundColor = new Color(0.0f, 1.0f, 1.0f, 1.0f);
+					}
+					else
+					{
+						//청록색 + 흰색
+						//textColor = Color.white;
+						GUI.backgroundColor = new Color(prevColor.r * 0.2f, prevColor.g * 0.8f, prevColor.b * 1.1f, 1.0f);
+					}
+				}
+
+				_sGUIContentWrapper.SetTextImageToolTip(strTextSelected, texture, null);
+				bool isBtn = GUILayout.Button(_sGUIContentWrapper.Content, 
+					apGUIStyleWrapper.I.Button_MiddleCenter_VerticalMargin0_White2Cyan,
+					apGUILOFactory.I.Width(width), apGUILOFactory.I.Height(height));
+
+				GUI.backgroundColor = prevColor;
+
+				if (!isAvailable)
+				{
+					return false;
+				}
+
+				return isBtn;
+			}
+			else
+			{
+				//변경
+				_sGUIContentWrapper.SetTextImageToolTip(strTextNotSelected, texture, null);
+				return GUILayout.Button(_sGUIContentWrapper.Content, apGUIStyleWrapper.I.Button_MiddleCenter_VerticalMargin0, apGUILOFactory.I.Width(width), apGUILOFactory.I.Height(height));
 			}
 		}
 
@@ -3429,6 +3695,99 @@ namespace AnyPortrait
 
 
 
+		//추가 : Ctrl을 누르면 색상이 바뀐다.
+		public static bool ToggledButton_2Side_Ctrl_VerticalMargin0(Texture2D texture, bool isSelected, bool isAvailable, int width, int height, string toolTip, bool isCtrlKey, bool isCommandKey)
+		{
+			bool isCtrl = isCtrlKey;
+#if UNITY_EDITOR_OSX
+			isCtrl = isCommandKey;
+#endif
+			if (isSelected || !isAvailable || isCtrl)
+			{
+				Color prevColor = GUI.backgroundColor;
+				//Color textColor = Color.white;
+
+				if (!isAvailable)
+				{
+					//회색 (Pro는 글자도 진해짐)
+					if(EditorGUIUtility.isProSkin)
+					{
+						//textColor = Color.black;
+						GUI.backgroundColor = new Color(0.4f, 0.4f, 0.4f, 1.0f);
+					}
+					else
+					{
+						//textColor = Color.white;
+						GUI.backgroundColor = new Color(0.5f, 0.5f, 0.5f, 1.0f);
+					}
+				}
+				else if(isCtrl)
+				{
+					//추가 : Ctrl을 누르면 연녹색으로 바뀐다.
+					if (EditorGUIUtility.isProSkin)
+					{
+						//밝은 파랑 + 하늘색
+						//textColor = Color.cyan;
+						GUI.backgroundColor = new Color(1.0f, 0.0f, 1.0f, 1.0f);
+					}
+					else
+					{
+						//청록색 + 흰색
+						//textColor = Color.white;
+						GUI.backgroundColor = new Color(prevColor.r * 0.2f, prevColor.g * 1.5f, prevColor.b * 0.5f, 1.0f);
+					}
+				}
+				else if (isSelected)
+				{
+					if (EditorGUIUtility.isProSkin)
+					{
+						//밝은 파랑 + 하늘색
+						//textColor = Color.cyan;
+						GUI.backgroundColor = new Color(0.0f, 1.0f, 1.0f, 1.0f);
+					}
+					else
+					{
+						//청록색 + 흰색
+						//textColor = Color.white;
+						GUI.backgroundColor = new Color(prevColor.r * 0.2f, prevColor.g * 0.8f, prevColor.b * 1.1f, 1.0f);
+					}
+					
+				}
+
+				_sGUIContentWrapper.SetTextImageToolTip(null, texture, toolTip);
+				bool isBtn = GUILayout.Button(	_sGUIContentWrapper.Content, 
+												apGUIStyleWrapper.I.Button_MiddleCenter_VerticalMargin0, 
+												apGUILOFactory.I.Width(width), apGUILOFactory.I.Height(height));
+
+				GUI.backgroundColor = prevColor;
+
+				if (!isAvailable)
+				{
+					return false;
+				}
+
+				return isBtn;
+			}
+			else
+			{
+				//GUIStyle guiStyle = new GUIStyle(GUI.skin.button);
+				//guiStyle.padding = GUI.skin.box.padding;
+
+				//이전
+				//return GUILayout.Button(new GUIContent(texture, toolTip), guiStyle, GUILayout.Width(width), GUILayout.Height(height));
+
+				//변경
+				_sGUIContentWrapper.SetTextImageToolTip(null, texture, toolTip);
+				return GUILayout.Button(	_sGUIContentWrapper.Content, 
+											apGUIStyleWrapper.I.Button_MiddleCenter_VerticalMargin0, 
+											apGUILOFactory.I.Width(width), apGUILOFactory.I.Height(height));
+			}
+		}
+
+
+
+
+
 		public static bool ToggledButton_2Side_Ctrl(Texture2D textureSelected, Texture2D textureNotSelected, bool isSelected, bool isAvailable, int width, int height, string toolTip, bool isCtrlKey, bool isCommandKey)
 		{
 			bool isCtrl = isCtrlKey;
@@ -3621,6 +3980,150 @@ namespace AnyPortrait
 			}
 		}
 
+
+
+
+
+
+
+
+		/// <summary>
+		/// 추가 21.3.19 : 3가지 종류의 버튼(메인 선택, 서브 선택, 선택 안됨) / 선택 불가인 상태가 나온다.
+		/// 텍스트도 두가지 상태가 색상으로 보여지며, 툴팁이 포함된다.
+		/// Ctrl키를 누르면 색이 모두 바뀐다.
+		/// </summary>
+		/// <param name="text"></param>
+		/// <param name="selectionType">0은 기본, 1은 메인 선택, 2는 서브 선택</param>
+		/// <param name="isAvailable"></param>
+		/// <param name="width"></param>
+		/// <param name="height"></param>
+		/// <param name="toolTip"></param>
+		/// <param name="isCtrlKey"></param>
+		/// <param name="isCommandKey"></param>
+		/// <returns></returns>
+		public static bool ToggledButton_3Side_Ctrl(	string text, 
+														int selectionType, 
+														bool isAvailable, 
+														//bool isColoredText,
+														int width, int height, 
+														string toolTip, 
+														bool isCtrlKey, bool isCommandKey)
+		{
+			bool isCtrl = isCtrlKey;
+#if UNITY_EDITOR_OSX
+			isCtrl = isCommandKey;
+#endif
+			if (selectionType != 0 || !isAvailable || isCtrl)
+			{
+				Color prevColor = GUI.backgroundColor;
+				//Color textColor = Color.white;
+
+				if (!isAvailable)
+				{
+					//회색 (Pro는 글자도 진해짐)
+					if(EditorGUIUtility.isProSkin)
+					{
+						//textColor = Color.black;
+						GUI.backgroundColor = new Color(0.4f, 0.4f, 0.4f, 1.0f);
+					}
+					else
+					{
+						//textColor = Color.white;
+						GUI.backgroundColor = new Color(0.5f, 0.5f, 0.5f, 1.0f);
+					}
+				}
+				else if(isCtrl)
+				{
+					//추가 : Ctrl을 누르면 연녹색으로 바뀐다.
+					if (EditorGUIUtility.isProSkin)
+					{
+						//밝은 파랑 + 하늘색
+						//textColor = Color.cyan;
+						GUI.backgroundColor = new Color(1.0f, 0.0f, 1.0f, 1.0f);
+					}
+					else
+					{
+						//청록색 + 흰색
+						//textColor = Color.white;
+						GUI.backgroundColor = new Color(prevColor.r * 0.2f, prevColor.g * 1.5f, prevColor.b * 0.5f, 1.0f);
+					}
+				}
+				else if (selectionType == 1)
+				{
+					//메인 선택 : 파란색 또는 청록색
+					if (EditorGUIUtility.isProSkin)
+					{
+						//밝은 파랑 + 하늘색
+						//textColor = Color.cyan;
+						GUI.backgroundColor = new Color(0.0f, 1.0f, 1.0f, 1.0f);
+					}
+					else
+					{
+						//청록색 + 흰색
+						//textColor = Color.white;
+						GUI.backgroundColor = new Color(prevColor.r * 0.2f, prevColor.g * 0.8f, prevColor.b * 1.1f, 1.0f);
+					}
+					
+				}
+				else if (selectionType == 2)
+				{
+					//서브 선택 : 보라색
+					if (EditorGUIUtility.isProSkin)
+					{
+						//밝은 파랑 + 하늘색
+						//textColor = Color.cyan;
+						GUI.backgroundColor = new Color(0.8f, 0.0f, 1.0f, 1.0f);
+					}
+					else
+					{
+						//보라색
+						//textColor = Color.white;
+						GUI.backgroundColor = new Color(prevColor.r * 1.1f, prevColor.g * 0.3f, prevColor.b * 1.1f, 1.0f);
+					}
+					
+				}
+
+				//GUIStyle guiStyle = new GUIStyle(GUI.skin.button);
+				//guiStyle.padding = GUI.skin.box.padding;
+
+				//이전
+				//bool isBtn = GUILayout.Button(new GUIContent(texture, toolTip), guiStyle, GUILayout.Width(width), GUILayout.Height(height));
+
+				//변경
+				_sGUIContentWrapper.SetTextImageToolTip(text, null, toolTip);
+				bool isBtn = GUILayout.Button(_sGUIContentWrapper.Content, 
+					apGUIStyleWrapper.I.Button_MiddleCenter_BoxPadding,
+					//isColoredText ? apGUIStyleWrapper.I.Button_MiddleCenter_BoxPadding_Orange2Yellow : apGUIStyleWrapper.I.Button_MiddleCenter_BoxPadding, 
+					apGUILOFactory.I.Width(width), apGUILOFactory.I.Height(height));
+
+				GUI.backgroundColor = prevColor;
+
+				if (!isAvailable)
+				{
+					return false;
+				}
+
+				return isBtn;
+			}
+			else
+			{
+				//GUIStyle guiStyle = new GUIStyle(GUI.skin.button);
+				//guiStyle.padding = GUI.skin.box.padding;
+
+				//이전
+				//return GUILayout.Button(new GUIContent(texture, toolTip), guiStyle, GUILayout.Width(width), GUILayout.Height(height));
+
+				//변경
+				_sGUIContentWrapper.SetTextImageToolTip(text, null, toolTip);
+				return GUILayout.Button(_sGUIContentWrapper.Content, 
+					//isColoredText ? apGUIStyleWrapper.I.Button_MiddleCenter_BoxPadding_Orange2Yellow : apGUIStyleWrapper.I.Button_MiddleCenter_BoxPadding,
+					apGUIStyleWrapper.I.Button_MiddleCenter_BoxPadding,
+					apGUILOFactory.I.Width(width), apGUILOFactory.I.Height(height));
+			}
+		}
+
+
+
 		//----------------------------------------------------------------------------------------------------------
 		// Delayed Vector2Field
 		//----------------------------------------------------------------------------------------------------------
@@ -3630,7 +4133,7 @@ namespace AnyPortrait
 		{
 			Vector2 result = vectorValue;
 
-			EditorGUILayout.BeginHorizontal(apGUILOFactory.I.Width(width));
+			EditorGUILayout.BeginHorizontal(apGUILOFactory.I.Width(width), apGUILOFactory.I.Height(20));
 			if (width > 100)
 			{
 				int widthLabel = 15;
@@ -3654,6 +4157,10 @@ namespace AnyPortrait
 
 			return result;
 		}
+
+
+
+		
 
 		//----------------------------------------------------------------------------------------------------------
 		// 스크롤을 하는 경우, 해당 UI가 출력될지 여부를 리턴한다
@@ -3931,6 +4438,8 @@ namespace AnyPortrait
 				return _whiteGUIStyle_Box;
 			}
 		}
+
+		
 
 		//----------------------------------------------------------------------------------------------------------
 		// 미리 정의된 텍스트 (추가적인 생성 없게)
@@ -5552,5 +6061,84 @@ namespace AnyPortrait
 			return urlPath.Replace("%20", " ");
 		}
 		//-------------------------------------------------------------------------------------------
+
+		//-------------------------------------------------------------------------------------------
+		// 파일 열거나 저장할 때 마지막으로 접근한 디렉토리 경로 알려주기 (바로 다시 열 수 있게)
+		//-------------------------------------------------------------------------------------------
+		//private static string s_lastOpenSaveFileDirectoryPath = "";
+		public enum SAVED_LAST_FILE_PATH
+		{
+			PSD_ExternalFile,
+			BackupFile,
+			BoneAnimExport,
+			Rotoscoping
+		}
+		/// <summary>
+		/// 파일을 디렉토리로부터 "열거나 저장할 때", 해당 파일의 경로를 저장한다. 
+		/// 나중에 바로 그 폴더를 열 수 있다.
+		/// 오직 외부의 OpenFileDialog/SaveFileDialog용으로만 사용한다.
+		/// </summary>
+		public static void SetLastExternalOpenSaveFilePath(string fileFullPath, SAVED_LAST_FILE_PATH filePathType)
+		{
+			if(string.IsNullOrEmpty(fileFullPath))
+			{
+				return;
+			}
+			System.IO.FileInfo fi = new System.IO.FileInfo(fileFullPath);
+			if(!fi.Exists)
+			{
+				//존재하지 않는 경로
+				return;
+			}
+			//적절하게 이름을 가공한다.
+			//s_lastOpenSaveFileDirectoryPath = (fi.Directory.FullName).Replace('\\', '/');
+			
+			//EditorPrefs에 저장하자
+			EditorPrefs.SetString(GetFilePathKey(filePathType), (fi.Directory.FullName).Replace('\\', '/'));
+			
+		}
+
+		/// <summary>
+		/// 마지막으로 "OpenFileDialog"를 사용했을때의 디렉토리 경로
+		/// </summary>
+		public static string GetLastOpenSaveFileDirectoryPath(SAVED_LAST_FILE_PATH filePathType)
+		{
+			//return s_lastOpenSaveFileDirectoryPath;
+			return EditorPrefs.GetString(GetFilePathKey(filePathType), "");
+		}
+
+		private static string GetFilePathKey(SAVED_LAST_FILE_PATH filePathType)
+		{
+			switch (filePathType)
+			{
+				case SAVED_LAST_FILE_PATH.PSD_ExternalFile:	return "AnyPortrait_LastFilePath__PSD_ExternalFile";
+				case SAVED_LAST_FILE_PATH.BackupFile:		return "AnyPortrait_LastFilePath__BackupFile";
+				case SAVED_LAST_FILE_PATH.BoneAnimExport:	return "AnyPortrait_LastFilePath__BoneAnimExport";
+				case SAVED_LAST_FILE_PATH.Rotoscoping:		return "AnyPortrait_LastFilePath__Rotoscoping";
+
+			}
+			return "AnyPortrait_LastFilePath__Common";
+
+		}
+
+
+		//-------------------------------------------------------------------------------------------
+		// 마지막 AutoKey를 EditorPref를 이용하여 저장한다.
+		//-------------------------------------------------------------------------------------------
+		public static void SaveAnimAutoKeyValueToPref(bool isAnimAutoKey)
+		{
+			if(!isAnimAutoKey)
+			{
+				EditorPrefs.DeleteKey("AnyPortrait_LastAnimAutoKeyValue");//False일 때는 값을 삭제한다.
+			}
+			else
+			{
+				EditorPrefs.SetBool("AnyPortrait_LastAnimAutoKeyValue", true);
+			}
+		}
+		public static bool GetAnimAutoKeyValueFromPref()
+		{
+			return EditorPrefs.GetBool("AnyPortrait_LastAnimAutoKeyValue", false);//값이 없다면 False이다.
+		}
 	}
 }

@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -50,26 +49,28 @@ namespace AnyPortrait
 		private string _str_Ctrl = null;
 		private string _str_Command = null;
 		private string _str_Alt = null;
+		private string _str_Option = null;
 		private string _str_Shift = null;
 
-		private string _str_BoneGUIToolTip1 = null;
-		private string _str_BoneGUIToolTip2 = null;
+		private string _str_BoneVisibility = null;
 		private string _str_MeshVisibleToolTip = null;
 		private string _str_PhysicFxEnableToolTip = null;
 		private string _str_FFDModeToolTip_1 = null;
 		private string _str_FFDModeToolTip_2 = null;
 		private string _str_ApplyFFD = null;
 		private string _str_RevertFFD = null;
-		private string _str_SoftSelectionToolTip = null;
-		private string _str_BlurToolTip = null;
+		private string _str_SoftSelectionToolTip_WithHotkey = null;
+		private string _str_BlurToolTip_WithHotkey = null;
+		private string _str_SoftSelectionToolTip_WOHotkey = null;
+		private string _str_BlurToolTip_WOHotkey = null;
+		private string _str_ToggleOnionSkin = null;
+		private string _str_RecordOnionRecord = null;
 
 		private string _str_Select = null;
 		private string _str_Move = null;
 		private string _str_Rotate = null;
 		private string _str_Scale = null;
 
-		private string _str_OnionSkinToggle = null;
-		private string _str_ChangeBoneVisiblity = null;
 		private string _str_IncreaseBrushSize = null;
 		private string _str_DecreaseBrushSize = null;
 		private string _str_RemovePolygon = null;
@@ -151,6 +152,11 @@ namespace AnyPortrait
 		private string _str_Z = null;
 		private string _str_Set = null;
 
+		private string _str_L = null;
+		private string _str_T = null;
+		private string _str_R = null;
+		private string _str_B = null;
+
 		private string _str_GIF = null;
 		private string _str_XML = null;
 		private string _str_JSON = null;
@@ -197,11 +203,12 @@ namespace AnyPortrait
 		private string _str_BindingModeToggleTooltip = null;
 		private string _str_EditModeToggleTooltip = null;
 		private string _str_SelectionLockToggleTooltip = null;
-		private string _str_ModifierLockToggleTooltip = null;
-		private string _str_ToggleEditingMode = null;
-		private string _str_ToggleSelectionLock = null;
-		private string _str_ToggleModifierLock = null;
-		private string _str_ToggleLayerLock = null;
+		//private string _str_ModifierLockToggleTooltip_1 = null;
+		//private string _str_ModifierLockToggleTooltip_2 = null;
+		//private string _str_ToggleEditingMode = null;
+		//private string _str_ToggleSelectionLock = null;
+		//private string _str_ToggleModifierLock = null;
+		//private string _str_ToggleLayerLock = null;
 		private string _str_RiggingViewModeTooltip_ColorWithTexture = null;
 		private string _str_RiggingViewModeTooltip_BoneColor = null;
 		private string _str_RiggingViewModeTooltip_CircleVert = null;
@@ -212,11 +219,12 @@ namespace AnyPortrait
 		private string _str_ClearWindForce = null;
 		private string _str_AnimationEditModeToggleTooltip = null;
 
-		private string _str_TimelineLayerLockToggleTooltip = null;
+		//private string _str_TimelineLayerLockToggleTooltip_1 = null;
+		//private string _str_TimelineLayerLockToggleTooltip_2 = null;
 		private string _str_AddKeyframe = null;
 		private string _str_RemoveKeyframe = null;
 		private string _str_RemoveKeyframes = null;
-		private string _str_AddNewKeyframe = null;
+		//private string _str_AddNewKeyframe = null;
 
 		private string _str_PlayPause = null;
 		private string _str_PreviousFrame = null;
@@ -304,6 +312,38 @@ namespace AnyPortrait
 		private string _str_SelectAllVertices = null;
 		private string _str_MoveVertices = null;
 
+		//이건 GUI ID용 텍스트
+		private string _str_GUIID_MeshName = null;
+		private string _str_GUIID_MeshGroupName = null;
+		private string _str_GUIID_SubTransformName = null;
+		private string _str_GUIID_BoneName = null;
+		private string _str_GUIID_AnimClipName = null;
+		private string _str_GUIID_ControlParamName = null;
+
+		//본 보여주기 상태
+		private string _str_Show = null;
+		private string _str_Outline = null;
+		private string _str_Hide = null;
+
+		//메시 탭 이름
+		private string _str_Setting = null;
+		private string _str_AddTool = null;
+		private string _str_EditTool = null;
+		private string _str_AutoTool = null;
+		private string _str_Pivot = null;
+		private string _str_Modify = null;
+
+		//로토스코핑 이미지..등
+		private string _str_PrevImage = null;
+		private string _str_NextImage = null;
+		
+		//특수 문자
+		private string _str_Symbol_FilledCircle = null;
+		private string _str_Symbol_EmptyCircle = null;
+
+
+		//툴팁용 StringWrapper (단축키때문에)
+		private apStringWrapper _tooltipStr = null;
 
 		// Init
 		//-------------------------------------------
@@ -311,6 +351,8 @@ namespace AnyPortrait
 		{
 			_isInitialized = false;
 			s_instance = this;
+
+			_tooltipStr = new apStringWrapper(128);
 		}
 
 		public void Init()
@@ -332,20 +374,20 @@ namespace AnyPortrait
 			_str_UnityEditorIsPlaying = "Unity Editor is Playing.";
 			_str_ResetZoomAndPosition = "Reset Zoom and Position";
 			_str_ToggleWorkspaceSize = "Toggle Workspace Size";
-			_str_ToggleWorkdspaceSize_HotKey = "Toogle Workspace Size (Alt+W)";
+			_str_ToggleWorkdspaceSize_HotKey = "Toogle Workspace Size";//단축키 추가되어야 함//(Alt+W)
 			_str_SettingsOfTherPortraitAndEditor = "Settings of the Portrait and Editor";
 			_str_BakeToScene = "Bake to Scene";
 
 			_str_Ctrl = "Ctrl";
 			_str_Command = "Command";
 			_str_Alt = "Alt";
+			_str_Option = "Option";
 			_str_Shift = "Shift";
 
-			_str_BoneGUIToolTip1 = "Change Bone Visiblity (B) / If you press the button while holding down [";
-			_str_BoneGUIToolTip2 = "], the function works in reverse.";
+			_str_BoneVisibility = "Change Bone Visiblity";//변경 21.1.21
 
 			_str_MeshVisibleToolTip = "Enable/Disable Mesh Visiblity";
-			_str_PhysicFxEnableToolTip = "Enable/Disable Physical Effect";
+			_str_PhysicFxEnableToolTip = "Enable/Disable Physics Effect";
 
 			_str_FFDModeToolTip_1 = "Free Form Deformation / If you press the button while holding down [";
 			_str_FFDModeToolTip_2 = "], a dialog appears allowing you to change the number of control points.";
@@ -353,16 +395,19 @@ namespace AnyPortrait
 			_str_ApplyFFD = "Apply FFD";
 			_str_RevertFFD = "Revert FFD";
 
-			_str_SoftSelectionToolTip = "Soft Selection (Adjust brush size with [, ])";
-			_str_BlurToolTip = "Blur (Adjust brush size with [, ])";
+			_str_SoftSelectionToolTip_WithHotkey = "Soft Selection / Adjust brush size with ";
+			_str_BlurToolTip_WithHotkey = "Blur / Adjust brush size with ";
+			_str_SoftSelectionToolTip_WOHotkey = "Soft Selection";
+			_str_BlurToolTip_WOHotkey = "Blur";
+
+			_str_ToggleOnionSkin = "Show/Hide Onion Skin";
+			_str_RecordOnionRecord = "Record Onion Skin";
 
 			_str_Select = "Select";
 			_str_Move = "Move";
 			_str_Rotate = "Rotate";
 			_str_Scale = "Scale";
 
-			_str_OnionSkinToggle = "Onion Skin Toggle";
-			_str_ChangeBoneVisiblity = "Change Bone Visiblity";
 			_str_IncreaseBrushSize = "Increase Brush Size";
 			_str_DecreaseBrushSize = "Decrease Brush Size";
 			_str_RemovePolygon = "Remove Polygon";
@@ -447,6 +492,11 @@ namespace AnyPortrait
 			_str_Z = "Z";
 			_str_Set = "Set";
 
+			_str_L = "L";
+			_str_T = "T";
+			_str_R = "R";
+			_str_B = "B";
+
 			_str_GIF = "GIF";
 			_str_XML = "XML";
 			_str_JSON = "JSON";
@@ -494,19 +544,21 @@ namespace AnyPortrait
 			_str_HowToControl_MoveView = "Move View";
 
 			_str_AddANewModifier = "Add a New Modifier";
-			_str_BindingModeToggleTooltip = "Enable/Disable Bind Mode (A)";
-			_str_EditModeToggleTooltip = "Enable/Disable Edit Mode (A)";
-			_str_SelectionLockToggleTooltip = "Selection Lock/Unlock (S)";
+			_str_BindingModeToggleTooltip = "Enable/Disable Bind Mode";
+			_str_EditModeToggleTooltip = "Enable/Disable Edit Mode";
+			_str_SelectionLockToggleTooltip = "Selection Lock/Unlock";
 
-#if UNITY_EDITOR_OSX
-			_str_ModifierLockToggleTooltip = "Modifier Lock/Unlock (D) / If you press the button while holding down [Command], the Setting dialog opens";
-#else
-			_str_ModifierLockToggleTooltip = "Modifier Lock/Unlock (D) / If you press the button while holding down [Ctrl], the Setting dialog opens";
-#endif
-			_str_ToggleEditingMode = "Toggle Editing Mode";
-			_str_ToggleSelectionLock = "Toggle Selection Lock";
-			_str_ToggleModifierLock = "Toggle Modifier Lock";
-			_str_ToggleLayerLock = "Toggle Layer Lock";
+//			_str_ModifierLockToggleTooltip_1 = "Modifier Lock/Unlock";
+//#if UNITY_EDITOR_OSX
+//			_str_ModifierLockToggleTooltip_2 = " / If you press the button while holding down [Command], the Setting dialog will be opened";
+//#else		
+//			_str_ModifierLockToggleTooltip_2 = " / If you press the button while holding down [Ctrl], the Setting dialog will be opened";
+//#endif
+			
+			//_str_ToggleEditingMode = "Toggle Editing Mode";
+			//_str_ToggleSelectionLock = "Toggle Selection Lock";
+			//_str_ToggleModifierLock = "Toggle Modifier Lock";
+			//_str_ToggleLayerLock = "Toggle Layer Lock";
 
 			_str_RiggingViewModeTooltip_ColorWithTexture = "Whether to render the Rigging weight with the texture of the image";
 			_str_RiggingViewModeTooltip_BoneColor = "Whether to render the Rigging weight by the color of the Bone";
@@ -517,17 +569,20 @@ namespace AnyPortrait
 			_str_SimulateWindForce = "Simulate wind forces";
 			_str_ClearWindForce = "Clear wind force";
 
-			_str_AnimationEditModeToggleTooltip = "Animation Edit Mode (A)";
+			_str_AnimationEditModeToggleTooltip = "Animation Edit Mode";
 
-#if UNITY_EDITOR_OSX
-			_str_TimelineLayerLockToggleTooltip = "Timeline Layer Lock/Unlock (D) / If you press the button while holding down [Command], the Setting dialog opens";
-#else
-			_str_TimelineLayerLockToggleTooltip = "Timeline Layer Lock/Unlock (D) / If you press the button while holding down [Ctrl], the Setting dialog opens";
-#endif
+//			_str_TimelineLayerLockToggleTooltip_1 = "Timeline Layer Lock/Unlock";
+//#if UNITY_EDITOR_OSX
+//			_str_TimelineLayerLockToggleTooltip_2 = " / If you press the button while holding down [Command], the Setting dialog will be opened";
+//#else
+//			_str_TimelineLayerLockToggleTooltip_2 = " / If you press the button while holding down [Ctrl], the Setting dialog will be opened";
+//#endif
+
+
 			_str_AddKeyframe = "Add Keyframe";
 			_str_RemoveKeyframe = "Remove Keyframe";
 			_str_RemoveKeyframes = "Remove Keyframes";
-			_str_AddNewKeyframe = "Add New Keyframe";
+			//_str_AddNewKeyframe = "Add New Keyframe";
 
 			_str_PlayPause = "Play/Pause";
 			_str_PreviousFrame = "Previous Frame";
@@ -606,7 +661,7 @@ namespace AnyPortrait
 			_str_Vector = "Vector";
 			_str_Texture = "Texture";
 			_str_Color = "Color";
-			
+
 			_str_Num0 = "0";
 			_str_Num1 = "1";
 			_str_Num2 = "2";
@@ -624,7 +679,34 @@ namespace AnyPortrait
 
 			_str_SelectAllVertices = "Select All Vertices";
 			_str_MoveVertices = "Move Vertices";
+
+			//GUI용 ID
+			_str_GUIID_MeshName = "GUI_MESH_NAME";
+			_str_GUIID_MeshGroupName = "GUI_MESHGROUP_NAME";
+			_str_GUIID_SubTransformName = "GUI_SUBTRANSFORM_NAME";
+			_str_GUIID_BoneName = "GUI_BONE_NAME";
+			_str_GUIID_AnimClipName = "GUI_ANIMCLIP_NAME";
+			_str_GUIID_ControlParamName = "GUI_CONTROLPARAM_NAME";
+
+			_str_Show = "Show";
+			_str_Outline = "Outline";
+			_str_Hide = "Hide";
+
+			_str_Setting = "Setting";
+			_str_AddTool = "Add Tool";
+			_str_EditTool = "Edit Tool";
+			_str_AutoTool = "Auto Tool";
+			_str_Pivot = "Pivot";
+			_str_Modify = "Modify";
+
+			_str_PrevImage = "Prev Image";
+			_str_NextImage = "Next Image";
+
+			_str_Symbol_FilledCircle = "●";
+			_str_Symbol_EmptyCircle = "○";
 		}
+
+
 
 
 		// Get
@@ -642,21 +724,85 @@ namespace AnyPortrait
 		public string UnityEditorIsPlaying { get { return _str_UnityEditorIsPlaying; } }
 		public string ResetZoomAndPositon { get { return _str_ResetZoomAndPosition; } }
 		public string ToggleWorkspaceSize { get { return _str_ToggleWorkspaceSize; } }
-		public string ToggleWorkspaceSize_HotKey { get { return _str_ToggleWorkdspaceSize_HotKey; } }
+
+		//툴팁
+		public string GetHotkeyTooltip_ToggleWorkspaceSize(apHotKeyMapping hotkeyMapping)
+		{
+			_tooltipStr.Clear();
+			_tooltipStr.Append(_str_ToggleWorkdspaceSize_HotKey, false);
+			hotkeyMapping.AddHotkeyTextToWrapper(apHotKeyMapping.KEY_TYPE.ToggleWorkspaceSize, _tooltipStr, true);
+			return _tooltipStr.ToString();
+		}
 		public string SettingsOfTherPortraitAndEditor { get { return _str_SettingsOfTherPortraitAndEditor; } }
 		public string BakeToScene { get { return _str_BakeToScene; } }
-		public string BoneGUIToolTip_1 { get { return _str_BoneGUIToolTip1; } }
-		public string BoneGUIToolTip_2 { get { return _str_BoneGUIToolTip2; } }
-		public string MeshVisibilityToolTip { get { return _str_MeshVisibleToolTip; } }
-		public string PhysicsFxEnableToolTop { get { return _str_PhysicFxEnableToolTip; } }
+
+		public string GetHotkeyTooltip_BoneVisibility(apHotKeyMapping hotkeyMapping)
+		{
+			_tooltipStr.Clear();
+			_tooltipStr.Append(_str_BoneVisibility, false);
+			hotkeyMapping.AddHotkeyTextToWrapper(apHotKeyMapping.KEY_TYPE.ToggleBoneVisibility, _tooltipStr, true);
+			return _tooltipStr.ToString();
+		}
+
+		public string GetHotkeyTooltip_MeshVisibility(apHotKeyMapping hotkeyMapping)
+		{
+			_tooltipStr.Clear();
+			_tooltipStr.Append(_str_MeshVisibleToolTip, false);
+			hotkeyMapping.AddHotkeyTextToWrapper(apHotKeyMapping.KEY_TYPE.ToggleMeshVisibility, _tooltipStr, true);
+			return _tooltipStr.ToString();
+		}
+		public string GetHotkeyTooltip_PhysicsFxEnable(apHotKeyMapping hotkeyMapping)
+		{
+			_tooltipStr.Clear();
+			_tooltipStr.Append(_str_PhysicFxEnableToolTip, false);
+			hotkeyMapping.AddHotkeyTextToWrapper(apHotKeyMapping.KEY_TYPE.TogglePhysicsPreview, _tooltipStr, true);
+			return _tooltipStr.ToString();
+		}
+
 		public string FFDModeToolTip_1 { get { return _str_FFDModeToolTip_1; } }
 		public string FFDModeToolTip_2 { get { return _str_FFDModeToolTip_2; } }
 		public string ApplyFFD { get { return _str_ApplyFFD; } }
 		public string RevertFFD { get { return _str_RevertFFD; } }
-		public string SoftSelectionToolTip { get { return _str_SoftSelectionToolTip; } }
-		public string BlurToolTip { get { return _str_BlurToolTip; } }
-		public string OnionSkinToggle { get { return _str_OnionSkinToggle; } }
-		public string ChangeBoneVisiblity { get { return _str_ChangeBoneVisiblity; } }
+		public string GetHotkeyTooltip_SoftSelectionToolTip(apHotKeyMapping hotkeyMapping)
+		{
+			if (hotkeyMapping.IsHotkeyAvailable(apHotKeyMapping.KEY_TYPE.IncreaseModToolBrushSize)
+				&& hotkeyMapping.IsHotkeyAvailable(apHotKeyMapping.KEY_TYPE.DecreaseModToolBrushSize))
+			{
+				//브러시 크기가 모두 유효한 경우
+				_tooltipStr.Clear();
+				_tooltipStr.Append(_str_SoftSelectionToolTip_WithHotkey, false);
+				hotkeyMapping.AddHotkeyTextToWrapper(apHotKeyMapping.KEY_TYPE.DecreaseModToolBrushSize, _tooltipStr, false);
+				_tooltipStr.Append(apStringFactory.I.Comma_Space, false);
+				hotkeyMapping.AddHotkeyTextToWrapper(apHotKeyMapping.KEY_TYPE.IncreaseModToolBrushSize, _tooltipStr, false);
+				return _tooltipStr.ToString();
+			}
+			return _str_SoftSelectionToolTip_WOHotkey;
+		}
+		public string GetHotkeyTooltip_BlurToolTip(apHotKeyMapping hotkeyMapping)
+		{
+			if (hotkeyMapping.IsHotkeyAvailable(apHotKeyMapping.KEY_TYPE.IncreaseModToolBrushSize)
+				&& hotkeyMapping.IsHotkeyAvailable(apHotKeyMapping.KEY_TYPE.DecreaseModToolBrushSize))
+			{
+				//브러시 크기가 모두 유효한 경우
+				_tooltipStr.Clear();
+				_tooltipStr.Append(_str_BlurToolTip_WithHotkey, false);
+				hotkeyMapping.AddHotkeyTextToWrapper(apHotKeyMapping.KEY_TYPE.DecreaseModToolBrushSize, _tooltipStr, false);
+				_tooltipStr.Append(apStringFactory.I.Comma_Space, false);
+				hotkeyMapping.AddHotkeyTextToWrapper(apHotKeyMapping.KEY_TYPE.IncreaseModToolBrushSize, _tooltipStr, false);
+				return _tooltipStr.ToString();
+			}
+			return _str_BlurToolTip_WOHotkey;
+		}
+
+		public string GetHotkeyTooltip_ToggleOnionSkin(apHotKeyMapping hotkeyMapping)
+		{
+			_tooltipStr.Clear();
+			_tooltipStr.Append(_str_ToggleOnionSkin, false);
+			hotkeyMapping.AddHotkeyTextToWrapper(apHotKeyMapping.KEY_TYPE.ToggleOnionSkin, _tooltipStr, true);
+			return _tooltipStr.ToString();
+		}
+		public string RecordOnionSkin { get { return _str_RecordOnionRecord; } } 
+
 		public string IncreaseBrushSize { get { return _str_IncreaseBrushSize; } }
 		public string DecreaseBrushSize { get { return _str_DecreaseBrushSize; } }
 		public string RemovePolygon { get { return _str_RemovePolygon; } }
@@ -670,9 +816,42 @@ namespace AnyPortrait
 		public string Rotate { get { return _str_Rotate; } }
 		public string Scale { get { return _str_Scale; } }
 
+		public string GetHotkeyTooltip_SelectTool(apHotKeyMapping hotkeyMapping)
+		{
+			_tooltipStr.Clear();
+			_tooltipStr.Append(_str_Select, false);
+			hotkeyMapping.AddHotkeyTextToWrapper(apHotKeyMapping.KEY_TYPE.Gizmo_Select, _tooltipStr, true);
+			return _tooltipStr.ToString();
+		}
+
+		public string GetHotkeyTooltip_MoveTool(apHotKeyMapping hotkeyMapping)
+		{
+			_tooltipStr.Clear();
+			_tooltipStr.Append(_str_Move, false);
+			hotkeyMapping.AddHotkeyTextToWrapper(apHotKeyMapping.KEY_TYPE.Gizmo_Move, _tooltipStr, true);
+			return _tooltipStr.ToString();
+		}
+
+		public string GetHotkeyTooltip_RotateTool(apHotKeyMapping hotkeyMapping)
+		{
+			_tooltipStr.Clear();
+			_tooltipStr.Append(_str_Rotate, false);
+			hotkeyMapping.AddHotkeyTextToWrapper(apHotKeyMapping.KEY_TYPE.Gizmo_Rotate, _tooltipStr, true);
+			return _tooltipStr.ToString();
+		}
+
+		public string GetHotkeyTooltip_ScaleTool(apHotKeyMapping hotkeyMapping)
+		{
+			_tooltipStr.Clear();
+			_tooltipStr.Append(_str_Scale, false);
+			hotkeyMapping.AddHotkeyTextToWrapper(apHotKeyMapping.KEY_TYPE.Gizmo_Scale, _tooltipStr, true);
+			return _tooltipStr.ToString();
+		}
+
 		public string Ctrl { get { return _str_Ctrl; } }
 		public string Command { get { return _str_Command; } }
 		public string Alt { get { return _str_Alt; } }
+		public string Option { get { return _str_Option; } }
 		public string Shift { get { return _str_Shift; } }
 
 		/// <summary>
@@ -685,6 +864,19 @@ namespace AnyPortrait
 			return _str_Command;
 #else
 			return _str_Ctrl;
+#endif
+		}
+
+		/// <summary>
+		/// Windows에서는 Alt, OSX에서는 Option을 리턴하는 함수
+		/// </summary>
+		/// <returns></returns>
+		public string GetAltOrOption()
+		{
+#if UNITY_EDITOR_OSX
+			return _str_Option;
+#else
+			return _str_Alt;
 #endif
 		}
 
@@ -783,6 +975,11 @@ namespace AnyPortrait
 		public string Z { get { return _str_Z; } }
 		public string Set { get { return _str_Set; } }
 
+		public string L { get { return _str_L; } }
+		public string T { get { return _str_T; } }
+		public string R { get { return _str_R; } }
+		public string B { get { return _str_B; } }
+
 		public string GIF { get { return _str_GIF; } }
 		public string XML { get { return _str_XML; } }
 		public string JSON { get { return _str_JSON; } }
@@ -830,15 +1027,44 @@ namespace AnyPortrait
 
 		public string AddANewModifier { get { return _str_AddANewModifier; } }
 
-		public string BindingModeToggleTooltip { get { return _str_BindingModeToggleTooltip; } }
-		public string EditModeToggleTooltip { get { return _str_EditModeToggleTooltip; } }
-		public string SelectionLockToggleTooltip { get { return _str_SelectionLockToggleTooltip; } }
-		public string ModifierLockToggleTooltip { get { return _str_ModifierLockToggleTooltip; } }
+		public string GetHotkeyTooltip_BindingModeToggle(apHotKeyMapping hotkeyMapping)
+		{
+			_tooltipStr.Clear();
+			_tooltipStr.Append(_str_BindingModeToggleTooltip, false);
+			hotkeyMapping.AddHotkeyTextToWrapper(apHotKeyMapping.KEY_TYPE.ToggleEditingMode, _tooltipStr, true);
+			return _tooltipStr.ToString();
+		}
 
-		public string ToggleEditingMode { get { return _str_ToggleEditingMode; } }
-		public string ToggleSelectionLock { get { return _str_ToggleSelectionLock; } }
-		public string ToggleModifierLock { get { return _str_ToggleModifierLock; } }
-		public string ToggleLayerLock { get { return _str_ToggleLayerLock; } }
+		public string GetHotkeyTooltip_EditModeToggle(apHotKeyMapping hotkeyMapping)
+		{
+			_tooltipStr.Clear();
+			_tooltipStr.Append(_str_EditModeToggleTooltip, false);
+			hotkeyMapping.AddHotkeyTextToWrapper(apHotKeyMapping.KEY_TYPE.ToggleEditingMode, _tooltipStr, true);
+			return _tooltipStr.ToString();
+		}
+
+		public string GetHotkeyTooltip_SelectionLockToggle(apHotKeyMapping hotkeyMapping)
+		{
+			_tooltipStr.Clear();
+			_tooltipStr.Append(_str_SelectionLockToggleTooltip, false);
+			hotkeyMapping.AddHotkeyTextToWrapper(apHotKeyMapping.KEY_TYPE.ToggleSelectionLock, _tooltipStr, true);
+			return _tooltipStr.ToString();
+		}
+
+		//삭제 21.2.13 : 모디파이어 잠금을 사용하지 않는다.
+		//public string GetHotkeyTooltip_ModifierLockToggle(apHotKeyMapping hotkeyMapping)
+		//{
+		//	_tooltipStr.Clear();
+		//	_tooltipStr.Append(_str_ModifierLockToggleTooltip_1, false);
+		//	hotkeyMapping.AddHotkeyTextToWrapper(apHotKeyMapping.KEY_TYPE.ToggleModifierLock, _tooltipStr, true);
+		//	_tooltipStr.Append(_str_ModifierLockToggleTooltip_2, true);
+		//	return _tooltipStr.ToString();
+		//}
+
+		//public string ToggleEditingMode { get { return _str_ToggleEditingMode; } }
+		//public string ToggleSelectionLock { get { return _str_ToggleSelectionLock; } }
+		//public string ToggleModifierLock { get { return _str_ToggleModifierLock; } }
+		//public string ToggleLayerLock { get { return _str_ToggleLayerLock; } }
 
 		public string RiggingViewModeTooltip_ColorWithTexture { get { return _str_RiggingViewModeTooltip_ColorWithTexture; } }
 		public string RiggingViewModeTooltip_BoneColor { get { return _str_RiggingViewModeTooltip_BoneColor; } }
@@ -850,12 +1076,36 @@ namespace AnyPortrait
 		public string SimulateWindForce { get { return _str_SimulateWindForce; } }
 		public string ClearWindForce { get { return _str_ClearWindForce; } }
 
-		public string AnimationEditModeToggleTooltip { get { return _str_AnimationEditModeToggleTooltip; } }
-		public string TimelineLayerLockToggleTooltip { get { return _str_TimelineLayerLockToggleTooltip; } }
+		public string GetHotkeyTooltip_AnimationEditModeToggle(apHotKeyMapping hotkeyMapping)
+		{
+			_tooltipStr.Clear();
+			_tooltipStr.Append(_str_AnimationEditModeToggleTooltip, false);
+			hotkeyMapping.AddHotkeyTextToWrapper(apHotKeyMapping.KEY_TYPE.ToggleEditingMode, _tooltipStr, true);
+			return _tooltipStr.ToString();
+		}
+
+		//삭제 21.2.13 : 모디파이어 잠금을 사용하지 않는다.
+		//public string GetHotkeyTooltip_TimelineLayerLockToggle(apHotKeyMapping hotkeyMapping)
+		//{
+		//	_tooltipStr.Clear();
+		//	_tooltipStr.Append(_str_TimelineLayerLockToggleTooltip_1, false);
+		//	hotkeyMapping.AddHotkeyTextToWrapper(apHotKeyMapping.KEY_TYPE.ToggleModifierLock, _tooltipStr, true);
+		//	_tooltipStr.Append(_str_TimelineLayerLockToggleTooltip_2, true);
+		//	return _tooltipStr.ToString();
+		//}
+
+
 		public string AddKeyframe { get { return _str_AddKeyframe; } }
+		public string GetHotkeyTooltip_AddKeyframe(apHotKeyMapping hotkeyMapping)
+		{
+			_tooltipStr.Clear();
+			_tooltipStr.Append(_str_AddKeyframe, false);
+			hotkeyMapping.AddHotkeyTextToWrapper(apHotKeyMapping.KEY_TYPE.Anim_AddKeyframes, _tooltipStr, true);
+			return _tooltipStr.ToString();
+		}
 		public string RemoveKeyframe { get { return _str_RemoveKeyframe; } }
 		public string RemoveKeyframes { get { return _str_RemoveKeyframes; } }
-		public string AddNewKeyframe { get { return _str_AddNewKeyframe; } }
+		//public string AddNewKeyframe { get { return _str_AddNewKeyframe; } }
 
 		public string PlayPause { get { return _str_PlayPause; } }
 		public string PreviousFrame { get { return _str_PreviousFrame; } }
@@ -877,7 +1127,13 @@ namespace AnyPortrait
 		public string AnimTimelineFit { get { return _str_AnimTimelineFit; } }
 		public string AnimTimelineFitTooltip { get { return _str_AnimTimelineFitTooltip; } }
 		public string AnimTimelineAutoScrollTooltip { get { return _str_AnimTimelineAutoScrollTooltip; } }
-		public string AnimTimelineAutoKeyTooltip { get { return _str_AnimTimelineAutoKeyTooltip; } }
+		public string GetHotkeyTooltip_AnimTimelineAutoKeyTooltip(apHotKeyMapping hotkeyMapping)
+		{
+			_tooltipStr.Clear();
+			_tooltipStr.Append(_str_AnimTimelineAutoKeyTooltip, false);
+			hotkeyMapping.AddHotkeyTextToWrapper(apHotKeyMapping.KEY_TYPE.Anim_ToggleAutoKey, _tooltipStr, true);
+			return _tooltipStr.ToString();
+		}
 
 		public string AnimCurveTooltip_Linear { get { return _str_AnimCurveTooltip_Linear; } }
 		public string AnimCurveTooltip_Smooth { get { return _str_AnimCurveTooltip_Smooth; } }
@@ -948,5 +1204,37 @@ namespace AnyPortrait
 
 		public string SelectAllVertices { get { return _str_SelectAllVertices; } }
 		public string MoveVertices { get { return _str_MoveVertices; } }
+
+
+		//GUI용 ID
+		public string GUI_ID__MeshName			{ get { return _str_GUIID_MeshName; } }
+		public string GUI_ID__MeshGroupName		{ get { return _str_GUIID_MeshGroupName; } }
+		public string GUI_ID__SubTransformName	{ get { return _str_GUIID_SubTransformName; } }
+		public string GUI_ID__BoneName			{ get { return _str_GUIID_BoneName; } }
+		public string GUI_ID__AnimClipName		{ get { return _str_GUIID_AnimClipName; } }
+		public string GUI_ID__ControlParamName	{ get { return _str_GUIID_ControlParamName; } }
+
+		//본 보여주기
+		public string Show { get { return _str_Show; } }
+		public string Outline { get { return _str_Outline; } }
+		public string Hide { get { return _str_Hide; } }
+
+		//메시 탭
+		public string Setting { get { return _str_Setting; } }
+		public string AddTool { get { return _str_AddTool; } }
+		public string EditTool { get { return _str_EditTool; } }
+		public string AutoTool { get { return _str_AutoTool; } }
+		public string Pivot { get { return _str_Pivot; } }
+		public string Modify { get { return _str_Modify; } }
+
+		//로토스코핑
+		public string PrevImage { get { return _str_PrevImage; } }
+		public string NextImage { get { return _str_NextImage; } }
+
+		//특수 문자
+		/// <summary>특수 문자 : ●</summary>
+		public string Symbol_FilledCircle { get { return _str_Symbol_FilledCircle; } }
+		/// <summary>특수 문자 : ○</summary>
+		public string Symbol_EmptyCircle { get { return _str_Symbol_EmptyCircle; } }
 	}
 }

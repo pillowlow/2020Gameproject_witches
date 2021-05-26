@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -713,17 +712,27 @@ namespace AnyPortrait
 				}
 
 				//RenderUnit의 현재 상태를 보고 Visible Type을 결정하자
-				if(curRenderUnit._isVisibleWorkToggle_Hide2Show)
+				//Tmp의 값을 보자
+				//이전
+				//if(curRenderUnit._isVisibleWorkToggle_Hide2Show)
+				//{
+				//	curData._visibleType = VISIBLE_TYPE.Shown;
+				//}
+				//else if(curRenderUnit._isVisibleWorkToggle_Show2Hide)
+				//{
+				//	curData._visibleType = VISIBLE_TYPE.Hidden;
+				//}
+				//else
+				//{
+				//	curData._visibleType = VISIBLE_TYPE.None;
+				//}
+
+				//변경 21.1.28
+				switch (curRenderUnit._workVisible_Tmp)
 				{
-					curData._visibleType = VISIBLE_TYPE.Shown;
-				}
-				else if(curRenderUnit._isVisibleWorkToggle_Show2Hide)
-				{
-					curData._visibleType = VISIBLE_TYPE.Hidden;
-				}
-				else
-				{
-					curData._visibleType = VISIBLE_TYPE.None;
+					case apRenderUnit.WORK_VISIBLE_TYPE.None: curData._visibleType = VISIBLE_TYPE.None; break;
+					case apRenderUnit.WORK_VISIBLE_TYPE.ToShow: curData._visibleType = VISIBLE_TYPE.Shown; break;
+					case apRenderUnit.WORK_VISIBLE_TYPE.ToHide: curData._visibleType = VISIBLE_TYPE.Hidden; break;
 				}
 			}
 
@@ -741,17 +750,26 @@ namespace AnyPortrait
 				}
 
 				//RenderUnit의 현재 상태를 보고 Visible Type을 결정하자
-				if(curRenderUnit._isVisibleWorkToggle_Hide2Show)
+				//이전
+				//if(curRenderUnit._isVisibleWorkToggle_Hide2Show)
+				//{
+				//	curData._visibleType = VISIBLE_TYPE.Shown;
+				//}
+				//else if(curRenderUnit._isVisibleWorkToggle_Show2Hide)
+				//{
+				//	curData._visibleType = VISIBLE_TYPE.Hidden;
+				//}
+				//else
+				//{
+				//	curData._visibleType = VISIBLE_TYPE.None;
+				//}
+
+				//변경 21.1.28
+				switch (curRenderUnit._workVisible_Tmp)
 				{
-					curData._visibleType = VISIBLE_TYPE.Shown;
-				}
-				else if(curRenderUnit._isVisibleWorkToggle_Show2Hide)
-				{
-					curData._visibleType = VISIBLE_TYPE.Hidden;
-				}
-				else
-				{
-					curData._visibleType = VISIBLE_TYPE.None;
+					case apRenderUnit.WORK_VISIBLE_TYPE.None: curData._visibleType = VISIBLE_TYPE.None; break;
+					case apRenderUnit.WORK_VISIBLE_TYPE.ToShow: curData._visibleType = VISIBLE_TYPE.Shown; break;
+					case apRenderUnit.WORK_VISIBLE_TYPE.ToHide: curData._visibleType = VISIBLE_TYPE.Hidden; break;
 				}
 			}
 
@@ -767,13 +785,22 @@ namespace AnyPortrait
 				curBone = curData._key_Bone;
 
 				//Bone은 Hidden이 아닌 경우에는 Show이다.
-				if(curBone.IsGUIVisible)
+
+				//if(curBone.IsGUIVisible)//이전
+				//{
+				//	curData._visibleType = VISIBLE_TYPE.None;
+				//}
+				//else
+				//{
+				//	curData._visibleType = VISIBLE_TYPE.Hidden;
+				//}
+
+				//변경 21.1.28 : Tmp 이용
+				switch (curBone.VisibleType_Tmp)
 				{
-					curData._visibleType = VISIBLE_TYPE.None;
-				}
-				else
-				{
-					curData._visibleType = VISIBLE_TYPE.Hidden;
+					case apBone.GUI_VISIBLE_TYPE.None: curData._visibleType = VISIBLE_TYPE.None; break;
+					case apBone.GUI_VISIBLE_TYPE.Show: curData._visibleType = VISIBLE_TYPE.Shown; break;
+					case apBone.GUI_VISIBLE_TYPE.Hide: curData._visibleType = VISIBLE_TYPE.Hidden; break;
 				}
 			}
 		}
@@ -815,22 +842,29 @@ namespace AnyPortrait
 			}
 
 			//Visibility를 지정하자
-			if(renderUnit._isVisibleWorkToggle_Hide2Show)
+			//이전
+			//if(renderUnit._isVisibleWorkToggle_Hide2Show)
+			//{
+			//	//Hide > Show
+			//	data.SetVisibility(VISIBLE_TYPE.Shown);
+			//}
+			//else if(renderUnit._isVisibleWorkToggle_Show2Hide)
+			//{
+			//	//Show > Hide
+			//	data.SetVisibility(VISIBLE_TYPE.Hidden);
+			//}
+			//else
+			//{
+			//	//연산값 그대로 사용
+			//	data.SetVisibility(VISIBLE_TYPE.None);
+			//}
+			//변경 21.1.28
+			switch (renderUnit._workVisible_Tmp)
 			{
-				//Hide > Show
-				data.SetVisibility(VISIBLE_TYPE.Shown);
+				case apRenderUnit.WORK_VISIBLE_TYPE.None: data.SetVisibility(VISIBLE_TYPE.None); break;
+				case apRenderUnit.WORK_VISIBLE_TYPE.ToShow: data.SetVisibility(VISIBLE_TYPE.Shown); break;
+				case apRenderUnit.WORK_VISIBLE_TYPE.ToHide: data.SetVisibility(VISIBLE_TYPE.Hidden); break;
 			}
-			else if(renderUnit._isVisibleWorkToggle_Show2Hide)
-			{
-				//Show > Hide
-				data.SetVisibility(VISIBLE_TYPE.Hidden);
-			}
-			else
-			{
-				//연산값 그대로 사용
-				data.SetVisibility(VISIBLE_TYPE.None);
-			}
-			
 			
 		}
 
@@ -870,15 +904,24 @@ namespace AnyPortrait
 			}
 
 			//Visibility를 지정하자
-			if(bone.IsGUIVisible)
+			//이전
+			//if(bone.IsGUIVisible)
+			//{
+			//	//Show : Bone은 보여지는게 기본값이다.
+			//	data.SetVisibility(VISIBLE_TYPE.None);
+			//}
+			//else
+			//{
+			//	//Hide
+			//	data.SetVisibility(VISIBLE_TYPE.Hidden);
+			//}
+
+			//변경 21.1.28
+			switch (bone.VisibleType_Tmp)
 			{
-				//Show : Bone은 보여지는게 기본값이다.
-				data.SetVisibility(VISIBLE_TYPE.None);
-			}
-			else
-			{
-				//Hide
-				data.SetVisibility(VISIBLE_TYPE.Hidden);
+				case apBone.GUI_VISIBLE_TYPE.None: data.SetVisibility(VISIBLE_TYPE.None); break;
+				case apBone.GUI_VISIBLE_TYPE.Show: data.SetVisibility(VISIBLE_TYPE.Shown); break;
+				case apBone.GUI_VISIBLE_TYPE.Hide: data.SetVisibility(VISIBLE_TYPE.Hidden); break;
 			}
 		}
 
@@ -939,17 +982,26 @@ namespace AnyPortrait
 				}
 
 				//RenderUnit의 현재 상태를 보고 Visible Type을 결정하자
-				if(curRenderUnit._isVisibleWorkToggle_Hide2Show)
+				//이전
+				//if(curRenderUnit._isVisibleWorkToggle_Hide2Show)
+				//{
+				//	curData._visibleType = VISIBLE_TYPE.Shown;
+				//}
+				//else if(curRenderUnit._isVisibleWorkToggle_Show2Hide)
+				//{
+				//	curData._visibleType = VISIBLE_TYPE.Hidden;
+				//}
+				//else
+				//{
+				//	curData._visibleType = VISIBLE_TYPE.None;
+				//}
+
+				//변경 21.1.28
+				switch (curRenderUnit._workVisible_Tmp)
 				{
-					curData._visibleType = VISIBLE_TYPE.Shown;
-				}
-				else if(curRenderUnit._isVisibleWorkToggle_Show2Hide)
-				{
-					curData._visibleType = VISIBLE_TYPE.Hidden;
-				}
-				else
-				{
-					curData._visibleType = VISIBLE_TYPE.None;
+					case apRenderUnit.WORK_VISIBLE_TYPE.None: curData._visibleType = VISIBLE_TYPE.None; break;
+					case apRenderUnit.WORK_VISIBLE_TYPE.ToShow: curData._visibleType = VISIBLE_TYPE.Shown; break;
+					case apRenderUnit.WORK_VISIBLE_TYPE.ToHide: curData._visibleType = VISIBLE_TYPE.Hidden; break;
 				}
 			}
 
@@ -967,17 +1019,26 @@ namespace AnyPortrait
 				}
 
 				//RenderUnit의 현재 상태를 보고 Visible Type을 결정하자
-				if(curRenderUnit._isVisibleWorkToggle_Hide2Show)
+				//이전
+				//if(curRenderUnit._isVisibleWorkToggle_Hide2Show)
+				//{
+				//	curData._visibleType = VISIBLE_TYPE.Shown;
+				//}
+				//else if(curRenderUnit._isVisibleWorkToggle_Show2Hide)
+				//{
+				//	curData._visibleType = VISIBLE_TYPE.Hidden;
+				//}
+				//else
+				//{
+				//	curData._visibleType = VISIBLE_TYPE.None;
+				//}
+
+				//변경 21.1.28
+				switch (curRenderUnit._workVisible_Tmp)
 				{
-					curData._visibleType = VISIBLE_TYPE.Shown;
-				}
-				else if(curRenderUnit._isVisibleWorkToggle_Show2Hide)
-				{
-					curData._visibleType = VISIBLE_TYPE.Hidden;
-				}
-				else
-				{
-					curData._visibleType = VISIBLE_TYPE.None;
+					case apRenderUnit.WORK_VISIBLE_TYPE.None: curData._visibleType = VISIBLE_TYPE.None; break;
+					case apRenderUnit.WORK_VISIBLE_TYPE.ToShow: curData._visibleType = VISIBLE_TYPE.Shown; break;
+					case apRenderUnit.WORK_VISIBLE_TYPE.ToHide: curData._visibleType = VISIBLE_TYPE.Hidden; break;
 				}
 			}
 		}
@@ -1035,13 +1096,22 @@ namespace AnyPortrait
 				curBone = curData._key_Bone;
 
 				//Bone은 Hidden이 아닌 경우에는 Show이다.
-				if(curBone.IsGUIVisible)
+				//이전
+				//if(curBone.IsGUIVisible)
+				//{
+				//	curData._visibleType = VISIBLE_TYPE.None;
+				//}
+				//else
+				//{
+				//	curData._visibleType = VISIBLE_TYPE.Hidden;
+				//}
+
+				//변경 21.1.28
+				switch (curBone.VisibleType_Tmp)
 				{
-					curData._visibleType = VISIBLE_TYPE.None;
-				}
-				else
-				{
-					curData._visibleType = VISIBLE_TYPE.Hidden;
+					case apBone.GUI_VISIBLE_TYPE.None: curData.SetVisibility(VISIBLE_TYPE.None); break;
+					case apBone.GUI_VISIBLE_TYPE.Show: curData.SetVisibility(VISIBLE_TYPE.Shown); break;
+					case apBone.GUI_VISIBLE_TYPE.Hide: curData.SetVisibility(VISIBLE_TYPE.Hidden); break;
 				}
 			}
 		}
@@ -1109,19 +1179,28 @@ namespace AnyPortrait
 				if(curData._visibleType == VISIBLE_TYPE.None)
 				{
 					//기본값으로 돌린다.
-					curRenderUnit.ResetTmpWorkVisible();
+					curRenderUnit.ResetTmpWorkVisible(false);
 				}
 				else if(curData._visibleType == VISIBLE_TYPE.Shown)
 				{
 					//Hide > Show
-					curRenderUnit._isVisibleWorkToggle_Hide2Show = true;
-					curRenderUnit._isVisibleWorkToggle_Show2Hide = false;
+					//이전
+					//curRenderUnit._isVisibleWorkToggle_Hide2Show = true;
+					//curRenderUnit._isVisibleWorkToggle_Show2Hide = false;
+
+					//변경 21.1.28
+					curRenderUnit._workVisible_Tmp = apRenderUnit.WORK_VISIBLE_TYPE.ToShow;
+
 				}
 				else
 				{
 					//Show > Hide
-					curRenderUnit._isVisibleWorkToggle_Hide2Show = false;
-					curRenderUnit._isVisibleWorkToggle_Show2Hide = true;
+					//이전
+					//curRenderUnit._isVisibleWorkToggle_Hide2Show = false;
+					//curRenderUnit._isVisibleWorkToggle_Show2Hide = true;
+
+					//변경 21.1.28
+					curRenderUnit._workVisible_Tmp = apRenderUnit.WORK_VISIBLE_TYPE.ToHide;
 				}
 
 
@@ -1143,19 +1222,27 @@ namespace AnyPortrait
 				if(curData._visibleType == VISIBLE_TYPE.None)
 				{
 					//기본값으로 돌린다.
-					curRenderUnit.ResetTmpWorkVisible();
+					curRenderUnit.ResetTmpWorkVisible(false);
 				}
 				else if(curData._visibleType == VISIBLE_TYPE.Shown)
 				{
 					//Hide > Show
-					curRenderUnit._isVisibleWorkToggle_Hide2Show = true;
-					curRenderUnit._isVisibleWorkToggle_Show2Hide = false;
+					//이전
+					//curRenderUnit._isVisibleWorkToggle_Hide2Show = true;
+					//curRenderUnit._isVisibleWorkToggle_Show2Hide = false;
+
+					//변경 21.1.28
+					curRenderUnit._workVisible_Tmp = apRenderUnit.WORK_VISIBLE_TYPE.ToShow;
 				}
 				else
 				{
 					//Show > Hide
-					curRenderUnit._isVisibleWorkToggle_Hide2Show = false;
-					curRenderUnit._isVisibleWorkToggle_Show2Hide = true;
+					//이전
+					//curRenderUnit._isVisibleWorkToggle_Hide2Show = false;
+					//curRenderUnit._isVisibleWorkToggle_Show2Hide = true;
+
+					//변경 21.1.28
+					curRenderUnit._workVisible_Tmp = apRenderUnit.WORK_VISIBLE_TYPE.ToHide;
 				}
 			}
 
@@ -1169,14 +1256,23 @@ namespace AnyPortrait
 
 				curBone = curData._key_Bone;
 
-				//Bone은 Hidden이 아닌 경우에는 Show이다.
-				if(curData._visibleType == VISIBLE_TYPE.Hidden)
+				//이전
+				////Bone은 Hidden이 아닌 경우에는 Show이다.
+				//if(curData._visibleType == VISIBLE_TYPE.Hidden)
+				//{
+				//	curBone.SetGUIVisible(false);
+				//}
+				//else
+				//{
+				//	curBone.SetGUIVisible(true);
+				//}
+
+				//변경 21.1.28
+				switch (curData._visibleType)
 				{
-					curBone.SetGUIVisible(false);
-				}
-				else
-				{
-					curBone.SetGUIVisible(true);
+					case VISIBLE_TYPE.None:		curBone.SetGUIVisible_Tmp(apBone.GUI_VISIBLE_TYPE.None); break;
+					case VISIBLE_TYPE.Shown:	curBone.SetGUIVisible_Tmp(apBone.GUI_VISIBLE_TYPE.Show); break;
+					case VISIBLE_TYPE.Hidden:	curBone.SetGUIVisible_Tmp(apBone.GUI_VISIBLE_TYPE.Hide); break;
 				}
 			}
 

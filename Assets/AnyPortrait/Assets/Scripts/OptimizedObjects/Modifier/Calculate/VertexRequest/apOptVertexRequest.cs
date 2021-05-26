@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -86,29 +85,32 @@ namespace AnyPortrait
 		//..Rigging은 첫 연결 후 weight가 변할리는 없으니 Modifier 처리가 필요 없을지도..
 		public class RigBoneWeightPair
 		{
-			public apOptTransform _optTransform = null;
+			//삭제 20.11.27 : LUT 로직으로 대체되면서 사용하지 않게됨
+			//public apOptTransform _optTransform = null;
+			//public apMatrix3x3 _boneMatrix = apMatrix3x3.identity;
+
 			public apOptBone _bone = null;
 
-			public apMatrix3x3 _boneMatrix = apMatrix3x3.identity;
+			//추가 20.11.26 : 빠른 계산을 위해 "미리 계산된 LUT"의 인덱스
+			public int _iRigPairLUT = -1;
 
 			public float _weight = 0.0f;
 
-			public RigBoneWeightPair(apOptTransform optTransform, apOptBone bone, float weight)
+			public RigBoneWeightPair(/*apOptTransform optTransform, */apOptBone bone, float weight)
 			{
-				_optTransform = optTransform;
+				//_optTransform = optTransform;
 				_bone = bone;
 				_weight = weight;
+				_iRigPairLUT = -1;
 			}
 
-			public void CalculateMatrix()
-			{
-				//_boneMatrix = _optTransform._vertMeshWorldNoModInverseMatrix
-				//	* _bone._vertWorld2BoneModWorldMatrix
-				//	* _optTransform._vertMeshWorldNoModMatrix;
-				_boneMatrix.SetMatrix(_optTransform._vertMeshWorldNoModInverseMatrix);
-				_boneMatrix.Multiply(_bone._vertWorld2BoneModWorldMatrix);
-				_boneMatrix.Multiply(_optTransform._vertMeshWorldNoModMatrix);
-			}
+			//삭제 20.11.27 : LUT 로직으로 대체되었다.
+			//public void CalculateMatrix()
+			//{
+			//	_boneMatrix.SetMatrix(_optTransform._vertMeshWorldNoModInverseMatrix);
+			//	_boneMatrix.Multiply(_bone._vertWorld2BoneModWorldMatrix);
+			//	_boneMatrix.Multiply(_optTransform._vertMeshWorldNoModMatrix);
+			//}
 		}
 
 		//버텍스별로 WeightPair를 가진다. 빠른 처리를 위해 배열로 저장
@@ -128,7 +130,7 @@ namespace AnyPortrait
 				_totalRiggingWeight = 0.0f;
 				for (int i = 0; i < weightPairs.Length; i++)
 				{
-					_rigTable[i] = new RigBoneWeightPair(modMesh._targetTransform, weightPairs[i]._bone, weightPairs[i]._weight);
+					_rigTable[i] = new RigBoneWeightPair(/*modMesh._targetTransform, */weightPairs[i]._bone, weightPairs[i]._weight);
 					_totalRiggingWeight += weightPairs[i]._weight;
 				}
 				//Debug.Log("VertRigWeightTable : " + totalWeight);
@@ -157,7 +159,7 @@ namespace AnyPortrait
 				_totalRiggingWeight = 0.0f;
 				for (int i = 0; i < weightPairs.Length; i++)
 				{
-					_rigTable[i] = new RigBoneWeightPair(modMeshSet._targetTransform, weightPairs[i]._bone, weightPairs[i]._weight);
+					_rigTable[i] = new RigBoneWeightPair(/*modMeshSet._targetTransform, */weightPairs[i]._bone, weightPairs[i]._weight);
 					_totalRiggingWeight += weightPairs[i]._weight;
 				}
 				//Debug.Log("VertRigWeightTable : " + totalWeight);
@@ -293,15 +295,9 @@ namespace AnyPortrait
 		}
 
 
-		public void MultiplyWeight(float weight
-			//, string strDebug
-			)
+		public void MultiplyWeight(float weight)
 		{
 			_totalWeight *= weight;
-			//if (!string.IsNullOrEmpty(strDebug))
-			//{
-			//	_strDebug = strDebug;
-			//}
 		}
 
 		// Get / Set

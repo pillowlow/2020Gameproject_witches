@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -345,6 +344,8 @@ namespace AnyPortrait
 		[NonSerialized]
 		public int _debugID = -1;
 
+
+
 		
 
 		// Init
@@ -674,7 +675,9 @@ namespace AnyPortrait
 		{
 			get
 			{
-				if (_linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.ExclusiveEnabled)
+				//if (_linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.ExclusiveEnabled)
+				if (_linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Edit
+					|| _linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Background)
 				{
 					return apModifierBase.BLEND_METHOD.Interpolation;
 				}
@@ -686,7 +689,9 @@ namespace AnyPortrait
 			get
 			{
 				//return _linkedModifier._layerWeight;
-				if (_linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.ExclusiveEnabled)
+				//if (_linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.ExclusiveEnabled)
+				if (_linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Edit
+					|| _linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Background)
 				{
 					return 1.0f;
 				}
@@ -700,7 +705,9 @@ namespace AnyPortrait
 			get
 			{
 				//return _linkedModifier._layerWeight;
-				if (_linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.ExclusiveEnabled)
+				//if (_linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.ExclusiveEnabled)
+				if (_linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Edit
+					|| _linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Background)
 				{
 					return 1.0f;
 				}

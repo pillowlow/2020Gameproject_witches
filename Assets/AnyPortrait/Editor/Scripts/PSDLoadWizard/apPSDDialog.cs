@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -123,6 +122,7 @@ namespace AnyPortrait
 		private apPSDLoader.BAKE_SIZE _bakeWidth = apPSDLoader.BAKE_SIZE.s1024;
 		private apPSDLoader.BAKE_SIZE _bakeHeight = apPSDLoader.BAKE_SIZE.s1024;
 		private string _bakeDstFilePath = "";//저장될 기본 경로 (폴더만 지정한다. 나머지는 파일 + 이미지 번호)
+
 		private string _bakeDstFileRelativePath = "";
 		private int _bakeMaximumNumAtlas = 2;
 		private int _bakePadding = 4;
@@ -439,7 +439,10 @@ namespace AnyPortrait
 							editor._mat_Alpha2White.shader,
 							editor._mat_BoneV2.shader,
 							editor._mat_Texture_VColorMul.shader,
-							editor._mat_RigCircleV2.shader);
+							editor._mat_RigCircleV2.shader,
+							editor._mat_Gray_Normal.shader,
+							editor._mat_Gray_Clipped.shader
+							);
 
 			wantsMouseMove = true;
 
@@ -452,6 +455,9 @@ namespace AnyPortrait
 
 			//변경 6.23 : 별도의 PSD Loader를 둔다.
 			_psdLoader = new apPSDLoader(editor);
+
+
+			
 
 			//_delayedGUIEvent_Request.Clear();
 			//_delayedGUIEvent_Result.Clear();
@@ -938,7 +944,10 @@ namespace AnyPortrait
 
 							EditorGUILayout.BeginVertical();
 							GUILayout.Space(10);
+
 							GUI_Center_FileLoad(windowWidth - 10, centerHeight - 26);
+
+							
 							EditorGUILayout.EndVertical();
 
 							EditorGUILayout.EndHorizontal();
@@ -1037,7 +1046,13 @@ namespace AnyPortrait
 			catch (Exception ex)
 			{
 				Debug.LogError("PSD Dialog Exception : " + ex);
-				CloseDialog();
+				
+				//Mac 코멘트 추가 : 에러가 발생해도 다이얼로그는 닫히지 않고, 코멘트 로그만 나오게 만들자
+#if !UNITY_EDITOR_WIN
+				Debug.Log("Comment: UI errors can often occur on Mac OS, but most can be ignored. Please ignore these logs if there is no problem with your work.");
+#endif
+				//삭제 21.3.17 : Mac의 문제로 에러가 줄기차게 발생할 수 있다. 그냥 에러가 나도 Close를 하지 말자
+				//CloseDialog();
 			}
 			//if (_isDialogEnded)
 			//{
@@ -1142,11 +1157,14 @@ namespace AnyPortrait
 					{
 						try
 						{
-							string filePath = EditorUtility.OpenFilePanel("Open PSD File", "", "psd");
+							string filePath = EditorUtility.OpenFilePanel("Open PSD File", apEditorUtil.GetLastOpenSaveFileDirectoryPath(apEditorUtil.SAVED_LAST_FILE_PATH.PSD_ExternalFile), "psd");
 							if (!string.IsNullOrEmpty(filePath))
 							{
 								//이전 코드
 								//LoadPsdFile(filePath);
+								apEditorUtil.SetLastExternalOpenSaveFilePath(filePath, apEditorUtil.SAVED_LAST_FILE_PATH.PSD_ExternalFile);//21.3.1
+
+								
 
 								_psdLoader.Step1_LoadPSDFile(filePath, null);
 							}
@@ -1739,7 +1757,18 @@ namespace AnyPortrait
 			EditorGUILayout.LabelField(_editor.GetText(TEXT.DLG_PSD_SavePath), GUILayout.Width(width));//"Save path"
 			EditorGUILayout.BeginHorizontal(GUILayout.Width(width));
 			string prev_bakeDstFilePath = _bakeDstFilePath;
+
+			Color prevColor = GUI.backgroundColor;
+			if(string.IsNullOrEmpty(_bakeDstFilePath))
+			{
+				GUI.backgroundColor = new Color(GUI.backgroundColor.r * 1.5f, 
+					GUI.backgroundColor.g * 0.8f, 
+					GUI.backgroundColor.b * 0.8f, 
+					GUI.backgroundColor.a);
+			}
 			string next_bakeDstFilePath = EditorGUILayout.DelayedTextField(_bakeDstFilePath, GUILayout.Width(width - 64));
+			GUI.backgroundColor = prevColor;
+
 			if (IsGUIUsable)
 			{
 				if (!string.Equals(_bakeDstFilePath, next_bakeDstFilePath))
@@ -1766,6 +1795,7 @@ namespace AnyPortrait
 					}
 					//_bakeDstFilePath = EditorUtility.SaveFolderPanel("Save Path Folder", "Assets", _fileNameOnly);
 					_bakeDstFilePath = EditorUtility.SaveFolderPanel("Save Path Folder", defaultPath, "");
+					
 
 					if (!_bakeDstFilePath.StartsWith(Application.dataPath))
 					{
@@ -1898,7 +1928,7 @@ namespace AnyPortrait
 					);
 			}
 
-			Color prevColor = GUI.backgroundColor;
+			
 
 			GUIStyle guiStyle_Result = new GUIStyle(GUI.skin.box);
 			guiStyle_Result.alignment = TextAnchor.MiddleLeft;
@@ -2189,7 +2219,7 @@ namespace AnyPortrait
 
 		// Functions
 		//----------------------------------------------------------
-		#region [미사용 : PSD Loader로 전환]
+#region [미사용 : PSD Loader로 전환]
 		//private void ClearPsdFile()
 		//{
 		//	_isFileLoaded = false;
@@ -3082,7 +3112,7 @@ namespace AnyPortrait
 		//		//Debug.LogError("Reimport Exception : " + ex);
 		//	}
 		//} 
-		#endregion
+#endregion
 
 
 		private int GetBakeSize(apPSDLoader.BAKE_SIZE bakeSize)

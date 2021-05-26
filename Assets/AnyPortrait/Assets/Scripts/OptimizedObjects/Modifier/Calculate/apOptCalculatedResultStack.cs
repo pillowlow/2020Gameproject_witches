@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -236,6 +235,11 @@ namespace AnyPortrait
 			}
 		}
 
+		//추가 20.11.26 : 빠른 Rigging을 위한 LUT
+		//Rigging이 있을 때에만 만든다.
+		private apOptCalculatedRigPairLUT _riggingLUT = null;
+
+
 		// Init
 		//--------------------------------------------
 		public apOptCalculatedResultStack(apOptTransform parentOptTransform)
@@ -431,6 +435,8 @@ namespace AnyPortrait
 			_isAnyRigging = false;
 			_isAnyBoneTransform = false;
 			_isAnyExtra = false;
+
+			_riggingLUT = null;
 		}
 
 
@@ -502,8 +508,9 @@ namespace AnyPortrait
 
 
 
-
-		public void Sort()
+		//변경 20.11.26 : 원래 Sort만 하던 함수에서 MetaData도 만드는 함수로 업그레이드
+		//LUT같은 객체들은 여기서 생성하자
+		public void SortAndMakeMetaData()
 		{
 			//다른 RenderUnit에 대해서는
 			//Level이 큰게(하위) 먼저 계산되도록 내림차순 정렬 > 변경 ) Level 낮은 상위가 먼저 계산되도록 (오름차순)
@@ -564,6 +571,20 @@ namespace AnyPortrait
 				else
 				{ return a._targetOptTransform._level - b._targetOptTransform._level; }
 			});
+
+
+
+			//추가 20.11.26 리깅에 대한 LUT 및 CalParam과의 연결
+			//리깅 속도를 올리자!
+			if(_resultParams_Rigging != null && _resultParams_Rigging.Count > 0)
+			{
+				_riggingLUT = new apOptCalculatedRigPairLUT(_parentOptTransform);
+				_riggingLUT.MakeLUTAndLink(this, _resultParams_Rigging);
+			}
+			else
+			{
+				_riggingLUT = null;
+			}
 		}
 
 		// Calculate Update
@@ -1221,7 +1242,8 @@ namespace AnyPortrait
 				{
 					_cal_resultParam = _resultParams_Rigging[iParam];
 					_cal_resultParam._resultWeight = 0.0f;
-					_cal_curWeight = _cal_resultParam.ModifierWeight;
+					//_cal_curWeight = _cal_resultParam.ModifierWeight;//이전
+					_cal_curWeight = _cal_resultParam.ModifierWeightForRigging;//변경 20.11.26
 
 					if (!_cal_resultParam.IsModifierAvailable || _cal_curWeight <= 0.001f)
 					{
@@ -1229,7 +1251,6 @@ namespace AnyPortrait
 					}
 
 					_cal_resultParam._resultWeight = 1.0f;//<<일단 Weight를 1로 두고 계산 시작
-
 
 
 					_result_RiggingWeight += _cal_curWeight;
@@ -1269,6 +1290,20 @@ namespace AnyPortrait
 						_cal_vertRequestList[iVR].MultiplyWeight(_cal_resultParam._resultWeight);
 					}
 				}
+
+
+
+//#if UNITY_EDITOR
+//				UnityEngine.Profiling.Profiler.BeginSample("Opt Mesh - Update calculate Render Vertices");
+//#endif
+				//추가 20.11.26 : LUT 업데이트 <중요> 여기서 Rig Matrix가 다 계산된다.
+				_riggingLUT.Update();
+//#if UNITY_EDITOR
+//				UnityEngine.Profiling.Profiler.EndSample();
+//#endif
+
+
+
 
 				//#if UNITY_EDITOR
 				//				Profiler.EndSample();
@@ -1504,8 +1539,48 @@ namespace AnyPortrait
 			return _result_RiggingWeight;
 		}
 
+		//이전 방식 : LUT 사용 전
+		//public apMatrix3x3 GetDeferredRiggingMatrix(int vertexIndex)
+		//{
+		//	_tmpMatrix.SetZero3x2();
 
-		public apMatrix3x3 GetDeferredRiggingMatrix(int vertexIndex)
+		//	for (int iParam = 0; iParam < _resultParams_Rigging.Count; iParam++)
+		//	{
+		//		_cal_resultParam = _resultParams_Rigging[iParam];
+		//		for (int iVR = 0; iVR < _cal_resultParam._result_VertLocalPairs.Count; iVR++)
+		//		{
+		//			_cal_vertRequest = _cal_resultParam._result_VertLocalPairs[iVR];
+		//			//삭제 20.11.26 : Opt에서 Rigging이 비활성화되는 경우는 없으므로, Weight와 Calculate 여부를 확인할 필요가 없다.
+		//			//if (!_cal_vertRequest._isCalculated || _cal_vertRequest._totalWeight == 0.0f)
+		//			//{
+		//			//	continue;
+		//			//}
+
+		//			_tmpVertRigWeightTable = _cal_vertRequest._rigBoneWeightTables[vertexIndex];
+		//			if (_tmpVertRigWeightTable._nRigTable == 0)
+		//			{
+		//				continue;
+		//			}
+
+		//			for (int iRig = 0; iRig < _tmpVertRigWeightTable._nRigTable; iRig++)
+		//			{
+		//				_tmpVertRigWeightTable._rigTable[iRig].CalculateMatrix();//<<TODO : 이걸 호출하면 성능이 떨어진다.
+		//				_tmpMatrix.AddMatrixWithWeight(_tmpVertRigWeightTable._rigTable[iRig]._boneMatrix, _tmpVertRigWeightTable._rigTable[iRig]._weight);
+		//			}
+		//		}
+		//	}
+
+		//	return _tmpMatrix;
+		//}
+
+
+
+		/// <summary>
+		/// 추가 20.11.26: LUT를 이용하여 중복 연산을 막는다.
+		/// </summary>
+		/// <param name="vertexIndex"></param>
+		/// <returns></returns>
+		public apMatrix3x3 GetDeferredRiggingMatrix_WithLUT(int vertexIndex)
 		{
 			_tmpMatrix.SetZero3x2();
 
@@ -1515,10 +1590,11 @@ namespace AnyPortrait
 				for (int iVR = 0; iVR < _cal_resultParam._result_VertLocalPairs.Count; iVR++)
 				{
 					_cal_vertRequest = _cal_resultParam._result_VertLocalPairs[iVR];
-					if (!_cal_vertRequest._isCalculated || _cal_vertRequest._totalWeight == 0.0f)
-					{
-						continue;
-					}
+					//삭제 20.11.26 : Opt에서 Rigging이 비활성화되는 경우는 없으므로, Weight와 Calculate 여부를 확인할 필요가 없다.
+					//if (!_cal_vertRequest._isCalculated || _cal_vertRequest._totalWeight == 0.0f)
+					//{
+					//	continue;
+					//}
 
 					_tmpVertRigWeightTable = _cal_vertRequest._rigBoneWeightTables[vertexIndex];
 					if (_tmpVertRigWeightTable._nRigTable == 0)
@@ -1528,14 +1604,18 @@ namespace AnyPortrait
 
 					for (int iRig = 0; iRig < _tmpVertRigWeightTable._nRigTable; iRig++)
 					{
-						_tmpVertRigWeightTable._rigTable[iRig].CalculateMatrix();
-						_tmpMatrix.AddMatrixWithWeight(_tmpVertRigWeightTable._rigTable[iRig]._boneMatrix, _tmpVertRigWeightTable._rigTable[iRig]._weight);
+						//_tmpVertRigWeightTable._rigTable[iRig].CalculateMatrix();//<<TODO : 이걸 호출하면 성능이 떨어진다.
+						//_tmpMatrix.AddMatrixWithWeight(_tmpVertRigWeightTable._rigTable[iRig]._boneMatrix, _tmpVertRigWeightTable._rigTable[iRig]._weight);
+						//LUT 코드로 변경
+						_tmpMatrix.AddMatrixWithWeight(_riggingLUT._LUT[_tmpVertRigWeightTable._rigTable[iRig]._iRigPairLUT]._resultMatrix, _tmpVertRigWeightTable._rigTable[iRig]._weight);
 					}
 				}
 			}
 
 			return _tmpMatrix;
 		}
+
+
 
 		public float GetDeferredRiggingWeight(int vertexIndex)
 		{
@@ -1549,10 +1629,12 @@ namespace AnyPortrait
 				for (int iVR = 0; iVR < _cal_resultParam._result_VertLocalPairs.Count; iVR++)
 				{
 					_cal_vertRequest = _cal_resultParam._result_VertLocalPairs[iVR];
-					if (!_cal_vertRequest._isCalculated || _cal_vertRequest._totalWeight == 0.0f)
-					{
-						continue;
-					}
+					
+					//삭제 20.11.26 : Opt에서 계산 여부는 필요하지 않다.
+					//if (!_cal_vertRequest._isCalculated || _cal_vertRequest._totalWeight == 0.0f)
+					//{
+					//	continue;
+					//}
 					//이전
 					//_tmpWeight += _cal_vertRequest._totalRiggingWeight;
 

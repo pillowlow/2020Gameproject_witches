@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -1147,10 +1146,16 @@ namespace AnyPortrait
 			//	//Vertex를 선택하지 않았다면
 			//}
 
+			//추가 21.2.17 : 편집 중이 아닌 오브젝트를 선택하는 건 "편집 모드가 아니거나" / "선택 제한 옵션이 꺼진 경우"이다.
+			bool isNotEditObjSelectable = Editor.Select.ExAnimEditingMode == apSelection.EX_EDIT.None || !Editor._exModObjOption_NotSelectable;
+
 			//그 다음엔 Bone이다.
 			//Vertex가 선택되지 않았다면
 			if (!isSelectionLock)
 			{
+				
+
+
 				if (isBoneSelectable && !isVertexSelected)
 				{
 					apMeshGroup mainMeshGroup = Editor.Select.AnimClip._targetMeshGroup;
@@ -1168,7 +1173,7 @@ namespace AnyPortrait
 							boneSet = mainMeshGroup._boneListSets[iSet];
 							for (int iRoot = 0; iRoot < boneSet._bones_Root.Count; iRoot++)
 							{
-								bone = CheckBoneClick(boneSet._bones_Root[iRoot], mousePosW, mousePosGL, Editor._boneGUIRenderMode, -1, Editor.Select.IsBoneIKRenderable);
+								bone = CheckBoneClickRecursive(boneSet._bones_Root[iRoot], mousePosW, mousePosGL, Editor._boneGUIRenderMode, -1, Editor.Select.IsBoneIKRenderable, isNotEditObjSelectable);
 								if (bone != null)
 								{
 									resultBone = bone;
@@ -1253,8 +1258,19 @@ namespace AnyPortrait
 							for (int iUnit = renderUnits.Count - 1; iUnit >= 0; iUnit--)
 							{
 								apRenderUnit renderUnit = renderUnits[iUnit];
+
+
 								if (renderUnit._meshTransform != null && renderUnit._meshTransform._mesh != null)
 								{
+									//추가 21.2.17
+									if (!isNotEditObjSelectable &&
+										(renderUnit._exCalculateMode == apRenderUnit.EX_CALCULATE.Disabled_NotEdit || renderUnit._exCalculateMode == apRenderUnit.EX_CALCULATE.Disabled_ExRun))
+									{
+										//모디파이어에 등록되지 않은 메시는 선택 불가이다.
+										//Debug.LogError("[" + renderUnit.Name + "] 옵션이 꺼져서 선택 불가");
+										continue;
+									}
+
 									if (renderUnit._meshTransform._isVisible_Default && renderUnit._meshColor2X.a > 0.1f)//Alpha 옵션 추가
 									{
 										bool isPick = apEditorUtil.IsMouseInRenderUnitMesh(
@@ -2601,12 +2617,32 @@ namespace AnyPortrait
 				Vector2 prevDeltaPos2 = Editor.Select.ModRenderVert_Main._modVert._deltaPos;
 
 				apMatrix3x3 martrixMorph = apMatrix3x3.TRS(prevDeltaPos2, 0, Vector2.one);
-				Vector2 prevWorldPos2 = (renderVert._matrix_Cal_VertWorld * renderVert._matrix_MeshTransform * martrixMorph * renderVert._matrix_Static_Vert2Mesh).MultiplyPoint(renderVert._vertex._pos);
+				
+				//이전
+				//Vector2 prevWorldPos2 = (	renderVert._matrix_Cal_VertWorld 
+				//							* renderVert._matrix_MeshTransform 
+				//							* martrixMorph 
+				//							* renderVert._matrix_Static_Vert2Mesh).MultiplyPoint(renderVert._vertex._pos);
+
+				//변경 21.4.5 : 리깅 적용 (다중 모드 처리시 리깅이 추가될 수 있기 때문)
+				Vector2 prevWorldPos2 = (	renderVert._matrix_Cal_VertWorld 
+											* renderVert._matrix_MeshTransform 
+											* renderVert._matrix_Rigging
+											* martrixMorph 
+											* renderVert._matrix_Static_Vert2Mesh).MultiplyPoint(renderVert._vertex._pos);
+
 				Vector2 nextWorldPos = prevWorldPos2 + deltaMoveW;
 				//Vector3 nextWorldPos3 = new Vector3(nextWorldPos.x, nextWorldPos.y, 0);
 
 				Vector2 noneMorphedPosM = (renderVert._matrix_Static_Vert2Mesh).MultiplyPoint(renderVert._vertex._pos);
-				Vector2 nextMorphedPosM = ((renderVert._matrix_Cal_VertWorld * renderVert._matrix_MeshTransform).inverse).MultiplyPoint(nextWorldPos);
+				
+				//이전
+				//Vector2 nextMorphedPosM = ((renderVert._matrix_Cal_VertWorld * renderVert._matrix_MeshTransform).inverse).MultiplyPoint(nextWorldPos);
+
+				//변경 21.4.5 : 리깅 적용 (다중 모드 처리시 리깅이 추가될 수 있기 때문)
+				Vector2 nextMorphedPosM = ((renderVert._matrix_Cal_VertWorld 
+											* renderVert._matrix_MeshTransform
+											* renderVert._matrix_Rigging).inverse).MultiplyPoint(nextWorldPos);
 
 				Editor.Select.ModRenderVert_Main._modVert._deltaPos.x = (nextMorphedPosM.x - noneMorphedPosM.x);
 				Editor.Select.ModRenderVert_Main._modVert._deltaPos.y = (nextMorphedPosM.y - noneMorphedPosM.y);
@@ -5637,15 +5673,16 @@ namespace AnyPortrait
 		public void AddHotKeys__Animation_Vertex(bool isGizmoRenderable, apGizmos.CONTROL_TYPE controlType, bool isFFDMode)
 		{
 			//"Select All Vertices"
-			Editor.AddHotKeyEvent(OnHotKeyEvent__Animation_Vertex__Ctrl_A, apHotKey.LabelText.SelectAllVertices, KeyCode.A, false, false, true, null);
+			//Editor.AddHotKeyEvent(OnHotKeyEvent__Animation_Vertex__Ctrl_A, apHotKey.LabelText.SelectAllVertices, KeyCode.A, false, false, true, null);
+			Editor.AddHotKeyEvent(OnHotKeyEvent__Animation_Vertex__Ctrl_A, apHotKeyMapping.KEY_TYPE.SelectAllVertices_EditMod, null);//변경 20.12.3
 		}
 
 		// 단축키 : 버텍스 전체 선택
-		private void OnHotKeyEvent__Animation_Vertex__Ctrl_A(object paramObject)
+		private apHotKey.HotKeyResult OnHotKeyEvent__Animation_Vertex__Ctrl_A(object paramObject)
 		{
 			if (Editor.Select.AnimClip == null || Editor.Select.AnimClip._targetMeshGroup == null)
 			{
-				return;
+				return null;
 			}
 
 			if (Editor.Select.AnimTimeline == null ||
@@ -5654,12 +5691,12 @@ namespace AnyPortrait
 				Editor.Select.ModRenderVerts_All == null
 				)
 			{
-				return;
+				return null;
 			}
 
 			if ((int)(Editor.Select.AnimTimeline._linkedModifier.CalculatedValueType & apCalculatedResultParam.CALCULATED_VALUE_TYPE.VertexPos) == 0)
 			{
-				return;
+				return null;
 			}
 
 			//apModifierBase linkedModifier = Editor.Select.AnimTimeline._linkedModifier;
@@ -5669,7 +5706,7 @@ namespace AnyPortrait
 
 			if (workKeyframe == null || targetModMesh == null || targetRenderUnit == null)
 			{
-				return;
+				return null;
 			}
 
 
@@ -5690,25 +5727,6 @@ namespace AnyPortrait
 				}
 			}
 
-			//apRenderVertex renderVert = null;
-			//for (int iVert = 0; iVert < targetRenderUnit._renderVerts.Count; iVert++)
-			//{
-			//	renderVert = targetRenderUnit._renderVerts[iVert];
-
-			//	apModifiedVertex selectedModVert = targetModMesh._vertices.Find(delegate (apModifiedVertex a)
-			//		{
-			//			return renderVert._vertex._uniqueID == a._vertexUniqueID;
-			//		});
-
-			//	if (selectedModVert != null)
-			//	{
-			//		//추가한다.
-			//		Editor.Select.AddModVertexOfAnim(selectedModVert, renderVert);
-
-			//		isAnyChanged = true;//<<뭔가 선택에 변동이 생겼다.
-			//	}
-			//}
-
 
 			if (isAnyChanged)
 			{
@@ -5719,6 +5737,8 @@ namespace AnyPortrait
 				Editor.RefreshTimelineLayers(apEditor.REFRESH_TIMELINE_REQUEST.None, null, null);
 				Editor.SetRepaint();
 			}
+
+			return apHotKey.HotKeyResult.MakeResult();
 		}
 
 
@@ -7377,11 +7397,28 @@ namespace AnyPortrait
 				Vector2 prevDeltaPos2 = Editor.Select.ModRenderVert_Main._modVert._deltaPos;
 
 				apMatrix3x3 martrixMorph = apMatrix3x3.TRS(prevDeltaPos2, 0, Vector2.one);
-				Vector2 prevWorldPos2 = (renderVert._matrix_Cal_VertWorld * renderVert._matrix_MeshTransform * martrixMorph * renderVert._matrix_Static_Vert2Mesh).MultiplyPoint(renderVert._vertex._pos);
+				
+				//이전
+				//Vector2 prevWorldPos2 = (renderVert._matrix_Cal_VertWorld * renderVert._matrix_MeshTransform * martrixMorph * renderVert._matrix_Static_Vert2Mesh).MultiplyPoint(renderVert._vertex._pos);
+
+				//변경 21.4.5 : 리깅 적용 (다중 모드 처리시 리깅이 추가될 수 있기 때문)
+				Vector2 prevWorldPos2 = (	renderVert._matrix_Cal_VertWorld 
+											* renderVert._matrix_MeshTransform 
+											* renderVert._matrix_Rigging
+											* martrixMorph 
+											* renderVert._matrix_Static_Vert2Mesh).MultiplyPoint(renderVert._vertex._pos);
+
 				Vector2 nextWorldPos = prevWorldPos2 + deltaMoveW;
 				
 				Vector2 noneMorphedPosM = (renderVert._matrix_Static_Vert2Mesh).MultiplyPoint(renderVert._vertex._pos);
-				Vector2 nextMorphedPosM = ((renderVert._matrix_Cal_VertWorld * renderVert._matrix_MeshTransform).inverse).MultiplyPoint(nextWorldPos);
+				
+				//이전
+				//Vector2 nextMorphedPosM = ((renderVert._matrix_Cal_VertWorld * renderVert._matrix_MeshTransform).inverse).MultiplyPoint(nextWorldPos);
+
+				//변경 21.4.5 : 리깅 적용 (다중 모드 처리시 리깅이 추가될 수 있기 때문)
+				Vector2 nextMorphedPosM = ((	renderVert._matrix_Cal_VertWorld 
+												* renderVert._matrix_MeshTransform
+												* renderVert._matrix_Rigging).inverse).MultiplyPoint(nextWorldPos);
 
 				Editor.Select.ModRenderVert_Main._modVert._deltaPos.x = (nextMorphedPosM.x - noneMorphedPosM.x);
 				Editor.Select.ModRenderVert_Main._modVert._deltaPos.y = (nextMorphedPosM.y - noneMorphedPosM.y);

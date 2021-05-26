@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -397,10 +396,6 @@ namespace AnyPortrait
 			}
 		}
 
-
-
-
-		
 
 
 		public void ReadyToUpdate()
@@ -1090,6 +1085,7 @@ namespace AnyPortrait
 
 
 
+
 		//public void RemoveAllCalculateResultParams()
 		//{
 		//	_calculatedStack.ClearResultParams();
@@ -1595,7 +1591,7 @@ namespace AnyPortrait
 
 			if (isRoot)
 			{
-				_modifierStack.LinkModifierStackToRenderUnitCalculateStack(true, this, isRecursive);
+				_modifierStack.LinkModifierStackToRenderUnitCalculateStack(true, this, isRecursive, _portrait._animPlayMapping);
 			}
 			
 		}
@@ -1633,7 +1629,7 @@ namespace AnyPortrait
 
 			if (isRoot)
 			{
-				_modifierStack.LinkModifierStackToRenderUnitCalculateStack(true, this, isRecursive);
+				_modifierStack.LinkModifierStackToRenderUnitCalculateStack(true, this, isRecursive, _portrait._animPlayMapping);
 			}
 			
 		}
@@ -1746,6 +1742,12 @@ namespace AnyPortrait
 
 		public apOptTransform GetMeshTransform(int uniqueID)
 		{
+			//추가 20.11.28 (버그)
+			if(_childTransforms == null)
+			{
+				return null;
+			}
+
 			for (int i = 0; i < _childTransforms.Length; i++)
 			{
 				if (_childTransforms[i]._unitType == UNIT_TYPE.Mesh
@@ -1759,6 +1761,13 @@ namespace AnyPortrait
 
 		public apOptTransform GetMeshGroupTransform(int uniqueID)
 		{
+			//추가 20.11.28 (버그)
+			if(_childTransforms == null)
+			{
+				return null;
+			}
+
+
 			for (int i = 0; i < _childTransforms.Length; i++)
 			{
 				if (_childTransforms[i]._unitType == UNIT_TYPE.Group
@@ -1777,6 +1786,12 @@ namespace AnyPortrait
 			if (result != null)
 			{
 				return result;
+			}
+
+			//추가 20.11.28 (버그)
+			if(_childTransforms == null)
+			{
+				return null;
 			}
 
 			apOptTransform curGroupTransform = null;
@@ -1803,6 +1818,12 @@ namespace AnyPortrait
 			if (result != null)
 			{
 				return result;
+			}
+
+			//추가 20.11.28 (버그)
+			if(_childTransforms == null)
+			{
+				return null;
 			}
 
 			apOptTransform curGroupTransform = null;
@@ -1893,6 +1914,8 @@ namespace AnyPortrait
 				//Debug.LogError("Child가 없다. [Opt Transform : " + _name + "]");
 				return null;
 			}
+
+
 			for (int i = 0; i < _childTransforms.Length; i++)
 			{
 				result = _childTransforms[i].GetBoneRecursive(uniqueID);

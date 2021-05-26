@@ -1,15 +1,14 @@
 ﻿/*
-*	Copyright (c) 2017-2020. RainyRizzle. All rights reserved
+*	Copyright (c) 2017-2021. RainyRizzle. All rights reserved
 *	Contact to : https://www.rainyrizzle.com/ , contactrainyrizzle@gmail.com
 *
 *	This file is part of [AnyPortrait].
 *
 *	AnyPortrait can not be copied and/or distributed without
-*	the express perission of [Seungjik Lee].
+*	the express perission of [Seungjik Lee] of [RainyRizzle team].
 *
-*	Unless this file is downloaded from the Unity Asset Store or RainyRizzle homepage, 
-*	this file and its users are illegal.
-*	In that case, the act may be subject to legal penalties.
+*	It is illegal to download files from other than the Unity Asset Store and RainyRizzle homepage.
+*	In that case, the act could be subject to legal sanctions.
 */
 
 using UnityEngine;
@@ -73,6 +72,12 @@ namespace AnyPortrait
 
 		private bool _isFirstFlippedCheck = true;
 		//private Vector3 _defaultScale = Vector3.one;
+
+		//추가 21.4.3 : 가시성 정보를 멤버로 가진다. 루트유닛 전환시 에러가 발생하는걸 방지하기 위함
+		[NonSerialized]
+		public bool _isVisible = false;
+		
+
 
 
 		// Init
@@ -187,45 +192,6 @@ namespace AnyPortrait
 
 		// Functions
 		//------------------------------------------------
-		//public void RemoveAllCalculateResultParams()
-		//{
-		//	if (_rootOptTransform == null)
-		//	{
-		//		return;
-		//	}
-		//	_rootOptTransform.ClearResultParams(true);
-		//}
-
-		///// <summary>
-		///// [Please do not use it]
-		///// </summary>
-		//public void ResetCalculateStackForBake()
-		//{
-		//	if (_rootOptTransform == null)
-		//	{
-		//		return;
-		//	}
-
-		//	//_rootOptTransform.ClearResultParams();
-			
-		//	_rootOptTransform.ResetCalculateStackForBake(true);
-			
-		//}
-
-
-		//public void DebugBoneMatrix()
-		//{
-		//	if (_rootOptTransform == null)
-		//	{
-		//		return;
-		//	}
-
-		//	//_rootOptTransform.ClearResultParams();
-			
-		//	_rootOptTransform.DebugBoneMatrix();
-			
-		//}
-
 		public void UpdateTransforms(float tDelta)
 		{
 			if (_rootOptTransform == null)
@@ -376,7 +342,7 @@ namespace AnyPortrait
 		}
 
 
-		
+
 		public void UpdateTransformsOnlyMaskMesh()
 		{
 			if (_rootOptTransform == null)
@@ -388,6 +354,9 @@ namespace AnyPortrait
 
 
 
+
+
+
 		public void Show()
 		{
 			if (_rootOptTransform == null)
@@ -396,6 +365,8 @@ namespace AnyPortrait
 			}
 
 			_rootOptTransform.Show(true);
+
+			_isVisible = true;//추가 21.4.3
 		}
 
 		public void ShowWhenBake()
@@ -406,6 +377,8 @@ namespace AnyPortrait
 			}
 
 			_rootOptTransform.ShowWhenBake(true);
+
+			_isVisible = true;//추가 21.4.3
 		}
 
 
@@ -418,6 +391,9 @@ namespace AnyPortrait
 			}
 
 			_rootOptTransform.Hide(true);
+			
+			_isVisible = false;//추가 21.4.3
+
 		}
 
 		public void ResetCommandBuffer(bool isRegistToCamera)
@@ -510,13 +486,13 @@ namespace AnyPortrait
 			return _sortedRenderBuffer.RefreshSortingOrderByDepth();
 		}
 
-		public void SetSortingOrderOption(apPortrait.SORTING_ORDER_OPTION sortingOrderOption)
+		public void SetSortingOrderOption(apPortrait.SORTING_ORDER_OPTION sortingOrderOption, int sortingOrderPerDepth)
 		{
 			if(_sortedRenderBuffer == null)
 			{
 				return;
 			}
-			_sortedRenderBuffer.SetSortingOrderOption(sortingOrderOption);
+			_sortedRenderBuffer.SetSortingOrderOption(sortingOrderOption, sortingOrderPerDepth);
 		}
 
 		// Get / Set
