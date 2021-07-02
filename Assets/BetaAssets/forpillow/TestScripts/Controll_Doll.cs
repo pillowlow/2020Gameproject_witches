@@ -139,7 +139,7 @@ public class Controll_Doll : MonoBehaviour
         {
             isGround = false;
             portrait.CrossFade("jump", 0.1f);
-            rg2D.AddForce(new Vector2(0, 40), ForceMode2D.Impulse);
+            rg2D.AddForce(new Vector2(0, 50), ForceMode2D.Impulse);
             portrait.CrossFade("fall",0.1f);
             isFirstFrame = false;
         }
