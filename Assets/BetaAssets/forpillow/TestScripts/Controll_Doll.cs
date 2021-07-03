@@ -74,7 +74,7 @@ public class Controll_Doll : MonoBehaviour
     {
         if (isFirstFrame)
         {
-            portrait.CrossFade("Walk1", 0.4f);
+            portrait.CrossFade("Walk1", 0.3f);
             isFirstFrame = false;
         }
         if (Input.GetKey(KeyCode.A))
@@ -106,21 +106,21 @@ public class Controll_Doll : MonoBehaviour
     {
         if (isFirstFrame)
         {
-            portrait.CrossFade("Run", 0.4f);
+            portrait.CrossFade("Run", 0.2f);
             isFirstFrame = false;
         }
         if (Input.GetKey(KeyCode.A) && Input.GetKey(KeyCode.LeftShift))
         {
             if (Input.GetKey(KeyCode.W) && isGround)
                 ChangeState(State.Jump);
-            transform.Translate(new Vector3(-4f * Time.deltaTime, 0, 0));
+            transform.Translate(new Vector3(-4.5f * Time.deltaTime, 0, 0));
             transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
         }
         else if (Input.GetKey(KeyCode.D)&& Input.GetKey(KeyCode.LeftShift))
         {
             if (Input.GetKey(KeyCode.W) && isGround)
                 ChangeState(State.Jump);
-            transform.Translate(new Vector3(4f * Time.deltaTime, 0, 0));
+            transform.Translate(new Vector3(4.5f * Time.deltaTime, 0, 0));
             transform.localScale = new Vector3(-0.5f, 0.5f, 0.5f);
         }
         else
@@ -147,7 +147,7 @@ public class Controll_Doll : MonoBehaviour
         {
             if (Input.GetKey(KeyCode.LeftShift))
             {
-                transform.Translate(new Vector3(-4f * Time.deltaTime, 0, 0));
+                transform.Translate(new Vector3(-4.5f * Time.deltaTime, 0, 0));
             }
             else
                 transform.Translate(new Vector3(-2f * Time.deltaTime, 0, 0));
@@ -158,7 +158,7 @@ public class Controll_Doll : MonoBehaviour
             
             if(Input.GetKey(KeyCode.LeftShift))
             {
-                transform.Translate(new Vector3(4f * Time.deltaTime, 0, 0));
+                transform.Translate(new Vector3(4.5f * Time.deltaTime, 0, 0));
             }
             else
                 transform.Translate(new Vector3(2f * Time.deltaTime, 0, 0));
