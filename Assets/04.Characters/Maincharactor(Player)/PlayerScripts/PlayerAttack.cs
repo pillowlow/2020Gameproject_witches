@@ -121,7 +121,8 @@ public class PlayerAttack : MonoBehaviour
         switch (PlayerManager.state)
         {
             case PlayerManager.StateCode.Idle:
-            case PlayerManager.StateCode.Moving:
+            case PlayerManager.StateCode.Walking:
+            case PlayerManager.StateCode.Running:
             case PlayerManager.StateCode.Jumping:
             case PlayerManager.StateCode.Flying:
             case PlayerManager.StateCode.Falling:
