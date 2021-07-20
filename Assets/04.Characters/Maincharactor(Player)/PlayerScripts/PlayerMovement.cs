@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using AnyPortrait;
+using UnityEditor;
+
 public class PlayerMovement : MonoBehaviour
 {
     public apPortrait portrait;
@@ -20,7 +22,7 @@ public class PlayerMovement : MonoBehaviour
 
     public event Action OnJump;
     public event Action OnLanding;
-
+    public InputManager input;
     private bool _isJumpAble = true;
     public bool _isMoveable = true;
     private bool isHandle = false;
@@ -44,32 +46,50 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
-        if(Input.GetKey(KeyCode.Q))
-        {
-            int trap = 0;
-        }
-
-
         Fall();
         Movement();
         Jump();
         AnimationControl();
-        if(PlayerManager.state!=PlayerManager.StateCode.Braking)
+        if (PlayerManager.state != PlayerManager.StateCode.Braking)
         {
             _isMoveable = true;
         }
     }
 
+    float _x_axis_value = 0;
+    float X_Axis()
+    {
+        float speed = 2;
+        if (input.GetKey(InputAction.Right))
+        {
+            _x_axis_value = _x_axis_value < 1 ? _x_axis_value + speed * Time.deltaTime : 1;
+        }
+        else if (input.GetKey(InputAction.Left))
+        {
+            _x_axis_value = _x_axis_value > -1 ? _x_axis_value - speed * Time.deltaTime : -1;
+        }
+        else if (_x_axis_value != 0)
+        {
+            float tem_x = _x_axis_value;
+            _x_axis_value = _x_axis_value > 0 ? _x_axis_value - speed * Time.deltaTime : _x_axis_value + speed * Time.deltaTime;
+            if ((tem_x > 0 && _x_axis_value < 0) || (tem_x < 0 && _x_axis_value > 0))
+            {
+                _x_axis_value = 0;
+            }
+        }
+        return _x_axis_value;
+    }
+
     void Movement()
     {
-        float x = Input.GetAxis("Horizontal");
+        float x = X_Axis();
         float speed = Mathf.Abs(x);
         bool moving = !(PlayerManager.state == PlayerManager.StateCode.Jumping || PlayerManager.state == PlayerManager.StateCode.Falling);
         if (_isMoveable && moving)
         {
             if (speed > 0.1)
             {
-                if (Input.GetKey(KeyCode.LeftShift) && !isHandle)
+                if (input.GetKey(InputAction.Sprint) && !isHandle)
                 {
                     rig.velocity = new Vector2(WalkVelocityScaler(x) * runSpeed, rig.velocity.y);
                 }
@@ -98,7 +118,7 @@ public class PlayerMovement : MonoBehaviour
     IEnumerator _Brake()
     {
         //Braking Animation Here
-        portrait.CrossFade("Handle", 0.1f);
+        portrait.CrossFade("Handle", 0.1f, 0);
         //Braking Animation Here
         float brakingFactor = 1;
         
@@ -122,20 +142,20 @@ public class PlayerMovement : MonoBehaviour
         }
         rig.velocity = new Vector2(0, rig.velocity.y);
         PlayerManager.state = PlayerManager.StateCode.Idle;
-        portrait.CrossFade("Idle", 0.3f);
+        portrait.CrossFade("Idle", 0.3f, 0);
         _isMoveable = true;
     }
 
     void Jump()
     {
-        if(Input.GetButtonDown("Jump"))
+        if(input.GetKeyDown(InputAction.Jump))
         {
-            if (PlayerManager.onGround && _isJumpAble)
+            if (PlayerManager.onGround && _isJumpAble && (!isHandle))
             {
                 OnJump?.Invoke();
-                portrait.CrossFade("Jump", 0.1f);
+                portrait.CrossFade("Jump", 0.1f, 0);
                 rig.AddForce(new Vector2(0, jumpForce), ForceMode2D.Impulse);
-                portrait.CrossFadeQueued("Fall", 0.1f);
+                portrait.CrossFadeQueued("Fall", 0.1f, 0);
 
                 PlayerManager.state = PlayerManager.StateCode.Jumping;
             }
@@ -179,9 +199,8 @@ public class PlayerMovement : MonoBehaviour
     }
     void AnimationControl()
     {
-        float vx = rig.velocity.x;              //x of velocity
+        float vx = rig.velocity.x;
         float speed = Mathf.Abs(vx);
-        //float ix = Input.GetAxis("Horizontal"); //x of input
         //Character orientation check
         if (_isMoveable)
         {
@@ -204,57 +223,39 @@ public class PlayerMovement : MonoBehaviour
             {
                 if (isHandle)
                 {
-                    portrait.CrossFade("HandleWalk", 0.3f);
+                    portrait.CrossFade("Walk", 0.3f, 0);
                 }
                 else
                 {
-                    portrait.CrossFade("Walk", 0.3f);
+                    portrait.CrossFade("Walk", 0.3f, 0);
                 }
                 PlayerManager.state = PlayerManager.StateCode.Walking;
             }
         }
         else if (PlayerManager.state == PlayerManager.StateCode.Walking && speed > 2.5f)
         {
-            portrait.CrossFade("Run", 0.2f);
+            portrait.CrossFade("Run", 0.2f, 0);
             PlayerManager.state = PlayerManager.StateCode.Running;
         }
-        //else if (PlayerManager.state == PlayerManager.StateCode.Running && speed < 2.4f)
-        //{
-        //    portrait.CrossFade("Walk", 0.3f);
-        //    PlayerManager.state = PlayerManager.StateCode.Walking;
-        //}
         else if (speed == 0 && (PlayerManager.state == PlayerManager.StateCode.Walking|| PlayerManager.state == PlayerManager.StateCode.Running))
         {
-            if(isHandle)
-            {
-                portrait.CrossFade("Handle", 0.2f);
-            }
-            else
-            {
-                portrait.CrossFade("Idle", 0.2f);
-            }
+            portrait.CrossFade("Idle", 0.2f, 0);
             PlayerManager.state = PlayerManager.StateCode.Idle;
         }
 
-        if (Input.GetKeyDown(KeyCode.E))
+        if (input.GetKeyDown(InputAction.Interact))
         {
             if(isHandle)
             {
-                portrait.CrossFade("Put", 0.1f);
-                portrait.CrossFadeQueued("Idle", 0.2f);
+                portrait.CrossFade("Put", 0.1f, 1);
                 isHandle = false;
             }
             else
             {
-                portrait.CrossFade("Take", 0.5f);
-                portrait.CrossFadeQueued("Handle", 0.4f);
+                portrait.CrossFade("Take", 0.5f, 1);
+                portrait.CrossFadeQueued("Handle", 0.4f, 1);
                 isHandle = true;
             }
-        }
-
-        if(Input.GetKeyDown(KeyCode.Q))
-        {
-            portrait.SetControlParamFloat("New Param (0)", -1);
         }
     }
 }
