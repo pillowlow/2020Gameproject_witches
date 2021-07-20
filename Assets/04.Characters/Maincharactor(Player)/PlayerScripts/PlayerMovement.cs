@@ -12,9 +12,12 @@ public class PlayerMovement : MonoBehaviour
     public PlayerManager.ModeCode initialMode;
 
     [Header("Movement")]
+    public InputManager input;
     public float walkSpeed = 2;
     public float runSpeed = 5;
-    public float flyForce = 1;
+    public float flyForce = 35;
+    public bool SprintToggle = true;
+    public AnimationCurve AcceleratingCurve;    //Curve that describes how the character accelerates
 
     [Header("Jump")]
     public float jumpForce;
@@ -22,18 +25,19 @@ public class PlayerMovement : MonoBehaviour
 
     public event Action OnJump;
     public event Action OnLanding;
-    public InputManager input;
+    
     private bool _isJumpAble = true;
-    public bool _isMoveable = true;
+    private bool _isMoveable = true;
     private bool isHandle = false;
+    private bool isSprinting = false;
     private Rigidbody2D rig;
 
 
     bool orient = false;                        //True means the player is facing right.False means the player is facing left.
     Vector3 Scale;                              //The scale of the main character.
-    float WalkVelocityScaler(float x)           //It's the math function to describe the relationship between the horizontal input and x-velocity. (It can be replaced by a better function.)
+    float WalkVelocityScaler(float x)           //It's the function that describes the relationship between the horizontal input and x-velocity.
     {
-        return (x < 0) ? -Mathf.Pow(-x, 1.4f) : Mathf.Pow(x, 1.4f);
+        return (x < 0) ? -AcceleratingCurve.Evaluate(-x) : AcceleratingCurve.Evaluate(x);
     }
     void Start()
     {
@@ -47,15 +51,11 @@ public class PlayerMovement : MonoBehaviour
         Fall();
         Movement();
         Jump();
-        AnimationControl();
-        if (PlayerManager.state != PlayerManager.StateCode.Braking)
-        {
-            _isMoveable = true;
-        }
+        ActionControl();
     }
 
-    float _x_axis_value = 0;
-    float X_Axis()
+    float _x_axis_value = 0;//internal static value for X_Axis function
+    float X_Axis()//Return smooth horizontal input
     {
         float speed = 2;
         if (input.GetKey(InputAction.Right))
@@ -78,46 +78,67 @@ public class PlayerMovement : MonoBehaviour
         return _x_axis_value;
     }
 
-    void Movement()
+    void Movement()//Calculate her speed and detect braking state
     {
-        float x = X_Axis();
-        float speed = Mathf.Abs(x);
         bool moving = !(PlayerManager.state == PlayerManager.StateCode.Jumping || PlayerManager.state == PlayerManager.StateCode.Falling);
-        if (_isMoveable && moving)
+        
+        if(moving)
         {
-            if (speed > 0.1)
+            if (_isMoveable)
             {
-                if (input.GetKey(InputAction.Sprint) && !isHandle)
+                float x = X_Axis();
+                float speed = Mathf.Abs(x);
+
+                //Update isSprinting
+                if (SprintToggle)
                 {
-                    rig.velocity = new Vector2(WalkVelocityScaler(x) * runSpeed, rig.velocity.y);
+                    if (input.GetKeyDown(InputAction.Sprint))
+                    {
+                        isSprinting = !isSprinting;
+                    }
                 }
                 else
                 {
-                    rig.velocity = new Vector2(WalkVelocityScaler(x) * walkSpeed, rig.velocity.y);
+                    isSprinting = input.GetKey(InputAction.Sprint);
+                }
+
+                if (speed > 0.1)
+                {
+                    if (isSprinting && !isHandle)
+                    {
+                        rig.velocity = new Vector2(WalkVelocityScaler(x) * runSpeed, rig.velocity.y);
+                    }
+                    else
+                    {
+                        rig.velocity = new Vector2(WalkVelocityScaler(x) * walkSpeed, rig.velocity.y);
+                    }
+                }
+                else
+                {
+                    rig.velocity = new Vector2(0, rig.velocity.y);
+                    isSprinting = false;
                 }
             }
-            else
+
+            if (Mathf.Abs(rig.velocity.x) < 2.4f && PlayerManager.state == PlayerManager.StateCode.Running)
             {
-                rig.velocity = new Vector2(0, rig.velocity.y);
+                Brake();
             }
-        }
-        if (Mathf.Abs(rig.velocity.x) < 2.4f && PlayerManager.state == PlayerManager.StateCode.Running && moving)
-        {
-            Brake();
         }
     }
     
-    void Brake()
+    void Brake()//Start to brake until her speed is 0
     {
         _isMoveable = false;
+        isSprinting = false;
         PlayerManager.state = PlayerManager.StateCode.Braking;
         StartCoroutine(nameof(_Brake));
     }
-    IEnumerator _Brake()
+    IEnumerator _Brake()//Brake coroutine function
     {
-        //Braking Animation Here
+        //Replace Braking Animation Here
         portrait.CrossFade("Handle", 0.1f, 0);
-        //Braking Animation Here
+        //Replace Braking Animation Here
         float brakingFactor = 1;
         
         float originalVelocity_x = rig.velocity.x;
@@ -144,9 +165,9 @@ public class PlayerMovement : MonoBehaviour
         _isMoveable = true;
     }
 
-    void Jump()
+    void Jump()//Jumping state detection and animation
     {
-        if(input.GetKeyDown(InputAction.Jump))
+        if (input.GetKeyDown(InputAction.Jump) && _isMoveable)
         {
             if (PlayerManager.onGround && _isJumpAble && (!isHandle))
             {
@@ -160,9 +181,9 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    void Fall()
+    void Fall()//Falling state detection and animation
     {
-        if(rig.velocity.y < 0 && !PlayerManager.onGround )
+        if(rig.velocity.y < -4 && !PlayerManager.onGround )
         {
             PlayerManager.state = PlayerManager.StateCode.Falling;
         }
@@ -195,10 +216,11 @@ public class PlayerMovement : MonoBehaviour
     {
         _isJumpAble = jumpAble;
     }
-    void AnimationControl()
+    void ActionControl()
     {
         float vx = rig.velocity.x;
         float speed = Mathf.Abs(vx);
+
         //Character orientation check
         if (_isMoveable)
         {
@@ -213,20 +235,13 @@ public class PlayerMovement : MonoBehaviour
                 orient = false;
             }
         }
-        //Horizontal movement animation
-        //Movement animation played if character state is "idle" or "moving"
+
+        //Movement animation
         if (PlayerManager.state == PlayerManager.StateCode.Idle)
         {
             if (speed > 0.5f)
             {
-                if (isHandle)
-                {
-                    portrait.CrossFade("Walk", 0.3f, 0);
-                }
-                else
-                {
-                    portrait.CrossFade("Walk", 0.3f, 0);
-                }
+                portrait.CrossFade("Walk", 0.3f, 0);
                 PlayerManager.state = PlayerManager.StateCode.Walking;
             }
         }
@@ -235,12 +250,13 @@ public class PlayerMovement : MonoBehaviour
             portrait.CrossFade("Run", 0.2f, 0);
             PlayerManager.state = PlayerManager.StateCode.Running;
         }
-        else if (speed == 0 && (PlayerManager.state == PlayerManager.StateCode.Walking|| PlayerManager.state == PlayerManager.StateCode.Running))
+        else if (speed == 0 && (PlayerManager.state == PlayerManager.StateCode.Walking || PlayerManager.state == PlayerManager.StateCode.Running))
         {
             portrait.CrossFade("Idle", 0.2f, 0);
             PlayerManager.state = PlayerManager.StateCode.Idle;
         }
 
+        //Interaction Animation
         if (input.GetKeyDown(InputAction.Interact))
         {
             if(isHandle)
@@ -254,6 +270,13 @@ public class PlayerMovement : MonoBehaviour
                 portrait.CrossFadeQueued("Handle", 0.4f, 1);
                 isHandle = true;
             }
+        }
+
+
+        //Reset _isMoveable to true
+        if (PlayerManager.state != PlayerManager.StateCode.Braking)
+        {
+            _isMoveable = true;
         }
     }
 }
