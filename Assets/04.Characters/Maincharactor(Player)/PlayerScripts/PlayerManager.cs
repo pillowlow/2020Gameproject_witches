@@ -55,7 +55,6 @@ public class PlayerManager : MonoBehaviour
     public static ModeCode mode = ModeCode.normal;
     public static StateCode state = StateCode.Idle;
     public static int hp = 100;
-    public static int damage = 5;
     public static int sanityValue = 100;
 
 
@@ -65,56 +64,6 @@ public class PlayerManager : MonoBehaviour
 
     public enum ModeCode{
         normal, transform
-    };
-
-    public static class Exp
-    {
-        static int lv = 0;
-        static int value = 0;
-
-        public static int GetValue()
-        {
-            return value;
-        }
-        public static int GetLv()
-        {
-            return lv;
-        }
-        public static void AssignValue(int val)
-        {
-            value = val;
-        }
-        public static void AssignLv(int val)
-        {
-            lv = val;
-        }
-    }
-
-    public static class Damage
-    {
-        static int lvDamage=5;
-        static int equipDamage=5;
-
-        public static int GetDamage()
-        {
-            return lvDamage + equipDamage;
-        }
-        public static int GetLvDamage()
-        {
-            return lvDamage;
-        }
-        public static int GetEquipDamage()
-        {
-            return equipDamage;
-        }
-        public static void AssignLvDamage(int damage)
-        {
-            lvDamage = damage;
-        }
-        public static void AssignEquipDamage(int damage)
-        {
-            equipDamage = damage;
-        }
     }
 
     public static void TakeDamage(int damage,Transform enemy)

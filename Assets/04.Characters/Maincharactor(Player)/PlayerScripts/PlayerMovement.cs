@@ -28,7 +28,6 @@ public class PlayerMovement : MonoBehaviour
 
     bool orient = false;                        //True means the player is facing right.False means the player is facing left.
     Vector3 Scale;                              //The scale of the main character.
-    PlayerAttack playerAttack;
     float WalkVelocityScaler(float x)           //It's the math function to describe the relationship between the horizontal input and x-velocity. (It can be replaced by a better function.)
     {
         return (x < 0) ? -Mathf.Pow(-x, 1.4f) : Mathf.Pow(x, 1.4f);
@@ -38,7 +37,6 @@ public class PlayerMovement : MonoBehaviour
         rig = GetComponent<Rigidbody2D>();
         PlayerManager.mode = initialMode;
         Scale = transform.localScale;
-        playerAttack = GetComponent<PlayerAttack>();
     }
 
     void Update()
