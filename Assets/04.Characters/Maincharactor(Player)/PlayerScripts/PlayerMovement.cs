@@ -26,6 +26,7 @@ public class PlayerMovement : MonoBehaviour
     private bool isHandle = false;
     private Rigidbody2D rig;
 
+
     bool orient = false;                        //True means the player is facing right.False means the player is facing left.
     Vector3 Scale;                              //The scale of the main character.
     PlayerAttack playerAttack;
@@ -43,19 +44,30 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
+        if(Input.GetKey(KeyCode.Q))
+        {
+            int trap = 0;
+        }
+
+
         Fall();
         Movement();
         Jump();
         AnimationControl();
-        _isMoveable = true;
+        if(PlayerManager.state!=PlayerManager.StateCode.Braking)
+        {
+            _isMoveable = true;
+        }
     }
 
     void Movement()
     {
         float x = Input.GetAxis("Horizontal");
-        if (_isMoveable && !(PlayerManager.state == PlayerManager.StateCode.Jumping || PlayerManager.state == PlayerManager.StateCode.Falling))
+        float speed = Mathf.Abs(x);
+        bool moving = !(PlayerManager.state == PlayerManager.StateCode.Jumping || PlayerManager.state == PlayerManager.StateCode.Falling);
+        if (_isMoveable && moving)
         {
-            if (Mathf.Abs(x) > 0.1)
+            if (speed > 0.1)
             {
                 if (Input.GetKey(KeyCode.LeftShift) && !isHandle)
                 {
@@ -71,8 +83,48 @@ public class PlayerMovement : MonoBehaviour
                 rig.velocity = new Vector2(0, rig.velocity.y);
             }
         }
+        if (Mathf.Abs(rig.velocity.x) < 2.4f && PlayerManager.state == PlayerManager.StateCode.Running && moving)
+        {
+            Brake();
+        }
     }
     
+    void Brake()
+    {
+        _isMoveable = false;
+        PlayerManager.state = PlayerManager.StateCode.Braking;
+        StartCoroutine(nameof(_Brake));
+    }
+    IEnumerator _Brake()
+    {
+        //Braking Animation Here
+        portrait.CrossFade("Handle", 0.1f);
+        //Braking Animation Here
+        float brakingFactor = 1;
+        
+        float originalVelocity_x = rig.velocity.x;
+        if (originalVelocity_x > 0)
+        {
+            while (originalVelocity_x > 0)
+            {
+                rig.velocity = new Vector2(originalVelocity_x -= brakingFactor * Time.deltaTime, rig.velocity.y);
+           
+                yield return new WaitForEndOfFrame();
+            }
+        }
+        else
+        {
+            while (originalVelocity_x < 0)
+            {
+                rig.velocity = new Vector2(originalVelocity_x += brakingFactor * Time.deltaTime, rig.velocity.y);
+                yield return new WaitForEndOfFrame();
+            }
+        }
+        rig.velocity = new Vector2(0, rig.velocity.y);
+        PlayerManager.state = PlayerManager.StateCode.Idle;
+        portrait.CrossFade("Idle", 0.3f);
+        _isMoveable = true;
+    }
 
     void Jump()
     {
@@ -166,11 +218,11 @@ public class PlayerMovement : MonoBehaviour
             portrait.CrossFade("Run", 0.2f);
             PlayerManager.state = PlayerManager.StateCode.Running;
         }
-        else if (PlayerManager.state == PlayerManager.StateCode.Running && speed < 2.4f)
-        {
-            portrait.CrossFade("Walk", 0.3f);
-            PlayerManager.state = PlayerManager.StateCode.Walking;
-        }
+        //else if (PlayerManager.state == PlayerManager.StateCode.Running && speed < 2.4f)
+        //{
+        //    portrait.CrossFade("Walk", 0.3f);
+        //    PlayerManager.state = PlayerManager.StateCode.Walking;
+        //}
         else if (speed == 0 && (PlayerManager.state == PlayerManager.StateCode.Walking|| PlayerManager.state == PlayerManager.StateCode.Running))
         {
             if(isHandle)
@@ -199,6 +251,10 @@ public class PlayerMovement : MonoBehaviour
                 isHandle = true;
             }
         }
+
+        if(Input.GetKeyDown(KeyCode.Q))
+        {
+            portrait.SetControlParamFloat("New Param (0)", -1);
+        }
     }
- 
 }
