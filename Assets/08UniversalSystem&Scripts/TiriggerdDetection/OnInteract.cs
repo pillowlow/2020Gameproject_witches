@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using Cinemachine;
-using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.UI;
+using CustomEventNamespace;
 
 [RequireComponent(typeof(Collider2D))]
 
 public class OnInteract : MonoBehaviour
 {
-    
     
     public enum Actions
     {
@@ -21,7 +20,6 @@ public class OnInteract : MonoBehaviour
     public List<Actions> ActionsList;
     public Queue<Actions> ActionsQueue=new Queue<Actions>();
     private bool ActionDone=true;
-    
     public List<String> TextPaths;
     private int TextIndex=0;
 
@@ -30,6 +28,22 @@ public class OnInteract : MonoBehaviour
     public float offset=4.0f;
     public String PopupText = "按F互動";
     private Text popup;
+
+    
+    //get all CustomEvents using Reflection
+    /*private void OnEnable()
+    {
+        String name = nameof(CustomEventNamespace);
+        var clazz = from t in Assembly.GetExecutingAssembly().GetTypes()
+            where t.IsClass && t.Namespace == name
+            select t;
+        foreach (var type in clazz.ToList())
+        {
+            Debug.Log(type);
+        }
+        
+    }*/
+
     private void OnTriggerEnter2D(Collider2D col)
     {
         if (col.CompareTag("Player"))
@@ -58,7 +72,7 @@ public class OnInteract : MonoBehaviour
                 {
                     ActionsQueue.Enqueue(action);
                 }
-            }
+            }   
             //DoAction
             if (ActionsQueue.Count!=0)
             {
@@ -88,24 +102,18 @@ public class OnInteract : MonoBehaviour
         switch (ActionsQueue.Peek())
             {
                 case Actions.Story:
-                    CustomEventFactory
-                        .GetEvent<LoadTextEvent, TextUIScript>(ObjectTextUI.GetComponent<TextUIScript>(), path)
-                        .StartEvent(this);
+                    new LoadTextEvent(ObjectTextUI.GetComponent<TextUIScript>(),path).StartEvent(this);
                     TextIndex++;
                     break;
                 case Actions.Item:
                     break;
                 case Actions.Quest:
-                    CustomEventFactory
-                        .GetEvent<AcceptQuestEvent, QuestDetailProto>(null, path)
-                        .StartEvent(this);
+                    new AcceptQuestEvent(null, path).StartEvent(this);
                     TextIndex++;
                     break;
                 case Actions.Camera:
                     CinemachineVirtualCamera camera = GameObject.Find("CM vcam2").GetComponent<CinemachineVirtualCamera>();
-                    CustomEventFactory
-                        .GetEvent<CameraEventTrigger, CinemachineVirtualCamera>(camera, path)
-                        .StartEvent(this);
+                    new CameraEventTrigger(camera,path).StartEvent(this);
                     TextIndex++;
                     break;
                 case Actions.Event:

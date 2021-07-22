@@ -88,7 +88,7 @@ public class AnimationControl
             {
                 yield return new WaitForEndOfFrame();
             }
-            if (PlayerManager.state == PlayerManager.StateCode.Moving)
+            if (PlayerManager.state == PlayerManager.StateCode.Walking)
             {
                 DB.animation.FadeIn("walk(run)", 0.2f, 1);
                 CurrentPlaying = 2;
@@ -103,7 +103,7 @@ public class AnimationControl
                 yield return new WaitForEndOfFrame();
             }
             state = DB.animation.GetState("walk(run)");
-            if ((PlayerManager.state == PlayerManager.StateCode.Moving) && (state != null && state.isCompleted))
+            if ((PlayerManager.state == PlayerManager.StateCode.Walking) && (state != null && state.isCompleted))
             {
                 DB.animation.FadeIn("walk(run)", 0.1f, 1);
                 o.StartCoroutine(Running(o));
