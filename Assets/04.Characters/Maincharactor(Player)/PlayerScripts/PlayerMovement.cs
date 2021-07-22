@@ -7,12 +7,10 @@ using UnityEditor;
 
 public class PlayerMovement : MonoBehaviour
 {
+    public static PlayerMovement instance;
     public apPortrait portrait;
-    [Header("Mode")]
-    public PlayerManager.ModeCode initialMode;
-
     [Header("Movement")]
-    public InputManager input;
+    private InputManager input;
     public float walkSpeed = 2;
     public float runSpeed = 5;
     public float flyForce = 35;
@@ -28,34 +26,49 @@ public class PlayerMovement : MonoBehaviour
     
     private bool _isJumpAble = true;
     private bool _isMoveable = true;
-    private bool isHandle = false;
-    private bool isSprinting = false;
+    public bool isHandle = false;
+    public bool isSprinting { get; private set; } = false;
     private Rigidbody2D rig;
+    const float SprintingSpeed = 7.5f;
+    private float capsuleRadius;
 
-
-    bool orient = false;                        //True means the player is facing right.False means the player is facing left.
+    private bool orient = false;                        //True means the player is facing right.False means the player is facing left.
     Vector3 Scale;                              //The scale of the main character.
     float WalkVelocityScaler(float x)           //It's the function that describes the relationship between the horizontal input and x-velocity.
     {
         return (x < 0) ? -AcceleratingCurve.Evaluate(-x) : AcceleratingCurve.Evaluate(x);
     }
-    void Start()
+
+    private void Awake()
     {
-        rig = GetComponent<Rigidbody2D>();
-        PlayerManager.mode = initialMode;
-        Scale = transform.localScale;
+        if (instance == null)
+        {
+            instance = this;
+            rig = GetComponent<Rigidbody2D>();
+            Scale = transform.localScale;
+            input = PlayerManager.instance.input;
+            capsuleRadius = GetComponent<CapsuleCollider2D>().size.y / 2.0f;
+        }
+        else if (instance != this)
+        {
+            Destroy(this.gameObject);
+        }
     }
 
     void Update()
     {
+        if(Input.GetKey(KeyCode.D))
+        {
+            int trap = 0;
+        }
         Fall();
         Movement();
         Jump();
         ActionControl();
     }
 
-    float _x_axis_value = 0;//internal static value for X_Axis function
-    float X_Axis()//Return smooth horizontal input
+    float _x_axis_value = 0;
+    void X_Axis()//Update smooth horizontal input
     {
         float speed = 2;
         if (input.GetKey(InputAction.Right))
@@ -75,19 +88,24 @@ public class PlayerMovement : MonoBehaviour
                 _x_axis_value = 0;
             }
         }
-        return _x_axis_value;
     }
 
     void Movement()//Calculate her speed and detect braking state
     {
         bool moving = !(PlayerManager.state == PlayerManager.StateCode.Jumping || PlayerManager.state == PlayerManager.StateCode.Falling);
-        
-        if(moving)
+        X_Axis();
+        if (moving)
         {
             if (_isMoveable)
             {
-                float x = X_Axis();
-                float speed = Mathf.Abs(x);
+                float input_speed = Mathf.Abs(_x_axis_value);
+                float rig_speed = Mathf.Abs(rig.velocity.x);
+                //Detect Braking State
+                if (rig_speed < SprintingSpeed && PlayerManager.state == PlayerManager.StateCode.Running)
+                {
+                    Brake();
+                    return;
+                }
 
                 //Update isSprinting
                 if (SprintToggle)
@@ -102,28 +120,30 @@ public class PlayerMovement : MonoBehaviour
                     isSprinting = input.GetKey(InputAction.Sprint);
                 }
 
-                if (speed > 0.1)
-                {
-                    if (isSprinting && !isHandle)
-                    {
-                        rig.velocity = new Vector2(WalkVelocityScaler(x) * runSpeed, rig.velocity.y);
-                    }
-                    else
-                    {
-                        rig.velocity = new Vector2(WalkVelocityScaler(x) * walkSpeed, rig.velocity.y);
-                    }
-                }
-                else
+                if (input_speed == 0 && rig_speed < 0.1)
                 {
                     rig.velocity = new Vector2(0, rig.velocity.y);
                     isSprinting = false;
                 }
+                else
+                {
+                    if (isSprinting && !isHandle)
+                    {
+                        rig_speed = WalkVelocityScaler(_x_axis_value) * runSpeed;
+                    }
+                    else
+                    {
+                        rig_speed = WalkVelocityScaler(_x_axis_value) * walkSpeed;
+                    }
+                    rig.AddForce(new Vector2(16 * (rig_speed - rig.velocity.x), 0));
+                }
             }
+        }
 
-            if (Mathf.Abs(rig.velocity.x) < 2.4f && PlayerManager.state == PlayerManager.StateCode.Running)
-            {
-                Brake();
-            }
+        //Fixed foot to the ground
+        if (rig.velocity.y > 0 && PlayerManager.state != PlayerManager.StateCode.Jumping)
+        {
+            rig.velocity = new Vector2(rig.velocity.x, 0);
         }
     }
     
@@ -139,23 +159,20 @@ public class PlayerMovement : MonoBehaviour
         //Replace Braking Animation Here
         portrait.CrossFade("Handle", 0.1f, 0);
         //Replace Braking Animation Here
-        float brakingFactor = 1;
-        
-        float originalVelocity_x = rig.velocity.x;
-        if (originalVelocity_x > 0)
+
+        if (rig.velocity.x > 0)
         {
-            while (originalVelocity_x > 0)
+            while (rig.velocity.x > 0.1f)
             {
-                rig.velocity = new Vector2(originalVelocity_x -= brakingFactor * Time.deltaTime, rig.velocity.y);
-           
+                rig.AddForce(new Vector2(-rig.velocity.x * 16, 0));
                 yield return new WaitForEndOfFrame();
             }
         }
         else
         {
-            while (originalVelocity_x < 0)
+            while (rig.velocity.x < -0.1f)
             {
-                rig.velocity = new Vector2(originalVelocity_x += brakingFactor * Time.deltaTime, rig.velocity.y);
+                rig.AddForce(new Vector2(-rig.velocity.x * 16, 0));
                 yield return new WaitForEndOfFrame();
             }
         }
@@ -183,15 +200,29 @@ public class PlayerMovement : MonoBehaviour
 
     void Fall()//Falling state detection and animation
     {
-        if(rig.velocity.y < -4 && !PlayerManager.onGround )
+        if (rig.velocity.y < -4 && !PlayerManager.onGround)
         {
             PlayerManager.state = PlayerManager.StateCode.Falling;
         }
-        else if(PlayerManager.state == PlayerManager.StateCode.Falling && PlayerManager.onGround)
+        else if ((PlayerManager.state == PlayerManager.StateCode.Falling || (PlayerManager.state == PlayerManager.StateCode.Jumping && rig.velocity.y < 0.1)) && PlayerManager.onGround)
         {
-            portrait.CrossFade("Land", 0.2f);
-            portrait.CrossFadeQueued("Idle", 0.2f);
-            PlayerManager.state = PlayerManager.StateCode.Idle;
+            float speed = Mathf.Abs(rig.velocity.x);
+            if (speed == 0)
+            {
+                portrait.CrossFade("Land", 0.2f);
+                portrait.CrossFadeQueued("Idle", 0.2f);
+                PlayerManager.state = PlayerManager.StateCode.Idle;
+            }
+            else if(speed < SprintingSpeed)
+            {
+                portrait.CrossFade("Walk", 0.2f);
+                PlayerManager.state = PlayerManager.StateCode.Walking;
+            }
+            else
+            {
+                portrait.CrossFade("Run", 0.2f);
+                PlayerManager.state = PlayerManager.StateCode.Running;
+            }
             OnLanding?.Invoke();
         }
     }
@@ -206,7 +237,13 @@ public class PlayerMovement : MonoBehaviour
 
     private void OnCollisionExit2D(Collision2D collision)
     {
-        if (((1 << collision.gameObject.layer) & groundLayer) != 0)
+        StartCoroutine(nameof(_CollisionExitHelper));
+    }
+    IEnumerator _CollisionExitHelper()
+    {
+        yield return new WaitForSeconds(0.1f);
+        Vector2 feet = new Vector2(transform.position.x, transform.position.y - capsuleRadius);
+        if (!Physics2D.Raycast(feet, Vector2.down, 0.01f))
         {
             PlayerManager.onGround = false;
         }
@@ -224,12 +261,12 @@ public class PlayerMovement : MonoBehaviour
         //Character orientation check
         if (_isMoveable)
         {
-            if (vx > 0 && (!orient))
+            if (vx > 0.1f && (!orient))
             {
                 gameObject.transform.localScale = new Vector3(-Scale.x, Scale.y, Scale.z);
                 orient = true;
             }
-            else if (vx < 0 && orient)
+            else if (vx < -0.1f && orient)
             {
                 gameObject.transform.localScale = new Vector3(Scale.x, Scale.y, Scale.z);
                 orient = false;
@@ -239,38 +276,38 @@ public class PlayerMovement : MonoBehaviour
         //Movement animation
         if (PlayerManager.state == PlayerManager.StateCode.Idle)
         {
-            if (speed > 0.5f)
+            if (speed > 0.2f)
             {
                 portrait.CrossFade("Walk", 0.3f, 0);
                 PlayerManager.state = PlayerManager.StateCode.Walking;
             }
         }
-        else if (PlayerManager.state == PlayerManager.StateCode.Walking && speed > 2.5f)
+        else if (PlayerManager.state == PlayerManager.StateCode.Walking && speed > SprintingSpeed)
         {
             portrait.CrossFade("Run", 0.2f, 0);
             PlayerManager.state = PlayerManager.StateCode.Running;
         }
-        else if (speed == 0 && (PlayerManager.state == PlayerManager.StateCode.Walking || PlayerManager.state == PlayerManager.StateCode.Running))
+        else if (speed == 0 && PlayerManager.state == PlayerManager.StateCode.Walking)
         {
             portrait.CrossFade("Idle", 0.2f, 0);
             PlayerManager.state = PlayerManager.StateCode.Idle;
         }
 
         //Interaction Animation
-        if (input.GetKeyDown(InputAction.Interact))
-        {
-            if(isHandle)
-            {
-                portrait.CrossFade("Put", 0.1f, 1);
-                isHandle = false;
-            }
-            else
-            {
-                portrait.CrossFade("Take", 0.5f, 1);
-                portrait.CrossFadeQueued("Handle", 0.4f, 1);
-                isHandle = true;
-            }
-        }
+        //if (input.GetKeyDown(InputAction.Interact))
+        //{
+        //    if(isHandle)
+        //    {
+        //        portrait.CrossFade("Put", 0.1f, 1, apAnimPlayUnit.BLEND_METHOD.Interpolation, apAnimPlayManager.PLAY_OPTION.StopSameLayer, true);
+        //        isHandle = false;
+        //    }
+        //    else
+        //    {
+        //        portrait.CrossFade("Take", 0.5f, 1);
+        //        portrait.CrossFadeQueued("Handle", 0.4f, 1);
+        //        isHandle = true;
+        //    }
+        //}
 
 
         //Reset _isMoveable to true

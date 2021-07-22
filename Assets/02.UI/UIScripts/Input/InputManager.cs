@@ -11,6 +11,7 @@ public class InputManager : ScriptableObject
         KeyCode.D,          //Right
         KeyCode.A,          //Left
         KeyCode.Space,      //Jump
+        KeyCode.S,          //Down
         KeyCode.F,          //Interact
         KeyCode.E,          //Inventory
         KeyCode.LeftShift   //Sprint

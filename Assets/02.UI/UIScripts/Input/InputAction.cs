@@ -7,6 +7,7 @@ public enum InputAction
     Right,
     Left,
     Jump,
+    Down,
     Interact,
     Inventory,
     Sprint
