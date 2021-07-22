@@ -13,15 +13,17 @@ public class CameraController : MonoBehaviour
         public float speed = 1.0f;
         public float factor = 1.0f;
         public float radius = 1.0f;
-    }
+    };
+    [System.Serializable]
+    public class UnseenArea
+    {
+        public GameObject UpperLeft;
+        public GameObject BottomRight;
+    };
     public GameObject target;
+    public UnseenArea[] UnseenAreas;
     
-    public float deadZone = 0;
-    
-    public float rightBound;
-    public float leftBound;
-    public float topBound;
-    public float bottomBound;
+
     public Camera[] cam;
     [SerializeField]
     private TriggerZoneT[] TriggerZone;
@@ -38,6 +40,7 @@ public class CameraController : MonoBehaviour
     private float last;
     private bool HasMoved = false;
     private bool Free = true;
+    private Rigidbody2D Character;
     private void Start()
     {
         zoom = Farest;
@@ -46,6 +49,7 @@ public class CameraController : MonoBehaviour
         {
             i.orthographicSize = zoom;
         }
+        Character = target.GetComponent<Rigidbody2D>();
     }
 
     void Update()
@@ -53,27 +57,8 @@ public class CameraController : MonoBehaviour
         if (target != null)
         {
             //檢查移動的水平方向與死區，移動的水平Ｘ軸速度也要將死區數值加減近來
-            
-            if (transform.position.x >= target.transform.position.x + deadZone)
-            {
-                transform.position = new Vector3(Mathf.Clamp(target.transform.position.x + deadZone,leftBound,rightBound), transform.position.y,transform.position.z);
-            }
-            if (transform.position.x <= target.transform.position.x - deadZone)
-            {
-                transform.position = new Vector3(Mathf.Clamp(target.transform.position.x - deadZone,leftBound,rightBound), transform.position.y, transform.position.z); 
-            }
-            
-    
-            
-            if (transform.position.y >= target.transform.position.y + deadZone)
-            {
-                transform.position = new Vector3(transform.position.x, Mathf.Clamp(target.transform.position.y + deadZone, bottomBound,topBound), transform.position.z);
-                    
-            }
-            if (transform.position.y <= target.transform.position.y - deadZone)
-            {
-                transform.position = new Vector3(transform.position.x, Mathf.Clamp(target.transform.position.y - deadZone, bottomBound, topBound), transform.position.z);
-            }
+
+            transform.position = new Vector3(target.transform.position.x, target.transform.position.y, transform.position.z);
 
             Free = true;
             foreach(var i in TriggerZone)
@@ -91,7 +76,7 @@ public class CameraController : MonoBehaviour
 
             if (Free)
             {
-                if (Mathf.Abs(target.GetComponent<Rigidbody2D>().velocity.x) > 0.5 || Mathf.Abs(target.GetComponent<Rigidbody2D>().velocity.y) > 0.5)
+                if (Mathf.Abs(Character.velocity.x) > 0.5 || Mathf.Abs(Character.velocity.y) > 0.5)
                 {
                     HasMoved = true;
                 }
@@ -113,14 +98,13 @@ public class CameraController : MonoBehaviour
     public bool Zoom( float z, float speed, float factor)
     {
         float d =  zoom - z;
-        float duration = Time.time - last;
         if(d>0.005f)
         {
-            zoom -= Mathf.Exp( d * factor) * speed * duration;
+            zoom -= Mathf.Exp( d * factor) * speed * Time.deltaTime;
         }
         else if(d<-0.005f)
         {
-            zoom += Mathf.Exp(-d * factor) * speed * duration;
+            zoom += Mathf.Exp(-d * factor) * speed * Time.deltaTime;
         }
         else
         {
@@ -134,11 +118,16 @@ public class CameraController : MonoBehaviour
         return true;
     }
 
-    private void OnDrawGizmosSelected()
+    private void OnDrawGizmos()
     {
-        Gizmos.DrawLine(new Vector2(leftBound-12,topBound+5),new Vector2(leftBound-12,bottomBound-5) );
-        Gizmos.DrawLine(new Vector2(rightBound+12,topBound+5),new Vector2(rightBound+12,bottomBound-5));
-        Gizmos.DrawLine(new Vector2(leftBound-12,topBound+5),new Vector2(rightBound+12,topBound+5) );
-        Gizmos.DrawLine(new Vector2(leftBound-12,bottomBound-5),new Vector2(rightBound+12,bottomBound-5) );
+        foreach(var a in UnseenAreas)
+        {
+            if (a.BottomRight != null && a.UpperLeft != null)
+            {
+                Gizmos.DrawWireCube(new Vector3((a.UpperLeft.transform.position.x + a.BottomRight.transform.position.x) / 2, (a.UpperLeft.transform.position.y + a.BottomRight.transform.position.y) / 2, 0.1f),
+                            new Vector3((a.BottomRight.transform.position.x - a.UpperLeft.transform.position.x), (a.UpperLeft.transform.position.y - a.BottomRight.transform.position.y), 0.1f));
+
+            }
+        }
     }
 }
