@@ -8,6 +8,7 @@ using UnityEditor;
 public class PlayerMovement : MonoBehaviour
 {
     public static PlayerMovement instance;
+    public GameObject Bottom;
     public apPortrait portrait;
     [Header("Movement")]
     private InputManager input;
@@ -29,8 +30,11 @@ public class PlayerMovement : MonoBehaviour
     public bool isHandle = false;
     public bool isSprinting { get; private set; } = false;
     private Rigidbody2D rig;
-    const float SprintingSpeed = 7.5f;
+    public float SprintingSpeed = 5.5f;
+    public float BrakingSpeed = 7.5f;
+
     private float capsuleRadius;
+    private bool isFullSpeed = false;
 
     private bool orient = false;                        //True means the player is facing right.False means the player is facing left.
     Vector3 Scale;                              //The scale of the main character.
@@ -47,7 +51,7 @@ public class PlayerMovement : MonoBehaviour
             rig = GetComponent<Rigidbody2D>();
             Scale = transform.localScale;
             input = PlayerManager.instance.input;
-            capsuleRadius = GetComponent<CapsuleCollider2D>().size.y / 2.0f;
+            capsuleRadius = GetComponent<CapsuleCollider2D>().size.y / 4.0f;
         }
         else if (instance != this)
         {
@@ -101,9 +105,10 @@ public class PlayerMovement : MonoBehaviour
                 float input_speed = Mathf.Abs(_x_axis_value);
                 float rig_speed = Mathf.Abs(rig.velocity.x);
                 //Detect Braking State
-                if (rig_speed < SprintingSpeed && PlayerManager.state == PlayerManager.StateCode.Running)
+                if (isFullSpeed && rig_speed < BrakingSpeed && PlayerManager.state == PlayerManager.StateCode.Running)
                 {
                     Brake();
+                    isFullSpeed = false;
                     return;
                 }
 
@@ -130,6 +135,10 @@ public class PlayerMovement : MonoBehaviour
                     if (isSprinting && !isHandle)
                     {
                         rig_speed = WalkVelocityScaler(_x_axis_value) * runSpeed;
+                        if (Mathf.Abs(rig.velocity.x) > BrakingSpeed)
+                        {
+                            isFullSpeed = true;
+                        }
                     }
                     else
                     {
@@ -237,13 +246,17 @@ public class PlayerMovement : MonoBehaviour
 
     private void OnCollisionExit2D(Collision2D collision)
     {
-        StartCoroutine(nameof(_CollisionExitHelper));
+        if (((1 << collision.gameObject.layer) & groundLayer) != 0)
+        {
+            StartCoroutine(nameof(_CollisionExitHelper));
+        }
     }
     IEnumerator _CollisionExitHelper()
     {
-        yield return new WaitForSeconds(0.1f);
-        Vector2 feet = new Vector2(transform.position.x, transform.position.y - capsuleRadius);
-        if (!Physics2D.Raycast(feet, Vector2.down, 0.01f))
+        yield return new WaitForSeconds(0.01f);
+        
+        RaycastHit2D rayHit= Physics2D.Raycast(Bottom.transform.position, Vector2.down, 0.1f, groundLayer);
+        if (rayHit.collider == null)
         {
             PlayerManager.onGround = false;
         }
