@@ -36,5 +36,4 @@ public class InputManager : ScriptableObject
     {
         Keys[(int)action] = key;
     }
-
 }
