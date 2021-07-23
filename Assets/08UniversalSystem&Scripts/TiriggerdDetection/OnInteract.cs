@@ -1,143 +1,132 @@
 ﻿using System;
 using System.Collections.Generic;
-using Cinemachine;
+using System.Linq;
+using System.Reflection;
+using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.UI;
-using CustomEventNamespace;
 
 [RequireComponent(typeof(Collider2D))]
-
 public class OnInteract : MonoBehaviour
 {
     
-    public enum Actions
+    [Serializable]
+    public struct DataStruct
     {
-        Story,Item,Quest,Camera,Event        
+        [CanBeNull] public String path;
+        [CanBeNull] public GameObject gameObject;
+        [CanBeNull] public Vector2 vec;
+        public bool clearEvents;
     }
-
-    public GameObject ObjectTextUI;
-
-    public List<Actions> ActionsList;
-    public Queue<Actions> ActionsQueue=new Queue<Actions>();
-    private bool ActionDone=true;
-    public List<String> TextPaths;
-    private int TextIndex=0;
-
-    public List<String> FlagIds;
     
-    public float offset=4.0f;
-    public String PopupText = "按F互動";
-    private Text popup;
+    [Serializable]
+    public struct EventsStruct
+    {
+        [StringInList(typeof(OnInteract),"GetEvents")]
+        public List<String> EventsList;
+        public List<DataStruct> Data;
+    }
+    
+    [SerializeField]
+    private EventsStruct EventsData;
+    public Queue<String> EventsQueue=new Queue<String>();
+
+    private bool EventDone=true;
+    private int DataIndex=0;
+    private LayerMask playerLayer;
+    public GameObject Hint;
 
     
     //get all CustomEvents using Reflection
-    /*private void OnEnable()
+
+    public static String[] GetEvents()
     {
         String name = nameof(CustomEventNamespace);
         var clazz = from t in Assembly.GetExecutingAssembly().GetTypes()
             where t.IsClass && t.Namespace == name
-            select t;
-        foreach (var type in clazz.ToList())
-        {
-            Debug.Log(type);
-        }
-        
-    }*/
+            select t.ToString();
+        return clazz.Select(n=>n.Replace("CustomEventNamespace.","")).ToArray();
+    }
+
+    public void Start()
+    {
+        playerLayer = PlayerManager.instance.layer;
+    }
 
     private void OnTriggerEnter2D(Collider2D col)
     {
-        if (col.CompareTag("Player"))
+        //check if gameObject layer is in playerLayer
+        if (((1 << col.gameObject.layer) & playerLayer) != 0)
         {
-            //When Player enter then show floating text on the object
-            popup = ObjectTextUI.transform.Find("PopUpText").GetComponent<Text>();
-            Vector2 pos = gameObject.transform.position;
-            ObjectTextUI.transform.position = new Vector2(pos.x, pos.y + offset);
-            popup.text = PopupText;
+            Hint.SetActive(true);
         }
     }
 
     void OnTriggerStay2D(Collider2D col)
     {
-        if (col.CompareTag("Player"))
+        if (((1 << col.gameObject.layer) & playerLayer) != 0)
         {
-            Vector2 pos = gameObject.transform.position;
-            ObjectTextUI.transform.position = new Vector2(pos.x, pos.y + offset);
-            popup.text = PopupText;
-            //If Player press F then Enqueue all action to the queue
-            if (ActionsQueue.Count==0 && Input.GetKeyDown(KeyCode.F))
+            if (EventsQueue.Count==0 && PlayerManager.instance.input.GetKeyDown(InputAction.Interact))
             {
                 if(PlayerManager.state==PlayerManager.StateCode.Stop) return;
-                TextIndex = 0;
-                foreach (Actions action in ActionsList)
-                {
-                    ActionsQueue.Enqueue(action);
-                }
-            }   
-            //DoAction
-            if (ActionsQueue.Count!=0)
-            {
-                popup.text = "";
-                DoAction();
+                DataIndex = 0;
+                foreach (String e in EventsData.EventsList)
+                    EventsQueue.Enqueue(e);
+                if (EventsQueue.Count!=0) 
+                    ExecuteEvent();
+                
             }
         }
         
     }
     private void OnTriggerExit2D(Collider2D col)
     {
-        if (col.CompareTag("Player"))
+        if (((1 << col.gameObject.layer) & playerLayer) != 0)
         {
-            //When Player exit then disable floating text
-            popup.text = "";
+            Hint.SetActive(false);
         }
     }
     
     
-    public void DoAction()
+    public void ExecuteEvent()
     {   
-        //Different Actions
-        if(!ActionDone) return;
-        ActionDone = false;
-        String path = TextPaths[TextIndex];
+        if(!EventDone) return;
+        EventDone = false;
         PlayerManager.state = PlayerManager.StateCode.Stop;
-        switch (ActionsQueue.Peek())
-            {
-                case Actions.Story:
-                    new LoadTextEvent(ObjectTextUI.GetComponent<TextUIScript>(),path).StartEvent(this);
-                    TextIndex++;
-                    break;
-                case Actions.Item:
-                    break;
-                case Actions.Quest:
-                    new AcceptQuestEvent(null, path).StartEvent(this);
-                    TextIndex++;
-                    break;
-                case Actions.Camera:
-                    CinemachineVirtualCamera camera = GameObject.Find("CM vcam2").GetComponent<CinemachineVirtualCamera>();
-                    new CameraEventTrigger(camera,path).StartEvent(this);
-                    TextIndex++;
-                    break;
-                case Actions.Event:
-                    break;
-            }
+        Type t = Type.GetType("CustomEventNamespace." + EventsQueue.Dequeue());
+        CustomEvent _event =(CustomEvent)Activator.CreateInstance(t,EventsData.Data[DataIndex]);
+        _event.StartEvent(this);
     }
 
-    public void SetActionDone()
+    public void SetEventDone()
     {
-        ActionsQueue.Dequeue();
-        ActionDone = true;
-        if(ActionsQueue.Count==0) PlayerManager.state = PlayerManager.StateCode.Idle;
+        EventDone = true;
+        if(EventsQueue.Count==0) PlayerManager.state = PlayerManager.StateCode.Idle;
+        
     }
 
-    public OnInteract AddAction(Actions action,String path)
+    public OnInteract AddAction(String e,DataStruct data)
     {
-        ActionsList.Add(action);
-        TextPaths.Add(path);
+        if (GetEvents().Contains(e))
+        {
+            EventsData.EventsList.Add(e);
+            EventsData.Data.Add(data);
+        }else Debug.LogWarning("[Warning] No event called "+e+", skip");
+        return this;
+
+    }
+
+    public OnInteract AddAction(CustomEvent e, DataStruct data)
+    {
+        String str = e.ToString().Replace("CustomEventNamespace.", "");
+        EventsData.EventsList.Add(str);
+        EventsData.Data.Add(data);
         return this;
     }
-    public OnInteract ClearAction()
+    public OnInteract ClearEvent()
     {
-        ActionsList.Clear();
-        TextPaths.Clear();
+        EventsData.EventsList.Clear();
+        EventsData.Data.Clear();
         return this;
     }
 

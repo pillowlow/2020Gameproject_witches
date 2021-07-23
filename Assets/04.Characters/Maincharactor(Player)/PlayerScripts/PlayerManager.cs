@@ -7,6 +7,7 @@ public class PlayerManager:MonoBehaviour
     public static PlayerManager instance = null;
     public GameObject player;
     public InputManager input;
+    public LayerMask layer;
     private void Awake()
     {
         if (instance == null)

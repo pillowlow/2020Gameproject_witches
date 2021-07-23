@@ -23,15 +23,15 @@ public class QuestVillager : MonoBehaviour
                 if (Quest.flag(FlagID.Visit_0_0) == 1)
                 {
                     Debug.Log("ConversationB with the villager");
-                    script.ClearAction()
-                        .AddAction(OnInteract.Actions.Story, "villagerB");
+                    /*script.ClearEvent()
+                        .AddAction(OnInteract.Actions.Story, "villagerB");*/
                 }
                 else
                 {
                     Debug.Log("ConversationA with the villager");
-                    script.ClearAction()
+                    /*script.ClearAction()
                         .AddAction(OnInteract.Actions.Story, "villagerA")
-                        .AddAction(OnInteract.Actions.Quest, "Dialog_0_0");
+                        .AddAction(OnInteract.Actions.Quest, "Dialog_0_0");*/
                 }
                 break;
             }
@@ -39,9 +39,9 @@ public class QuestVillager : MonoBehaviour
             {
                 if(Quest.flag(FlagID.Dialog_0_0)==1)
                 {
-                    script.ClearAction()
+                    /*script.ClearAction()
                         .AddAction(OnInteract.Actions.Story, "crystalball")
-                        .AddAction(OnInteract.Actions.Quest, "Visit_0_0");
+                        .AddAction(OnInteract.Actions.Quest, "Visit_0_0");*/
                 }
                 break;
             }
