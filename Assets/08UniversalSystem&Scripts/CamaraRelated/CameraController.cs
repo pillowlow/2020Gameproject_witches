@@ -43,9 +43,9 @@ public class CameraController : MonoBehaviour
     public float ZoomInSpeed = 0.0005f;
     public float SpeedFactor = 0.7f;
     public float WaitTime = 2.0f;
+    private float WaitingTime = 0;
 
     private float zoom;
-    private float stopt;
     private bool HasMoved = false;
     private bool FreeToZoom = true;
     public bool isCameraMovement { get; private set; } = false;
@@ -84,10 +84,7 @@ public class CameraController : MonoBehaviour
                 }
                 Vector2 newPos = Vector2.Lerp(CameraMovements[cameraMovementIndex].Begin.transform.position, CameraMovements[cameraMovementIndex].End.transform.position, ratio);
                 transform.position = new Vector3(newPos.x, newPos.y, transform.position.z);
-            }
-            else
-            {
-                MoveCameraTo(PlayerManager.instance.transform.position);
+                return;
             }
 
             FreeToZoom = true;
@@ -115,15 +112,17 @@ public class CameraController : MonoBehaviour
                     if (!Zoom(Farest, ZoomOutSpeed, 1))
                     {
                         zoom = Farest;
-                        HasMoved = false; 
+                        HasMoved = false;
                     }
-                    stopt = Time.time;
+                    WaitingTime = 0;
                 }
-                else if (Time.time - stopt > WaitTime)
+                else if ((WaitingTime += Time.deltaTime) > WaitTime)
                 {
                     Zoom(Closest,ZoomInSpeed,SpeedFactor);
                 }
             }
+
+            MoveCameraTo(PlayerManager.instance.transform.position);
         }
     }
 
@@ -140,13 +139,12 @@ public class CameraController : MonoBehaviour
         }
         return true;
     }
-
     void MoveCameraTo(Vector2 target)
     {
         Vector2 dir = new Vector2(target.x - transform.position.x, target.y - transform.position.y) * Time.deltaTime * CameraMovingSpeed;
         Vector2 nextPosition = new Vector2(transform.position.x + dir.x, transform.position.y + dir.y);
-        float VerticalRadius = Farest;
-        float HorizontalRadius = Farest * Screen.width / Screen.height;
+        float VerticalRadius = zoom;
+        float HorizontalRadius = zoom * Screen.width / Screen.height;
         float right = nextPosition.x + HorizontalRadius;
         float left = nextPosition.x - HorizontalRadius;
         float up = nextPosition.y + VerticalRadius;
@@ -170,18 +168,55 @@ public class CameraController : MonoBehaviour
                 float r_up = i.UpperLeft.transform.position.y;
                 float r_down = i.BottomRight.transform.position.y;
 
+                bool local_yFree = true;
+                bool local_xFree = true;
+
+                bool r_in_middle = false;
+                bool u_in_middle = false;
+
                 if (yFree && (((ori_right > r_left && ori_right < r_right) || ((ori_left > r_left && ori_left < r_right) || (ori_left < r_left && ori_right > r_right)))
-                    && ((up > r_down && up < r_up) || (down > r_down && down < r_up) || (up > r_up && down < r_down))))
+                    && ((u_in_middle = (up > r_down && up < r_up)) || (down > r_down && down < r_up) || (up > r_up && down < r_down))))
                 {
-                    yFree = false;
+                    yFree = local_yFree = false;
                     newY = (up > r_up) ? r_up + VerticalRadius : r_down - VerticalRadius;
                 }
 
-                if (xFree && (((right > r_left && right < r_right) || ((left > r_left && left < r_right) || (left < r_left && right > r_right)))
+                if (xFree && (((r_in_middle=(right > r_left && right < r_right)) || ((left > r_left && left < r_right) || (left < r_left && right > r_right)))
                 && ((ori_up > r_down && ori_up < r_up) || (ori_down > r_down && ori_down < r_up) || (ori_up > r_up && ori_down < r_down))))
                 {
-                    xFree = false;
+                    xFree = local_xFree = false;
                     newX = (left < r_left) ? r_left - HorizontalRadius : r_right + HorizontalRadius;
+                }
+
+                if (!(local_xFree || local_yFree))
+                {
+                    float x_min = r_in_middle ? (right - r_left) : (r_right - left);
+                    float y_min = u_in_middle ? (up - r_down) : (r_up - down);
+                    if(x_min > y_min)
+                    {
+                        if(u_in_middle)
+                        {
+                            newY -= y_min / 100;
+                        }
+                        else
+                        {
+                            newY += y_min / 100;
+                        }
+                        newX = transform.position.x;
+                    }
+                    else
+                    {
+                        if(r_in_middle)
+                        {
+                            newX -= x_min / 100;
+                        }
+                        else
+                        {
+                            newX += x_min / 100;
+                        }
+                        newY = transform.position.y;
+                    }
+                    break;
                 }
 
                 if (!(xFree || yFree))

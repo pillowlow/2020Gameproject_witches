@@ -20,6 +20,7 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("Jump")]
     public float jumpForce;
+    public float lowJump = 1;
     public LayerMask groundLayer;
 
     public event Action OnJump;
@@ -205,6 +206,10 @@ public class PlayerMovement : MonoBehaviour
                 PlayerManager.state = PlayerManager.StateCode.Jumping;
             }
         }
+        if(rig.velocity.y > 0 && input.GetKey(InputAction.Jump))
+        {
+            rig.velocity += Vector2.up * lowJump;
+        }
     }
 
     void Fall()//Falling state detection and animation
@@ -221,11 +226,13 @@ public class PlayerMovement : MonoBehaviour
                 portrait.CrossFade("Land", 0.2f);
                 portrait.CrossFadeQueued("Idle", 0.2f);
                 PlayerManager.state = PlayerManager.StateCode.Idle;
+                isFullSpeed = false;
             }
             else if(speed < SprintingSpeed)
             {
                 portrait.CrossFade("Walk", 0.2f);
                 PlayerManager.state = PlayerManager.StateCode.Walking;
+                isFullSpeed = false;
             }
             else
             {
@@ -287,7 +294,7 @@ public class PlayerMovement : MonoBehaviour
         }
 
         //Movement animation
-        if (PlayerManager.state == PlayerManager.StateCode.Idle)
+        if ((PlayerManager.state == PlayerManager.StateCode.Idle)|| (!isFullSpeed && PlayerManager.state == PlayerManager.StateCode.Running && speed < SprintingSpeed))
         {
             if (speed > 0.2f)
             {
