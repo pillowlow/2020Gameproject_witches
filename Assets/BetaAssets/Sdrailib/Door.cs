@@ -37,7 +37,7 @@ public class Door : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (isClosed && (((1 << collision.gameObject.layer) & playerLayer) != 0))
+        if (isClosed && ((1 << collision.gameObject.layer) & playerLayer) != 0)
         {
             mat.SetFloat(shaderID, maxEffectStrength);
             Hint.SetActive(true);
