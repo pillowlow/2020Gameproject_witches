@@ -92,13 +92,35 @@ public class Door : MonoBehaviour
         StartCoroutine(nameof(WaitForRespone));
     }
 
-    public void OpenDoor()
+    public void SetState(bool s)
+    {
+        if(s)
+        {
+            CloseDoor();
+        }
+        else
+        {
+            OpenDoor();
+        }
+    }
+
+    private void OpenDoor()
     {
         OpenedDoor.SetActive(true);
         ClosedDoor.SetActive(false);
         isClosed = false;
         Hint.SetActive(false);
-        CameraController.instance.UnseenAreas[UnseenAreaIndex].enable = false;
+        if(UnseenAreaIndex>=0)
+        {
+            CameraController.instance.UnseenAreas[UnseenAreaIndex].enable = false;
+        }
+    }
+
+    private void CloseDoor()
+    {
+        OpenedDoor.SetActive(false);
+        ClosedDoor.SetActive(true);
+        isClosed = true;
     }
 
     IEnumerator WaitForRespone()
@@ -123,7 +145,6 @@ public class Door : MonoBehaviour
         {
             if(Yes)
             {
-                isLocked = false;
                 UnlockUI.SetActive(false);
                 OpenDoor();
                 CameraController.instance.StartCameraMovement(0);
