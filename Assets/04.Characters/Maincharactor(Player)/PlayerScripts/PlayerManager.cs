@@ -14,6 +14,7 @@ public class PlayerManager:MonoBehaviour
         {
             instance = this;
             player = gameObject;
+            DontDestroyOnLoad(this.gameObject);
         }
         else if(instance != this)
         {
@@ -22,7 +23,10 @@ public class PlayerManager:MonoBehaviour
     }
     public enum StateCode
     {
-        Idle, Die, Walking, Running, Braking, Jumping, Falling, TakingHit, Stop, Flying, Crawling
+        Idle, Walk, Run, Brake, Crawl, Ride, Tic_Tac, Knock, Float, Jump, Fall,
+        Take_cast, Take_push, Take_drag, Take_port,
+        Action_cast, Action_push, Action_drag, Action_port,
+        TakingHit, Stop, Flying, Die
     };
     public static bool onGround = false;
     public static StateCode state = StateCode.Idle;
