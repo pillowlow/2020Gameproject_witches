@@ -8,7 +8,6 @@ using UnityEditor;
 public class PlayerMovement : MonoBehaviour
 {
     public static PlayerMovement instance;
-    public GameObject Bottom;
     public apPortrait portrait;
     [Header("Movement")]
     private InputManager input;
@@ -20,7 +19,8 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("Jump")]
     public float jumpForce;
-    public float lowJump = 1;
+    public float highJump = 1;
+    public float JumpForwardFactor = 1;
     public LayerMask groundLayer;
 
     public event Action OnJump;
@@ -28,7 +28,6 @@ public class PlayerMovement : MonoBehaviour
     
     private bool _isJumpAble = true;
     private bool _isMoveable = true;
-    public bool isHandle = false;
     public bool isSprinting { get; private set; } = false;
     private Rigidbody2D rig;
     public float SprintingSpeed = 5.5f;
@@ -36,9 +35,20 @@ public class PlayerMovement : MonoBehaviour
 
     private float capsuleRadius;
     private bool isFullSpeed = false;
-
+    private bool isFirstFrame = true;
     private bool orient = false;                        //True means the player is facing right.False means the player is facing left.
-    Vector3 Scale;                              //The scale of the main character.
+    Vector3 Scale;                                      //The scale of the main character.
+    WaitForSeconds Wait100ms = new WaitForSeconds(0.1f);
+
+    public enum Actions_Type{ cast, push, drag, port };
+    bool ContinueBrake = true;
+    const string Animation_Idle     = "Idle";
+    const string Animation_Walk     = "Walk";
+    const string Animation_Run      = "Run";
+    const string Animation_Jump     = "Jump";
+    const string Animation_Fall     = "Fall";
+    const string Animation_Land     = "Land";
+    const string Animation_Brake    = "Land";  //Replace this when we have the animation
     float WalkVelocityScaler(float x)           //It's the function that describes the relationship between the horizontal input and x-velocity.
     {
         return (x < 0) ? -AcceleratingCurve.Evaluate(-x) : AcceleratingCurve.Evaluate(x);
@@ -52,7 +62,10 @@ public class PlayerMovement : MonoBehaviour
             rig = GetComponent<Rigidbody2D>();
             Scale = transform.localScale;
             input = PlayerManager.instance.input;
+            PlayerManager.state = PlayerManager.StateCode.Idle;
             capsuleRadius = GetComponent<CapsuleCollider2D>().size.y / 4.0f;
+            StartCoroutine(nameof(_CollisionDetectionHelper));
+            DontDestroyOnLoad(this.gameObject);
         }
         else if (instance != this)
         {
@@ -62,14 +75,7 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
-        if(Input.GetKey(KeyCode.D))
-        {
-            int trap = 0;
-        }
-        Fall();
         Movement();
-        Jump();
-        ActionControl();
     }
 
     float _x_axis_value = 0;
@@ -95,84 +101,108 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    /*
+        states : idle walk run brake crawl ride tic-tac knock float jump fall take action (cast push drag port)
+        
+        animation transitions table
+        ----------------------------------------------------------
+        idle 	-> walk crawl ride float knock take jump fall
+        walk 	-> idle run crawl ride knock float take jump fall
+        run 	-> brake jump fall
+        brake 	-> idle fall
+        crawl 	-> idle walk
+        ride 	-> idle
+        tic-tac -> idle fall
+        knock 	-> idle
+        float 	-> idle walk fall
+        jump 	-> idle walk tic-tac float fall
+        fall 	-> (land)idle walk float
+        take	-> action
+     */
     void Movement()//Calculate her speed and detect braking state
     {
-        bool moving = !(PlayerManager.state == PlayerManager.StateCode.Jumping || PlayerManager.state == PlayerManager.StateCode.Falling);
         X_Axis();
-        if (moving)
+        UpdateIsSprinting();
+        switch (PlayerManager.state)
         {
-            if (_isMoveable)
+            case PlayerManager.StateCode.Idle:
             {
-                float input_speed = Mathf.Abs(_x_axis_value);
-                float rig_speed = Mathf.Abs(rig.velocity.x);
-                //Detect Braking State
-                if (isFullSpeed && rig_speed < BrakingSpeed && PlayerManager.state == PlayerManager.StateCode.Running)
-                {
-                    Brake();
-                    isFullSpeed = false;
-                    return;
-                }
-
-                //Update isSprinting
-                if (SprintToggle)
-                {
-                    if (input.GetKeyDown(InputAction.Sprint))
-                    {
-                        isSprinting = !isSprinting;
-                    }
-                }
-                else
-                {
-                    isSprinting = input.GetKey(InputAction.Sprint);
-                }
-
-                if (input_speed == 0 && rig_speed < 0.1)
-                {
-                    rig.velocity = new Vector2(0, rig.velocity.y);
-                    isSprinting = false;
-                }
-                else
-                {
-                    if (isSprinting && !isHandle)
-                    {
-                        rig_speed = WalkVelocityScaler(_x_axis_value) * runSpeed;
-                        if (Mathf.Abs(rig.velocity.x) > BrakingSpeed)
-                        {
-                            isFullSpeed = true;
-                        }
-                    }
-                    else
-                    {
-                        rig_speed = WalkVelocityScaler(_x_axis_value) * walkSpeed;
-                    }
-                    rig.AddForce(new Vector2(16 * (rig_speed - rig.velocity.x), 0));
-                }
+                IdleState(false);
+                break;
+            }
+            case PlayerManager.StateCode.Walk:
+            {
+                WalkState(false);
+                break;
+            }
+            case PlayerManager.StateCode.Run:
+            {
+                RunState(false);
+                break;
+            }
+            case PlayerManager.StateCode.Brake:
+            {
+                BrakeState(false);
+                break;
+            }
+            case PlayerManager.StateCode.Jump:
+            {
+                JumpState(false);
+                break;
+            }
+            case PlayerManager.StateCode.Fall:
+            {
+                FallState();
+                break;
             }
         }
 
-        //Fixed foot to the ground
-        if (rig.velocity.y > 0 && PlayerManager.state != PlayerManager.StateCode.Jumping)
+        if(Mathf.Abs(rig.velocity.x) < walkSpeed)
         {
-            rig.velocity = new Vector2(rig.velocity.x, 0);
+            isFullSpeed = false;
         }
+
     }
-    
-    void Brake()//Start to brake until her speed is 0
+
+    void BrakeState(bool transition)// ( completed )
     {
+        PlayerManager.state = PlayerManager.StateCode.Brake;
+        if (transition) { isFirstFrame = true; return; }
+
+
+        /*------------Start of State Transitions------------*/
+        //idle
+        if (!(isFirstFrame || portrait.IsPlaying(Animation_Brake)))
+        {
+            IdleState(true);
+            return;
+        }
+        //fall
+        if(!PlayerManager.onGround && rig.velocity.y<-1)
+        {
+            ContinueBrake = false;
+            FallState();
+            return;
+        }
+        /*------------End of State Transitions------------*/
+
+
         _isMoveable = false;
         isSprinting = false;
-        PlayerManager.state = PlayerManager.StateCode.Braking;
-        StartCoroutine(nameof(_Brake));
+        if(isFirstFrame)
+        {
+            isFirstFrame = false;
+            portrait.CrossFade(Animation_Brake, 0.3f, 0, apAnimPlayUnit.BLEND_METHOD.Interpolation, apAnimPlayManager.PLAY_OPTION.StopSameLayer, true);
+            StartCoroutine(nameof(_Brake));
+        }
+       
     }
+
     IEnumerator _Brake()//Brake coroutine function
     {
-        //Replace Braking Animation Here
-        portrait.CrossFade("Handle", 0.1f, 0);
-        //Replace Braking Animation Here
-
         if (rig.velocity.x > 0)
         {
-            while (rig.velocity.x > 0.1f)
+            while (rig.velocity.x > 0.1f && ContinueBrake)
             {
                 rig.AddForce(new Vector2(-rig.velocity.x * 16, 0));
                 yield return new WaitForEndOfFrame();
@@ -180,92 +210,283 @@ public class PlayerMovement : MonoBehaviour
         }
         else
         {
-            while (rig.velocity.x < -0.1f)
+            while (rig.velocity.x < -0.1f && ContinueBrake)
             {
                 rig.AddForce(new Vector2(-rig.velocity.x * 16, 0));
                 yield return new WaitForEndOfFrame();
             }
         }
+        ContinueBrake = true;
         rig.velocity = new Vector2(0, rig.velocity.y);
         PlayerManager.state = PlayerManager.StateCode.Idle;
-        portrait.CrossFade("Idle", 0.3f, 0);
         _isMoveable = true;
     }
 
-    void Jump()//Jumping state detection and animation
+    void IdleState(bool transition)
     {
+        PlayerManager.state = PlayerManager.StateCode.Idle;
+        if (transition) { isFirstFrame = true; return; }
+
+        /*------------Start of State Transitions------------*/
+        //walk
+        if (Mathf.Abs(_x_axis_value) > 0.1f)
+        {
+            WalkState(true);
+            return;
+        }
+        //crawl
+        //ride
+        //float
+        //knock
+        //take
+        //jump
         if (input.GetKeyDown(InputAction.Jump) && _isMoveable)
         {
-            if (PlayerManager.onGround && _isJumpAble && (!isHandle))
+            JumpState(true);
+            return;
+        }
+        //fall
+        if (rig.velocity.y < 0 && !PlayerManager.onGround)
+        {
+            FallState();
+            return;
+        }
+        /*------------End of State Transitions------------*/
+
+
+        if (isFirstFrame)
+        {
+            portrait.CrossFade(Animation_Idle);
+            isFirstFrame = false;
+        }
+        isSprinting = false;
+    }
+
+    void WalkState(bool transition)
+    {
+        PlayerManager.state = PlayerManager.StateCode.Walk;
+        if (transition) { isFirstFrame = true; return; }
+
+
+        /*------------Start of State Transitions------------*/
+        //idle
+        if (Mathf.Abs(rig.velocity.x) < 0.1f && !input.isHorizonInput())
+        {
+            rig.velocity = new Vector2(0, rig.velocity.y);
+            
+            IdleState(true);
+            return;
+        }
+        //run
+        
+        if(isSprinting)
+        {
+            RunState(true);
+            return;
+        }    
+        //crawl
+        //ride
+        //knock
+        //float
+        //take
+        //jump
+        if (input.GetKeyDown(InputAction.Jump) && _isMoveable)
+        {
+            JumpState(true);
+            return;
+        }
+        //fall
+        if (rig.velocity.y < 0 && !PlayerManager.onGround)
+        {
+            FallState();
+            return;
+        }
+        /*------------End of State Transitions------------*/
+
+
+        UpdateOrientation();
+        float speed = WalkVelocityScaler(_x_axis_value) * walkSpeed;
+        rig.AddForce(new Vector2(16 * (speed - rig.velocity.x), 0));
+
+        if (isFirstFrame)
+        {
+            portrait.CrossFade(Animation_Walk);
+            isFirstFrame = false;
+        }
+        isSprinting = false;
+    }
+
+    void RunState(bool transition)
+    {
+        PlayerManager.state = PlayerManager.StateCode.Run;
+        if (transition) { isFirstFrame = true; return; }
+
+
+        /*------------Start of State Transitions------------*/
+        //Brake
+        if (((Mathf.Abs(rig.velocity.x) < BrakingSpeed || !isSprinting) && isFullSpeed) || (Mathf.Abs(rig.velocity.x) < walkSpeed && Mathf.Abs(_x_axis_value) < 0.1f))
+        {
+            BrakeState(true);
+            return;
+        }
+        //Jump
+        if (input.GetKeyDown(InputAction.Jump) && _isMoveable)
+        {
+            JumpState(true);
+            return;
+        }
+        //Fall
+        if (rig.velocity.y < 0 && !PlayerManager.onGround)
+        {
+            FallState();
+            return;
+        }
+        /*------------End of State Transitions------------*/
+
+
+        float speed = WalkVelocityScaler(_x_axis_value) * runSpeed;
+        rig.AddForce(new Vector2(16 * (speed - rig.velocity.x), 0));
+        if (Mathf.Abs(rig.velocity.x) > BrakingSpeed)
+        {
+            isFullSpeed = true;
+        }
+        if (isFirstFrame)
+        {
+            portrait.CrossFade(Animation_Run);
+            isFirstFrame = false;
+        }
+        if (Mathf.Abs(rig.velocity.x) < float.Epsilon)
+        {
+            isSprinting = false;
+        }
+        UpdateOrientation();
+    }
+
+    void JumpState(bool transition)//Jumping state detection and animation
+    {
+        PlayerManager.state = PlayerManager.StateCode.Jump;
+        //high jump
+        if (rig.velocity.y > 0 && input.GetKey(InputAction.Jump))
+        {
+            rig.velocity += highJump * Time.deltaTime * Vector2.up;
+        }
+        if (input.GetKeyDown(InputAction.Jump) && _isMoveable)
+        {
+            if (PlayerManager.onGround && _isJumpAble)
             {
                 OnJump?.Invoke();
-                portrait.CrossFade("Jump", 0.1f, 0);
-                rig.AddForce(new Vector2(0, jumpForce), ForceMode2D.Impulse);
-                portrait.CrossFadeQueued("Fall", 0.1f, 0);
-
-                PlayerManager.state = PlayerManager.StateCode.Jumping;
+                rig.AddForce(new Vector2(rig.velocity.x * JumpForwardFactor, jumpForce), ForceMode2D.Impulse);
             }
         }
-        if(rig.velocity.y > 0 && input.GetKey(InputAction.Jump))
+        if (transition) { isFirstFrame = true; return; }
+
+
+        /*------------Start of State Transitions------------*/
+        //idle
+        if (Mathf.Abs(rig.velocity.x)<0.01f && Mathf.Abs(rig.velocity.y) < 0.01f && PlayerManager.onGround)
         {
-            rig.velocity += Vector2.up * lowJump;
+            IdleState(true);
+            return;
+        }
+        //walk
+        if (Mathf.Abs(rig.velocity.y) < 0.01f && PlayerManager.onGround)
+        {
+            WalkState(true);
+            return;
+        }
+        //tic - tac
+        //float
+        //fall
+        if (rig.velocity.y < 0 && !PlayerManager.onGround)
+        {
+            FallState();
+            return;
+        }
+        /*------------End of State Transitions------------*/
+
+        if (isFirstFrame)
+        {
+            portrait.CrossFade(Animation_Jump);
+            portrait.CrossFadeQueued(Animation_Fall);
+            isFirstFrame = false;
+        }
+        if(Mathf.Abs(rig.velocity.x) < walkSpeed)
+        {
+            isSprinting = false;
         }
     }
 
-    void Fall()//Falling state detection and animation
+    void FallState()// ( completed )
     {
-        if (rig.velocity.y < -4 && !PlayerManager.onGround)
-        {
-            PlayerManager.state = PlayerManager.StateCode.Falling;
-        }
-        else if ((PlayerManager.state == PlayerManager.StateCode.Falling || (PlayerManager.state == PlayerManager.StateCode.Jumping && rig.velocity.y < 0.1)) && PlayerManager.onGround)
+        PlayerManager.state = PlayerManager.StateCode.Fall;
+
+        /*------------Start of State Transitions------------*/
+        if (PlayerManager.onGround)
         {
             float speed = Mathf.Abs(rig.velocity.x);
-            if (speed == 0)
+            //land
+            if (speed < 0.01f)
             {
-                portrait.CrossFade("Land", 0.2f);
-                portrait.CrossFadeQueued("Idle", 0.2f);
-                PlayerManager.state = PlayerManager.StateCode.Idle;
                 isFullSpeed = false;
+                LandState();
             }
-            else if(speed < SprintingSpeed)
+            //walk
+            else if (speed < SprintingSpeed)
             {
-                portrait.CrossFade("Walk", 0.2f);
-                PlayerManager.state = PlayerManager.StateCode.Walking;
                 isFullSpeed = false;
+                WalkState(true);
+            }
+            //run
+            else
+            {
+                RunState(true);
+            }
+            OnLanding?.Invoke();
+            return;
+        }
+        /*------------End of State Transitions------------*/
+
+
+        if (isFirstFrame)
+        {
+            portrait.CrossFade(Animation_Fall);
+            isFirstFrame = false;
+        }
+        if (Mathf.Abs(rig.velocity.x) < walkSpeed)
+        {
+            isSprinting = false;
+        }
+    }
+
+    void LandState()
+    {
+        portrait.CrossFade(Animation_Land);
+        portrait.CrossFadeQueued(Animation_Idle);
+        PlayerManager.state = PlayerManager.StateCode.Idle;
+    }
+
+
+
+
+
+
+
+
+    IEnumerator _CollisionDetectionHelper()
+    {
+        while(true)
+        {
+            yield return Wait100ms;
+            Vector2 pos = (Vector2)PlayerManager.instance.player.transform.position + new Vector2(0.069f, -1.7f);
+            Collider2D collider = Physics2D.OverlapBox(pos, new Vector2(0.8f, 0.01f), 0, groundLayer);
+            if (collider == null)
+            {
+                PlayerManager.onGround = false;
             }
             else
             {
-                portrait.CrossFade("Run", 0.2f);
-                PlayerManager.state = PlayerManager.StateCode.Running;
+                PlayerManager.onGround = true;
             }
-            OnLanding?.Invoke();
-        }
-    }
-
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        if (((1 << collision.gameObject.layer) & groundLayer) != 0)
-        {
-            PlayerManager.onGround = true;
-        }
-    }
-
-    private void OnCollisionExit2D(Collision2D collision)
-    {
-        if (((1 << collision.gameObject.layer) & groundLayer) != 0)
-        {
-            StartCoroutine(nameof(_CollisionExitHelper));
-        }
-    }
-    IEnumerator _CollisionExitHelper()
-    {
-        yield return new WaitForSeconds(0.01f);
-        
-        RaycastHit2D rayHit= Physics2D.Raycast(Bottom.transform.position, Vector2.down, 0.1f, groundLayer);
-        if (rayHit.collider == null)
-        {
-            PlayerManager.onGround = false;
         }
     }
 
@@ -273,67 +494,42 @@ public class PlayerMovement : MonoBehaviour
     {
         _isJumpAble = jumpAble;
     }
-    void ActionControl()
+ 
+    void UpdateIsSprinting()
     {
-        float vx = rig.velocity.x;
-        float speed = Mathf.Abs(vx);
+        if (SprintToggle)
+        {
+            if (input.GetKeyDown(InputAction.Sprint))
+            {
+                isSprinting = !isSprinting;
+            }
+        }
+        else
+        {
+            isSprinting = input.GetKey(InputAction.Sprint);
+        }
+    }
 
-        //Character orientation check
+    void UpdateOrientation()
+    {
         if (_isMoveable)
         {
-            if (vx > 0.1f && (!orient))
+            if (rig.velocity.x > 0.1f && (!orient))
             {
                 gameObject.transform.localScale = new Vector3(-Scale.x, Scale.y, Scale.z);
                 orient = true;
             }
-            else if (vx < -0.1f && orient)
+            else if (rig.velocity.x < -0.1f && orient)
             {
                 gameObject.transform.localScale = new Vector3(Scale.x, Scale.y, Scale.z);
                 orient = false;
             }
         }
-
-        //Movement animation
-        if ((PlayerManager.state == PlayerManager.StateCode.Idle)|| (!isFullSpeed && PlayerManager.state == PlayerManager.StateCode.Running && speed < SprintingSpeed))
-        {
-            if (speed > 0.2f)
-            {
-                portrait.CrossFade("Walk", 0.3f, 0);
-                PlayerManager.state = PlayerManager.StateCode.Walking;
-            }
-        }
-        else if (PlayerManager.state == PlayerManager.StateCode.Walking && speed > SprintingSpeed)
-        {
-            portrait.CrossFade("Run", 0.2f, 0);
-            PlayerManager.state = PlayerManager.StateCode.Running;
-        }
-        else if (speed == 0 && PlayerManager.state == PlayerManager.StateCode.Walking)
-        {
-            portrait.CrossFade("Idle", 0.2f, 0);
-            PlayerManager.state = PlayerManager.StateCode.Idle;
-        }
-
-        //Interaction Animation
-        //if (input.GetKeyDown(InputAction.Interact))
-        //{
-        //    if(isHandle)
-        //    {
-        //        portrait.CrossFade("Put", 0.1f, 1, apAnimPlayUnit.BLEND_METHOD.Interpolation, apAnimPlayManager.PLAY_OPTION.StopSameLayer, true);
-        //        isHandle = false;
-        //    }
-        //    else
-        //    {
-        //        portrait.CrossFade("Take", 0.5f, 1);
-        //        portrait.CrossFadeQueued("Handle", 0.4f, 1);
-        //        isHandle = true;
-        //    }
-        //}
-
-
-        //Reset _isMoveable to true
-        if (PlayerManager.state != PlayerManager.StateCode.Braking)
-        {
-            _isMoveable = true;
-        }
     }
+
+    //private void OnDrawGizmos()
+    //{
+    //    Vector2 pos = new Vector2(-0.861f, 4.947f) + new Vector2(0.069f, -1.75f);//1.75  2.0
+    //    Gizmos.DrawCube(pos, new Vector2(0.8f, 0.01f));
+    //}
 }
