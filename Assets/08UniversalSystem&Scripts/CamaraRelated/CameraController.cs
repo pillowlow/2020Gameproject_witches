@@ -168,55 +168,29 @@ public class CameraController : MonoBehaviour
                 float r_up = i.UpperLeft.transform.position.y;
                 float r_down = i.BottomRight.transform.position.y;
 
-                bool local_yFree = true;
-                bool local_xFree = true;
+                bool r_in_middle = (right > r_left && right < r_right);
+                bool u_in_middle = (up > r_down && up < r_up);
 
-                bool r_in_middle = false;
-                bool u_in_middle = false;
+                float x_min = r_in_middle ? (right - r_left) : (r_right - left);
+                float y_min = u_in_middle ? (up - r_down) : (r_up - down);
 
-                if (yFree && (((ori_right > r_left && ori_right < r_right) || ((ori_left > r_left && ori_left < r_right) || (ori_left < r_left && ori_right > r_right)))
-                    && ((u_in_middle = (up > r_down && up < r_up)) || (down > r_down && down < r_up) || (up > r_up && down < r_down))))
+                if (x_min > y_min)
                 {
-                    yFree = local_yFree = false;
-                    newY = (up > r_up) ? r_up + VerticalRadius : r_down - VerticalRadius;
+                    if (yFree && (((ori_right > r_left && ori_right < r_right) || ((ori_left > r_left && ori_left < r_right) || (ori_left < r_left && ori_right > r_right)))
+                    && (u_in_middle || (down > r_down && down < r_up) || (up > r_up && down < r_down))))
+                    {
+                        yFree = false;
+                        newY = (up > r_up) ? r_up + VerticalRadius : r_down - VerticalRadius;
+                    }
                 }
-
-                if (xFree && (((r_in_middle=(right > r_left && right < r_right)) || ((left > r_left && left < r_right) || (left < r_left && right > r_right)))
+                else
+                {
+                    if (xFree && ((r_in_middle || ((left > r_left && left < r_right) || (left < r_left && right > r_right)))
                 && ((ori_up > r_down && ori_up < r_up) || (ori_down > r_down && ori_down < r_up) || (ori_up > r_up && ori_down < r_down))))
-                {
-                    xFree = local_xFree = false;
-                    newX = (left < r_left) ? r_left - HorizontalRadius : r_right + HorizontalRadius;
-                }
-
-                if (!(local_xFree || local_yFree))
-                {
-                    float x_min = r_in_middle ? (right - r_left) : (r_right - left);
-                    float y_min = u_in_middle ? (up - r_down) : (r_up - down);
-                    if(x_min > y_min)
                     {
-                        if(u_in_middle)
-                        {
-                            newY -= y_min / 100;
-                        }
-                        else
-                        {
-                            newY += y_min / 100;
-                        }
-                        newX = transform.position.x;
+                        xFree = false;
+                        newX = (left < r_left) ? r_left - HorizontalRadius : r_right + HorizontalRadius;
                     }
-                    else
-                    {
-                        if(r_in_middle)
-                        {
-                            newX -= x_min / 100;
-                        }
-                        else
-                        {
-                            newX += x_min / 100;
-                        }
-                        newY = transform.position.y;
-                    }
-                    break;
                 }
 
                 if (!(xFree || yFree))
