@@ -61,7 +61,7 @@ public class Controll_Doll_JH : MonoBehaviour
         if (isFirstFrame)
         {
             if(!isHandle)
-                portrait.CrossFade("Idle", 0.2f);
+                portrait.CrossFade("FallDown", 0.2f);
             else
                 portrait.CrossFade("Handle", 0.2f);
             isFirstFrame = false;
@@ -71,7 +71,7 @@ public class Controll_Doll_JH : MonoBehaviour
             if (!isHandle)
             {
                 isHandle = true;
-                portrait.CrossFade("Take", 0.1f);
+                portrait.CrossFade("StandUp", 0.1f);
             }
             else
             {
