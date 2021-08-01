@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using AnyPortrait;
 
-public class Controll_Doll_J : MonoBehaviour
+public class Controll_Doll_JH : MonoBehaviour
 {
     public apPortrait portrait;
     public Rigidbody2D rg2D;
@@ -61,7 +61,7 @@ public class Controll_Doll_J : MonoBehaviour
         if (isFirstFrame)
         {
             if(!isHandle)
-                portrait.CrossFade("FallDown", 0.2f);
+                portrait.CrossFade("Idle", 0.2f);
             else
                 portrait.CrossFade("Handle", 0.2f);
             isFirstFrame = false;
@@ -71,7 +71,7 @@ public class Controll_Doll_J : MonoBehaviour
             if (!isHandle)
             {
                 isHandle = true;
-                portrait.CrossFade("StandUp", 0.1f);
+                portrait.CrossFade("Take", 0.1f);
             }
             else
             {
