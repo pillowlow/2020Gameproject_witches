@@ -7,46 +7,55 @@ public class LightControll : MonoBehaviour
 {
     public UnityEngine.Experimental.Rendering.Universal.Light2D editLight;
     
-    public float flashStrength = 1;
-    public float flashingSpeed = 30;
-    public float flashingcycle = 100;
-    public float flashinglength = 20;
-    float timer;
-    float Brightness ;
-    int counter = 0;
+    public int flashLength = 1;
+    public int normalLength = 5;
+    
+    
+    public float flashfrequent = 2;
+    public float flashstrength = 1;
+    public int cycleOffest = 2;
     bool isFlash = false;
+    float timer;
+    float oriBright;
+    float cyclecount;
+    int x,y = 0;
+    int i,j = 0;
+    
+    
+
+    
+    
 
     // Start is called before the first frame update
     void Start()
     {
-        Brightness = editLight.intensity;
+        oriBright = editLight.intensity;
+        
+        x = UnityEngine.Random.Range(0,10);
+        
+
     }
 
     // Update is called once per frame
     void Update()
     {
+        y = UnityEngine.Random.Range(-cycleOffest,cycleOffest);
+        j++;
+        if(j % flashfrequent == 0)
+            i++;
         timer = Mathf.Floor(Time.time);
-        if(timer % flashingcycle == 0　&& timer / flashingcycle != 0){
+        cyclecount = (timer + x) % (flashLength+normalLength+y);
+        
+
+        if(cyclecount < flashLength)
             isFlash = true;
-        }
-
-
-        if (isFlash) {
-            editLight.intensity += Mathf.Sin(timer*flashingSpeed)*flashStrength;
-            counter++;
-        }
-
-
-        
-        if(isFlash && counter == flashinglength )
+        else
             isFlash = false;
-            counter = 0;
 
-
-        
-        
-        Debug.Log( isFlash);
-        Debug.Log(counter);
-        
+        if(isFlash)
+            editLight.intensity = i%2*oriBright;
+        else
+            editLight.intensity = oriBright;
     }
+        
 }
