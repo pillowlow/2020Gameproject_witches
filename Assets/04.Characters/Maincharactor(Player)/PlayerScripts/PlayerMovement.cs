@@ -13,6 +13,7 @@ public class PlayerMovement : MonoBehaviour
     private InputManager input;
     public float walkSpeed = 2;
     public float runSpeed = 5;
+    public float pushingSpeed = 1;
     public float flyForce = 35;
     public bool SprintToggle = true;
     public AnimationCurve AcceleratingCurve;    //Curve that describes how the character accelerates
@@ -29,26 +30,27 @@ public class PlayerMovement : MonoBehaviour
     private bool _isJumpAble = true;
     private bool _isMoveable = true;
     public bool isSprinting { get; private set; } = false;
-    private Rigidbody2D rig;
+    public Rigidbody2D rig { get; private set; }
     public float SprintingSpeed = 5.5f;
     public float BrakingSpeed = 7.5f;
 
     private float capsuleRadius;
     private bool isFullSpeed = false;
     private bool isFirstFrame = true;
-    private bool orient = false;                        //True means the player is facing right.False means the player is facing left.
+    public bool orient { get; private set; } = false;                        //True means the player is facing right.False means the player is facing left.
     Vector3 Scale;                                      //The scale of the main character.
     WaitForSeconds Wait100ms = new WaitForSeconds(0.1f);
-
     public enum Actions_Type{ cast, push, drag, port };
     bool ContinueBrake = true;
-    const string Animation_Idle     = "Idle";
-    const string Animation_Walk     = "Walk";
-    const string Animation_Run      = "Run";
-    const string Animation_Jump     = "Jump";
-    const string Animation_Fall     = "Fall";
-    const string Animation_Land     = "Land";
-    const string Animation_Brake    = "Land";  //Replace this when we have the animation
+    const string Animation_Idle         = "Idle";
+    const string Animation_Walk         = "Walk";
+    const string Animation_Run          = "Run";
+    const string Animation_Jump         = "Jump";
+    const string Animation_Fall         = "Fall";
+    const string Animation_Land         = "Land";
+    const string Animation_Brake        = "Land";       //Replace this when we have the animation
+    const string Animation_Start_Push   = "StartPush";
+    const string Animation_Push         = "Push";
     float WalkVelocityScaler(float x)           //It's the function that describes the relationship between the horizontal input and x-velocity.
     {
         return (x < 0) ? -AcceleratingCurve.Evaluate(-x) : AcceleratingCurve.Evaluate(x);
@@ -155,6 +157,11 @@ public class PlayerMovement : MonoBehaviour
                 FallState();
                 break;
             }
+            case PlayerManager.StateCode.Action_push:
+            {
+                PushState(false);
+                break;
+            }
         }
 
         if(Mathf.Abs(rig.velocity.x) < walkSpeed)
@@ -239,6 +246,11 @@ public class PlayerMovement : MonoBehaviour
         //float
         //knock
         //take
+        if(Pushable.isPushing)
+        {
+            PushState(true);
+            return;
+        }
         //jump
         if (input.GetKeyDown(InputAction.Jump) && _isMoveable)
         {
@@ -283,12 +295,17 @@ public class PlayerMovement : MonoBehaviour
         {
             RunState(true);
             return;
-        }    
+        }
         //crawl
         //ride
         //knock
         //float
         //take
+        if (Pushable.isPushing)
+        {
+            PushState(true);
+            return;
+        }
         //jump
         if (input.GetKeyDown(InputAction.Jump) && _isMoveable)
         {
@@ -465,6 +482,32 @@ public class PlayerMovement : MonoBehaviour
         PlayerManager.state = PlayerManager.StateCode.Idle;
     }
 
+    void PushState(bool transition)
+    {
+        PlayerManager.state = PlayerManager.StateCode.Action_push;
+        if (transition) {isFirstFrame = true; return; }
+        if (!Pushable.isPushing)
+        {
+            IdleState(true);
+            return;
+        }
+        if(Vector3.Dot(rig.velocity, Pushable.PushedObject.position - PlayerManager.instance.player.transform.position) < 0)
+        {
+            Pushable.isPushing = false;
+            WalkState(true);
+            return;
+        }
+
+        if(isFirstFrame)
+        {
+            portrait.CrossFade(Animation_Start_Push);
+            portrait.CrossFadeQueued(Animation_Push);
+            isFirstFrame = false;
+        }
+
+        float speed = WalkVelocityScaler(_x_axis_value) * pushingSpeed;
+        rig.AddForce(new Vector2(50 * (speed - rig.velocity.x), 0));
+    }
 
 
 
@@ -510,7 +553,7 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    void UpdateOrientation()
+    bool UpdateOrientation()
     {
         if (_isMoveable)
         {
@@ -518,13 +561,16 @@ public class PlayerMovement : MonoBehaviour
             {
                 gameObject.transform.localScale = new Vector3(-Scale.x, Scale.y, Scale.z);
                 orient = true;
+                return true;
             }
             else if (rig.velocity.x < -0.1f && orient)
             {
                 gameObject.transform.localScale = new Vector3(Scale.x, Scale.y, Scale.z);
                 orient = false;
+                return true;
             }
         }
+        return false;
     }
 
     //private void OnDrawGizmos()
