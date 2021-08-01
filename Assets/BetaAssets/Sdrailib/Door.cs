@@ -13,10 +13,11 @@ public class Door : MonoBehaviour
     public bool isLocked = false;
     public bool isClosed = true;
     public LayerMask playerLayer;
+    public int UnseenAreaIndex = 0;
     private InputManager input;
     private Renderer shader;
-    private bool Yes = false;
-    private bool No = false;
+    private static bool Yes = false;
+    private static bool No = false;
     private bool UnlockOrOpen = true;
     private int shaderID;
     private Material mat;
@@ -36,18 +37,22 @@ public class Door : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (((1 << collision.gameObject.layer) & playerLayer) != 0)
+        if (isClosed && ((1 << collision.gameObject.layer) & playerLayer) != 0)
         {
             mat.SetFloat(shaderID, maxEffectStrength);
             Hint.SetActive(true);
+            StopWaiting = false;
         }
     }
+    bool StopWaiting = false;
     private void OnTriggerExit2D(Collider2D collision)
     {
         if (((1 << collision.gameObject.layer) & playerLayer) != 0)
         {
             mat.SetFloat(shaderID, 0);
             Hint.SetActive(false);
+            UI.SetActive(false);
+            StopWaiting = true;
         }
     }
 
@@ -87,12 +92,35 @@ public class Door : MonoBehaviour
         StartCoroutine(nameof(WaitForRespone));
     }
 
+    public void SetState(bool s)
+    {
+        if(s)
+        {
+            CloseDoor();
+        }
+        else
+        {
+            OpenDoor();
+        }
+    }
+
     private void OpenDoor()
     {
         OpenedDoor.SetActive(true);
         ClosedDoor.SetActive(false);
         isClosed = false;
+        Hint.SetActive(false);
+        if(UnseenAreaIndex>=0)
+        {
+            CameraController.instance.UnseenAreas[UnseenAreaIndex].enable = false;
+        }
+    }
 
+    private void CloseDoor()
+    {
+        OpenedDoor.SetActive(false);
+        ClosedDoor.SetActive(true);
+        isClosed = true;
     }
 
     IEnumerator WaitForRespone()
@@ -108,20 +136,25 @@ public class Door : MonoBehaviour
             OpenUI.SetActive(true);
         }
 
-        yield return new WaitUntil(() => { return Yes || No; });
-
+        yield return new WaitUntil(() => { return Yes || No|| StopWaiting; });
+        if(StopWaiting)
+        {
+            yield break;
+        }
         if(UnlockOrOpen)
         {
             if(Yes)
             {
-                isLocked = false;
+                UnlockUI.SetActive(false);
                 OpenDoor();
+                CameraController.instance.StartCameraMovement(0);
             }
         }
         else
         {
             if (Yes)
             {
+                OpenUI.SetActive(false);
                 OpenDoor();
             }
         }

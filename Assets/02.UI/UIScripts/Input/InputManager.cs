@@ -36,5 +36,8 @@ public class InputManager : ScriptableObject
     {
         Keys[(int)action] = key;
     }
-
+    public bool isHorizonInput()
+    {
+        return Input.GetKey(Keys[(int)InputAction.Right]) || Input.GetKey(Keys[(int)InputAction.Left]);
+    }
 }

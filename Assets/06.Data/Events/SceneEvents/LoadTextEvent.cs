@@ -16,6 +16,7 @@ namespace CustomEventNamespace
         public void StartEvent(OnInteract action)
         {
             TextScript.LoadText(TextPath,action);
+            action.SetEventDone();
         }
     }
 

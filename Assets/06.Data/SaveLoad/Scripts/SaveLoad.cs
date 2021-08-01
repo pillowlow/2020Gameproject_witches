@@ -4,8 +4,10 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 public static class SaveLoad
 {
-    public static void Save(PlayerData.SceneID SceneID)
+    private static Type[] SceneTypes = { typeof(SceneData01_01) };
+    public static void Save(PlayerData.SceneID SceneID, SceneDataHolderBaseClass SceneData)
     {
+        SaveScene(SceneID, SceneData);
         Vector2 Pos = GetSpawnPosition(SceneID);
         PlayerData Data = new PlayerData
         {
@@ -18,20 +20,23 @@ public static class SaveLoad
             Flags = Quest.flags
         };
 
-        string path = Path.Combine(Application.persistentDataPath, "Save_" + Saving.ToString() + ".json");
+        string path = GetSavingDirectory(Saving);
+        path = Path.Combine(path, "CharacterData");
         File.WriteAllText(path,JsonUtility.ToJson(Data));
     }
 
-    public static void LoadScene()
+    public static void Load()
     {
-        string path = Path.Combine(Application.persistentDataPath, "Save_" + Saving.ToString()+".json");
+        string path = GetSavingDirectory(Saving);
+        path = Path.Combine(path, "CharacterData");
         PlayerData Data = JsonUtility.FromJson<PlayerData>(File.ReadAllText(path));                                 //Get data from disk
         SceneManager.LoadScene(Data.CurrentScene.ToString());
         SceneManager.sceneLoaded += OnSceneLoaded;
     }
     public static string GetSavingDateTime(int s)
     {
-        string path = Path.Combine(Application.persistentDataPath, "Save_" + s.ToString() + ".json");
+        string path = GetSavingDirectory(s);
+        path = Path.Combine(path, "CharacterData");
         PlayerData Data = JsonUtility.FromJson<PlayerData>(File.ReadAllText(path));
         return Data.Time;
     }
@@ -58,16 +63,68 @@ public static class SaveLoad
     }
     static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        string path = Path.Combine(Application.persistentDataPath, "Save_" + Saving.ToString() + ".json");
+        string path = GetSavingDirectory(Saving);
+        path = Path.Combine(path, "CharacterData");
         PlayerData Data = JsonUtility.FromJson<PlayerData>(File.ReadAllText(path));                                 //Get data from disk
-        GameObject Player = GameObject.Find("Player");
+        GameObject Player = GameObject.FindWithTag("Player");
 
         Quest.QuestsProgress = Data.QuestProgress;
         Quest.QuestState = Data.QuestState;
         Quest.flags = Data.Flags;
         Vector2 Pos = GetSpawnPosition(Data.CurrentScene);        
         Player.transform.position = new Vector3(Pos.x, Pos.y, 0.0f);
-        PlayerManager.state = PlayerManager.StateCode.Idle; //Idk why but it fixs sth
+        PlayerManager.state = PlayerManager.StateCode.Idle;
         SceneManager.sceneLoaded -= OnSceneLoaded;
+        //LoadScene
+        GameObject SceneDataHolder = GameObject.FindWithTag("SceneDataHolder");
+        SceneDataHolderBaseClass dataHolder = SceneDataHolder.GetComponent<SceneDataHolderBaseClass>();
+        SceneDataBaseClass data = LoadScene(Data.CurrentScene);
+        dataHolder.Load(data);
     }
+
+    public static void SaveScene(PlayerData.SceneID SceneID, SceneDataHolderBaseClass SceneData)
+    {
+        SceneDataBaseClass data = SceneData.Save();
+        //Save To The Disk
+        string path = GetSavingDirectory(Saving);
+        string file = Enum.GetName(typeof(PlayerData.SceneID), SceneID) + Saving.ToString();
+        //file do hash
+        path = Path.Combine(path, file);
+        File.WriteAllText(path, JsonUtility.ToJson(data));
+    }
+
+    public static SceneDataBaseClass LoadScene(PlayerData.SceneID SceneID)
+    {
+        string path = GetSavingDirectory(Saving);
+        string file = Enum.GetName(typeof(PlayerData.SceneID), SceneID) + Saving.ToString();
+        //file do hash
+        path = Path.Combine(path, file);
+        if(File.Exists(path))
+        {
+            System.Reflection.MethodInfo mif = typeof(JsonUtility).GetMethod("FromJson", new Type[] { typeof(string) }).MakeGenericMethod(SceneTypes[Saving]);
+            return (SceneDataBaseClass)mif.Invoke(null, new object[] { File.ReadAllText(path) });
+        }
+        return null;
+    }
+
+    //Get the number of savings
+    public static int GetSavingNum()
+    {
+        string pre = Path.Combine(Application.persistentDataPath, "Save_");
+        int s = 0;
+        string path;
+        do
+        {
+            path = pre + s.ToString();
+        }while (File.Exists(path));
+        return s;
+    }
+
+    public static string GetSavingDirectory(int s)
+    {
+        string path = Path.Combine(Application.persistentDataPath, "Save_" + s.ToString());
+        System.IO.Directory.CreateDirectory(path);
+        return path;
+    }
+
 }

@@ -2,46 +2,39 @@
 using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-public class SaveLoadButton : MonoBehaviour
+
+public static class SaveLoadButton
 {
-    public GameObject Player;
+
+    //public GameObject Player;
     //Call it when "New Game" is clicked
-    public void NewGame()
+    public static void NewGame()
     {
-        SaveLoad.SetSaving(GetSavingNum());
+        SaveLoad.SetSaving(SaveLoad.GetSavingNum());
         Quest.QuestInit();
     }
-    public void Load_Button(int x)
+    public static void Load_Button(int x)
     {
         SaveLoad.SetSaving(x);
         Load_Current_Saving();
     }
 
-    public void Save_Button(int x)
+    public static void Save_Button(int s, SceneDataHolderBaseClass d)
     {
-        SaveLoad.SetSaving(x);
-        Save_Current_Saving();
+        SaveLoad.SetSaving(s);
+        Save_Current_Saving(d);
     }
     //Quick Save
-    public void Save_Current_Saving()
+    public static void Save_Current_Saving(SceneDataHolderBaseClass x)
     {
-        SaveLoad.Save((PlayerData.SceneID)Enum.Parse(typeof(PlayerData.SceneID), SceneManager.GetActiveScene().name));
+        //SaveLoad.Save((PlayerData.SceneID)Enum.Parse(typeof(PlayerData.SceneID), SceneManager.GetActiveScene().name),x);
+        SaveLoad.Save(PlayerData.SceneID.scene_01_01, x);
     }
     //Quick Load
-    public void Load_Current_Saving()
+    public static void Load_Current_Saving()
     {
-        SaveLoad.LoadScene();
+        SaveLoad.Load();
     }
 
-    //Get the number of savings
-    public int GetSavingNum()
-    {
-        string path = Path.Combine(Application.persistentDataPath, "Save_0.json");
-        int s = 1;
-        for (; File.Exists(path); s++)
-        {
-            path = Path.Combine(Application.persistentDataPath, "Save_" + s.ToString() + ".json");
-        }
-        return s-1;
-    }
+
 }
