@@ -25,7 +25,7 @@ public class Pushable : MonoBehaviour
     }
     private void OnTriggerStay2D(Collider2D collision)
     {
-        if ((((1 << collision.gameObject.layer) & PlayerManager.instance.layer) != 0) && ((transform.position.x - PlayerManager.instance.player.transform.position.x) > 0 ? (PlayerManager.instance.input.GetKey(InputAction.Right)) : (PlayerManager.instance.input.GetKey(InputAction.Left))))
+        if ((((1 << collision.gameObject.layer) & PlayerManager.instance.layer) != 0) && ((box.transform.position.x - PlayerManager.instance.player.transform.position.x) > 0 ? (PlayerManager.instance.input.GetKey(InputAction.Right)) : (PlayerManager.instance.input.GetKey(InputAction.Left))))
         {
             if(freeToMove)
             {

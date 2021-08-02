@@ -7,15 +7,26 @@ public class CharacterStep : MonoBehaviour
     public LayerMask groundLayer;
     private Rigidbody2D Character;
     public float StepHeight = 0.2f;
+    public PhysicsMaterial2D material;
     private void Start()
     {
         Character = GetComponentInParent<Rigidbody2D>();
     }
-    private void OnCollisionEnter2D(Collision2D collision)
+    private void OnTriggerStay2D(Collider2D collision)
     {
         if ((((1 << collision.gameObject.layer) & groundLayer) != 0))
         {
-            Character.position = new Vector2(Character.position.x, Character.position.y + StepHeight);
+            if(PlayerManager.instance.input.isHorizonInput())
+            {
+                Vector2 dir = new Vector2((PlayerMovement.instance.orient ? StepHeight : -StepHeight), StepHeight) * Time.deltaTime;
+                Character.MovePosition(Character.position + dir);
+                material.friction = 2;
+            }
         }
+    }
+
+    private void OnTriggerExit2D(Collider2D collision)
+    {
+        material.friction = 0.1f;
     }
 }

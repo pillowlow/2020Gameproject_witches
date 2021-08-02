@@ -7,37 +7,39 @@ using UnityEditor;
 
 public class PlayerMovement : MonoBehaviour
 {
-    public static PlayerMovement instance;
-    public apPortrait portrait;
     [Header("Movement")]
-    private InputManager input;
     public float walkSpeed = 2;
     public float runSpeed = 5;
     public float pushingSpeed = 1;
-    public float flyForce = 35;
     public bool SprintToggle = true;
+    public float SprintingSpeed = 5.5f;
+    public float BrakingSpeed = 7.5f;
+    public float SpeedInAir = 2;
+    public float ClimbOffset = 0.5f;
+    public float chainnn = 10;
     public AnimationCurve AcceleratingCurve;    //Curve that describes how the character accelerates
 
     [Header("Jump")]
     public float jumpForce;
     public float highJump = 1;
     public float JumpForwardFactor = 1;
-    public LayerMask groundLayer;
-
     public event Action OnJump;
     public event Action OnLanding;
-    
     private bool _isJumpAble = true;
     private bool _isMoveable = true;
+    private InputManager input;
+    [Header("Layers")]
+    public LayerMask groundLayer;
+    [HideInInspector]
+    public apPortrait portrait;
+    public static PlayerMovement instance;
+    public bool orient { get; private set; } = false;                        //True means the player is facing right.False means the player is facing left.
+
     public bool isSprinting { get; private set; } = false;
     public Rigidbody2D rig { get; private set; }
-    public float SprintingSpeed = 5.5f;
-    public float BrakingSpeed = 7.5f;
-
     private float capsuleRadius;
     private bool isFullSpeed = false;
     private bool isFirstFrame = true;
-    public bool orient { get; private set; } = false;                        //True means the player is facing right.False means the player is facing left.
     Vector3 Scale;                                      //The scale of the main character.
     WaitForSeconds Wait100ms = new WaitForSeconds(0.1f);
     public enum Actions_Type{ cast, push, drag, port };
@@ -49,8 +51,12 @@ public class PlayerMovement : MonoBehaviour
     const string Animation_Fall         = "Fall";
     const string Animation_Land         = "Land";
     const string Animation_Brake        = "Land";       //Replace this when we have the animation
-    const string Animation_Start_Push   = "StartPush";
+    const string Animation_Push_Start   = "StartPush";
     const string Animation_Push         = "Push";
+    const string Animation_Pick         = "Pick";
+    const string Animation_Idle_Weapon  = "IdleWithWeapon";
+    const string Animation_Climb_Start  = "StartClimb";
+    const string Animation_Climb_Idle   = "StayOnRope";
     float WalkVelocityScaler(float x)           //It's the function that describes the relationship between the horizontal input and x-velocity.
     {
         return (x < 0) ? -AcceleratingCurve.Evaluate(-x) : AcceleratingCurve.Evaluate(x);
@@ -62,6 +68,7 @@ public class PlayerMovement : MonoBehaviour
         {
             instance = this;
             rig = GetComponent<Rigidbody2D>();
+            portrait = GetComponent<apPortrait>();
             Scale = transform.localScale;
             input = PlayerManager.instance.input;
             PlayerManager.state = PlayerManager.StateCode.Idle;
@@ -162,6 +169,16 @@ public class PlayerMovement : MonoBehaviour
                 PushState(false);
                 break;
             }
+            case PlayerManager.StateCode.Action_pick:
+            {
+                PickState(false);
+                break;
+            }
+            case PlayerManager.StateCode.Climb:
+            {
+                ClimbState(false);
+                break;
+            }
         }
 
         if(Mathf.Abs(rig.velocity.x) < walkSpeed)
@@ -246,11 +263,29 @@ public class PlayerMovement : MonoBehaviour
         //float
         //knock
         //take
-        if(Pushable.isPushing)
         {
-            PushState(true);
-            return;
+            //Push
+            if (Pushable.isPushing)
+            {
+                PushState(true);
+                return;
+            }
+            //Pick
+            if(Pickable.isTaking)
+            {
+                PickState(true);
+                return;
+            }
+            //Throw
+            if(PlayerManager.isTaking && input.GetKeyDown(InputAction.Interact))
+            {
+                Pickable.held.Throw(new Vector2(-1000,1000));
+                PlayerManager.isTaking = false;
+                IdleState(true);
+                return;
+            }
         }
+        
         //jump
         if (input.GetKeyDown(InputAction.Jump) && _isMoveable)
         {
@@ -268,7 +303,7 @@ public class PlayerMovement : MonoBehaviour
 
         if (isFirstFrame)
         {
-            portrait.CrossFade(Animation_Idle);
+            portrait.CrossFade(PlayerManager.isTaking && Pickable.held.isWeapon ? Animation_Idle_Weapon : Animation_Idle);
             isFirstFrame = false;
         }
         isSprinting = false;
@@ -382,11 +417,28 @@ public class PlayerMovement : MonoBehaviour
     void JumpState(bool transition)//Jumping state detection and animation
     {
         PlayerManager.state = PlayerManager.StateCode.Jump;
-        //high jump
-        if (rig.velocity.y > 0 && input.GetKey(InputAction.Jump))
+
+        //Additional speed boost
         {
-            rig.velocity += highJump * Time.deltaTime * Vector2.up;
+            //high jump
+            if (rig.velocity.y > 0 && input.GetKey(InputAction.Jump))
+            {
+                rig.velocity += highJump * Vector2.up * Time.deltaTime;
+            }
+
+            //Horizontal movement
+
+            if(input.GetKey(InputAction.Right) && rig.velocity.x < SpeedInAir && rig.velocity.x > -0.001f)
+            {
+                rig.AddForce(new Vector2(16 * (SpeedInAir - rig.velocity.x), 0));
+            }
+            else if(input.GetKey(InputAction.Left) && rig.velocity.x > -SpeedInAir && rig.velocity.x < 0.001f)
+            {
+                rig.AddForce(new Vector2(16 * (rig.velocity.x - SpeedInAir), 0));
+            }
+            
         }
+
         if (input.GetKeyDown(InputAction.Jump) && _isMoveable)
         {
             if (PlayerManager.onGround && _isJumpAble)
@@ -421,6 +473,7 @@ public class PlayerMovement : MonoBehaviour
         }
         /*------------End of State Transitions------------*/
 
+        UpdateOrientation();
         if (isFirstFrame)
         {
             portrait.CrossFade(Animation_Jump);
@@ -463,6 +516,17 @@ public class PlayerMovement : MonoBehaviour
         }
         /*------------End of State Transitions------------*/
 
+        //Horizontal movement
+
+        if (input.GetKey(InputAction.Right) && rig.velocity.x < SpeedInAir && rig.velocity.x > -0.001f)
+        {
+            rig.AddForce(new Vector2(16 * (SpeedInAir - rig.velocity.x), 0));
+        }
+        else if (input.GetKey(InputAction.Left) && rig.velocity.x > -SpeedInAir && rig.velocity.x < 0.001f)
+        {
+            rig.AddForce(new Vector2(16 * (rig.velocity.x - SpeedInAir), 0));
+        }
+        UpdateOrientation();
 
         if (isFirstFrame)
         {
@@ -478,14 +542,18 @@ public class PlayerMovement : MonoBehaviour
     void LandState()
     {
         portrait.CrossFade(Animation_Land);
-        portrait.CrossFadeQueued(Animation_Idle);
-        PlayerManager.state = PlayerManager.StateCode.Idle;
+        if(!portrait.IsPlaying(Animation_Land))
+        {
+            IdleState(true);
+            return;
+        }
     }
 
     void PushState(bool transition)
     {
         PlayerManager.state = PlayerManager.StateCode.Action_push;
         if (transition) {isFirstFrame = true; return; }
+        /*------------Start of State Transitions------------*/
         if (!Pushable.isPushing)
         {
             IdleState(true);
@@ -497,10 +565,10 @@ public class PlayerMovement : MonoBehaviour
             WalkState(true);
             return;
         }
-
-        if(isFirstFrame)
+        /*------------End of State Transitions------------*/
+        if (isFirstFrame)
         {
-            portrait.CrossFade(Animation_Start_Push);
+            portrait.CrossFade(Animation_Push_Start);
             portrait.CrossFadeQueued(Animation_Push);
             isFirstFrame = false;
         }
@@ -509,9 +577,89 @@ public class PlayerMovement : MonoBehaviour
         rig.AddForce(new Vector2(50 * (speed - rig.velocity.x), 0));
     }
 
+    void PickState(bool transition)
+    {
+        PlayerManager.state = PlayerManager.StateCode.Action_pick;
+        if (transition) { isFirstFrame = true; return; }
+        /*------------Start of State Transitions------------*/
+        if (isFirstFrame)
+        {
+            isFirstFrame = false;
+            portrait.CrossFade(Animation_Pick, 0.3f, 0, apAnimPlayUnit.BLEND_METHOD.Interpolation, apAnimPlayManager.PLAY_OPTION.StopSameLayer, true);
+            portrait.CrossFadeQueued(Animation_Idle_Weapon);
+        }
+        else if(!portrait.IsPlaying(Animation_Pick))
+        {
+            PlayerManager.isTaking = true;
+            Pickable.isTaking = false;
+            PlayerManager.state = PlayerManager.StateCode.Idle;
+            return;
+        }
+        /*------------End of State Transitions------------*/
+    }
 
+    public void Climb()
+    {
+        ClimbState(true);
+    }
+    Vector2 ClimbPosition()
+    {
+        return new Vector2((orient ? -ClimbOffset : ClimbOffset) + Climbable.climbed.transform.position.x, Climbable.climbed.transform.position.y);
+    }
+    Quaternion ClimbRotation()
+    {
+        Vector3 Euler = Climbable.climbed.transform.rotation.eulerAngles;
+        return Quaternion.Euler(Euler.x, Euler.y, Euler.z + 90);
+    }
+    void ClimbState(bool transition)
+    {
+        if (transition) { PlayerManager.state = PlayerManager.StateCode.Climb; isFirstFrame = true; return; }
 
+        /*------------Start of State Transitions------------*/
 
+        if (input.GetKeyDown(InputAction.Interact) && !isFirstFrame)
+        {
+            rig.simulated = true;
+            rig.velocity = Vector2.zero;
+            Climbable.climbed = null;
+            isFirstFrame = true;
+            FallState();
+            return;
+        }
+
+        /*------------End of State Transitions------------*/
+
+        if (isFirstFrame)
+        {
+            isFirstFrame = false;
+            if(PlayerManager.onGround)
+            {
+                portrait.CrossFade(Animation_Climb_Start);
+                portrait.CrossFadeQueued(Animation_Climb_Idle);
+            }
+            else
+            {
+                portrait.CrossFade(Animation_Climb_Idle);
+            }
+        }
+        if(input.GetKey(InputAction.Right))
+        {
+            orient = true;
+            gameObject.transform.localScale = new Vector3(-Scale.x, Scale.y, Scale.z);
+            Climbable.climbed.rig.velocity += new Vector2(chainnn,0);
+        }
+        else if(input.GetKey(InputAction.Left))
+        {
+            orient = false;
+            gameObject.transform.localScale = new Vector3(Scale.x, Scale.y, Scale.z);
+            Climbable.climbed.rig.velocity -= new Vector2(chainnn, 0);
+        }
+
+        
+        rig.simulated = false;
+        transform.position = ClimbPosition();
+        transform.rotation = ClimbRotation();
+    }
 
 
 
