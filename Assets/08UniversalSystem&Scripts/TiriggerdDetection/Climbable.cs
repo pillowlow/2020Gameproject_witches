@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Climbable : MonoBehaviour
 {
-    private BoxCollider2D collider;
+    private BoxCollider2D m_collider;
     public static Climbable climbed = null;
     [HideInInspector] public Climbable Up = null;
     [HideInInspector] public Climbable Down = null;
@@ -15,11 +15,11 @@ public class Climbable : MonoBehaviour
     public float length_2 { get; private set; }
     private void Start()
     {
-        collider = GetComponent<BoxCollider2D>();
+        m_collider = GetComponent<BoxCollider2D>();
         rig = GetComponent<Rigidbody2D>();
         hinge = GetComponent<HingeJoint2D>();
         GameObject Object_Up = hinge.connectedBody.gameObject;
-        length_2 = collider.size.y * transform.lossyScale.y;
+        length_2 = m_collider.size.y * transform.lossyScale.y;
         length = length_2 * 2;
         if (Object_Up != null)
         {
@@ -44,7 +44,7 @@ public class Climbable : MonoBehaviour
     {
         if (((1 << collision.gameObject.layer) & PlayerManager.instance.layer) != 0 )
         {
-            if (PlayerManager.instance.input.GetKey(InputAction.Up) && collider.IsTouching(PlayerManager.instance.HandRange) && PlayerManager.instance.isFreeToDoAction)
+            if (PlayerManager.instance.input.GetKey(InputAction.Up) && m_collider.IsTouching(PlayerManager.instance.HandRange) && PlayerManager.instance.isFreeToDoAction)
             {
                 if (climbed == null || transform.position.y > climbed.transform.position.y)
                 {

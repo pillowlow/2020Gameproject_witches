@@ -16,8 +16,9 @@ public class CharacterStep : MonoBehaviour
     {
         if ((((1 << collision.gameObject.layer) & groundLayer) != 0))
         {
-            if(PlayerManager.instance.input.isHorizonInput())
+            if(PlayerManager.instance.input.GetHorizonInput() != 0)
             {
+                PlayerManager.state = PlayerManager.StateCode.Walk;
                 Vector2 dir = new Vector2((PlayerMovement.instance.orient ? StepHeight : -StepHeight), StepHeight) * Time.deltaTime;
                 Character.MovePosition(Character.position + dir);
                 material.friction = 2;

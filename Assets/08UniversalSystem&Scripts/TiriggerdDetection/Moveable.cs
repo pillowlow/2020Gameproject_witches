@@ -26,9 +26,13 @@ public class Moveable : MonoBehaviour
                 {
                     if(joint == null)
                     {
-                        joint = box.AddComponent<RelativeJoint2D>();
-                        joint.enableCollision = true;
-                        joint.maxTorque = 0;
+                        joint = box.GetComponent<RelativeJoint2D>();
+                        if(joint == null)
+                        {
+                            joint = box.AddComponent<RelativeJoint2D>();
+                            joint.enableCollision = true;
+                            joint.maxTorque = 0;
+                        }
                     }
                     moved = this;
                     PlayerManager.instance.isFreeToDoAction = false;
@@ -50,7 +54,6 @@ public class Moveable : MonoBehaviour
         {
             ready2move = false;
             moved = null;
-            PlayerManager.instance.isFreeToDoAction = true;
         }
     }
 

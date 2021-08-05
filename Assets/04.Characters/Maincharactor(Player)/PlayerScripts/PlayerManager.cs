@@ -11,7 +11,7 @@ public class PlayerManager:MonoBehaviour
     public LayerMask layer;
     public Transform RightHand;
     public Transform LeftHand;
-    public bool isFreeToDoAction = true;
+    [HideInInspector] public bool isFreeToDoAction = true;
     [Range(0,100)] public float Stamina = 100;
     public bool isInWater = false;
     private void Awake()

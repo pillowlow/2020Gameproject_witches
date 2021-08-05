@@ -19,8 +19,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float RestSpeed = 2;
     [SerializeField] private float Run_StaminaCost = 2;
     [SerializeField] private float PortSpeed = 1;
-    [SerializeField] private AnimationCurve AcceleratingCurve;    //Curve that describes how the character accelerates
-
+    
     [Header("Jump")]
     [SerializeField] private float jumpForce;
     [SerializeField] private float highJump = 1;
@@ -50,21 +49,22 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float TerminalSpeedInWater = -1;
     [Header("Layers")]
     public LayerMask groundLayer;
-    [HideInInspector] public apPortrait portrait;
+    private apPortrait portrait;
     public static PlayerMovement instance;
     public bool orient { get; private set; } = false;                        //True means the player is facing right.False means the player is facing left.
 
     public bool isSprinting { get; private set; } = false;
     public Rigidbody2D rig { get; private set; }
-    private CapsuleCollider2D collider;
+    private CapsuleCollider2D m_collider;
     private float capsuleRadius;
     private bool isFullSpeed = false;
     private bool isFirstFrame = true;
     Vector3 Scale;                                      //The scale of the main character.
     WaitForSeconds Wait100ms = new WaitForSeconds(0.1f);
     WaitForEndOfFrame waitForEndOfFrame = new WaitForEndOfFrame();
+
+
     List<Action<bool>> States;
-    bool ContinueBrake = true;
     const string Animation_Idle             = "Idle";
     const string Animation_Walk             = "Walk";
     const string Animation_Run              = "Run";
@@ -99,10 +99,6 @@ public class PlayerMovement : MonoBehaviour
     const string Animation_Port             = "Handle";
     const string Animation_Port_Walk        = "HandleWalk";
     const string Animation_Port_End         = "Put";
-    float WalkVelocityScaler(float x)           //It's the function that describes the relationship between the horizontal input and x-velocity.
-    {
-        return (x < 0) ? -AcceleratingCurve.Evaluate(-x) : AcceleratingCurve.Evaluate(x);
-    }
 
     private void Awake()
     {
@@ -111,7 +107,7 @@ public class PlayerMovement : MonoBehaviour
             instance = this;
             rig = GetComponent<Rigidbody2D>();
             portrait = GetComponent<apPortrait>();
-            collider = GetComponent<CapsuleCollider2D>();
+            m_collider = GetComponent<CapsuleCollider2D>();
             Scale = transform.localScale;
             input = PlayerManager.instance.input;
             PlayerManager.state = PlayerManager.StateCode.Idle;
@@ -130,29 +126,6 @@ public class PlayerMovement : MonoBehaviour
     void Update()
     {
         Movement();
-    }
-
-    float _x_axis_value = 0;
-    void X_Axis()//Update smooth horizontal input
-    {
-        float speed = 2;
-        if (input.GetKey(InputAction.Right))
-        {
-            _x_axis_value = _x_axis_value < 1 ? _x_axis_value + speed * Time.deltaTime : 1;
-        }
-        else if (input.GetKey(InputAction.Left))
-        {
-            _x_axis_value = _x_axis_value > -1 ? _x_axis_value - speed * Time.deltaTime : -1;
-        }
-        else if (_x_axis_value != 0)
-        {
-            float tem_x = _x_axis_value;
-            _x_axis_value = _x_axis_value > 0 ? _x_axis_value - speed * Time.deltaTime : _x_axis_value + speed * Time.deltaTime;
-            if ((tem_x > 0 && _x_axis_value < 0) || (tem_x < 0 && _x_axis_value > 0))
-            {
-                _x_axis_value = 0;
-            }
-        }
     }
 
     /*
@@ -198,9 +171,9 @@ public class PlayerMovement : MonoBehaviour
         States[(int)PlayerManager.StateCode.Action_port_walk]       = PortWalkState;
         States[(int)PlayerManager.StateCode.None]                   = (bool a)=> {};
     }
+
     void Movement()//Calculate her speed and detect braking state
     {
-        X_Axis();
         UpdateIsSprinting();
         States[(int)PlayerManager.state](false);
         if(Mathf.Abs(rig.velocity.x) < walkSpeed)
@@ -210,6 +183,8 @@ public class PlayerMovement : MonoBehaviour
 
     }
 
+
+    bool BrakeEnd = true;
     void BrakeState(bool transition)// ( completed )
     {
         if (transition) { PlayerManager.state = PlayerManager.StateCode.Brake; isFirstFrame = true; return; }
@@ -217,7 +192,7 @@ public class PlayerMovement : MonoBehaviour
 
         /*------------Start of State Transitions------------*/
         //idle
-        if (!(isFirstFrame || ContinueBrake == true))
+        if ((!isFirstFrame) && BrakeEnd)
         {
             IdleState(true);
             return;
@@ -225,7 +200,6 @@ public class PlayerMovement : MonoBehaviour
         //fall
         if(!PlayerManager.onGround && rig.velocity.y<-1)
         {
-            ContinueBrake = false;
             FallState(true);
             return;
         }
@@ -237,36 +211,31 @@ public class PlayerMovement : MonoBehaviour
         if(isFirstFrame)
         {
             isFirstFrame = false;
+            BrakeEnd = false;
             portrait.CrossFade(Animation_Brake);
-            StartCoroutine(nameof(_Brake));
             PlayerManager.instance.isFreeToDoAction = false;
         }
-       
+        if(SlowDown(16))
+        {
+            _isMoveable = true;
+            BrakeEnd = true;
+        }
     }
 
-    IEnumerator _Brake()//Brake coroutine function
+    public bool SlowDown(float force)
     {
-        ContinueBrake = true;
-        if (rig.velocity.x > 0)
+        if (Mathf.Abs(rig.velocity.x) > 0.1f)
         {
-            while (rig.velocity.x > 0.1f && ContinueBrake)
-            {
-                rig.AddForce(new Vector2(-rig.velocity.x * 16, 0));
-                yield return waitForEndOfFrame;
-            }
+            rig.AddForce(new Vector2(-rig.velocity.x * force, 0));
+            return false;
         }
         else
         {
-            while (rig.velocity.x < -0.1f && ContinueBrake)
-            {
-                rig.AddForce(new Vector2(-rig.velocity.x * 16, 0));
-                yield return waitForEndOfFrame;
-            }
+            rig.velocity = new Vector2(0, rig.velocity.y);
+            return true;
         }
-        ContinueBrake = false;
-        rig.velocity = new Vector2(0, rig.velocity.y);
-        _isMoveable = true;
     }
+
 
     float resting_time = 0;
     void IdleState(bool transition)
@@ -275,7 +244,7 @@ public class PlayerMovement : MonoBehaviour
 
         /*------------Start of State Transitions------------*/
         //walk
-        if (Mathf.Abs(_x_axis_value) > 0.1f)
+        if (input.GetHorizonInput() != 0)
         {
             WalkState(true);
             return;
@@ -369,7 +338,8 @@ public class PlayerMovement : MonoBehaviour
         yield return waitForEndOfFrame;
         while(portrait.IsPlaying(Animation_Pick_PutDown))
         {
-            if(Pickable.held!=null)
+            SlowDown(32);
+            if (Pickable.held!=null)
             {
                 time += Time.deltaTime;
                 if (time > TimeToReleaseWeapon)
@@ -389,7 +359,7 @@ public class PlayerMovement : MonoBehaviour
 
         /*------------Start of State Transitions------------*/
         //idle
-        if (Mathf.Abs(rig.velocity.x) < 0.1f && !input.isHorizonInput())
+        if (Mathf.Abs(rig.velocity.x) < 0.1f && (input.GetHorizonInput() == 0))
         {
             rig.velocity = new Vector2(0, rig.velocity.y);
             
@@ -459,7 +429,7 @@ public class PlayerMovement : MonoBehaviour
 
 
         UpdateOrientation();
-        float speed = WalkVelocityScaler(_x_axis_value) * walkSpeed;
+        float speed = input.GetKey(InputAction.Right) ? walkSpeed : (input.GetKey(InputAction.Left)? -walkSpeed:0);//WalkVelocityScaler(_x_axis_value) * walkSpeed;
         rig.AddForce(new Vector2(16 * (speed - rig.velocity.x), 0));
         resting_time += Time.deltaTime;
         if (resting_time > TimeToRest && PlayerManager.instance.Stamina < 100)
@@ -486,7 +456,7 @@ public class PlayerMovement : MonoBehaviour
 
         /*------------Start of State Transitions------------*/
         //Brake
-        if (((Mathf.Abs(rig.velocity.x) < BrakingSpeed || !isSprinting) && isFullSpeed) || (Mathf.Abs(rig.velocity.x) < walkSpeed && Mathf.Abs(_x_axis_value) < 0.1f))
+        if (((Mathf.Abs(rig.velocity.x) < BrakingSpeed || !isSprinting) && isFullSpeed) || (Mathf.Abs(rig.velocity.x) < walkSpeed && input.GetHorizonInput() == 0))
         {
             BrakeState(true);
             return;
@@ -520,7 +490,7 @@ public class PlayerMovement : MonoBehaviour
 
         PlayerManager.instance.Stamina -= Time.deltaTime * Run_StaminaCost;
         resting_time = 0;
-        float speed = WalkVelocityScaler(_x_axis_value) * runSpeed;
+        float speed = input.GetHorizonInput() * runSpeed;
         rig.AddForce(new Vector2(16 * (speed - rig.velocity.x), 0));
         if (Mathf.Abs(rig.velocity.x) > BrakingSpeed)
         {
@@ -629,7 +599,7 @@ public class PlayerMovement : MonoBehaviour
             //die
             if(fallingSpeed < SpeedToDie)
             {
-                DieState(true);
+                Killed();
                 return;
             }
             //land
@@ -709,13 +679,19 @@ public class PlayerMovement : MonoBehaviour
             IdleState(true);
             return;
         }
-        if ((Mathf.Abs(rig.velocity.x) < 0.1f && !input.isHorizonInput()))
+        if ((Mathf.Abs(rig.velocity.x) < 0.1f && input.GetHorizonInput() == 0))
         {
             Moveable.ready2move = false;
             PlayerManager.instance.isFreeToDoAction = true;
             IdleState(true);
             return;
         }
+        if (rig.velocity.y < 0 && !PlayerManager.onGround)
+        {
+            LeaveMoveObjectState();
+            FallState(true);
+        }
+
         if (((Moveable.moved.transform.position - PlayerManager.instance.player.transform.position).x > 0) == input.GetKey(InputAction.Right))
         {
             //push
@@ -737,7 +713,7 @@ public class PlayerMovement : MonoBehaviour
             /*------------End of State Transitions------------*/
         if (isFirstFrame)
         {
-            if(input.isHorizonInput())
+            if(input.GetHorizonInput() != 0)
             {
                 if (((Moveable.moved.transform.position - PlayerManager.instance.player.transform.position).x > 0) == input.GetKey(InputAction.Right))
                 {
@@ -774,8 +750,19 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
-        float speed = WalkVelocityScaler(_x_axis_value) * pushingSpeed;
+        float speed = input.GetHorizonInput() * pushingSpeed;
         Moveable.moved.rig.velocity = new Vector2(speed, 0);
+    }
+
+    void LeaveMoveObjectState()
+    {
+        if(Moveable.moved!=null)
+        {
+            Moveable.moved.joint.connectedBody = null;
+            Moveable.moved = null;
+        }
+        Moveable.ready2move = false;
+        PlayerManager.instance.isFreeToDoAction = true;
     }
 
     void PickState(bool transition)
@@ -802,10 +789,12 @@ public class PlayerMovement : MonoBehaviour
     {
         ClimbState(true);
     }
+
     Vector2 ClimbPosition()
     {
         return new Vector2((orient ? -ClimbOffset : ClimbOffset), 0) + Vector2.Lerp(Climbable.climbed.GetBottom(), Climbable.climbed.GetTop(), Climbable_pos / Climbable.climbed.length);
     }
+
     Quaternion ClimbRotation()
     {
         Quaternion A = Climbable.climbed.transform.rotation;
@@ -822,6 +811,8 @@ public class PlayerMovement : MonoBehaviour
         }
         return Quaternion.Euler(Euler.x, Euler.y, Euler.z + 90);
     }
+
+
     bool Climbable_StartMoving = true;
     void ClimbState(bool transition)
     {
@@ -831,12 +822,7 @@ public class PlayerMovement : MonoBehaviour
 
         if (input.GetKeyDown(InputAction.Jump))
         {
-            rig.simulated = true;
-            rig.velocity = Climbable.climbed.rig.velocity + new Vector2(orient ? 4 : -4, 4);
-            transform.rotation = Quaternion.identity;
-            Climbable.climbed = null;
-            PlayerManager.instance.isFreeToDoAction = true;
-            Destroy(GetComponent<RelativeJoint2D>());
+            LeaveClimbState();
             FallState(true);
             return;
         }
@@ -915,7 +901,7 @@ public class PlayerMovement : MonoBehaviour
                 portrait.SetAnimationSpeed(Animation_Climb_Move, -1);
             }
         }
-        else if(input.isHorizonInput())
+        else if(input.GetHorizonInput() != 0)
         {
             SwingState(true);
             return;
@@ -932,6 +918,22 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    void LeaveClimbState()
+    {
+        RelativeJoint2D joint = GetComponent<RelativeJoint2D>();
+        if (joint != null)
+        {
+            Destroy(joint);
+        }
+        if(Climbable.climbed != null)
+        {
+            rig.simulated = true;
+            rig.velocity = Climbable.climbed.rig.velocity + new Vector2(orient ? 2 : -2, 2);
+            transform.rotation = Quaternion.identity;
+            Climbable.climbed = null;
+            PlayerManager.instance.isFreeToDoAction = true;
+        }
+    }
 
     float Swing_Current_Frame = 0;
     void SwingState(bool transition)
@@ -942,12 +944,7 @@ public class PlayerMovement : MonoBehaviour
         if (input.GetKeyDown(InputAction.Jump))
         {
             portrait.SetControlParamFloat(Swing_parameter, -2);
-            rig.simulated = true;
-            rig.velocity = Climbable.climbed.rig.velocity;
-            transform.rotation = Quaternion.identity;
-            Climbable.climbed = null;
-            PlayerManager.instance.isFreeToDoAction = true;
-            Destroy(GetComponent<RelativeJoint2D>());
+            LeaveClimbState();
             FallState(true);
             return;
         }
@@ -955,8 +952,8 @@ public class PlayerMovement : MonoBehaviour
         {
             if (orient == false)
             {
-                Vector3 test = collider.transform.TransformPoint(new Vector3(-2 * ClimbOffset / transform.localScale.x, 0, 0));
-                Collider2D col = Physics2D.OverlapCapsule(test, collider.size * collider.transform.lossyScale, CapsuleDirection2D.Vertical, collider.transform.rotation.eulerAngles.z, groundLayer);
+                Vector3 test = m_collider.transform.TransformPoint(new Vector3(-2 * ClimbOffset / transform.localScale.x, 0, 0));
+                Collider2D col = Physics2D.OverlapCapsule(test, m_collider.size * m_collider.transform.lossyScale, CapsuleDirection2D.Vertical, m_collider.transform.rotation.eulerAngles.z, groundLayer);
                 if (col == null)
                 {
                     orient = true;
@@ -973,8 +970,8 @@ public class PlayerMovement : MonoBehaviour
         {
             if (orient == true)
             {
-                Vector3 test = collider.transform.TransformPoint(new Vector3(2 * ClimbOffset / transform.localScale.x, 0, 0));
-                Collider2D col = Physics2D.OverlapCapsule(test, collider.size * collider.transform.lossyScale, CapsuleDirection2D.Vertical, collider.transform.rotation.eulerAngles.z, groundLayer);
+                Vector3 test = m_collider.transform.TransformPoint(new Vector3(2 * ClimbOffset / transform.localScale.x, 0, 0));
+                Collider2D col = Physics2D.OverlapCapsule(test, m_collider.size * m_collider.transform.lossyScale, CapsuleDirection2D.Vertical, m_collider.transform.rotation.eulerAngles.z, groundLayer);
                 if (col == null)
                 {
                     orient = false;
@@ -1006,7 +1003,10 @@ public class PlayerMovement : MonoBehaviour
         Swing_Current_Frame += (frame - Swing_Current_Frame) * Time.deltaTime;
         portrait.SetControlParamFloat(Swing_parameter, Swing_Current_Frame);
     }
+
+
     const float EndSwingTime = 0.5f;
+
     bool EndSwingend = false;
     IEnumerator EndSwing()
     {
@@ -1036,7 +1036,10 @@ public class PlayerMovement : MonoBehaviour
         float t = Vector2.Dot((Vector2)transform.position - A, dir);
         return t;
     }
+
+
     float Climbable_pos = 0;
+
     bool StartClimbEnd = false;
     IEnumerator StartToClimb()
     {
@@ -1058,6 +1061,8 @@ public class PlayerMovement : MonoBehaviour
         StartClimbEnd = true;
         rig.simulated = true;
     }
+
+
     bool EndingClimb = false;
     IEnumerator EndClimb()
     {
@@ -1070,6 +1075,13 @@ public class PlayerMovement : MonoBehaviour
         PlayerManager.instance.isFreeToDoAction = true;
         Destroy(GetComponent<RelativeJoint2D>());
         FallState(true);
+    }
+
+    public void Killed()
+    {
+        LeaveAllState();
+        rig.velocity = new Vector2(0, 0);
+        DieState(true);
     }
 
     void DieState(bool transition)
@@ -1109,6 +1121,7 @@ public class PlayerMovement : MonoBehaviour
     }
 
     bool Crawling = false;
+
     bool EndCrawling = false;
     void CrawlState(bool transition)
     {
@@ -1117,13 +1130,15 @@ public class PlayerMovement : MonoBehaviour
         if(input.GetKeyDown(InputAction.Crawl))
         {
             EndCrawling = true;
-            collider.direction = CapsuleDirection2D.Vertical;
-            collider.size = new Vector2(3.36f, 12.03f);
-            collider.offset = new Vector2(0.3f, -1.25f);
-            portrait.CrossFade(Animation_Crawl_StandUp, 0.3f, 0, apAnimPlayUnit.BLEND_METHOD.Interpolation, apAnimPlayManager.PLAY_OPTION.StopSameLayer, true);
+            LeaveCrawState();
             return;
         }
-        if(EndCrawling)
+        if (rig.velocity.y < 0 && !PlayerManager.onGround)
+        {
+            LeaveCrawState();
+            FallState(true);
+        }
+        if (EndCrawling)
         {
             if(!portrait.IsPlaying(Animation_Crawl_StandUp))
             {
@@ -1135,9 +1150,9 @@ public class PlayerMovement : MonoBehaviour
 
         if(Crawling)
         {
-            if(input.isHorizonInput())
+            if(input.GetHorizonInput() != 0)
             {
-                float speed = WalkVelocityScaler(_x_axis_value) * CrawlSpeed;
+                float speed = input.GetHorizonInput() * CrawlSpeed;
                 rig.AddForce(new Vector2(16 * (speed - rig.velocity.x), 0));
                 UpdateOrientation();
                 portrait.SetAnimationSpeed(Animation_Crawl, 1);
@@ -1151,9 +1166,9 @@ public class PlayerMovement : MonoBehaviour
         {
             isFirstFrame = false;
             Crawling = false;
-            collider.direction = CapsuleDirection2D.Horizontal;
-            collider.size = new Vector2(12.03f,6.69f);
-            collider.offset = new Vector2(-1.3f,-3.98f);
+            m_collider.direction = CapsuleDirection2D.Horizontal;
+            m_collider.size = new Vector2(12.03f,6.69f);
+            m_collider.offset = new Vector2(-1.3f,-3.98f);
             portrait.CrossFade(Animation_Crawl_Start, 0.3f, 0, apAnimPlayUnit.BLEND_METHOD.Interpolation, apAnimPlayManager.PLAY_OPTION.StopSameLayer, true);
             portrait.CrossFadeQueued(Animation_Crawl);
             PlayerManager.instance.isFreeToDoAction = false;
@@ -1161,6 +1176,16 @@ public class PlayerMovement : MonoBehaviour
         if(!Crawling)
         {
             Crawling = !portrait.IsPlaying(Animation_Crawl_Start);
+        }
+    }
+
+    void LeaveCrawState()
+    {
+        if(m_collider.direction == CapsuleDirection2D.Horizontal)
+        {
+            m_collider.direction = CapsuleDirection2D.Vertical;
+            m_collider.size = new Vector2(3.36f, 12.03f);
+            m_collider.offset = new Vector2(0.3f, -1.25f);
         }
     }
 
@@ -1173,22 +1198,24 @@ public class PlayerMovement : MonoBehaviour
             isFirstFrame = false;
             portrait.CrossFade(Animation_Stumble, 0.3f, 0, apAnimPlayUnit.BLEND_METHOD.Interpolation, apAnimPlayManager.PLAY_OPTION.StopSameLayer, true);
             portrait.CrossFadeQueued(Animation_Crawl_StandUp, 0.3f, 0, apAnimPlayUnit.BLEND_METHOD.Interpolation, true);
+            if (PlayerManager.isTaking)
+            {
+                PlayerManager.isTaking = false;
+                if (Pickable.held != null)
+                {
+                    Pickable.held.Throw(Vector2.zero);
+                }
+            }
             PlayerManager.instance.isFreeToDoAction = false;
             return;
         }
-        if(Mathf.Abs(rig.velocity.x) > 0.1f)
-        {
-            rig.AddForce(new Vector2(-rig.velocity.x * 16, 0));
-        }
-        else
-        {
-            rig.velocity = new Vector2(0, rig.velocity.y);
-        }
+        SlowDown(16);
         
         if (!portrait.IsPlaying(Animation_Stumble) && !portrait.IsPlaying(Animation_Crawl_StandUp))
         {
             isSprinting = false;
             isFullSpeed = false;
+            PlayerManager.instance.isFreeToDoAction = true;
             IdleState(true);
             return;
         }
@@ -1223,9 +1250,9 @@ public class PlayerMovement : MonoBehaviour
 
         if (PlayerManager.instance.isInWater)
         {
-            if(input.isHorizonInput())
+            if(input.GetHorizonInput()!=0)
             {
-                float speed = WalkVelocityScaler(_x_axis_value) * SpeedInWater;
+                float speed = input.GetHorizonInput() * SpeedInWater;
                 rig.AddForce(new Vector2(16 * (speed - rig.velocity.x), 0));
             }
             else if (Mathf.Abs(rig.velocity.x) < 2)
@@ -1261,7 +1288,7 @@ public class PlayerMovement : MonoBehaviour
         
         if(PlayerManager.instance.isInWater)
         {
-            if (input.isHorizonInput() || input.GetKeyDown(InputAction.Jump) || input.GetKey(InputAction.Down))
+            if (input.GetHorizonInput() != 0 || input.GetKeyDown(InputAction.Jump) || input.GetKey(InputAction.Down))
             {
                 SwimState(true);
                 return;
@@ -1293,8 +1320,12 @@ public class PlayerMovement : MonoBehaviour
         {
             StartCoroutine(nameof(EndPort));
         }
-
-        if (input.isHorizonInput() && (!portrait.IsPlaying(Animation_Port_Start)))
+        if (rig.velocity.y < 0 && !PlayerManager.onGround)
+        {
+            LeavePortState();
+            FallState(true);
+        }
+        if (input.GetHorizonInput() != 0 && (!portrait.IsPlaying(Animation_Port_Start)))
         {
             PortWalkState(true);
             return;
@@ -1307,6 +1338,15 @@ public class PlayerMovement : MonoBehaviour
             return;
         }
     }
+
+    void LeavePortState()
+    {
+        if(Portable.ported != null)
+        {
+            Portable.ported.PutDown();
+        }
+    }
+
     IEnumerator EndPort()
     {
         isEnding = true;
@@ -1318,11 +1358,12 @@ public class PlayerMovement : MonoBehaviour
         isEnding = false;
         PlayerManager.state = PlayerManager.StateCode.Idle;
     }
+
     void PortWalkState(bool transition)
     {
         if (transition) { PlayerManager.state = PlayerManager.StateCode.Action_port_walk; isFirstFrame = true; return; }
 
-        if (Mathf.Abs(rig.velocity.x) < 0.1f && (!input.isHorizonInput()))
+        if (Mathf.Abs(rig.velocity.x) < 0.1f && (input.GetHorizonInput() == 0))
         {
             portrait.CrossFade(Animation_Port);
             PlayerManager.state = PlayerManager.StateCode.Action_port_idle;
@@ -1330,16 +1371,24 @@ public class PlayerMovement : MonoBehaviour
         }
         else
         {
-            float speed = WalkVelocityScaler(_x_axis_value) * PortSpeed;
+            float speed = input.GetHorizonInput() * PortSpeed;
             rig.AddForce(new Vector2(16 * (speed - rig.velocity.x), 0));
         }
-        if(isFirstFrame)
+
+        if (rig.velocity.y < 0 && !PlayerManager.onGround)
+        {
+            LeavePortState();
+            FallState(true);
+        }
+
+        if (isFirstFrame)
         {
             isFirstFrame = false;
             portrait.CrossFade(Animation_Port_Walk);
         }
         UpdateOrientation();
     }
+
     IEnumerator _CollisionDetectionHelper()
     {
         while(true)
@@ -1361,6 +1410,22 @@ public class PlayerMovement : MonoBehaviour
     public void SetJump(bool jumpAble)
     {
         _isJumpAble = jumpAble;
+    }
+
+    void LeaveAllState()
+    {
+        LeaveClimbState();
+        LeavePortState();
+        LeavePortState();
+        LeaveMoveObjectState();
+        if(PlayerManager.isTaking)
+        {
+            PlayerManager.isTaking = false;
+            if(Pickable.held != null)
+            {
+                Pickable.held.Throw(Vector2.zero);
+            }
+        }
     }
  
     void UpdateIsSprinting()

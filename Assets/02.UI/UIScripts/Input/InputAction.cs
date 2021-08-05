@@ -19,7 +19,7 @@ public enum InputAction
 
 public class InputConfig
 {
-    Dictionary<InputAction, KeyCode> Default = new Dictionary<InputAction, KeyCode>
+    public readonly Dictionary<InputAction, KeyCode> Default = new Dictionary<InputAction, KeyCode>
     {
         {InputAction.Right, KeyCode.D },
         {InputAction.Left, KeyCode.A },
@@ -34,10 +34,6 @@ public class InputConfig
     };
     public Dictionary<InputAction, KeyCode> KeyCodes;
     public InputConfig()
-    {
-        Reset();
-    }
-    public void Reset()
     {
         KeyCodes = Default;
     }

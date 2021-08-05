@@ -4,11 +4,11 @@ using UnityEngine;
 using System;
 public class InputManager
 {
-    InputConfig inputConfig;
+    private readonly InputConfig inputConfig;
     KeyCode[] Keys;
     public InputManager()
     {
-        if(inputConfig==null)
+        if(inputConfig == null)
         {
             inputConfig = new InputConfig();
         }
@@ -29,19 +29,35 @@ public class InputManager
     {
         return Input.GetKeyUp(Keys[(int)action]);
     }
+
     public void BindKey(InputAction action, KeyCode key)
     {
         Keys[(int)action] = key;
-    }
-    public bool isHorizonInput()
-    {
-        return Input.GetKey(Keys[(int)InputAction.Right]) || Input.GetKey(Keys[(int)InputAction.Left]);
+        inputConfig.KeyCodes[action] = key;
     }
 
-    public bool isVerticalInput()
+    public void ResetKey(InputAction action)
     {
-        return Input.GetKey(Keys[(int)InputAction.Up]) || Input.GetKey(Keys[(int)InputAction.Down]);
+        KeyCode key = inputConfig.Default[action];
+        Keys[(int)action] = key;
+        inputConfig.KeyCodes[action] = key;
     }
+
+    public void ResetAllKeys()
+    {
+        inputConfig.KeyCodes = inputConfig.Default;
+    }
+
+    public float GetHorizonInput()
+    {
+        return Input.GetKey(Keys[(int)InputAction.Right]) ? 1 : (Input.GetKey(Keys[(int)InputAction.Left]) ? -1 : 0);
+    }
+
+    public float GetVerticalInput()
+    {
+        return Input.GetKey(Keys[(int)InputAction.Up]) ? 1 : (Input.GetKey(Keys[(int)InputAction.Down]) ? -1 : 0);
+    }
+
     public void SaveSetting()
     {
         string path = System.IO.Path.Combine(Application.dataPath, "input.cfg");
@@ -52,20 +68,26 @@ public class InputManager
         }
         System.IO.File.WriteAllText(path, content);
     }
-    public void LoadSetting()
+
+    public void TryLoadSetting()
     {
         string path = System.IO.Path.Combine(Application.dataPath, "input.cfg");
-        string content = System.IO.File.ReadAllText(path);
-        string[] lines = content.Split('\n');
-        foreach(var i in lines)
+        if(System.IO.File.Exists(path))
         {
-            string[] key = i.Split(':');
-            if(key.Length == 2)
+            string content = System.IO.File.ReadAllText(path);
+            string[] lines = content.Split('\n');
+            foreach (var i in lines)
             {
-                InputAction action = (InputAction)Enum.Parse(typeof(InputAction),key[0]);
-                inputConfig.KeyCodes[action] = (KeyCode)Enum.Parse(typeof(KeyCode), key[1]);
+                string[] key = i.Split(':');
+                if (key.Length == 2)
+                {
+                    if (Enum.TryParse(key[0], out InputAction action))
+                    {
+                        inputConfig.KeyCodes[action] = (KeyCode)Enum.Parse(typeof(KeyCode), key[1]);
+                    }
+                }
             }
+            Keys = inputConfig.ToKeys();
         }
-        Keys = inputConfig.ToKeys();
     }
 }
