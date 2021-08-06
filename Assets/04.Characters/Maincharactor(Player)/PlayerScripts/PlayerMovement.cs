@@ -34,7 +34,7 @@ public class PlayerMovement : MonoBehaviour
     [Header("PickWeapon")]
     [SerializeField] private float TimeToReleaseWeapon = 0.5f;
     [Header("Climb")]
-    [SerializeField] private float ClimbOffset = 0.5f;
+    [SerializeField] private Vector2 ClimbOffset;
     [SerializeField] private float ClimbSpeed = 1;
     [SerializeField] private float SwingForce = 5;
     private apControlParam Swing_parameter;
@@ -187,7 +187,7 @@ public class PlayerMovement : MonoBehaviour
     bool BrakeEnd = true;
     void BrakeState(bool transition)// ( completed )
     {
-        if (transition) { PlayerManager.state = PlayerManager.StateCode.Brake; isFirstFrame = true; return; }
+        if (transition) { PlayerManager.state = PlayerManager.StateCode.Brake; setIsFirstFrame(true); return; }
 
 
         /*------------Start of State Transitions------------*/
@@ -240,7 +240,7 @@ public class PlayerMovement : MonoBehaviour
     float resting_time = 0;
     void IdleState(bool transition)
     {
-        if (transition) { PlayerManager.state = PlayerManager.StateCode.Idle; isFirstFrame = true; return; }
+        if (transition) { PlayerManager.state = PlayerManager.StateCode.Idle; setIsFirstFrame(true); return; }
 
         /*------------Start of State Transitions------------*/
         //walk
@@ -354,7 +354,7 @@ public class PlayerMovement : MonoBehaviour
 
     void WalkState(bool transition)
     {
-        if (transition) { PlayerManager.state = PlayerManager.StateCode.Walk; isFirstFrame = true; return; }
+        if (transition) { PlayerManager.state = PlayerManager.StateCode.Walk; setIsFirstFrame(true); return; }
 
 
         /*------------Start of State Transitions------------*/
@@ -451,7 +451,7 @@ public class PlayerMovement : MonoBehaviour
 
     void RunState(bool transition)
     {
-        if (transition) { PlayerManager.state = PlayerManager.StateCode.Run; isFirstFrame = true; return; }
+        if (transition) { PlayerManager.state = PlayerManager.StateCode.Run; setIsFirstFrame(true); return; }
 
 
         /*------------Start of State Transitions------------*/
@@ -511,7 +511,7 @@ public class PlayerMovement : MonoBehaviour
 
     void JumpState(bool transition)//Jumping state detection and animation
     {
-        if (transition) { if (PlayerManager.instance.Stamina < Jump_StaminaCost) { return; }; PlayerManager.state = PlayerManager.StateCode.Jump; isFirstFrame = true; return; }
+        if (transition) { if (PlayerManager.instance.Stamina < Jump_StaminaCost) { return; }; PlayerManager.state = PlayerManager.StateCode.Jump; setIsFirstFrame(true); return; }
         //Additional speed boost
         {
             //high jump
@@ -540,7 +540,6 @@ public class PlayerMovement : MonoBehaviour
                 PlayerManager.instance.Stamina -= Jump_StaminaCost;
                 resting_time = 0;
                 OnJump?.Invoke();
-                PlayerManager.instance.isFreeToDoAction = false;
                 rig.AddForce(new Vector2(rig.velocity.x * JumpForwardFactor, jumpForce), ForceMode2D.Impulse);
             }
         }
@@ -590,7 +589,7 @@ public class PlayerMovement : MonoBehaviour
     float fallingSpeed = 0;
     void FallState(bool transition)
     {
-        if (transition) { PlayerManager.state = PlayerManager.StateCode.Fall; isFirstFrame = true; return; }
+        if (transition) { PlayerManager.state = PlayerManager.StateCode.Fall; setIsFirstFrame(true); return; }
 
         /*------------Start of State Transitions------------*/
         if (PlayerManager.onGround)
@@ -645,7 +644,6 @@ public class PlayerMovement : MonoBehaviour
         {
             portrait.CrossFade(Animation_Fall);
             isFirstFrame = false;
-            PlayerManager.instance.isFreeToDoAction = false;
         }
         if (Mathf.Abs(rig.velocity.x) < walkSpeed)
         {
@@ -669,7 +667,7 @@ public class PlayerMovement : MonoBehaviour
 
     void MoveObjectState(bool transition)
     {
-        if (transition) { PlayerManager.state = PlayerManager.StateCode.Action_move_object; isFirstFrame = true; return; }
+        if (transition) { PlayerManager.state = PlayerManager.StateCode.Action_move_object; setIsFirstFrame(true); return; }
         /*------------Start of State Transitions------------*/
         if (!input.GetKey(InputAction.Interact))
         {
@@ -767,7 +765,7 @@ public class PlayerMovement : MonoBehaviour
 
     void PickState(bool transition)
     {
-        if (transition) { PlayerManager.state = PlayerManager.StateCode.Action_pick; isFirstFrame = true; return; }
+        if (transition) { PlayerManager.state = PlayerManager.StateCode.Action_pick; setIsFirstFrame(true); return; }
         /*------------Start of State Transitions------------*/
         if (isFirstFrame)
         {
@@ -792,31 +790,26 @@ public class PlayerMovement : MonoBehaviour
 
     Vector2 ClimbPosition()
     {
-        return new Vector2((orient ? -ClimbOffset : ClimbOffset), 0) + Vector2.Lerp(Climbable.climbed.GetBottom(), Climbable.climbed.GetTop(), Climbable_pos / Climbable.climbed.length);
+        return Vector2.Lerp(Climbable.climbed.GetBottom(), Climbable.climbed.GetTop(), Climbable_pos / Climbable.climbed.length);
     }
 
-    Quaternion ClimbRotation()
+    float ClimbRotation()
     {
-        Quaternion A = Climbable.climbed.transform.rotation;
-        Vector3 Euler;
-        if(Climbable.climbed.Up!=null)
+        float A = Climbable.climbed.transform.rotation.eulerAngles.z;
+        float rotation = A;
+        if(Climbable.climbed.Up != null)
         {
-            Quaternion B = Climbable.climbed.Up.transform.rotation;
-            Quaternion C = Quaternion.Lerp(A, B, Climbable_pos / Climbable.climbed.length);
-            Euler = C.eulerAngles;
+            float B = Climbable.climbed.Up.transform.rotation.eulerAngles.z;
+            rotation = Mathf.Lerp(A, B, Climbable_pos / Climbable.climbed.length);
         }
-        else
-        {
-            Euler = A.eulerAngles;
-        }
-        return Quaternion.Euler(Euler.x, Euler.y, Euler.z + 90);
+        return rotation + 90;
     }
 
 
     bool Climbable_StartMoving = true;
     void ClimbState(bool transition)
     {
-        if (transition) { PlayerManager.state = PlayerManager.StateCode.Climb; isFirstFrame = true; return; }
+        if (transition) { PlayerManager.state = PlayerManager.StateCode.Climb; setIsFirstFrame(true); return; }
 
         /*------------Start of State Transitions------------*/
 
@@ -914,7 +907,11 @@ public class PlayerMovement : MonoBehaviour
         Out:
         if(StartClimbEnd)
         {
-            transform.SetPositionAndRotation(ClimbPosition(), ClimbRotation());
+            Vector2 hand = transform.TransformPoint(ClimbOffset);
+            Vector3 dif = ClimbPosition() - hand;
+            transform.position += dif;
+            float dif_rot = ClimbRotation() - transform.rotation.eulerAngles.z;
+            transform.RotateAround(hand, Vector3.forward, dif_rot);
         }
     }
 
@@ -938,7 +935,7 @@ public class PlayerMovement : MonoBehaviour
     float Swing_Current_Frame = 0;
     void SwingState(bool transition)
     {
-        if (transition) { PlayerManager.state = PlayerManager.StateCode.Swing; isFirstFrame = true; return; }
+        if (transition) { PlayerManager.state = PlayerManager.StateCode.Swing; setIsFirstFrame(true); return; }
 
         if (EndSwingend) return;
         if (input.GetKeyDown(InputAction.Jump))
@@ -952,7 +949,7 @@ public class PlayerMovement : MonoBehaviour
         {
             if (orient == false)
             {
-                Vector3 test = m_collider.transform.TransformPoint(new Vector3(-2 * ClimbOffset / transform.localScale.x, 0, 0));
+                Vector3 test = m_collider.transform.TransformPoint(new Vector3(2 * ClimbOffset.x, 0, 0));
                 Collider2D col = Physics2D.OverlapCapsule(test, m_collider.size * m_collider.transform.lossyScale, CapsuleDirection2D.Vertical, m_collider.transform.rotation.eulerAngles.z, groundLayer);
                 if (col == null)
                 {
@@ -970,7 +967,7 @@ public class PlayerMovement : MonoBehaviour
         {
             if (orient == true)
             {
-                Vector3 test = m_collider.transform.TransformPoint(new Vector3(2 * ClimbOffset / transform.localScale.x, 0, 0));
+                Vector3 test = m_collider.transform.TransformPoint(new Vector3(2 * ClimbOffset.x, 0, 0));
                 Collider2D col = Physics2D.OverlapCapsule(test, m_collider.size * m_collider.transform.lossyScale, CapsuleDirection2D.Vertical, m_collider.transform.rotation.eulerAngles.z, groundLayer);
                 if (col == null)
                 {
@@ -991,7 +988,11 @@ public class PlayerMovement : MonoBehaviour
         }
         if (StartClimbEnd)
         {
-            transform.SetPositionAndRotation(ClimbPosition(), ClimbRotation());
+            Vector2 hand = transform.TransformPoint(ClimbOffset);
+            Vector3 dif = ClimbPosition() - hand;
+            transform.position += dif;
+            float dif_rot = ClimbRotation() - transform.rotation.eulerAngles.z;
+            transform.RotateAround(hand, Vector3.forward, dif_rot);
         }
         if(isFirstFrame)
         {
@@ -1044,18 +1045,17 @@ public class PlayerMovement : MonoBehaviour
     IEnumerator StartToClimb()
     {
         rig.simulated = false;
-        Vector3 Ori_pos = transform.position;
         Climbable_pos = Climbable_find_closest_pos();
         float acc_time = 0;
         while (acc_time < 0.5f)
         {
-            Vector2 Target_Pos = new Vector2((orient ? -ClimbOffset : ClimbOffset), 0) + Vector2.Lerp(Climbable.climbed.GetBottom(), Climbable.climbed.Up.GetBottom(), Climbable_pos / Climbable.climbed.length);
-            transform.position = Vector2.Lerp(Ori_pos, Target_Pos, acc_time * 2);
+            Vector2 hand = transform.TransformPoint(ClimbOffset);
+            Vector2 dif = ClimbPosition() - hand;
+            transform.position += Vector3.Lerp(Vector2.zero, dif, acc_time * 2);
 
             acc_time += Time.deltaTime;
             yield return waitForEndOfFrame;
         }
-        transform.position = new Vector2((orient ? -ClimbOffset : ClimbOffset), 0) + Climbable.climbed.Up.GetBottom();
         RelativeJoint2D joint = gameObject.AddComponent<RelativeJoint2D>();
         joint.connectedBody = Climbable.climbed.rig;
         StartClimbEnd = true;
@@ -1086,7 +1086,7 @@ public class PlayerMovement : MonoBehaviour
 
     void DieState(bool transition)
     {
-        if (transition) { PlayerManager.state = PlayerManager.StateCode.Die; isFirstFrame = true; return; }
+        if (transition) { PlayerManager.state = PlayerManager.StateCode.Die; setIsFirstFrame(true); return; }
 
         if(Input.GetKeyDown(KeyCode.R))
         {
@@ -1104,7 +1104,7 @@ public class PlayerMovement : MonoBehaviour
 
     void RebornState(bool transition)
     {
-        if (transition) { PlayerManager.state = PlayerManager.StateCode.Reborn; isFirstFrame = true; return;  }
+        if (transition) { PlayerManager.state = PlayerManager.StateCode.Reborn; setIsFirstFrame(true); return;  }
         
         if(!isFirstFrame && !portrait.IsPlaying(Animation_Reborn))
         {
@@ -1125,7 +1125,7 @@ public class PlayerMovement : MonoBehaviour
     bool EndCrawling = false;
     void CrawlState(bool transition)
     {
-        if (transition) { PlayerManager.state = PlayerManager.StateCode.Crawl; isFirstFrame = true; return; }
+        if (transition) { PlayerManager.state = PlayerManager.StateCode.Crawl; setIsFirstFrame(true); return; }
 
         if(input.GetKeyDown(InputAction.Crawl))
         {
@@ -1191,7 +1191,7 @@ public class PlayerMovement : MonoBehaviour
 
     void StumbleState(bool transition)
     {
-        if (transition) { PlayerManager.state = PlayerManager.StateCode.Stumble; isFirstFrame = true; return; }
+        if (transition) { PlayerManager.state = PlayerManager.StateCode.Stumble; setIsFirstFrame(true); return; }
 
         if(isFirstFrame)
         {
@@ -1223,7 +1223,7 @@ public class PlayerMovement : MonoBehaviour
 
     void AttackState(bool transition)
     {
-        if (transition) { PlayerManager.state = PlayerManager.StateCode.Attack; isFirstFrame = true; return; }
+        if (transition) { PlayerManager.state = PlayerManager.StateCode.Attack; setIsFirstFrame(true); return; }
         if(isFirstFrame)
         {
             isFirstFrame = false;
@@ -1246,7 +1246,7 @@ public class PlayerMovement : MonoBehaviour
         {
             rig.AddForce(Vector2.up * JumpForceInWater);
         }
-        if (transition) { PlayerManager.state = PlayerManager.StateCode.Swim; isFirstFrame = true; return; }
+        if (transition) { PlayerManager.state = PlayerManager.StateCode.Swim; setIsFirstFrame(true); return; }
 
         if (PlayerManager.instance.isInWater)
         {
@@ -1284,7 +1284,7 @@ public class PlayerMovement : MonoBehaviour
 
     void FloatState(bool transition)
     {
-        if (transition) { PlayerManager.state = PlayerManager.StateCode.Float; isFirstFrame = true; return; }
+        if (transition) { PlayerManager.state = PlayerManager.StateCode.Float; setIsFirstFrame(true); return; }
         
         if(PlayerManager.instance.isInWater)
         {
@@ -1313,7 +1313,7 @@ public class PlayerMovement : MonoBehaviour
     bool isEnding = false;
     void PortIdleState(bool transition)
     {
-        if (transition) { PlayerManager.state = PlayerManager.StateCode.Action_port_idle; isFirstFrame = true; return; }
+        if (transition) { PlayerManager.state = PlayerManager.StateCode.Action_port_idle; setIsFirstFrame(true); return; }
 
         if (isEnding) return;
         if(input.GetKeyDown(InputAction.Interact))
@@ -1361,7 +1361,7 @@ public class PlayerMovement : MonoBehaviour
 
     void PortWalkState(bool transition)
     {
-        if (transition) { PlayerManager.state = PlayerManager.StateCode.Action_port_walk; isFirstFrame = true; return; }
+        if (transition) { PlayerManager.state = PlayerManager.StateCode.Action_port_walk; setIsFirstFrame(true); return; }
 
         if (Mathf.Abs(rig.velocity.x) < 0.1f && (input.GetHorizonInput() == 0))
         {
@@ -1463,4 +1463,14 @@ public class PlayerMovement : MonoBehaviour
         return false;
     }
 
+    void setIsFirstFrame(bool value)
+    {
+        isFirstFrame = value;
+    }
+
+    //Vector2 d = Vector2.zero;
+    //private void OnDrawGizmos()
+    //{
+    //    Gizmos.DrawSphere(d, 0.1f);
+    //}
 }
