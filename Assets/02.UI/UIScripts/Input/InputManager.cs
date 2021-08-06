@@ -2,22 +2,19 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
-[CreateAssetMenu(fileName = "InputManager", menuName = "ScriptableObjects/InputManager")]
-public class InputManager : ScriptableObject
+public class InputManager
 {
-    [SerializeField]
-    KeyCode[] Keys = //Default Values
-    { 
-        KeyCode.D,          //Right
-        KeyCode.A,          //Left
-        KeyCode.Space,      //Jump
-        KeyCode.S,          //Down
-        KeyCode.F,          //Interact
-        KeyCode.E,          //Inventory
-        KeyCode.LeftShift   //Sprint
-                            //...
-    };
-
+    private readonly InputConfig inputConfig;
+    KeyCode[] Keys;
+    public InputManager()
+    {
+        if(inputConfig == null)
+        {
+            inputConfig = new InputConfig();
+        }
+        Keys = inputConfig.ToKeys();
+        SaveSetting();
+    }
     public bool GetKey(InputAction action)
     {
         return Input.GetKey(Keys[(int)action]);
@@ -32,12 +29,65 @@ public class InputManager : ScriptableObject
     {
         return Input.GetKeyUp(Keys[(int)action]);
     }
+
     public void BindKey(InputAction action, KeyCode key)
     {
         Keys[(int)action] = key;
+        inputConfig.KeyCodes[action] = key;
     }
-    public bool isHorizonInput()
+
+    public void ResetKey(InputAction action)
     {
-        return Input.GetKey(Keys[(int)InputAction.Right]) || Input.GetKey(Keys[(int)InputAction.Left]);
+        KeyCode key = inputConfig.Default[action];
+        Keys[(int)action] = key;
+        inputConfig.KeyCodes[action] = key;
+    }
+
+    public void ResetAllKeys()
+    {
+        inputConfig.KeyCodes = inputConfig.Default;
+    }
+
+    public float GetHorizonInput()
+    {
+        return Input.GetKey(Keys[(int)InputAction.Right]) ? 1 : (Input.GetKey(Keys[(int)InputAction.Left]) ? -1 : 0);
+    }
+
+    public float GetVerticalInput()
+    {
+        return Input.GetKey(Keys[(int)InputAction.Up]) ? 1 : (Input.GetKey(Keys[(int)InputAction.Down]) ? -1 : 0);
+    }
+
+    public void SaveSetting()
+    {
+        string path = System.IO.Path.Combine(Application.dataPath, "input.cfg");
+        string content = "";
+        foreach(var i in inputConfig.KeyCodes)
+        {
+            content += i.Key.ToString() + ':' + i.Value.ToString() + '\n';
+        }
+        System.IO.File.WriteAllText(path, content);
+    }
+
+    public void TryLoadSetting()
+    {
+        string path = System.IO.Path.Combine(Application.dataPath, "input.cfg");
+        if(System.IO.File.Exists(path))
+        {
+            string content = System.IO.File.ReadAllText(path);
+            string[] lines = content.Split('\n');
+            foreach (var i in lines)
+            {
+                string[] key = i.Split(':');
+                if (key.Length == 2)
+                {
+                    if (Enum.TryParse(key[0], out InputAction action))
+                    {
+                        inputConfig.KeyCodes[action] = (KeyCode)Enum.Parse(typeof(KeyCode), key[1]);
+                    }
+                }
+            }
+            Keys = inputConfig.ToKeys();
+        }
     }
 }

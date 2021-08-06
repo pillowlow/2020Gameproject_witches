@@ -147,7 +147,6 @@ public class Door : MonoBehaviour
             {
                 UnlockUI.SetActive(false);
                 OpenDoor();
-                CameraController.instance.StartCameraMovement(0);
             }
         }
         else

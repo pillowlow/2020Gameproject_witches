@@ -5,15 +5,22 @@ using UnityEngine;
 public class PlayerManager:MonoBehaviour
 {
     public static PlayerManager instance = null;
-    public GameObject player;
+    [HideInInspector] public GameObject player;
     public InputManager input;
+    public CircleCollider2D HandRange;
     public LayerMask layer;
+    public Transform RightHand;
+    public Transform LeftHand;
+    [HideInInspector] public bool isFreeToDoAction = true;
+    [Range(0,100)] public float Stamina = 100;
+    public bool isInWater = false;
     private void Awake()
     {
         if (instance == null)
         {
             instance = this;
             player = gameObject;
+            input = new InputManager();
             DontDestroyOnLoad(this.gameObject);
         }
         else if(instance != this)
@@ -23,11 +30,11 @@ public class PlayerManager:MonoBehaviour
     }
     public enum StateCode
     {
-        Idle, Walk, Run, Brake, Crawl, Ride, Tic_Tac, Knock, Float, Jump, Fall,
-        Take_cast, Take_push, Take_drag, Take_port,
-        Action_cast, Action_push, Action_drag, Action_port,
-        TakingHit, Stop, Flying, Die
+        Idle, Walk, Run, Brake, Crawl, Attack, Float, Jump, Fall, Climb, Stumble,
+        Action_pick, Action_move_object, Action_port_idle, Action_port_walk, Swim, Swing,
+        Die,Reborn, Stop, None
     };
+    public static bool isTaking = false;
     public static bool onGround = false;
     public static StateCode state = StateCode.Idle;
     
