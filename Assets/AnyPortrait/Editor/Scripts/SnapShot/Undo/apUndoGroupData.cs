@@ -21,6 +21,8 @@ using AnyPortrait;
 namespace AnyPortrait
 {
 
+	
+
 	/// <summary>
 	/// Unity의 Undo 기능을 사용할 때, 불필요한 호출을 막는 용도
 	/// "연속된 동일한 요청"을 방지한다.
@@ -54,11 +56,14 @@ namespace AnyPortrait
 		private apMeshGroup _meshGroup = null;
 		private apModifierBase _modifier = null;
 
-		private object _keyObject = null;
+
+		//private object _keyObject = null;//키 오브젝트는 삭제. 사용하는 일이 거의 없다.
 		private bool _isCallContinuous = false;//여러 항목을 동시에 처리하는 Batch 액션 중인가
 
 		private DateTime _lastUndoTime = new DateTime();
 		private bool _isFirstAction = true;
+
+		private const float CONT_SAVE_TIME = 5.0f;//이전 : 1초마다 Cont 작업을 분절해서 Undo > 5초로 변경 (21.7.17)
 
 		public enum ACTION
 		{
@@ -87,6 +92,7 @@ namespace AnyPortrait
 
 			MeshEdit_AddVertex,
 			MeshEdit_EditVertex,
+			MeshEdit_EditVertexDepth,
 			MeshEdit_RemoveVertex,
 			MeshEdit_ResetVertices,
 			MeshEdit_RemoveAllVertices,
@@ -154,6 +160,8 @@ namespace AnyPortrait
 			Modifier_SetVolumeWeight,
 			Modifier_SetPhysicsProperty,
 
+			Modifier_ExtraOptionChanged,
+
 			Modifier_Gizmo_MoveTransform,
 			Modifier_Gizmo_RotateTransform,
 			Modifier_Gizmo_ScaleTransform,
@@ -210,6 +218,7 @@ namespace AnyPortrait
 			Anim_SettingChanged,
 
 			ControlParam_SettingChanged,
+			ControlParam_Duplicated,
 
 			Retarget_ImportSinglePoseToMod,
 			Retarget_ImportSinglePoseToAnim,
@@ -221,6 +230,7 @@ namespace AnyPortrait
 			MaterialSetChanged,
 
 			VisibilityChanged,
+			GuidelineChanged,
 		}
 
 		private Dictionary<ACTION, string> _undoLabels = null;
@@ -228,170 +238,7 @@ namespace AnyPortrait
 
 		public static string GetLabel(ACTION action)
 		{
-			return I._undoLabels[action];
-			//switch (action)
-			//{
-			//	case ACTION.None:					return "None";
-
-			//	case ACTION.Main_AddImage:			return "Add Image";
-			//	case ACTION.Main_RemoveImage:		return "Remove Image";
-			//	case ACTION.Main_AddMesh:			return "Add Mesh";
-			//	case ACTION.Main_RemoveMesh:		return "Remove Mesh";
-			//	case ACTION.Main_AddMeshGroup:		return "Add MeshGroup";
-			//	case ACTION.Main_RemoveMeshGroup:	return "Remove MeshGroup";
-			//	case ACTION.Main_AddAnimation:		return "Add Animation";
-			//	case ACTION.Main_RemoveAnimation:	return "Remove Animation";
-			//	case ACTION.Main_AddParam:			return "Add Parameter";
-			//	case ACTION.Main_RemoveParam:		return "Remove Parameter";
-
-			//	case ACTION.Portrait_SettingChanged:		return "Portrait Setting Changed";
-			//	case ACTION.Portrait_BakeOptionChanged:		return "Bake Option Changed";
-			//	case ACTION.Portrait_SetMeshGroup:			return "Set Main MeshGroup";
-			//	case ACTION.Portrait_ReleaseMeshGroup:		return "Release Main MeshGroup";
-
-			//	case ACTION.Image_SettingChanged:	return "Set Image Property";
-			//	case ACTION.Image_PSDImport:		return "Import PSD";
-
-			//	case ACTION.MeshEdit_AddVertex:				return "Add Vertex";
-			//	case ACTION.MeshEdit_EditVertex:			return "Edit Vertex";
-			//	case ACTION.MeshEdit_RemoveVertex:			return "Remove Vertex";
-			//	case ACTION.MeshEdit_ResetVertices:			return "Reset Vertices";
-			//	case ACTION.MeshEdit_RemoveAllVertices:		return "Remove All Vertices";
-			//	case ACTION.MeshEdit_AddEdge:				return "Add Edge";
-			//	case ACTION.MeshEdit_EditEdge:				return "Edit Edge";
-			//	case ACTION.MeshEdit_RemoveEdge:			return "Remove Edge";
-			//	case ACTION.MeshEdit_MakeEdges:				return "Make Edges";
-			//	case ACTION.MeshEdit_EditPolygons:			return "Edit Polygons";
-			//	case ACTION.MeshEdit_SetImage:				return "Set Image";
-			//	case ACTION.MeshEdit_SetPivot:				return "Set Mesh Pivot";
-			//	case ACTION.MeshEdit_SettingChanged:		return "Mesh Setting Changed";
-			//	case ACTION.MeshEdit_AtlasChanged:			return "Mesh Atals Changed";
-			//	case ACTION.MeshEdit_AutoGen:				return "Vertices Generated";
-			//	case ACTION.MeshEdit_VertexCopied:			return "Vertices Copied";
-			//	case ACTION.MeshEdit_VertexMoved:			return "Vertices Moved";
-
-			//	case ACTION.MeshGroup_AttachMesh:			return "Attach Mesh";
-			//	case ACTION.MeshGroup_AttachMeshGroup:		return "Attach MeshGroup";
-			//	case ACTION.MeshGroup_DetachMesh:			return "Detach Mesh";
-			//	case ACTION.MeshGroup_DetachMeshGroup:		return "Detach MeshGroup";
-			//	case ACTION.MeshGroup_ClippingChanged:		return "Clipping Changed";
-			//	case ACTION.MeshGroup_DepthChanged:			return "Depth Changed";
-			//	case ACTION.MeshGroup_AddBone:				return "Add Bone";
-			//	case ACTION.MeshGroup_RemoveBone:			return "Remove Bone";
-			//	case ACTION.MeshGroup_RemoveAllBones:		return "Remove All Bones";
-			//	case ACTION.MeshGroup_BoneSettingChanged:	return "Bone Setting Changed";
-			//	case ACTION.MeshGroup_BoneDefaultEdit:		return "Bone Edit";
-			//	case ACTION.MeshGroup_AttachBoneToChild:	return "Attach Bone to Child";
-			//	case ACTION.MeshGroup_DetachBoneFromChild:	return "Detach Bone from Child";
-			//	case ACTION.MeshGroup_SetBoneAsParent:		return "Set Bone as Parent";
-			//	case ACTION.MeshGroup_SetBoneAsIKTarget:	return "Set Bone as IK target";
-			//	case ACTION.MeshGroup_AddBoneFromRetarget:	return "Add Bones from File";
-			//	case ACTION.MeshGroup_BoneIKControllerChanged:	return "IK Controller Changed";
-			//	case ACTION.MeshGroup_BoneMirrorChanged:		return "Mirror Changed";
-
-			//	case ACTION.MeshGroup_DuplicateMeshTransform:	return "Duplicate Mesh Transform";
-			//	case ACTION.MeshGroup_DuplicateMeshGroupTransform:	return "Duplicate Mesh Group Transform";
-			//	case ACTION.MeshGroup_DuplicateBone:			return "Duplicate Bone";
-
-			//	case ACTION.MeshGroup_Gizmo_MoveTransform:		return "Default Position";
-			//	case ACTION.MeshGroup_Gizmo_RotateTransform:	return "Default Rotation";
-			//	case ACTION.MeshGroup_Gizmo_ScaleTransform:		return "Default Scaling";
-			//	case ACTION.MeshGroup_Gizmo_Color:				return "Default Color";
-
-			//	case ACTION.MeshGroup_AddModifier:		return "Add Modifier";
-			//	case ACTION.MeshGroup_RemoveModifier:	return "Remove Modifier";
-			//	case ACTION.MeshGroup_RemoveParamSet:	return "Remove Modified Key";
-
-			//	case ACTION.MeshGroup_DefaultSettingChanged:	return "Default Setting Changed";
-			//	case ACTION.MeshGroup_MigrateMeshTransform:		return "Migrate Mesh Transform";
-
-			//	case ACTION.Modifier_LinkControlParam:			return "Link Control Parameter";
-			//	case ACTION.Modifier_UnlinkControlParam:		return "Unlink Control Parameter";
-			//	case ACTION.Modifier_AddStaticParamSetGroup:	return "Add StaticPSG";
-
-			//	case ACTION.Modifier_LayerChanged:			return "Change Layer Order";
-			//	case ACTION.Modifier_SettingChanged:		return "Change Layer Setting";
-			//	case ACTION.Modifier_SetBoneWeight:			return "Set Bone Weight";
-			//	case ACTION.Modifier_RemoveBoneWeight:		return "Remove Bone Weight";
-			//	case ACTION.Modifier_RemoveBoneRigging:		return "Remove Bone Rigging";
-			//	case ACTION.Modifier_RemovePhysics:			return "Remove Physics";
-			//	case ACTION.Modifier_SetPhysicsWeight:		return "Set Physics Weight";
-			//	case ACTION.Modifier_SetVolumeWeight:		return "Set Volume Weight";
-			//	case ACTION.Modifier_SetPhysicsProperty:	return "Set Physics Property";
-
-			//	case ACTION.Modifier_Gizmo_MoveTransform:		return "Move Transform";
-			//	case ACTION.Modifier_Gizmo_RotateTransform:		return "Rotate Transform";
-			//	case ACTION.Modifier_Gizmo_ScaleTransform:		return "Scale Transform";
-			//	case ACTION.Modifier_Gizmo_BoneIKTransform:		return "FK/IK Weight Changed";
-			//	case ACTION.Modifier_Gizmo_MoveVertex:			return "Move Vertex";
-			//	case ACTION.Modifier_Gizmo_RotateVertex:		return "Rotate Vertex";
-			//	case ACTION.Modifier_Gizmo_ScaleVertex:			return "Scale Vertex";
-			//	case ACTION.Modifier_Gizmo_FFDVertex:			return "Freeform Vertices";
-			//	case ACTION.Modifier_Gizmo_Color:				return "Set Color";
-			//	case ACTION.Modifier_Gizmo_BlurVertex:			return "Blur Vertices";
-
-			//	case ACTION.Modifier_ModMeshValuePaste:		return "Paste Modified Value";
-			//	case ACTION.Modifier_ModMeshValueReset:		return "Reset Modified Value";
-
-			//	case ACTION.Modifier_AddModMeshToParamSet:			return "Add To Key";
-			//	case ACTION.Modifier_RemoveModMeshFromParamSet:		return "Remove From Key";
-
-			//	case ACTION.Modifier_RiggingWeightChanged: return "Weight Changed";
-
-			//	case ACTION.Modifier_FFDStart:				return "Edit FFD";
-			//	case ACTION.Modifier_FFDAdapt:				return "Adapt FFD";
-			//	case ACTION.Modifier_FFDRevert:				return "Revert FFD";
-
-			//	case ACTION.Anim_SetMeshGroup:			return "Set MeshGroup";
-			//	case ACTION.Anim_DupAnimClip:			return "Duplicate AnimClip";
-			//	case ACTION.Anim_ImportAnimClip:		return "Import AnimClip";
-			//	case ACTION.Anim_AddTimeline:			return "Add Timeline";
-			//	case ACTION.Anim_RemoveTimeline:		return "Remove Timeline";
-			//	case ACTION.Anim_AddTimelineLayer:		return "Add Timeline Layer";
-			//	case ACTION.Anim_RemoveTimelineLayer:	return "Remove Timeline Layer";
-			//	case ACTION.Anim_AddKeyframe:			return "Add Keyframe";
-
-			//	case ACTION.Anim_MoveKeyframe:		return "Move Keyframe";
-			//	case ACTION.Anim_CopyKeyframe:		return "Copy Keyframe";
-			//	case ACTION.Anim_RemoveKeyframe:	return "Remove Keyframe";
-			//	case ACTION.Anim_DupKeyframe:		return "Duplicate Keyframe";
-
-			//	case ACTION.Anim_KeyframeValueChanged:	return "Keyframe Value Changed";
-			//	case ACTION.Anim_AddEvent:				return "Event Added";
-			//	case ACTION.Anim_RemoveEvent:			return "Event Removed";
-			//	case ACTION.Anim_EventChanged:			return "Event Changed";
-			//	case ACTION.Anim_SortEvents:			return "Events Sorted";
-
-			//	case ACTION.Anim_Gizmo_MoveTransform:		return "Move Transform";
-			//	case ACTION.Anim_Gizmo_RotateTransform:		return "Rotate Transform";
-			//	case ACTION.Anim_Gizmo_ScaleTransform:		return "Scale Transform";
-			//	case ACTION.Anim_Gizmo_BoneIKControllerTransform:	return "FK/IK Weight Changed";
-
-			//	case ACTION.Anim_Gizmo_MoveVertex:		return "Move Vertex";
-			//	case ACTION.Anim_Gizmo_RotateVertex:	return "Rotate Vertex";
-			//	case ACTION.Anim_Gizmo_ScaleVertex:		return "Scale Vertex";
-			//	case ACTION.Anim_Gizmo_FFDVertex:		return "Freeform Vertices";
-			//	case ACTION.Anim_Gizmo_BlurVertex:		return "Blur Vertices";
-			//	case ACTION.Anim_Gizmo_Color:			return "Set Color";
-			//	case ACTION.Anim_SettingChanged:			return "Animation Setting Changed";
-
-			//	case ACTION.ControlParam_SettingChanged:	return "Control Param Setting";
-
-			//	case ACTION.Retarget_ImportSinglePoseToMod:		return "Import Pose";
-			//	case ACTION.Retarget_ImportSinglePoseToAnim:	return "Import Pose";
-
-			//	case ACTION.PSDSet_AddNewPSDSet:		return "New PSD Set";
-
-			//	case ACTION.MaterialSetAdded:				return "Material Set Added";
-			//	case ACTION.MaterialSetRemoved:			return "Material Set Removed";
-			//	case ACTION.MaterialSetChanged:			return "Material Set Changed";
-
-			//	case ACTION.VisibilityChanged:			return "Visibility Changed";
-
-			//	default:
-			//		Debug.LogError("정의되지 않은 Undo Action");
-			//		return action.ToString();
-			//}
+			return I._undoLabels[action];			
 		}
 
 		// Init
@@ -428,6 +275,8 @@ namespace AnyPortrait
 
 			_undoLabels.Add(ACTION.MeshEdit_AddVertex,			"Add Vertex");
 			_undoLabels.Add(ACTION.MeshEdit_EditVertex,			"Edit Vertex");
+			_undoLabels.Add(ACTION.MeshEdit_EditVertexDepth,	"Edit Vertex Settings");
+			
 			_undoLabels.Add(ACTION.MeshEdit_RemoveVertex,		"Remove Vertex");
 			_undoLabels.Add(ACTION.MeshEdit_ResetVertices,		"Reset Vertices");
 			_undoLabels.Add(ACTION.MeshEdit_RemoveAllVertices,	"Remove All Vertices");
@@ -494,6 +343,8 @@ namespace AnyPortrait
 			_undoLabels.Add(ACTION.Modifier_SetVolumeWeight,		"Set Volume Weight");
 			_undoLabels.Add(ACTION.Modifier_SetPhysicsProperty,		"Set Physics Property");
 
+			_undoLabels.Add(ACTION.Modifier_ExtraOptionChanged,		"Extra Option Changed");
+
 			_undoLabels.Add(ACTION.Modifier_Gizmo_MoveTransform,	"Move Transform");
 			_undoLabels.Add(ACTION.Modifier_Gizmo_RotateTransform,	"Rotate Transform");
 			_undoLabels.Add(ACTION.Modifier_Gizmo_ScaleTransform,	"Scale Transform");
@@ -551,6 +402,7 @@ namespace AnyPortrait
 			_undoLabels.Add(ACTION.Anim_SettingChanged,			"Animation Setting Changed");
 
 			_undoLabels.Add(ACTION.ControlParam_SettingChanged, "Control Param Setting");
+			_undoLabels.Add(ACTION.ControlParam_Duplicated,		"Control Param Duplicated");
 
 			_undoLabels.Add(ACTION.Retarget_ImportSinglePoseToMod,	"Import Pose");
 			_undoLabels.Add(ACTION.Retarget_ImportSinglePoseToAnim, "Import Pose");
@@ -562,6 +414,8 @@ namespace AnyPortrait
 			_undoLabels.Add(ACTION.MaterialSetChanged,	"Material Set Changed");
 
 			_undoLabels.Add(ACTION.VisibilityChanged,	"Visibility Changed");
+			_undoLabels.Add(ACTION.GuidelineChanged,	"Guideline Option Changed");
+			
 		}
 
 		public void Clear()
@@ -573,11 +427,13 @@ namespace AnyPortrait
 			_meshGroup = null;
 			_modifier = null;
 
-			_keyObject = null;
+			//_keyObject = null;
 			_isCallContinuous = false;//여러 항목을 동시에 처리하는 Batch 액션 중인가
 
 			_lastUndoTime = DateTime.Now;
 		}
+
+
 
 
 		// Functions
@@ -587,20 +443,27 @@ namespace AnyPortrait
 		/// 리턴값이 True이면 "새로운 Action"이므로 Undo 등록을 해야한다.
 		/// 만약 Action 타입이 Add, New.. 계열이면 targetObject가 null일 수 있다. (parent는 null이 되어선 안된다)
 		/// </summary>
-		public bool SetAction(ACTION action, apPortrait portrait, apMesh mesh, apMeshGroup meshGroup, apModifierBase modifier, object keyObject, bool isCallContinuous, SAVE_TARGET saveTarget)
-		{
+		/// <returns>이어지지 않은 새로운 타입의 Undo Action이면 True</returns>
+		//public bool SetAction(ACTION action, apPortrait portrait, apMesh mesh, apMeshGroup meshGroup, apModifierBase modifier, object keyObject, bool isCallContinuous, SAVE_TARGET saveTarget)
+		public bool SetAction(ACTION action, apPortrait portrait, apMesh mesh, apMeshGroup meshGroup, apModifierBase modifier, bool isCallContinuous, SAVE_TARGET saveTarget)
+		{	
 			bool isTimeOver = false;
-			if(DateTime.Now.Subtract(_lastUndoTime).TotalSeconds > 1.0f || _isFirstAction)
+			double lastDeltaTime = DateTime.Now.Subtract(_lastUndoTime).TotalSeconds;
+			if(lastDeltaTime > CONT_SAVE_TIME || _isFirstAction)
 			{
+				//Debug.Log("Undo Delta Time : " + lastDeltaTime + " > " + CONT_SAVE_TIME);
+
 				//1초가 넘었다면 강제 Undo ID 증가
 				isTimeOver = true;
 				_lastUndoTime = DateTime.Now;
 				_isFirstAction = false;
+
+				
 			}
 
 			//특정 조건에서는 UndoID가 증가하지 않는다.
 			//유효한 Action이고 시간이 지나지 않았다면
-			if(_action != ACTION.None && !isTimeOver)
+			if(_action != ACTION.None && !isTimeOver && isCallContinuous)
 			{
 				//이전과 값이 같을 때에만 Multiple 처리가 된다.
 				if(	action == _action &&
@@ -608,22 +471,30 @@ namespace AnyPortrait
 					portrait == _portrait &&
 					mesh == _mesh &&
 					meshGroup == _meshGroup &&
-					modifier == _modifier &&
+					modifier == _modifier && 
 					isCallContinuous == _isCallContinuous
 					)
 				{
-					if(isCallContinuous)
-					{
-						//연속 호출이면 KeyObject가 달라도 Undo를 묶는다.
-						return false;
-					}
-					else if(keyObject == _keyObject && keyObject != null)
-					{
-						//연속 호출이 아니더라도 KeyObject가 같으면 Undo를 묶는다.
-						return false;
-					}
+					//연속 호출이면 KeyObject가 달라도 Undo를 묶는다.
+					//>KeyObject는 무시
+					return false;
+
+					//if(isCallContinuous)
+					//{
+					//	//연속 호출이면 KeyObject가 달라도 Undo를 묶는다.
+					//	//>KeyObject는 무시
+					//	return false;
+					//}
+					//삭제 21.6.30
+					//else if(keyObject == _keyObject && keyObject != null)
+					//{
+					//	//연속 호출이 아니더라도 KeyObject가 같으면 Undo를 묶는다.
+					//	return false;
+					//}
 				}
 			}
+
+
 			#region [미사용 코드]
 			//if (_action != ACTION.None && _parentMonoObject != null)
 			//{
@@ -664,7 +535,7 @@ namespace AnyPortrait
 			_meshGroup = meshGroup;
 			_modifier = modifier;
 
-			_keyObject = keyObject;
+			//_keyObject = keyObject;
 			_isCallContinuous = isCallContinuous;//여러 항목을 동시에 처리하는 Batch 액션 중인가
 
 			//_parentMonoObject = parentMonoObject;
@@ -676,5 +547,15 @@ namespace AnyPortrait
 			return true;
 		}
 
+
+		/// <summary>
+		/// 추가 21.6.30 : 마우스 Up, 다른 객체 선택 (작은 단위까지)시 Undo의 연속성을 초기화한다.
+		/// 이 함수가 제대로 작동하면 KeyObject를 사용하지 않아도 된다.
+		/// </summary>
+		public void ResetContinuous()
+		{
+			_isFirstAction = true;
+			_lastUndoTime = DateTime.Now;
+		}
 	}
 }

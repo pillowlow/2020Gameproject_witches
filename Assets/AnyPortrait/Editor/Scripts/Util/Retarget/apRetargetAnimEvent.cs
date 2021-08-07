@@ -237,17 +237,17 @@ namespace AnyPortrait
 
 					strParse = strSrc.Split(new string[] { "/" }, StringSplitOptions.None);
 
-					subParam._paramType = (apAnimEvent.PARAM_TYPE)int.Parse(strParse[0]);
-					subParam._boolValue = (int.Parse(strParse[1]) == 1 ? true : false);
-					subParam._intValue = int.Parse(strParse[2]);
-					subParam._floatValue = float.Parse(strParse[3]);
-					subParam._vec2Value.x = float.Parse(strParse[4]);
-					subParam._vec2Value.y = float.Parse(strParse[5]);
+					subParam._paramType =	(apAnimEvent.PARAM_TYPE)int.Parse(strParse[0]);
+					subParam._boolValue =	(int.Parse(strParse[1]) == 1 ? true : false);
+					subParam._intValue =	int.Parse(strParse[2]);
+					subParam._floatValue =	apUtil.ParseFloat(strParse[3]);
+					subParam._vec2Value.x = apUtil.ParseFloat(strParse[4]);
+					subParam._vec2Value.y = apUtil.ParseFloat(strParse[5]);
 
-					subParam._intValue_End = int.Parse(strParse[6]);
-					subParam._floatValue_End = float.Parse(strParse[7]);
-					subParam._vec2Value_End.x = float.Parse(strParse[8]);
-					subParam._vec2Value_End.y = float.Parse(strParse[9]);
+					subParam._intValue_End =	int.Parse(strParse[6]);
+					subParam._floatValue_End =	apUtil.ParseFloat(strParse[7]);
+					subParam._vec2Value_End.x = apUtil.ParseFloat(strParse[8]);
+					subParam._vec2Value_End.y = apUtil.ParseFloat(strParse[9]);
 
 					_subParams.Add(subParam);
 				}

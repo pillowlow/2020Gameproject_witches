@@ -31,6 +31,9 @@ namespace AnyPortrait
 		public delegate void FUNC_UNIT_CLICK_ORDER_CHANGED(apEditorHierarchyUnit eventUnit, int savedKey, object savedObj, bool isOrderUp);
 		public delegate void FUNC_UNIT_CLICK_RESTORE_TMPWORK();
 
+		//추가 21.6.12 : 우클릭은 따로 체크한다.
+		public delegate void FUNC_UNIT_RIGHTCLICK(apEditorHierarchyUnit eventUnit, int savedKey, object savedObj);
+
 
 		public enum UNIT_TYPE
 		{
@@ -133,9 +136,10 @@ namespace AnyPortrait
 		
 		public bool IsAvailable {  get {  return _isAvailable; } }
 
-		public FUNC_UNIT_CLICK _funcClick = null;
-		public FUNC_UNIT_CLICK_VISIBLE _funcClickVisible = null;
-		public FUNC_UNIT_CLICK_ORDER_CHANGED _funcClickOrderChanged = null;
+		private FUNC_UNIT_CLICK _funcClick = null;
+		private FUNC_UNIT_CLICK_VISIBLE _funcClickVisible = null;
+		private FUNC_UNIT_CLICK_ORDER_CHANGED _funcClickOrderChanged = null;
+		private FUNC_UNIT_RIGHTCLICK _funcRightClick = null;
 
 		//이전
 		//private GUIContent _guiContent_Text = new GUIContent();
@@ -177,16 +181,7 @@ namespace AnyPortrait
 			ModKey,
 			Rule//추가 21.1.27
 		}
-		//이전
-		//private GUIContent _guiContent_NoKey = null;
-		//private GUIContent[] _guiContent_Visible = new GUIContent[4];
-		//private GUIContent[] _guiContent_Nonvisible = new GUIContent[4];
-
-		//private GUIContent _guiContent_ModRegisted = new GUIContent();
-
-		//private GUIContent _guiContent_OrderUp = new GUIContent();
-		//private GUIContent _guiContent_OrderDown = new GUIContent();
-
+		
 		//변경 19.11.16
 		private apGUIContentWrapper _guiContent_NoKey = null;
 		private apGUIContentWrapper[] _guiContent_Visible = new apGUIContentWrapper[5];
@@ -360,6 +355,7 @@ namespace AnyPortrait
 			_funcClick = null;
 			_funcClickVisible = null;
 			_funcClickOrderChanged = null;
+			_funcRightClick = null;//추가 21.6.12
 
 			if(_guiContent_Text == null)
 			{
@@ -519,7 +515,7 @@ namespace AnyPortrait
 			_isOrderChangable = false;
 		}
 
-		//TODO : Visible 속성이 붙은 경우는 위 함수(SetEvent)대신 이걸 호출해야한다.
+		//Visible 속성이 붙은 경우는 위 함수(SetEvent)대신 이걸 호출해야한다.
 		public void SetEvent(FUNC_UNIT_CLICK funcUnitClick, FUNC_UNIT_CLICK_VISIBLE funcClickVisible, FUNC_UNIT_CLICK_ORDER_CHANGED funcClickOrderChanged = null)
 		{
 			_funcClick = funcUnitClick;
@@ -528,6 +524,13 @@ namespace AnyPortrait
 
 			_isOrderChangable = _funcClickOrderChanged != null;
 		}
+
+		//추가 21.6.12 : 우클릭을 입력하자
+		public void SetRightClickEvent(FUNC_UNIT_RIGHTCLICK funcRightClick)
+		{
+			_funcRightClick = funcRightClick;
+		}
+
 
 		public void SetParent(apEditorHierarchyUnit parentUnit)
 		{
@@ -1137,10 +1140,16 @@ namespace AnyPortrait
 					}
 					else
 					{
-						if (_funcClick != null)
+						apEditorUtil.ReleaseGUIFocus();//<<추가 : 메뉴 바뀌면 무조건 GUI Focus를 날린다.
+
+						if(Event.current.button == 1 && _funcRightClick != null)
 						{
-							apEditorUtil.ReleaseGUIFocus();//<<추가 : 메뉴 바뀌면 무조건 GUI Focus를 날린다.
-							
+							//우클릭이라면 (추가 21.6.12)
+							_funcRightClick(this, _savedKey, _savedObj);
+						}
+						else if (_funcClick != null)
+						{
+							//좌클릭이라면
 							_funcClick(this, _savedKey, _savedObj,
 #if UNITY_EDITOR_OSX
 								Event.current.command
@@ -1188,9 +1197,15 @@ namespace AnyPortrait
 				case UNIT_TYPE.OnlyButton:
 					if (GUILayout.Button(_guiContent_Text.Content, _isAvailable ? _guiStyle_None : _guiStyle_NoAvailable, _layoutOption_H_Height))
 					{
-						if (_funcClick != null)
+						apEditorUtil.ReleaseGUIFocus();//<<추가 : 메뉴 바뀌면 무조건 GUI Focus를 날린다.
+
+						if(Event.current.button == 1 && _funcRightClick != null)
 						{
-							apEditorUtil.ReleaseGUIFocus();//<<추가 : 메뉴 바뀌면 무조건 GUI Focus를 날린다.
+							//우클릭이라면 (추가 21.6.12)
+							_funcRightClick(this, _savedKey, _savedObj);
+						}
+						if (_funcClick != null)
+						{	
 							_funcClick(this, _savedKey, _savedObj,
 #if UNITY_EDITOR_OSX
 								Event.current.command
@@ -1212,9 +1227,15 @@ namespace AnyPortrait
 							_isAvailable ? ((_isSelected || _isSubSelected) ? _guiStyle_Selected : _guiStyle_None) : _guiStyle_NoAvailable, 
 							_layoutOption_H_Height))
 						{
-							if (_funcClick != null)
+							apEditorUtil.ReleaseGUIFocus();//<<추가 : 메뉴 바뀌면 무조건 GUI Focus를 날린다.
+
+							if(Event.current.button == 1 && _funcRightClick != null)
 							{
-								apEditorUtil.ReleaseGUIFocus();//<<추가 : 메뉴 바뀌면 무조건 GUI Focus를 날린다.
+								//우클릭이라면 (추가 21.6.12)
+								_funcRightClick(this, _savedKey, _savedObj);
+							}
+							else if (_funcClick != null)
+							{	
 								_funcClick(this, _savedKey, _savedObj,
 #if UNITY_EDITOR_OSX
 											Event.current.command
@@ -1227,8 +1248,28 @@ namespace AnyPortrait
 						}
 					}
 					else
-					{	
-						GUILayout.Label(_guiContent_Text.Content, _isAvailable ? _guiStyle_Selected : _guiStyle_NoAvailable, _layoutOption_H_Height);
+					{
+						if(_funcRightClick != null)
+						{
+							//변경 21.6.13 : 우클릭이 있다면 선택된 상태에서도 Button으로 출력해야한다.
+							if (GUILayout.Button(	_guiContent_Text.Content,
+													_isAvailable ? _guiStyle_Selected : _guiStyle_NoAvailable,
+													_layoutOption_H_Height))
+							{
+								apEditorUtil.ReleaseGUIFocus();//<<추가 : 메뉴 바뀌면 무조건 GUI Focus를 날린다.
+
+								if (Event.current.button == 1 && _funcRightClick != null)
+								{
+									//우클릭이라면 (추가 21.6.12)
+									_funcRightClick(this, _savedKey, _savedObj);
+								}
+							}
+						}
+						else
+						{
+							GUILayout.Label(_guiContent_Text.Content, _isAvailable ? _guiStyle_Selected : _guiStyle_NoAvailable, _layoutOption_H_Height);
+						}
+						
 					}
 
 					break;
@@ -1253,9 +1294,15 @@ namespace AnyPortrait
 						}
 						if (isBtnClick)
 						{
-							if (_funcClick != null)
+							apEditorUtil.ReleaseGUIFocus();//<<추가 : 메뉴 바뀌면 무조건 GUI Focus를 날린다.
+
+							if(Event.current.button == 1 && _funcRightClick != null)
 							{
-								apEditorUtil.ReleaseGUIFocus();//<<추가 : 메뉴 바뀌면 무조건 GUI Focus를 날린다.
+								//우클릭이라면 (추가 21.6.12)
+								_funcRightClick(this, _savedKey, _savedObj);
+							}
+							else if (_funcClick != null)
+							{	
 								_funcClick(this, _savedKey, _savedObj,
 #if UNITY_EDITOR_OSX
 									Event.current.command
@@ -1269,13 +1316,39 @@ namespace AnyPortrait
 					}
 					else
 					{
-						if(_isCur_VisiblePostfix)
+						if (_funcRightClick != null)
 						{
-							GUILayout.Label(_guiContent_Text_Short.Content, _isAvailable ? _guiStyle_Selected : _guiStyle_NoAvailable, apGUILOFactory.I.Width(width - (_cursorX + 30)), _layoutOption_H_Height);
+							bool isBtnClick = false;
+							//변경 21.6.13 : 우클릭이 있다면 선택된 상태에서도 Button으로 출력해야한다.
+							if (_isCur_VisiblePostfix)
+							{
+								isBtnClick = GUILayout.Button(_guiContent_Text_Short.Content, _isAvailable ? _guiStyle_Selected : _guiStyle_NoAvailable, apGUILOFactory.I.Width(width - (_cursorX + 30)), _layoutOption_H_Height);
+							}
+							else
+							{
+								isBtnClick = GUILayout.Button(_guiContent_Text.Content, _isAvailable ? _guiStyle_Selected : _guiStyle_NoAvailable, _layoutOption_H_Height);
+							}
+							if (isBtnClick)
+							{
+								apEditorUtil.ReleaseGUIFocus();//<<추가 : 메뉴 바뀌면 무조건 GUI Focus를 날린다.
+
+								if (Event.current.button == 1 && _funcRightClick != null)
+								{
+									//우클릭이라면 (추가 21.6.12)
+									_funcRightClick(this, _savedKey, _savedObj);
+								}
+							}
 						}
 						else
 						{
-							GUILayout.Label(_guiContent_Text.Content, _isAvailable ? _guiStyle_Selected : _guiStyle_NoAvailable, _layoutOption_H_Height);
+							if (_isCur_VisiblePostfix)
+							{
+								GUILayout.Label(_guiContent_Text_Short.Content, _isAvailable ? _guiStyle_Selected : _guiStyle_NoAvailable, apGUILOFactory.I.Width(width - (_cursorX + 30)), _layoutOption_H_Height);
+							}
+							else
+							{
+								GUILayout.Label(_guiContent_Text.Content, _isAvailable ? _guiStyle_Selected : _guiStyle_NoAvailable, _layoutOption_H_Height);
+							}
 						}
 						
 					}

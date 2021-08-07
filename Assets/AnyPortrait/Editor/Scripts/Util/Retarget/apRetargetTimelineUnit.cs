@@ -135,10 +135,10 @@ namespace AnyPortrait
 				_unitID = int.Parse(strParse[0]);
 				_timelineUniqueID = int.Parse(strParse[1]);
 
-				_guiColor.r = float.Parse(strParse[2]);
-				_guiColor.g = float.Parse(strParse[3]);
-				_guiColor.b = float.Parse(strParse[4]);
-				_guiColor.a = float.Parse(strParse[5]);
+				_guiColor.r = apUtil.ParseFloat(strParse[2]);
+				_guiColor.g = apUtil.ParseFloat(strParse[3]);
+				_guiColor.b = apUtil.ParseFloat(strParse[4]);
+				_guiColor.a = apUtil.ParseFloat(strParse[5]);
 
 				_linkType = (apAnimClip.LINK_TYPE)int.Parse(strParse[6]);
 				_modifierUniqueID = int.Parse(strParse[7]);

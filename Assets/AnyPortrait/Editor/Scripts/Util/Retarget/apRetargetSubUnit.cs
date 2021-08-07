@@ -210,18 +210,18 @@ namespace AnyPortrait
 				_type = (TYPE)int.Parse(strParse[1]);
 				_uniqueID = int.Parse(strParse[2]);
 				
-				_defaultMatrix._pos.x = float.Parse(strParse[3]);
-				_defaultMatrix._pos.y = float.Parse(strParse[4]);
-				_defaultMatrix._angleDeg = float.Parse(strParse[5]);
-				_defaultMatrix._scale.x = float.Parse(strParse[6]);
-				_defaultMatrix._scale.y = float.Parse(strParse[7]);
+				_defaultMatrix._pos.x = apUtil.ParseFloat(strParse[3]);
+				_defaultMatrix._pos.y = apUtil.ParseFloat(strParse[4]);
+				_defaultMatrix._angleDeg = apUtil.ParseFloat(strParse[5]);
+				_defaultMatrix._scale.x = apUtil.ParseFloat(strParse[6]);
+				_defaultMatrix._scale.y = apUtil.ParseFloat(strParse[7]);
 
 				_defaultMatrix.MakeMatrix();
 
-				_defaultColor.r = float.Parse(strParse[8]);
-				_defaultColor.g = float.Parse(strParse[9]);
-				_defaultColor.b = float.Parse(strParse[10]);
-				_defaultColor.a = float.Parse(strParse[11]);
+				_defaultColor.r = apUtil.ParseFloat(strParse[8]);
+				_defaultColor.g = apUtil.ParseFloat(strParse[9]);
+				_defaultColor.b = apUtil.ParseFloat(strParse[10]);
+				_defaultColor.a = apUtil.ParseFloat(strParse[11]);
 
 				_isVisible = (int.Parse(strParse[12]) == 1 ? true : false);
 

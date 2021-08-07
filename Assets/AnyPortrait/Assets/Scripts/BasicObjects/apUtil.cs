@@ -386,6 +386,101 @@ namespace AnyPortrait
 			return result;
 		}
 
+
+
+
+		// 추가 21.7.3 : URI 관련 에러 (인식 안되는 아스키값 변경)
+		/// <summary>
+		/// 이스케이프 문자를 일반 문자로 변환시킨다.
+		/// </summary>
+		/// <param name="srcURI"></param>
+		/// <returns></returns>
+		public static string ConvertEscapeToPlainText(string srcURI)
+		{
+			if(string.IsNullOrEmpty(srcURI))
+			{
+				return "";
+			}
+			//HTTP API를 사용할 수 없으므로
+			//중요한 문자만 변환하자
+			srcURI = srcURI.Replace("%20", " ");//공백
+			srcURI = srcURI.Replace("%21", "!");			
+			srcURI = srcURI.Replace("%22", "\"");
+			srcURI = srcURI.Replace("%23", "#");
+			srcURI = srcURI.Replace("%24", "$");
+			srcURI = srcURI.Replace("%25", "%");
+			srcURI = srcURI.Replace("%26", "&");
+			srcURI = srcURI.Replace("%27", "'");
+
+			srcURI = srcURI.Replace("%28", "(");
+			srcURI = srcURI.Replace("%29", ")");
+			srcURI = srcURI.Replace("%2A", "*");
+			srcURI = srcURI.Replace("%2B", "+");
+			srcURI = srcURI.Replace("%2C", ",");
+			srcURI = srcURI.Replace("%2D", "-");
+			srcURI = srcURI.Replace("%2E", ".");
+			srcURI = srcURI.Replace("%2F", "/");
+
+			srcURI = srcURI.Replace("%3A", ":");
+			srcURI = srcURI.Replace("%3B", ";");
+			srcURI = srcURI.Replace("%3C", "<");
+			srcURI = srcURI.Replace("%3D", "=");
+			srcURI = srcURI.Replace("%3E", ">");
+			srcURI = srcURI.Replace("%3F", "?");
+			srcURI = srcURI.Replace("%40", "@");
+
+			srcURI = srcURI.Replace("%5B", "[");
+			srcURI = srcURI.Replace("%5C", "\\");
+			srcURI = srcURI.Replace("%5D", "]");
+			srcURI = srcURI.Replace("%5E", "^");
+			srcURI = srcURI.Replace("%5F", "_");
+
+			srcURI = srcURI.Replace("%60", "`");
+			srcURI = srcURI.Replace("%7B", "{");
+			srcURI = srcURI.Replace("%7C", "|");
+			srcURI = srcURI.Replace("%7D", "}");
+			srcURI = srcURI.Replace("%7E", "~");
+			
+			return srcURI;
+		}
+
+
+		//파싱 (추가 21.7.11)
+		//프랑스어 등의 문제로 쉼표(,)가 소수점인 경우가 있다.
+		//--------------------------------------------------------------------------------------------
+		private const char PARSE_DOT = '.';
+		private const char PARSE_COMMA = ',';
+		private static System.Globalization.CultureInfo s_cultureInfo = null;
+		public static float ParseFloat(string strSrc)
+		{
+			//문화권은 영어로 통일한다. (점(.)을 소수점으로 인식한다.)
+			if(s_cultureInfo == null)
+			{
+				s_cultureInfo = System.Globalization.CultureInfo.GetCultureInfo("en-us");
+			}
+			return float.Parse(strSrc.Replace(PARSE_COMMA, PARSE_DOT), s_cultureInfo);
+			//return float.Parse(strSrc.Replace(PARSE_COMMA, PARSE_DOT));
+		}
+
+		public static double ParseDouble(string strSrc)
+		{
+			//문화권은 영어로 통일한다. (점(.)을 소수점으로 인식한다.)
+			if(s_cultureInfo == null)
+			{
+				s_cultureInfo = System.Globalization.CultureInfo.GetCultureInfo("en-us");
+			}
+			return double.Parse(strSrc.Replace(PARSE_COMMA, PARSE_DOT), s_cultureInfo);
+			//return double.Parse(strSrc.Replace(PARSE_COMMA, PARSE_DOT));
+		}
+
+		//public static double ParseDouble(string strSrc)
+		//{
+		//	return double.Parse(strSrc.Replace(PARSE_COMMA, PARSE_DOT));
+		//}
+
+
+
+
 		//추가 20.4.3 : 갱신 요청에 관련된 변수를 별도로 만든다.
 		//---------------------------------------------------------------------------------------------------
 		//public enum LINK_REFRESH_REQUEST_TYPE

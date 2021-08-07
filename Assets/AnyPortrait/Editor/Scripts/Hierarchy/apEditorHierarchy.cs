@@ -36,6 +36,11 @@ namespace AnyPortrait
 		//개선 20.3.28 : Pool을 이용하자
 		private apEditorHierarchyUnitPool _unitPool = new apEditorHierarchyUnitPool();
 
+		//추가 21.6.12 : 우클릭에 대한 메뉴 멤버 추가
+		private apEditorHierarchyMenu _rightMenu = null;
+		private object _loadKey_Rename = null;//이름 변경 다이얼로그의 유효성 테스트를 위한 로드키 
+		private object _loadKey_Search = null;
+
 		public enum CATEGORY
 		{
 			Overall_Name,
@@ -104,6 +109,8 @@ namespace AnyPortrait
 		public apEditorHierarchy(apEditor editor)
 		{
 			_editor = editor;
+
+			_rightMenu = new apEditorHierarchyMenu(_editor, OnSelectRightMenu);
 
 			if(_unitPool == null)
 			{
@@ -199,7 +206,7 @@ namespace AnyPortrait
 				AddUnit_ToggleButton(	Editor.ImageSet.Get(apImageSet.PRESET.Hierarchy_Root), 
 										"Root Unit " + i + " (" + rootUnitSet._linked_RootUnit.Name + ")",//<<변경
 										CATEGORY.Overall_Item, rootUnitSet._linked_RootUnit, selectedObject,
-										false, _rootUnit_Overall);
+										false, _rootUnit_Overall, RIGHTCLICK_MENU.Enabled);
 			}
 
 
@@ -222,7 +229,8 @@ namespace AnyPortrait
 										CATEGORY.Images_Item, 
 										textureDataSet._linked_Image, 
 										selectedObject,
-										false, _rootUnit_Image);
+										false, _rootUnit_Image,
+										RIGHTCLICK_MENU.Enabled);
 			}
 
 			AddUnit_OnlyButton(Editor.ImageSet.Get(apImageSet.PRESET.Hierarchy_Add), Editor.GetUIWord(UIWORD.AddImage), CATEGORY.Images_Add, null, false, _rootUnit_Image);
@@ -247,7 +255,8 @@ namespace AnyPortrait
 										CATEGORY.Mesh_Item, 
 										meshSet._linked_Mesh, 
 										selectedObject,
-										false, _rootUnit_Mesh);
+										false, _rootUnit_Mesh,
+										RIGHTCLICK_MENU.Enabled);
 			}
 			AddUnit_OnlyButton(Editor.ImageSet.Get(apImageSet.PRESET.Hierarchy_Add), Editor.GetUIWord(UIWORD.AddMesh), CATEGORY.Mesh_Add, null, false, _rootUnit_Mesh);
 
@@ -276,7 +285,8 @@ namespace AnyPortrait
 																						CATEGORY.MeshGroup_Item, 
 																						meshGroup, 
 																						selectedObject,
-																						false, _rootUnit_MeshGroup);
+																						false, _rootUnit_MeshGroup,
+																						RIGHTCLICK_MENU.Enabled);
 					if (meshGroup._childMeshGroupTransforms.Count > 0)
 					{
 						AddUnit_SubMeshGroup(meshGroup, addedHierarchyUnit, selectedObject);
@@ -309,7 +319,8 @@ namespace AnyPortrait
 										CATEGORY.Param_Item, 
 										cParamSet._linked_ControlParam, 
 										selectedObject,
-										false, _rootUnit_Param);
+										false, _rootUnit_Param,
+										RIGHTCLICK_MENU.Enabled);
 			}
 			AddUnit_OnlyButton(Editor.ImageSet.Get(apImageSet.PRESET.Hierarchy_Add), Editor.GetUIWord(UIWORD.AddControlParameter), CATEGORY.Param_Add, null, false, _rootUnit_Param);
 
@@ -333,7 +344,8 @@ namespace AnyPortrait
 										CATEGORY.Animation_Item, 
 										animClipSet._linked_AnimClip, 
 										selectedObject,
-										false, _rootUnit_Animation);
+										false, _rootUnit_Animation,
+										RIGHTCLICK_MENU.Enabled);
 			}
 			AddUnit_OnlyButton(Editor.ImageSet.Get(apImageSet.PRESET.Hierarchy_Add), Editor.GetUIWord(UIWORD.AddAnimationClip), CATEGORY.Animation_Add, null, false, _rootUnit_Animation);
 		}
@@ -351,7 +363,9 @@ namespace AnyPortrait
 																				CATEGORY.MeshGroup_Item, 
 																				childMeshGroup, 
 																				selectedObject,
-																				false, parentUnit, false);
+																				false, parentUnit,
+																				RIGHTCLICK_MENU.Enabled,
+																				ORDER_CHANGABLE.None);
 
 					if (childMeshGroup._childMeshGroupTransforms.Count > 0)
 					{
@@ -397,10 +411,21 @@ namespace AnyPortrait
 		}
 
 
+		private enum RIGHTCLICK_MENU
+		{
+			None, Enabled
+		}
+
+		private enum ORDER_CHANGABLE
+		{
+			None, Changable
+		}
+
 		private apEditorHierarchyUnit AddUnit_ToggleButton(	Texture2D icon, string text, 
 															CATEGORY savedKey, object savedObj, object curSelectedObj,
 															bool isRoot, apEditorHierarchyUnit parent, 
-															bool isOrderChangable = true)
+															RIGHTCLICK_MENU rightClickSupported,
+															ORDER_CHANGABLE isOrderChangable = ORDER_CHANGABLE.Changable)
 		{
 			//이전
 			//apEditorHierarchyUnit newUnit = new apEditorHierarchyUnit();
@@ -424,13 +449,19 @@ namespace AnyPortrait
 										);
 			
 
-			if(isOrderChangable)
+			if(isOrderChangable == ORDER_CHANGABLE.Changable)
 			{
 				newUnit.SetEvent(OnUnitClick, null, OnUnitClickOrderChanged);
 			}
 			else
 			{
 				newUnit.SetEvent(OnUnitClick);
+			}
+
+			//추가 21.6.13 : 우클릭 지원
+			if(rightClickSupported == RIGHTCLICK_MENU.Enabled)
+			{
+				newUnit.SetRightClickEvent(OnUnitRightClick);
 			}
 			
 
@@ -531,7 +562,8 @@ namespace AnyPortrait
 								"Root Unit " + i + " (" + rootUnit.Name + ")",//<<변경
 								Editor.Select.RootUnit,
 								_rootUnit_Overall, 
-								i);
+								i,
+								RIGHTCLICK_MENU.Enabled);
 			}
 			//이전
 			//CheckRemovableUnits<apRootUnit>(deletedUnits, CATEGORY.Overall_Item, rootUnits);
@@ -559,7 +591,7 @@ namespace AnyPortrait
 								textureData._name,
 								Editor.Select.TextureData,
 								_rootUnit_Image,
-								i);
+								i, RIGHTCLICK_MENU.Enabled);
 			}
 			//이전
 			//CheckRemovableUnits<apTextureData>(deletedUnits, CATEGORY.Images_Item, textures);
@@ -588,7 +620,7 @@ namespace AnyPortrait
 								mesh._name,
 								Editor.Select.Mesh,
 								_rootUnit_Mesh,
-								i);
+								i, RIGHTCLICK_MENU.Enabled);
 			}
 			//이전
 			//CheckRemovableUnits<apMesh>(deletedUnits, CATEGORY.Mesh_Item, meshes);
@@ -638,7 +670,7 @@ namespace AnyPortrait
 								cParam._keyName,
 								Editor.Select.Param,
 								_rootUnit_Param,
-								i);
+								i, RIGHTCLICK_MENU.Enabled);
 			}
 			//이전
 			//CheckRemovableUnits<apControlParam>(deletedUnits, CATEGORY.Param_Item, cParams);
@@ -664,7 +696,7 @@ namespace AnyPortrait
 								animClip._name,
 								Editor.Select.AnimClip,
 								_rootUnit_Animation,
-								i);
+								i, RIGHTCLICK_MENU.Enabled);
 			}
 			//이전
 			//CheckRemovableUnits<apAnimClip>(deletedUnits, CATEGORY.Animation_Item, animClips);
@@ -709,7 +741,10 @@ namespace AnyPortrait
 								parentMeshGroup._name,
 								Editor.Select.MeshGroup,
 								refreshedHierarchyUnit,
-								indexPerParent);
+								indexPerParent,
+								RIGHTCLICK_MENU.Enabled,
+								(parentMeshGroup._parentMeshGroup == null) ? ORDER_CHANGABLE.Changable : ORDER_CHANGABLE.None//Root MeshGroup만 순서 바꿀 수 있다.
+								);
 
 			if (parentMeshGroup._childMeshGroupTransforms.Count > 0)
 			{
@@ -732,7 +767,9 @@ namespace AnyPortrait
 													string objName, 
 													object selectedObj, 
 													apEditorHierarchyUnit parentUnit,
-													int indexPerParent)
+													int indexPerParent,
+													RIGHTCLICK_MENU rightClickMenu,
+													ORDER_CHANGABLE orderChangable = ORDER_CHANGABLE.Changable)
 		{
 			apEditorHierarchyUnit unit = _units_All.Find(delegate (apEditorHierarchyUnit a)
 				{
@@ -779,7 +816,7 @@ namespace AnyPortrait
 			}
 			else
 			{
-				unit = AddUnit_ToggleButton(iconImage, objName, category, obj, selectedObj, false, parentUnit);
+				unit = AddUnit_ToggleButton(iconImage, objName, category, obj, selectedObj, false, parentUnit, rightClickMenu, orderChangable);
 			}
 
 			//추가 3.29 : Refresh의 경우 Index를 외부에서 지정한다.
@@ -846,7 +883,7 @@ namespace AnyPortrait
 
 			apEditorHierarchyUnit selectedUnit = null;
 
-
+			
 			//여기서 이벤트를 설정해주자
 			bool isAnyAdded = false;//추가 20.7.14 : 뭔가 추가가 되었다면, Refresh를 해야한다.
 			CATEGORY category = (CATEGORY)savedKey;
@@ -1204,6 +1241,581 @@ namespace AnyPortrait
 				apEditorUtil.SetEditorDirty();
 				Editor.RefreshControllerAndHierarchy(false);
 			}
+		}
+
+
+		// 우클릭 이벤트
+		//--------------------------------------------------------------------------------
+		//추가 21.6.12
+		//우클릭시 메뉴가 마우스에서 나온다.
+		public void OnUnitRightClick(apEditorHierarchyUnit eventUnit, int savedKey, object savedObj)
+		{
+			//Debug.Log("우클릭");
+			if(_rightMenu != null && savedObj != null)
+			{
+				//우클릭 메뉴를 열자 (해당되는 항목만)
+				CATEGORY category = (CATEGORY)savedKey;
+				switch (category)
+				{
+					case CATEGORY.Overall_Item:
+						{
+							//루트유닛
+							_rightMenu.ShowMenu(apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveUp
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveDown
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Search
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Remove,
+												savedKey, savedObj);
+						}
+						break;
+					case CATEGORY.Images_Item:
+						{
+							//이미지
+							_rightMenu.ShowMenu(apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Rename
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveUp
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveDown
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Search
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Remove,
+												savedKey, savedObj);
+						}
+						break;
+
+					case CATEGORY.Mesh_Item:
+						{
+							//메시
+							_rightMenu.ShowMenu(apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Rename
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveUp
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveDown
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Search
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Duplicate
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Remove,
+												savedKey, savedObj);
+						}
+						break;
+					case CATEGORY.MeshGroup_Item:
+						{
+							apMeshGroup meshGroup = savedObj as apMeshGroup;
+							if(meshGroup != null && meshGroup._parentMeshGroup != null)
+							{
+								//Child MeshGroup인 경우
+								_rightMenu.ShowMenu(apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Rename
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Search
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Duplicate
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Remove,
+												savedKey, savedObj);
+							}
+							else
+							{
+								//Root MeshGroup인 경우
+								_rightMenu.ShowMenu(apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Rename
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveUp
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveDown
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Search
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Duplicate
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Remove,
+												savedKey, savedObj);
+							}
+						}
+						break;
+					case CATEGORY.Animation_Item:
+						{
+							_rightMenu.ShowMenu(apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Rename
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveUp
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveDown
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Search
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Duplicate
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Remove,
+												savedKey, savedObj);
+						}
+						break;
+					case CATEGORY.Param_Item:
+						{
+							_rightMenu.ShowMenu(apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Rename
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveUp
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveDown
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Search
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Duplicate
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Remove,
+												savedKey, savedObj);
+						}
+					break;
+				}
+				
+			}
+		}
+
+
+		//우클릭 메뉴에서 항목을 선택했을 때
+		private void OnSelectRightMenu(apEditorHierarchyMenu.MENU_ITEM_HIERARCHY menuType, int hierachyUnitType, object requestedObj)
+		{
+			if(_editor == null || _editor._portrait == null)
+			{
+				return;
+			}
+			apObjectOrders orders = _editor._portrait._objectOrders;//위치 변경용
+			CATEGORY category = (CATEGORY)hierachyUnitType;
+			switch (category)
+			{
+				case CATEGORY.Overall_Item:
+					{
+						apRootUnit rootUnit = requestedObj as apRootUnit;
+						if(rootUnit != null)
+						{
+							switch (menuType)
+							{
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveUp:
+									orders.ChangeOrder(Editor._portrait, apObjectOrders.OBJECT_TYPE.RootUnit, rootUnit._childMeshGroup._uniqueID, true);
+									break;
+
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveDown:
+									orders.ChangeOrder(Editor._portrait, apObjectOrders.OBJECT_TYPE.RootUnit, rootUnit._childMeshGroup._uniqueID, false);
+									break;
+
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Search:
+									_loadKey_Search = apDialog_SearchObjects.ShowDialog_Portrait(_editor, OnObjectSearched);
+									break;
+
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Remove:
+									{
+										//Unregister
+										apMeshGroup targetRootMeshGroup = rootUnit._childMeshGroup;
+										if (targetRootMeshGroup != null)
+										{
+											bool isNeedToNone = _editor.Select.RootUnit == rootUnit;
+											apEditorUtil.SetRecord_PortraitMeshGroup(apUndoGroupData.ACTION.Portrait_SetMeshGroup, _editor, _editor._portrait, targetRootMeshGroup, false, true, apEditorUtil.UNDO_STRUCT.StructChanged);
+
+											_editor._portrait._mainMeshGroupIDList.Remove(targetRootMeshGroup._uniqueID);
+											_editor._portrait._mainMeshGroupList.Remove(targetRootMeshGroup);
+
+											_editor._portrait._rootUnits.Remove(rootUnit);
+
+											if (isNeedToNone)
+											{
+												_editor.Select.SetNone();
+											}
+										}
+									}
+									break;
+							}
+						}
+					}
+					break;
+
+				case CATEGORY.Images_Item:
+					{
+						apTextureData textureData = requestedObj as apTextureData;
+						if(textureData != null)
+						{
+							switch (menuType)
+							{
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Rename:
+									_loadKey_Rename = apDialog_Rename.ShowDialog(_editor, textureData, textureData._name, OnObjectRenamed);
+									break;
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveUp:
+									orders.ChangeOrder(Editor._portrait, apObjectOrders.OBJECT_TYPE.Image, textureData._uniqueID, true);
+									break;
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveDown:
+									orders.ChangeOrder(Editor._portrait, apObjectOrders.OBJECT_TYPE.Image, textureData._uniqueID, false);
+									break;
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Search:
+									_loadKey_Search = apDialog_SearchObjects.ShowDialog_Portrait(_editor, OnObjectSearched);
+									break;
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Remove:
+									{
+										//경고 메시지를 먼저 보여준다.
+
+										string strDialogInfo = _editor.Controller.GetRemoveItemMessage(
+																				_editor._portrait,
+																				textureData,
+																				5,
+																				_editor.GetTextFormat(TEXT.RemoveImage_Body, textureData._name),
+																				_editor.GetText(TEXT.DLG_RemoveItemChangedWarning));
+
+										bool isResult = EditorUtility.DisplayDialog(_editor.GetText(TEXT.RemoveImage_Title),
+																strDialogInfo,
+																_editor.GetText(TEXT.Remove),
+																_editor.GetText(TEXT.Cancel));
+
+										if (isResult)
+										{
+											_editor.Controller.RemoveTexture(textureData);
+										}
+									}
+									break;
+							}
+						}
+					}
+					break;
+
+				case CATEGORY.Mesh_Item:
+					{
+						apMesh mesh = requestedObj as apMesh;
+						if(mesh != null)
+						{
+							switch (menuType)
+							{
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Rename:
+									_loadKey_Rename = apDialog_Rename.ShowDialog(_editor, mesh, mesh._name, OnObjectRenamed);
+									break;
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveUp:
+									orders.ChangeOrder(Editor._portrait, apObjectOrders.OBJECT_TYPE.Mesh, mesh._uniqueID, true);
+									break;
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveDown:
+									orders.ChangeOrder(Editor._portrait, apObjectOrders.OBJECT_TYPE.Mesh, mesh._uniqueID, false);
+									break;
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Search:
+									_loadKey_Search = apDialog_SearchObjects.ShowDialog_Portrait(_editor, OnObjectSearched);
+									break;
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Duplicate:
+									{
+										_editor.Controller.DuplicateMesh(mesh);
+									}
+									break;
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Remove:
+									{
+										string strRemoveDialogInfo = _editor.Controller.GetRemoveItemMessage(
+																				_editor._portrait,
+																				mesh,
+																				5,
+																				_editor.GetTextFormat(TEXT.RemoveMesh_Body, mesh._name),
+																				_editor.GetText(TEXT.DLG_RemoveItemChangedWarning)
+																				);
+
+										bool isResult = EditorUtility.DisplayDialog(_editor.GetText(TEXT.RemoveMesh_Title),
+																						strRemoveDialogInfo,
+																						_editor.GetText(TEXT.Remove),
+																						_editor.GetText(TEXT.Cancel));
+
+										if (isResult)
+										{
+											_editor.Controller.RemoveMesh(mesh);
+										}
+									}
+									break;
+							}
+						}
+					}
+					break;
+
+				case CATEGORY.MeshGroup_Item:
+					{
+						apMeshGroup meshGroup = requestedObj as apMeshGroup;
+						if(meshGroup != null)
+						{
+							switch (menuType)
+							{
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Rename:
+									_loadKey_Rename = apDialog_Rename.ShowDialog(_editor, meshGroup, meshGroup._name, OnObjectRenamed);
+									break;
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveUp://Root MeshGroup인 경우
+									orders.ChangeOrder(Editor._portrait, apObjectOrders.OBJECT_TYPE.MeshGroup, meshGroup._uniqueID, true);
+									break;
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveDown://Root MeshGroup인 경우
+									orders.ChangeOrder(Editor._portrait, apObjectOrders.OBJECT_TYPE.MeshGroup, meshGroup._uniqueID, false);
+									break;
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Search:
+									_loadKey_Search = apDialog_SearchObjects.ShowDialog_Portrait(_editor, OnObjectSearched);
+									break;
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Duplicate:
+									{
+										_editor.Controller.DuplicateMeshGroup(meshGroup, null, meshGroup._parentMeshGroup == null, true);
+									}
+									break;
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Remove:
+									{
+										string strRemoveDialogInfo = _editor.Controller.GetRemoveItemMessage(
+																				_editor._portrait,
+																				meshGroup,
+																				5,
+																				Editor.GetTextFormat(TEXT.RemoveMeshGroup_Body, meshGroup._name),
+																				Editor.GetText(TEXT.DLG_RemoveItemChangedWarning)
+																				);
+
+										bool isResult = EditorUtility.DisplayDialog(_editor.GetText(TEXT.RemoveMeshGroup_Title),
+																						strRemoveDialogInfo,
+																						_editor.GetText(TEXT.Remove),
+																						_editor.GetText(TEXT.Cancel)
+																						);
+										if (isResult)
+										{
+											_editor.Controller.RemoveMeshGroup(meshGroup);
+										}
+									}
+									break;
+							}
+						}
+					}
+					break;
+
+				case CATEGORY.Animation_Item:
+					{
+						apAnimClip animClip = requestedObj as apAnimClip;
+						if (animClip != null)
+						{
+							switch (menuType)
+							{
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Rename:
+									_loadKey_Rename = apDialog_Rename.ShowDialog(_editor, animClip, animClip._name, OnObjectRenamed);
+									break;
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveUp:
+									orders.ChangeOrder(Editor._portrait, apObjectOrders.OBJECT_TYPE.AnimClip, animClip._uniqueID, true);
+									break;
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveDown:
+									orders.ChangeOrder(Editor._portrait, apObjectOrders.OBJECT_TYPE.AnimClip, animClip._uniqueID, false);
+									break;
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Search:
+									_loadKey_Search = apDialog_SearchObjects.ShowDialog_Portrait(_editor, OnObjectSearched);
+									break;
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Duplicate:
+									{
+										_editor.Controller.DuplicateAnimClip(animClip);
+									}
+									break;
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Remove:
+									{
+										bool isResult = EditorUtility.DisplayDialog(	_editor.GetText(TEXT.RemoveAnimClip_Title),
+																						_editor.GetTextFormat(TEXT.RemoveAnimClip_Body, animClip._name),
+																						_editor.GetText(TEXT.Remove),
+																						_editor.GetText(TEXT.Cancel));
+										if (isResult)
+										{
+											_editor.Controller.RemoveAnimClip(animClip);
+										}
+									}
+									break;
+							}
+						}
+					}
+					break;
+
+				case CATEGORY.Param_Item:
+					{
+						apControlParam cParam = requestedObj as apControlParam;
+						if(cParam != null)
+						{
+							switch (menuType)
+							{
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Rename:
+									_loadKey_Rename = apDialog_Rename.ShowDialog(_editor, cParam, cParam._keyName, OnObjectRenamed);
+									break;
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveUp:
+									orders.ChangeOrder(Editor._portrait, apObjectOrders.OBJECT_TYPE.ControlParam, cParam._uniqueID, true);
+									break;
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveDown:
+									orders.ChangeOrder(Editor._portrait, apObjectOrders.OBJECT_TYPE.ControlParam, cParam._uniqueID, false);
+									break;
+
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Search:
+									_loadKey_Search = apDialog_SearchObjects.ShowDialog_Portrait(_editor, OnObjectSearched);
+									break;
+
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Duplicate:
+									{
+										_editor.Controller.DuplicateParam(cParam);
+									}
+									break;
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Remove:
+									{
+										string strRemoveParamText = Editor.Controller.GetRemoveItemMessage(
+														_editor._portrait,
+														cParam,
+														5,
+														_editor.GetTextFormat(TEXT.RemoveControlParam_Body, cParam._keyName),
+														_editor.GetText(TEXT.DLG_RemoveItemChangedWarning)
+														);
+
+										bool isResult = EditorUtility.DisplayDialog(	_editor.GetText(TEXT.RemoveControlParam_Title),
+																						strRemoveParamText,
+																						_editor.GetText(TEXT.Remove),
+																						_editor.GetText(TEXT.Cancel));
+										if (isResult)
+										{
+											_editor.Controller.RemoveParam(cParam);
+										}
+									}
+									break;
+							}
+						}
+					}
+					break;
+			}
+
+			//메뉴를 선택하면 변경이 될 것이므로 Dirty
+			apEditorUtil.SetEditorDirty();
+			Editor.RefreshControllerAndHierarchy(false);
+		}
+
+		//오브젝트 이름 바꾸기 다이얼로그 결과
+		public void OnObjectRenamed(bool isSuccess, object loadKey, object targetObject, string name)
+		{
+			if(!isSuccess
+				|| loadKey == null
+				|| _loadKey_Rename != loadKey
+				|| targetObject == null
+				|| string.IsNullOrEmpty(name)
+				|| _editor == null
+				|| _editor._portrait == null)
+			{
+				_loadKey_Rename = null;
+				return;
+			}
+
+			_loadKey_Rename = null;
+
+			//대상에 따라 다르다.
+			if(targetObject is apTextureData)
+			{
+				apTextureData textureData = targetObject as apTextureData;
+
+				apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Image_SettingChanged, 
+													_editor, 
+													_editor._portrait, 
+													//textureData, 
+													false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
+
+				textureData._name = name;
+			}
+			else if(targetObject is apMesh)
+			{
+				apMesh mesh = targetObject as apMesh;
+
+				apEditorUtil.SetRecord_Mesh(	apUndoGroupData.ACTION.MeshEdit_SettingChanged, 
+												_editor, 
+												mesh, 
+												//null, 
+												false,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
+
+				mesh._name = name;
+			}
+			else if(targetObject is apMeshGroup)
+			{
+				apMeshGroup meshGroup = targetObject as apMeshGroup;
+
+				//메시 그룹의 이름은 아래 함수를 이용한다.
+				_editor.Controller.RenameMeshGroup(meshGroup, name);
+			}
+			else if(targetObject is apAnimClip)
+			{
+				apAnimClip animClip = targetObject as apAnimClip;
+
+				apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Anim_SettingChanged, 
+													_editor, 
+													_editor._portrait, 
+													//animClip, 
+													false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);					
+				animClip._name = name;
+			}
+			else if(targetObject is apControlParam)
+			{
+				apControlParam controlParam = targetObject as apControlParam;
+
+				if (Editor.ParamControl.FindParam(name) != null)
+				{
+					//이미 사용중인 이름이다.
+					EditorUtility.DisplayDialog(_editor.GetText(TEXT.ControlParamNameError_Title),
+												_editor.GetText(TEXT.ControlParamNameError_Body_Used),
+												_editor.GetText(TEXT.Close));
+				}
+				else
+				{
+					_editor.Controller.ChangeParamName(controlParam, name);
+				}
+			}
+
+			Editor.RefreshControllerAndHierarchy(false);
+		}
+
+
+		//오브젝트 찾기 다이얼로그 결과
+		private void OnObjectSearched(object loadKey, object targetObject)
+		{
+			
+			//창이 열린 이후에 연속으로 이 이벤트가 호출될 수 있다.
+			if(_loadKey_Search != loadKey
+				|| loadKey == null
+				|| _editor == null
+				|| _editor._portrait == null)
+			{
+				_loadKey_Search = null;
+				return;
+			}
+			if(targetObject == null)
+			{
+				return;
+			}
+
+			
+			if(targetObject is apRootUnit)
+			{
+				//루트유닛
+				apRootUnit rootUnit = targetObject as apRootUnit;
+				if(rootUnit != null
+					&& _editor._portrait != null
+					&& _editor._portrait._rootUnits.Contains(rootUnit))
+				{
+					Editor.Select.SetOverall(rootUnit);
+				}
+			}
+			else if(targetObject is apTextureData)
+			{
+				//텍스쳐
+				apTextureData textureData = targetObject as apTextureData;
+				if(textureData != null 
+					&& _editor._portrait._textureData != null
+					&& _editor._portrait._textureData.Contains(textureData))
+				{
+					Editor.Select.SetImage(textureData);//<< 선택하자
+				}
+			}
+			else if(targetObject is apMesh)
+			{
+				//메시
+				apMesh mesh = targetObject as apMesh;
+				if(mesh != null 
+					&& _editor._portrait._meshes != null
+					&& _editor._portrait._meshes.Contains(mesh))
+				{
+					Editor.Select.SetMesh(mesh);//<< 선택하자
+				}
+			}
+			else if(targetObject is apMeshGroup)
+			{
+				//메시 그룹
+				apMeshGroup meshGroup = targetObject as apMeshGroup;
+				if(meshGroup != null 
+					&& _editor._portrait._meshGroups != null
+					&& _editor._portrait._meshGroups.Contains(meshGroup))
+				{
+					Editor.Select.SetMeshGroup(meshGroup);
+				}
+			}
+			else if(targetObject is apAnimClip)
+			{
+				//애니메이션 클립
+				apAnimClip animClip = targetObject as apAnimClip;
+				if(animClip != null 
+					&& _editor._portrait._animClips != null
+					&& _editor._portrait._animClips.Contains(animClip))
+				{
+					Editor.Select.SetAnimClip(animClip);
+				}
+			}
+			else if(targetObject is apControlParam)
+			{
+				//컨트롤 파라미터
+				apControlParam cParam = targetObject as apControlParam;
+				if(cParam != null 
+					&& _editor._portrait._controller != null
+					&& _editor._portrait._controller._controlParams != null
+					&& _editor._portrait._controller._controlParams.Contains(cParam))
+				{
+					Editor.Select.SetParam(cParam);
+				}
+			}
+
+			Editor.RefreshControllerAndHierarchy(false);
 		}
 
 		// GUI

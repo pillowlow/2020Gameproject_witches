@@ -237,9 +237,14 @@ namespace AnyPortrait
 					}
 				}
 
+				//이전
+				//fs = new FileStream(baseFolderPath + "/" + fileName + ".pos", FileMode.Create, FileAccess.Write);
+				//sw = new StreamWriter(fs);
 
-				fs = new FileStream(baseFolderPath + "/" + fileName + ".pos", FileMode.Create, FileAccess.Write);
-				sw = new StreamWriter(fs);
+				//변경 21.7.3 : 경로 + 인코딩 문제
+				fs = new FileStream(apUtil.ConvertEscapeToPlainText(baseFolderPath + "/" + fileName + ".pos"), FileMode.Create, FileAccess.Write);
+				sw = new StreamWriter(fs, System.Text.Encoding.UTF8);
+
 
 				sw.WriteLine("--------------------------");
 				sw.WriteLine(" Pose Data ");
@@ -320,8 +325,13 @@ namespace AnyPortrait
 
 			try
 			{
-				fs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-				sr = new StreamReader(fs);
+				//이전
+				//fs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+				//sr = new StreamReader(fs);
+
+				//변경 21.7.3 : 경로 문제와 인코딩 문제
+				fs = new FileStream(apUtil.ConvertEscapeToPlainText(filePath), FileMode.Open, FileAccess.Read);
+				sr = new StreamReader(fs, System.Text.Encoding.UTF8, true);
 
 				sr.ReadLine();//"-------------"
 				sr.ReadLine();//"  Pose Data  "

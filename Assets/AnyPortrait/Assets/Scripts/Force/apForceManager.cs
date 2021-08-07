@@ -53,9 +53,19 @@ namespace AnyPortrait
 		//----------------------------------------------------------
 		public apForceManager()
 		{
+			if(_touchUnits == null)
+			{
+				_touchUnits = new apPullTouch[MAX_TOUCH_UNIT];
+			}
+
 			for (int i = 0; i < MAX_TOUCH_UNIT; i++)
 			{
 				_touchUnits[i] = new apPullTouch(i);
+			}
+
+			if(_forceUnits == null)
+			{
+				_forceUnits = new List<apForceUnit>();
 			}
 
 			ClearAll();
@@ -80,11 +90,29 @@ namespace AnyPortrait
 
 
 		public void ClearForce()
-		{
+		{	
 			_forceUnits.Clear();
 			_isAnyForceUnit = false;
 
 		}
+
+		//추가 21.7.8 : 일부만 삭제할 수 있다.
+		public void RemoveForce(apForceUnit forceUnit)
+		{
+			if(forceUnit == null)
+			{
+				return;
+			}
+
+			if(_forceUnits.Contains(forceUnit))
+			{
+				_forceUnits.Remove(forceUnit);
+			}
+			_isAnyForceUnit = _forceUnits.Count > 0;
+		}
+
+		
+
 
 
 
@@ -190,6 +218,18 @@ namespace AnyPortrait
 
 			CalculateTouchCount();
 		}
+
+
+		public void RemoveTouch(apPullTouch touch)
+		{
+			if(touch == null)
+			{
+				return;
+			}
+			
+			RemoveTouch(touch.TouchID);
+		}
+
 
 		public void ClearTouch()
 		{

@@ -1088,7 +1088,12 @@ namespace AnyPortrait
 				return true;//>>Reimport가 안되므로 걍 진행한다.
 			}
 
-			apEditorUtil.SetRecord_PortraitAllMeshGroupAndAllModifiers(apUndoGroupData.ACTION.Image_PSDImport, _editor, _portrait, _portrait, false);
+			apEditorUtil.SetRecord_PortraitAllMeshGroupAndAllModifiers(	apUndoGroupData.ACTION.Image_PSDImport, 
+																		_editor, 
+																		_portrait, 
+																		//_portrait, 
+																		false,
+																		apEditorUtil.UNDO_STRUCT.StructChanged);
 
 			apMeshGroup targetMeshGroup = _reimportPSDSet._linkedTargetMeshGroup;
 			List<apTextureData> texDataList_Target = new List<apTextureData>();

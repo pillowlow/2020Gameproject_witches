@@ -447,7 +447,7 @@ namespace AnyPortrait
 				string fileName = EditorUtility.SaveFilePanelInProject("Thumbnail File Path", _editor._portrait.name + "_Thumb.png", "png", "Please Enter a file name to save Thumbnail to");
 				if (!string.IsNullOrEmpty(fileName))
 				{
-					_editor._portrait._imageFilePath_Thumbnail = fileName;
+					_editor._portrait._imageFilePath_Thumbnail = apUtil.ConvertEscapeToPlainText(fileName);//이스케이프 문자 삭제
 					apEditorUtil.ReleaseGUIFocus();
 				}
 			}

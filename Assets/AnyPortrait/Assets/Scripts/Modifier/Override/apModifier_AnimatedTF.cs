@@ -154,7 +154,22 @@ namespace AnyPortrait
 		{
 			base.Calculate(tDelta);
 
+			//UnityEngine.Profiling.Profiler.BeginSample("Mod - TF (Animation)");
+
 			CalculatePattern_Transform(tDelta);
+
+			//UnityEngine.Profiling.Profiler.EndSample();
+		}
+
+		public override void Calculate_DLL(float tDelta)
+		{
+			base.Calculate_DLL(tDelta);
+
+			//UnityEngine.Profiling.Profiler.BeginSample("Mod - TF (Animation)");
+
+			CalculatePattern_Transform_DLL(tDelta);
+
+			//UnityEngine.Profiling.Profiler.EndSample();
 		}
 	}
 

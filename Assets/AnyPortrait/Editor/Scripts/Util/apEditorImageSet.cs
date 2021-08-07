@@ -154,6 +154,8 @@ namespace AnyPortrait
 			Modifier_AnimatedFFD,
 			Modifier_BoneTF,
 			Modifier_AnimBoneTF,
+			Modifier_ColorOnly,
+			Modifier_AnimatedColorOnly,
 
 			Modifier_Active,
 			Modifier_Deactive,
@@ -168,6 +170,9 @@ namespace AnyPortrait
 			Modifier_RemoveFromControlParamKey,
 			Modifier_RemoveFromPhysics,
 			Modifier_RemoveFromRigging,
+
+			CopyPaste_SingleTarget,
+			CopyPaste_MultiTarget,
 
 			Controller_Default,
 			Controller_Edit,
@@ -453,6 +458,9 @@ namespace AnyPortrait
 			SmallMod_CursorLocked,
 			SmallMod_CursorUnlocked,
 
+			SmallMod_ColorOnly,
+			SmallMod_AnimColorOnly,
+
 			Capture_Frame,
 			Capture_Tab,
 			Capture_Thumbnail,
@@ -722,6 +730,9 @@ namespace AnyPortrait
 			CheckImageAndLoad(PRESET.Modifier_BoneTF, "Modifier_BoneTF", true);
 			CheckImageAndLoad(PRESET.Modifier_AnimBoneTF, "Modifier_AnimBoneTF", true);
 
+			CheckImageAndLoad(PRESET.Modifier_ColorOnly,			"Modifier_ColorOnly");
+			CheckImageAndLoad(PRESET.Modifier_AnimatedColorOnly,	"Modifier_AnimatedColorOnly");
+
 
 			CheckImageAndLoad(PRESET.Modifier_Active, "Modifier_Active");
 			CheckImageAndLoad(PRESET.Modifier_Deactive, "Modifier_Deactive");
@@ -736,6 +747,9 @@ namespace AnyPortrait
 			CheckImageAndLoad(PRESET.Modifier_RemoveFromControlParamKey, "Modifier_RemoveFromControlParamKey", true);
 			CheckImageAndLoad(PRESET.Modifier_RemoveFromPhysics, "Modifier_RemoveFromPhysics", true);
 			CheckImageAndLoad(PRESET.Modifier_RemoveFromRigging, "Modifier_RemoveFromRigging", true);
+
+			CheckImageAndLoad(PRESET.CopyPaste_SingleTarget, "CopyPaste_SingleTarget");
+			CheckImageAndLoad(PRESET.CopyPaste_MultiTarget, "CopyPaste_MultiTarget");
 
 			CheckImageAndLoad(PRESET.Controller_Default, "Controller_Default", true);
 			CheckImageAndLoad(PRESET.Controller_Edit, "Controller_Edit", true);
@@ -1041,6 +1055,9 @@ namespace AnyPortrait
 
 			CheckImageAndLoad(PRESET.SmallMod_CursorLocked,		"SmallMod_CursorLocked");
 			CheckImageAndLoad(PRESET.SmallMod_CursorUnlocked,	"SmallMod_CursorUnlocked");
+
+			CheckImageAndLoad(PRESET.SmallMod_ColorOnly,		"SmallMod_ColorOnly");
+			CheckImageAndLoad(PRESET.SmallMod_AnimColorOnly,	"SmallMod_AnimColorOnly");
 
 			CheckImageAndLoad(PRESET.Capture_Frame,				"Capture_Frame", true);
 			CheckImageAndLoad(PRESET.Capture_Tab,				"Capture_Tab");

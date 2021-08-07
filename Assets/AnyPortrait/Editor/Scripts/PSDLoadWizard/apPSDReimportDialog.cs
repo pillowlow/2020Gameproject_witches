@@ -748,6 +748,9 @@ namespace AnyPortrait
 					GUI_Center_5_AtlasSetting(width, height, centerRect);
 					break;
 			}
+
+			//추가 21.5.19 : 렌더링중인 Pass를 종료한다.
+			_gl.EndPass();
 		}
 
 
@@ -919,6 +922,9 @@ namespace AnyPortrait
 
 							if (!string.IsNullOrEmpty(filePath))
 							{
+								//추가 21.7.3 : 이스케이프 문자 삭제
+								filePath = apUtil.ConvertEscapeToPlainText(filePath);
+
 								//LoadPsdFile(filePath, _selectedPSDSet);
 								_selectedPSDSet.SetPSDFilePath(filePath);
 
@@ -3152,6 +3158,10 @@ namespace AnyPortrait
 						{
 							_selectedPSDSet._bakeOption_DstFileRelativePath += _selectedPSDSet._bakeOption_DstFilePath.Substring(subStartLength);
 						}
+
+						//추가 21.7.3 : Escape 문자 삭제
+						_selectedPSDSet._bakeOption_DstFilePath = apUtil.ConvertEscapeToPlainText(_selectedPSDSet._bakeOption_DstFilePath);
+						_selectedPSDSet._bakeOption_DstFileRelativePath = apUtil.ConvertEscapeToPlainText(_selectedPSDSet._bakeOption_DstFileRelativePath);
 					}
 				}
 				//_bakeDstFilePath = EditorUtility.SaveFilePanelInProject("Set Atlas Save Path with File Name", _fileNameOnly, "png", "Please enter a file name to save the atlas set.\nFiles are name with an index.");

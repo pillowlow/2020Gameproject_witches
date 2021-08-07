@@ -738,7 +738,7 @@ namespace AnyPortrait
 			//"Add New Rule"
 			if(GUILayout.Button(_editor.GetText(TEXT.AddNewRule), apGUILOFactory.I.Height(25)))
 			{
-				apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.VisibilityChanged, _editor, _portrait, null, false);//Undo
+				apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.VisibilityChanged, _editor, _portrait, false, apEditorUtil.UNDO_STRUCT.ValueOnly);//Undo
 
 				_curRule = _visiblePreset.AddNewRule();
 				SyncToRule();//동기화
@@ -780,12 +780,12 @@ namespace AnyPortrait
 				if(!string.Equals(nextName, prevName))
 				{
 					//이름 바꾸기
-					apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.VisibilityChanged, _editor, _portrait, _curRule, false);//Undo
+					apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.VisibilityChanged, _editor, _portrait, false, apEditorUtil.UNDO_STRUCT.ValueOnly);//Undo
 					_curRule._name = nextName;
 				}
 				if(nextRuleType != prevRuleType)
 				{
-					apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.VisibilityChanged, _editor, _portrait, _curRule, false);//Undo
+					apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.VisibilityChanged, _editor, _portrait, false, apEditorUtil.UNDO_STRUCT.ValueOnly);//Undo
 					_curRule._ruleType = nextRuleType;
 
 					if(prevRuleType == apVisibilityPresets.RULE_TYPE.Custom && nextRuleType != apVisibilityPresets.RULE_TYPE.Custom)
@@ -796,7 +796,7 @@ namespace AnyPortrait
 				}
 				if(nextHotKey != prevHotKey)
 				{
-					apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.VisibilityChanged, _editor, _portrait, _curRule, false);//Undo
+					apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.VisibilityChanged, _editor, _portrait, false, apEditorUtil.UNDO_STRUCT.ValueOnly);//Undo
 					_curRule._hotKey = nextHotKey;
 
 					//None타입이 아닐 때 동일한 단축키를 가진 다른 규칙이 있다면, 그 규칙의 단축키를 해제
@@ -879,7 +879,7 @@ namespace AnyPortrait
 					int iRule = _visiblePreset._rules.IndexOf(_curRule);
 					if(iRule >= 1 && iRule < _visiblePreset._rules.Count)
 					{
-						apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.VisibilityChanged, _editor, _portrait, _curRule, false);//Undo
+						apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.VisibilityChanged, _editor, _portrait, false, apEditorUtil.UNDO_STRUCT.ValueOnly);//Undo
 
 						//인덱스 교환해서 정렬
 						int iPrevRule = iRule;
@@ -900,7 +900,7 @@ namespace AnyPortrait
 					int iRule = _visiblePreset._rules.IndexOf(_curRule);
 					if(iRule >= 0 && iRule < _visiblePreset._rules.Count - 1)
 					{
-						apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.VisibilityChanged, _editor, _portrait, _curRule, false);//Undo
+						apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.VisibilityChanged, _editor, _portrait, false, apEditorUtil.UNDO_STRUCT.ValueOnly);//Undo
 
 						//인덱스 교환해서 정렬
 						int iPrevRule = iRule;
@@ -919,7 +919,7 @@ namespace AnyPortrait
 			{
 				if (_curRule != null)
 				{
-					apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.VisibilityChanged, _editor, _portrait, null, false);//Undo
+					apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.VisibilityChanged, _editor, _portrait, false, apEditorUtil.UNDO_STRUCT.ValueOnly);//Undo
 					apVisibilityPresets.RuleData prevRule = _curRule;
 					_curRule = _visiblePreset.AddNewRule();
 
@@ -933,7 +933,7 @@ namespace AnyPortrait
 			{
 				if(_curRule != null)
 				{
-					apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.VisibilityChanged, _editor, _portrait, null, false);//Undo
+					apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.VisibilityChanged, _editor, _portrait, false, apEditorUtil.UNDO_STRUCT.ValueOnly);//Undo
 					_visiblePreset.RemoveRule(_curRule);
 
 					//만약, 에디터의 현재 Rule이 이 Rule이면 생략
@@ -1158,7 +1158,7 @@ namespace AnyPortrait
 				{
 					//자식 본들을 모두 설정한다.
 
-					apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.VisibilityChanged, _editor, _portrait, null, false);//Undo
+					apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.VisibilityChanged, _editor, _portrait, false, apEditorUtil.UNDO_STRUCT.ValueOnly);//Undo
 
 
 					if(_meshGroup2BoneList_All != null && _meshGroup2BoneList_All.ContainsKey(_curMeshGroup)
@@ -1261,7 +1261,7 @@ namespace AnyPortrait
 
 				if(isVisibleChanged)
 				{
-					apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.VisibilityChanged, _editor, _portrait, null, false);//Undo
+					apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.VisibilityChanged, _editor, _portrait, false, apEditorUtil.UNDO_STRUCT.ValueOnly);//Undo
 
 					//-> None이면 데이터 삭제
 					//-> Show/Hide면 데이터 갱신

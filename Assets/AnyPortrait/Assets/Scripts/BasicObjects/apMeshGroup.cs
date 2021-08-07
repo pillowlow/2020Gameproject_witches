@@ -347,6 +347,30 @@ namespace AnyPortrait
 			
 		}
 
+#if UNITY_EDITOR
+		/// <summary>
+		/// 추가 21.5.13 : C++ DLL을 이용하여 메시 그룹을 업데이트한다.
+		/// </summary>
+		/// <param name="tDelta"></param>
+		/// <param name="isUpdateVertsAlways"></param>
+		public void UpdateRenderUnits_DLL(float tDelta, bool isUpdateVertsAlways)
+		{
+			//일정 프레임마다 업데이트하도록 한다.
+			_tDelta += tDelta;
+			
+
+			//Profiler.BeginSample("MeshGroup Update Per Frame");
+
+			//UpdateAllRenderUnits(_tDelta, isUpdateVertsAlways, false);
+			UpdateAllRenderUnits_DLL(_tDelta, isUpdateVertsAlways, false);
+
+			//Profiler.EndSample();
+
+			_tDelta = 0.0f;
+			
+		}
+#endif
+
 
 		/// <summary>
 		/// 호출시 MeshGroup 전체를 업데이트를 한다.
@@ -357,6 +381,21 @@ namespace AnyPortrait
 		{
 			//Profiler.BeginSample("MeshGroup Refresh Force");
 			UpdateAllRenderUnits(tDelta, true, isDepthChanged, linkRefreshRequest);
+
+			//Profiler.EndSample();
+		}
+
+		/// <summary>
+		/// C++ DLL로 업데이트를 하는 경우
+		/// </summary>
+		/// <param name="isDepthChanged"></param>
+		/// <param name="tDelta"></param>
+		/// <param name="linkRefreshRequest"></param>
+		public void RefreshForce_DLL(bool isDepthChanged = false, float tDelta = 0.0f, apUtil.LinkRefreshRequest linkRefreshRequest = null)
+		{
+			//Profiler.BeginSample("MeshGroup Refresh Force");
+			
+			UpdateAllRenderUnits_DLL(tDelta, true, isDepthChanged, linkRefreshRequest);
 
 			//Profiler.EndSample();
 		}
@@ -398,16 +437,27 @@ namespace AnyPortrait
 			//추가 11.30 : DepthChanged 이벤트
 			_sortedRenderBuffer.ReadyToUpdate();
 			
+			//UnityEngine.Profiling.Profiler.BeginSample("Update Render Units (Internal)");
 
+			//UnityEngine.Profiling.Profiler.BeginSample("1. Ready To Bones");
 
 			//추가
 			//본 업데이트 1단계
 			ReadyToUpdateBones();
 
+			//UnityEngine.Profiling.Profiler.EndSample();
+
+
+			//UnityEngine.Profiling.Profiler.BeginSample("2. Update Modifier (Pre)");
+
 			//Modifier를 계산한다.
 			UpdateModifierStack_Pre(tDelta);
 
-			
+			//UnityEngine.Profiling.Profiler.EndSample();
+
+
+			//UnityEngine.Profiling.Profiler.BeginSample("3. Update Render Units (Pre)");
+
 			//값을 계산해준다.
 			//값은 계층 방식으로 호출
 			_rootRenderUnit.ReadyToUpdate();
@@ -415,26 +465,175 @@ namespace AnyPortrait
 			//CalculateParam을 계산하고 RenderUnit에 반영한다. [Pre]
 			_rootRenderUnit.Update_Pre(tDelta);//Vertex + WorldMatrix가 계산된다.//<<이것도 Pre/Post로 나눠야 한다.
 			
+
+			//UnityEngine.Profiling.Profiler.EndSample();
+
+
+			//UnityEngine.Profiling.Profiler.BeginSample("4. Make Bones Matrix");
+
+
 			//본 업데이트 : [WorldMatrix 생성]을 하자!
 			UpdateBonesWorldMatrix();
 
+
+			//UnityEngine.Profiling.Profiler.EndSample();
+			
+
+			//UnityEngine.Profiling.Profiler.BeginSample("5. Update Modifier (Post)");
 			
 			//Rigging Modifier는 여기서 계산해야하는데?
 			//RenderUnit과 Bone Matrix가 계산되는게 우선되어야하는 Modifier는 여기서 업데이트한다.
 			UpdateModifierStack_Post(tDelta);
 			
+
+			//UnityEngine.Profiling.Profiler.EndSample();
+
+
+			//UnityEngine.Profiling.Profiler.BeginSample("6. Update Render Units (Post)");
+
+
 			//CalculateParam을 계산하고 RenderUnit에 반영한다. [Post]
 			_rootRenderUnit.Update_Post(tDelta);
 
+
+			//UnityEngine.Profiling.Profiler.EndSample();
+
+
+			//UnityEngine.Profiling.Profiler.BeginSample("7. Update Render Vertices");
+
+
 			_rootRenderUnit.UpdateToRenderVert(tDelta, isUpdateVertAlways);//<<추가 : Update와 [적용]이 분리되었다.
 
+
+			//UnityEngine.Profiling.Profiler.EndSample();
+
+
+			//UnityEngine.Profiling.Profiler.BeginSample("8. Re-Sort");
 
 			//추가 11.30
 			//만약 Extra-Depth Changed 이벤트가 발생했다면, RenderUnit을 다시 재정렬 해야한다.
 			//기존의 "_renderUnits_All"을 재정렬하는 것은 위험하다.
 			//이때는 "_renderUnits_All_DepthChanged"을 클리어하고, 여기에 값을 넣는다.
 			_sortedRenderBuffer.UpdateDepthChangedEventAndBuffers();
+
+			//UnityEngine.Profiling.Profiler.EndSample();
+
+			//UnityEngine.Profiling.Profiler.EndSample();
 		}
+
+
+
+
+		//추가 21.5.14 : C++ DLL로 업데이트
+		//TODO : 여기의 코드를 DLL 버전으로 교체해야한다.
+		private void UpdateAllRenderUnits_DLL(float tDelta, bool isUpdateVertAlways, bool isDepthChanged, apUtil.LinkRefreshRequest linkRefreshRequest = null)
+		{
+			//Debug.Log("DLL Update");
+			if (_parentPortrait == null)
+			{
+				return;
+			}
+			if (_isNeedRenderUnitReset || _renderUnits_All.Count == 0 || _rootRenderUnit == null)
+			{
+				ResetRenderUnits(linkRefreshRequest);
+			}
+
+			if (_isNeedRenderUnitSort)
+			{
+				//Debug.Log("Sort");
+				SortRenderUnits(isDepthChanged);
+			}
+
+			
+			_tUpdateBias += tDelta;
+			if (_tUpdateBias > 0.01f)
+			{
+				_tUpdateBias = 0.0f;
+			}
+
+			//추가 11.30 : DepthChanged 이벤트
+			_sortedRenderBuffer.ReadyToUpdate();
+			
+			//UnityEngine.Profiling.Profiler.BeginSample("Update Render Units (DLL)");
+
+			//UnityEngine.Profiling.Profiler.BeginSample("1. Ready To Bones");
+			//추가
+			//본 업데이트 1단계
+			ReadyToUpdateBones();
+
+			//UnityEngine.Profiling.Profiler.EndSample();
+
+
+			//UnityEngine.Profiling.Profiler.BeginSample("2. Update Modifier (Pre)");
+
+			//Modifier를 계산한다.
+			//< C++ DLL로 변경 >
+			UpdateModifierStack_Pre_DLL(tDelta);
+
+			//UnityEngine.Profiling.Profiler.EndSample();
+
+
+			//UnityEngine.Profiling.Profiler.BeginSample("3. Update Render Units (Pre)");
+			
+			//값을 계산해준다.
+			//값은 계층 방식으로 호출
+			_rootRenderUnit.ReadyToUpdate();
+
+			//CalculateParam을 계산하고 RenderUnit에 반영한다. [Pre]
+			//< C++ DLL로 변경 >
+			_rootRenderUnit.Update_Pre_DLL(tDelta);//Vertex + WorldMatrix가 계산된다. (작성 필요)
+			
+
+			//UnityEngine.Profiling.Profiler.EndSample();
+
+			//UnityEngine.Profiling.Profiler.BeginSample("4. Make Bones Matrix");
+
+			//본 업데이트 : [WorldMatrix 생성]을 하자!
+			UpdateBonesWorldMatrix();
+
+			//UnityEngine.Profiling.Profiler.EndSample();
+			
+
+			//UnityEngine.Profiling.Profiler.BeginSample("5. Update Modifier (Post)");
+
+			//Rigging Modifier는 여기서 계산해야하는데?
+			//RenderUnit과 Bone Matrix가 계산되는게 우선되어야하는 Modifier는 여기서 업데이트한다.
+			//< TODO : C++ DLL로 변경 >
+			UpdateModifierStack_Post_DLL(tDelta);
+			
+			//UnityEngine.Profiling.Profiler.EndSample();
+
+
+			//UnityEngine.Profiling.Profiler.BeginSample("6. Update Render Units (Post)");
+
+			//CalculateParam을 계산하고 RenderUnit에 반영한다. [Post]
+			//< TODO : C++ DLL로 변경 >
+			_rootRenderUnit.Update_Post_DLL(tDelta);
+
+			//UnityEngine.Profiling.Profiler.EndSample();
+
+
+			//UnityEngine.Profiling.Profiler.BeginSample("7. Update Render Vertices");
+			
+			//< TODO : C++ DLL로 변경 >
+			_rootRenderUnit.UpdateToRenderVert_DLL(tDelta, isUpdateVertAlways);//<<추가 : Update와 [적용]이 분리되었다.
+
+			//UnityEngine.Profiling.Profiler.EndSample();
+
+
+			//UnityEngine.Profiling.Profiler.BeginSample("8. Re-Sort");
+
+			//추가 11.30
+			//만약 Extra-Depth Changed 이벤트가 발생했다면, RenderUnit을 다시 재정렬 해야한다.
+			//기존의 "_renderUnits_All"을 재정렬하는 것은 위험하다.
+			//이때는 "_renderUnits_All_DepthChanged"을 클리어하고, 여기에 값을 넣는다.
+			_sortedRenderBuffer.UpdateDepthChangedEventAndBuffers();
+
+			//UnityEngine.Profiling.Profiler.EndSample();
+
+			//UnityEngine.Profiling.Profiler.EndSample();
+		}
+
 
 
 		public void UpdateModifierStack_Pre(float tDelta)
@@ -446,6 +645,24 @@ namespace AnyPortrait
 				if (_childMeshGroupTransforms[i]._meshGroup != null)
 				{
 					_childMeshGroupTransforms[i]._meshGroup.UpdateModifierStack_Pre(tDelta);
+				}
+			}
+		}
+
+
+		/// <summary>
+		/// 추가 21.5.14 : C++ DLL을 이용하여 업데이트를 한다.
+		/// </summary>
+		/// <param name="tDelta"></param>
+		public void UpdateModifierStack_Pre_DLL(float tDelta)
+		{
+			_modifierStack.Update_Pre_DLL(tDelta);
+
+			for (int i = 0; i < _childMeshGroupTransforms.Count; i++)
+			{
+				if (_childMeshGroupTransforms[i]._meshGroup != null)
+				{
+					_childMeshGroupTransforms[i]._meshGroup.UpdateModifierStack_Pre_DLL(tDelta);
 				}
 			}
 		}
@@ -467,6 +684,34 @@ namespace AnyPortrait
 				{
 					_childMeshGroupTransforms[i]._meshGroup.UpdateModifierStack_Post(tDelta);
 				}
+			}
+		}
+
+		/// <summary>
+		/// 추가 21.5.14 : C++ DLL을 이용하여 업데이트 한다.
+		/// </summary>
+		/// <param name="tDelta"></param>
+		public void UpdateModifierStack_Post_DLL(float tDelta)
+		{
+			_modifierStack.Update_Post_DLL(tDelta);
+
+			for (int i = 0; i < _childMeshGroupTransforms.Count; i++)
+			{
+				if (_childMeshGroupTransforms[i]._meshGroup != null)
+				{
+					_childMeshGroupTransforms[i]._meshGroup.UpdateModifierStack_Post_DLL(tDelta);
+				}
+			}
+		}
+
+		/// <summary>
+		/// 추가 21.7.1 : 실행 취소시, 복구된 Depth값을 RenderUnit에 적용시킬 필요가 있다.
+		/// </summary>
+		public void TFDepthToRenderUnitsOnUndo()
+		{
+			if (_rootRenderUnit != null)
+			{
+				RefreshDepth(_rootRenderUnit, 0);
 			}
 		}
 
@@ -916,21 +1161,50 @@ namespace AnyPortrait
 			Dictionary<object, apRenderUnit> prevSubObj2RenderUnits = new Dictionary<object, apRenderUnit>();
 			int nRenderUnits = _renderUnits_All.Count;
 			apRenderUnit curRenderUnit = null;
+
+			apTransform_Mesh curMeshTF = null;
+			apTransform_MeshGroup curMeshGroupTF = null;
+
+			//중요 21.7.19 : 다른 메시 그룹 (부모나 자식 등)에 의해서, 현재 Transform에 연결된 RenderUnit이 curRenderUnit이 아닐 수 있다.
+			//다만 현재 이 메시 그룹의 RenderUnit 리스트가 초기화되지 않고 남아서, 적절한 재활용을 방해하는 것일 수 있다.
+			//기존에 Linked된게 있다면 그대로 활용하자
+
 			for (int i = 0; i < nRenderUnits; i++)
 			{
 				curRenderUnit = _renderUnits_All[i];
 				if(curRenderUnit._meshTransform != null)
 				{
-					if(!prevSubObj2RenderUnits.ContainsKey(curRenderUnit._meshTransform))
+					curMeshTF = curRenderUnit._meshTransform;
+
+					if(!prevSubObj2RenderUnits.ContainsKey(curMeshTF))
 					{
-						prevSubObj2RenderUnits.Add(curRenderUnit._meshTransform, curRenderUnit);
+						//변경 21.7.19 : 연결된 RenderUnit을 우선시한다.
+						if(curMeshTF._linkedRenderUnit != null)
+						{
+							prevSubObj2RenderUnits.Add(curMeshTF, curMeshTF._linkedRenderUnit);
+						}
+						else
+						{
+							prevSubObj2RenderUnits.Add(curMeshTF, curRenderUnit);
+						}
+						
 					}
 				}
 				else if(curRenderUnit._meshGroupTransform != null)
 				{
-					if(!prevSubObj2RenderUnits.ContainsKey(curRenderUnit._meshGroupTransform))
+					curMeshGroupTF = curRenderUnit._meshGroupTransform;
+
+					if(!prevSubObj2RenderUnits.ContainsKey(curMeshGroupTF))
 					{
-						prevSubObj2RenderUnits.Add(curRenderUnit._meshGroupTransform, curRenderUnit);
+						//변경 21.7.19 : 연결된 RenderUnit을 우선시한다.
+						if(curMeshGroupTF._linkedRenderUnit != null)
+						{
+							prevSubObj2RenderUnits.Add(curMeshGroupTF, curMeshGroupTF._linkedRenderUnit);
+						}
+						else
+						{
+							prevSubObj2RenderUnits.Add(curMeshGroupTF, curRenderUnit);
+						}
 					}
 				}
 			}
@@ -997,21 +1271,51 @@ namespace AnyPortrait
 			Dictionary<object, apRenderUnit> prevSubObj2RenderUnits = new Dictionary<object, apRenderUnit>();
 			int nRenderUnits = _renderUnits_All.Count;
 			apRenderUnit curRenderUnit = null;
+
+
+			apTransform_Mesh curMeshTF = null;
+			apTransform_MeshGroup curMeshGroupTF = null;
+
+			//중요 21.7.19 : 다른 메시 그룹 (부모나 자식 등)에 의해서, 현재 Transform에 연결된 RenderUnit이 curRenderUnit이 아닐 수 있다.
+			//다만 현재 이 메시 그룹의 RenderUnit 리스트가 초기화되지 않고 남아서, 적절한 재활용을 방해하는 것일 수 있다.
+			//기존에 Linked된게 있다면 그대로 활용하자
+
 			for (int i = 0; i < nRenderUnits; i++)
 			{
 				curRenderUnit = _renderUnits_All[i];
 				if(curRenderUnit._meshTransform != null)
 				{
-					if(!prevSubObj2RenderUnits.ContainsKey(curRenderUnit._meshTransform))
+					curMeshTF = curRenderUnit._meshTransform;
+					if(!prevSubObj2RenderUnits.ContainsKey(curMeshTF))
 					{
-						prevSubObj2RenderUnits.Add(curRenderUnit._meshTransform, curRenderUnit);
+						if(curMeshTF._linkedRenderUnit != null)
+						{
+							//연결된게 이미 있으면 그걸 이용
+							prevSubObj2RenderUnits.Add(curMeshTF, curMeshTF._linkedRenderUnit);
+						}
+						else
+						{
+							prevSubObj2RenderUnits.Add(curMeshTF, curRenderUnit);
+						}
+						
 					}
 				}
 				else if(curRenderUnit._meshGroupTransform != null)
 				{
-					if(!prevSubObj2RenderUnits.ContainsKey(curRenderUnit._meshGroupTransform))
+					curMeshGroupTF = curRenderUnit._meshGroupTransform;
+
+					if(!prevSubObj2RenderUnits.ContainsKey(curMeshGroupTF))
 					{
-						prevSubObj2RenderUnits.Add(curRenderUnit._meshGroupTransform, curRenderUnit);
+						if(curMeshGroupTF._linkedRenderUnit != null)
+						{
+							//연결된게 있으면 그걸 이용
+							prevSubObj2RenderUnits.Add(curMeshGroupTF, curMeshGroupTF._linkedRenderUnit);
+						}
+						else
+						{
+							prevSubObj2RenderUnits.Add(curMeshGroupTF, curRenderUnit);
+						}
+						
 					}
 				}
 			}
@@ -1144,6 +1448,8 @@ namespace AnyPortrait
 
 			apRenderUnit curRenderUnit_Group = null;
 
+			//Debug.LogWarning("< AddRenderUnitPerMeshGroup : MeshGroup : " + targetMeshGroup._name + " >");
+
 			#region [미사용 코드] 대신 prevSubObj2RenderUnits를 이용하자
 			//생성하기 전에
 			//동일한 targetMeshGroup을 가진 다른 RenderUnit이 있는지 검색하자
@@ -1167,7 +1473,7 @@ namespace AnyPortrait
 			//} 
 			#endregion
 
-			if (prevSubObj2RenderUnits != null)
+			if (prevSubObj2RenderUnits != null)			
 			{
 				//재활용이 가능한 경우
 				if (targetMeshGroupTransform != null && prevSubObj2RenderUnits.ContainsKey(targetMeshGroupTransform))
@@ -1225,7 +1531,7 @@ namespace AnyPortrait
 				//} 
 				#endregion
 
-				if (prevSubObj2RenderUnits != null)
+				if (prevSubObj2RenderUnits != null)				
 				{
 					//재활용이 가능한 경우
 					if (meshTransform != null && prevSubObj2RenderUnits.ContainsKey(meshTransform))
@@ -1256,6 +1562,7 @@ namespace AnyPortrait
 					continue;
 				}
 
+				//Debug.Log(">> 자식 메시 그룹으로 이동");
 				AddRenderUnitPerMeshGroup(meshGroupTransform._meshGroup, meshGroupTransform, curRenderUnit_Group, prevSubObj2RenderUnits);
 			}
 		}
@@ -1596,103 +1903,6 @@ namespace AnyPortrait
 					//Debug.LogError("Next Depth의 최소 이동치를 보정한다. >> " + nextDepth);
 				}
 			}
-
-			#region [미사용 코드 : 잘못된 Next Depth 보정]
-			//Debug.Log((isIncrease ? "Increase" : "Decrease") + " : " + curDepth + " > " + nextDepth);
-
-			//if (!sameLevelRenderUnits.Exists(delegate (apRenderUnit a)
-			// {
-			//	 //return a._depth == nextDepth;//이전
-			//	 return a.GetDepth() == nextDepth;
-			// }))
-			//{
-
-			//	Debug.LogWarning("목표한 NextDepth에 해당하는 RenderUnit이 없다. >> " + nextDepth);
-
-			//	//해당 nextDepth에 마땅한 객체가 없을 경우 검색
-			//	//int optDepth = nextDepth;
-			//	int optDepth = curDepth;//<<시작 지점 변경
-
-			//	apRenderUnit optUnit = null;
-			//	for (int i = 0; i < sameLevelRenderUnits.Count; i++)
-			//	{
-			//		apRenderUnit nextUnit = sameLevelRenderUnits[i];
-			//		if (isIncrease)
-			//		{
-			//			//이전
-			//			//if (renderUnit.GetDepth() < nextUnit.GetDepth())
-			//			//{
-			//			//	//목표보다는 크지만, 그 중 최소값을 찾는다.
-			//			//	//if (optUnit == null || nextUnit._depth < optDepth)//이전
-			//			//	if (optUnit == null || nextUnit.GetDepth() < optDepth)
-			//			//	{
-			//			//		optUnit = nextUnit;
-			//			//		//optDepth = nextUnit._depth;//이전
-			//			//		optDepth = nextUnit.GetDepth();
-			//			//	}
-			//			//}
-
-			//			//변경
-			//			//현재 < .... Opt[Max] < Next
-			//			if (curDepth < nextUnit.GetDepth() && nextUnit.GetDepth() <= nextDepth)
-			//			{
-			//				//목표 범위 안에 있으며, 최대값을 찾는다.
-			//				if (optUnit == null || nextUnit.GetDepth() > optDepth)
-			//				{
-			//					optUnit = nextUnit;
-			//					//optDepth = nextUnit._depth;//이전
-			//					optDepth = nextUnit.GetDepth();
-			//				}
-			//			}
-			//		}
-			//		else
-			//		{
-			//			//이전
-			//			//if (renderUnit.GetDepth() > nextUnit.GetDepth())
-			//			//{
-			//			//	//목표보다는 작지만, 그 중 최대값을 찾는다.
-			//			//	//if (optUnit == null || nextUnit._depth > optDepth)
-			//			//	if (optUnit == null || nextUnit.GetDepth() > optDepth)
-			//			//	{
-			//			//		optUnit = nextUnit;
-			//			//		//optDepth = nextUnit._depth;
-			//			//		optDepth = nextUnit.GetDepth();
-			//			//	}
-			//			//}
-
-			//			//변경
-			//			//Next < Opt[Min]... < 현재
-			//			if (nextDepth <= nextUnit.GetDepth() && nextUnit.GetDepth() < curDepth)
-			//			{
-			//				//목표 범위 안에 있으며, 최소값을 찾는다.
-			//				if (optUnit == null || nextUnit.GetDepth() < optDepth)
-			//				{
-			//					optUnit = nextUnit;
-			//					//optDepth = nextUnit._depth;//이전
-			//					optDepth = nextUnit.GetDepth();
-			//				}
-			//			}
-			//		}
-			//	}
-			//	if (optUnit != null)
-			//	{
-			//		nextDepth = optDepth;
-			//		if(!isIncrease)
-			//		{
-			//			nextDepth--;
-			//		}
-			//		Debug.LogError("Next Depth가 바뀌었다.  >> : " + nextDepth);
-			//	}
-			//	else
-			//	{
-			//		Debug.LogError("Opt Depth를 찾지 못했다.  >> : " + nextDepth);
-			//	}
-			//}
-			//else
-			//{
-			//	Debug.Log("목표한 NextDepth에 해당하는 RenderUnit이 있다. >> " + nextDepth);
-			//} 
-			#endregion
 
 			
 			int movedDepthOffset = Mathf.Abs(renderUnit.GetDepth() - nextDepth) + 100;
@@ -2693,6 +2903,9 @@ namespace AnyPortrait
 				}
 			}
 		}
+
+
+
 
 		
 

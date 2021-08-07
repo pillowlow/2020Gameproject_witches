@@ -117,28 +117,6 @@ namespace AnyPortrait
 																OnHotKeyEvent__Animation_Transform__Keyboard_Scale);
 
 			return apGizmos.GizmoEventSet.I;
-			
-			//이전
-			//return new apGizmos.GizmoEventSet(Select__Animation,
-			//									Unselect__Animation,
-			//									Move__Animation_Transform,
-			//									Rotate__Animation_Transform,
-			//									Scale__Animation_Transform,
-			//									TransformChanged_Position__Animation_Transform,
-			//									TransformChanged_Rotate__Animation_Transform,
-			//									TransformChanged_Scale__Animation_Transform,
-			//									null,
-			//									TransformChanged_Color__Animation_Transform,
-			//									TransformChanged_Extra__Animation_Transform,
-			//									PivotReturn__Animation_Transform,
-			//									null, null, null, null, null, null,
-			//									apGizmos.TRANSFORM_UI.TRS_NoDepth //Depth 제외
-			//									| apGizmos.TRANSFORM_UI.Color 
-			//									| apGizmos.TRANSFORM_UI.Extra//<<추가
-			//									| apGizmos.TRANSFORM_UI.BoneIKController,
-			//									FirstLink__Animation,
-			//									null
-			//									);
 		}
 
 		public apGizmos.GizmoEventSet GetEventSet__Animation_EditVertex()
@@ -205,6 +183,36 @@ namespace AnyPortrait
 			//									AddHotKeys__Animation_Vertex);
 		}
 
+
+		public apGizmos.GizmoEventSet GetEventSet__Animation_EditColorOnly()
+		{
+			apGizmos.GizmoEventSet.I.Clear();
+			apGizmos.GizmoEventSet.I.SetEvent_1_Basic(	Select__Animation,
+														Unselect__Animation, 
+														null, 
+														null, 
+														null, 
+														PivotReturn__Animation_ColorOnly);
+
+			apGizmos.GizmoEventSet.I.SetEvent_2_TransformGUI(	null,
+																null,
+																null,
+																null,
+																TransformChanged_Color__Animation_Transform,
+																TransformChanged_Extra__Animation_Transform,
+																apGizmos.TRANSFORM_UI.Color 
+																	| apGizmos.TRANSFORM_UI.Extra//<<추가
+																	);
+
+			apGizmos.GizmoEventSet.I.SetEvent_3_Tools(null, null, null, null, null, null);
+			apGizmos.GizmoEventSet.I.SetEvent_4_EtcAndKeyboard(	FirstLink__Animation, 
+																null, 
+																null, 
+																null, 
+																null);
+
+			return apGizmos.GizmoEventSet.I;
+		}
 
 
 		//---------------------------------------------------------------------------
@@ -1168,23 +1176,40 @@ namespace AnyPortrait
 
 						//>>Bone Set으로 변경
 						apMeshGroup.BoneListSet boneSet = null;
-						for (int iSet = 0; iSet < mainMeshGroup._boneListSets.Count; iSet++)
+						if (mainMeshGroup._boneListSets != null && mainMeshGroup._boneListSets.Count > 0)
 						{
-							boneSet = mainMeshGroup._boneListSets[iSet];
-							for (int iRoot = 0; iRoot < boneSet._bones_Root.Count; iRoot++)
+							//for (int iSet = 0; iSet < mainMeshGroup._boneListSets.Count; iSet++)//출력 순서
+							for (int iSet = mainMeshGroup._boneListSets.Count - 1; iSet >= 0; iSet--)//선택 순서
 							{
-								bone = CheckBoneClickRecursive(boneSet._bones_Root[iRoot], mousePosW, mousePosGL, Editor._boneGUIRenderMode, -1, Editor.Select.IsBoneIKRenderable, isNotEditObjSelectable);
-								if (bone != null)
+								boneSet = mainMeshGroup._boneListSets[iSet];
+
+								if (boneSet._bones_Root != null && boneSet._bones_Root.Count > 0)
 								{
-									resultBone = bone;
+									//for (int iRoot = 0; iRoot < boneSet._bones_Root.Count; iRoot++)//출력 순서
+									for (int iRoot = boneSet._bones_Root.Count - 1; iRoot >= 0; iRoot--)//선택 순서
+									{
+										bone = CheckBoneClickRecursive(boneSet._bones_Root[iRoot],
+																		mousePosW, mousePosGL, Editor._boneGUIRenderMode,
+																		//-1,
+																		Editor.Select.IsBoneIKRenderable, isNotEditObjSelectable,
+																		false);
+										if (bone != null)
+										{
+											resultBone = bone;
+											break;//다른 Root List는 확인하지 않는다.
+										}
+									}
+
+								}
+
+								if (resultBone != null)
+								{
+									//다른 Set에서 확인하지 않는다.
+									break;
 								}
 							}
-							if(resultBone != null)
-							{
-								//이 Set에서 선택이 완료되었다.
-								break;
-							}
 						}
+						
 
 
 						if (resultBone != null)
@@ -1271,7 +1296,8 @@ namespace AnyPortrait
 										continue;
 									}
 
-									if (renderUnit._meshTransform._isVisible_Default && renderUnit._meshColor2X.a > 0.1f)//Alpha 옵션 추가
+									//if (renderUnit._meshTransform._isVisible_Default && renderUnit._meshColor2X.a > 0.1f)//이전
+									if (renderUnit._isVisible && renderUnit._meshColor2X.a > 0.1f)//변경 21.7.20
 									{
 										bool isPick = apEditorUtil.IsMouseInRenderUnitMesh(
 												mousePosGL, renderUnit);
@@ -1936,7 +1962,9 @@ namespace AnyPortrait
 																		Editor._portrait,
 																		targetMeshGroup,
 																		linkedModifier, 
-																		null, false);
+																		//null, 
+																		false,
+																		apEditorUtil.UNDO_STRUCT.ValueOnly);
 				}
 				else
 				{
@@ -1973,15 +2001,21 @@ namespace AnyPortrait
 																		Editor._portrait,
 																		targetMeshGroup,
 																		linkedModifier,
-																		null, false);
+																		//null, 
+																		false,
+																		apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 						//Debug.LogError("부모 본이 있어서 Undo Record의 범위 확장");
 					}
 					else
 					{
 						//일반적인 편집
-						apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Anim_Gizmo_MoveTransform,
-														Editor, linkedModifier, null, false);
+						apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Anim_Gizmo_MoveTransform,
+															Editor, 
+															linkedModifier, 
+															//null, 
+															false,
+															apEditorUtil.UNDO_STRUCT.ValueOnly);
 						//Debug.LogWarning("일반 편집에 의한 Undo Record");
 					}
 					
@@ -2603,7 +2637,9 @@ namespace AnyPortrait
 				apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Anim_Gizmo_MoveVertex, 
 													Editor, 
 													linkedModifier, 
-													null, false);
+													//null, 
+													false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 
@@ -2929,12 +2965,18 @@ namespace AnyPortrait
 																		Editor._portrait,
 																		targetMeshGroup,
 																		linkedModifier, 
-																		null, false);
+																		//null, 
+																		false,
+																		apEditorUtil.UNDO_STRUCT.ValueOnly);
 				}
 				else
 				{
-					apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Anim_Gizmo_RotateTransform,
-														Editor, linkedModifier, null, false);
+					apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Anim_Gizmo_RotateTransform,
+														Editor, 
+														linkedModifier, 
+														//null, 
+														false,
+														apEditorUtil.UNDO_STRUCT.ValueOnly);
 				}
 			}
 
@@ -3128,9 +3170,17 @@ namespace AnyPortrait
 					bone = curModBone._bone;
 					if (bone == null) { continue; }
 
+
+
+					//추가 : 21.7.3 : 본의 World Matrix가 반전된 상태면 Delta Angle을 뒤집는다.
+					float rotateBoneAngleW = deltaAngleW;					
+					if(curModBone._bone._worldMatrix.Is1AxisFlipped())
+					{
+						rotateBoneAngleW = -deltaAngleW;
+					}
+
 					//Default Angle은 -180 ~ 180 범위 안에 들어간다.
-					//float nextAngle = bone._defaultMatrix._angleDeg + deltaAngleW;
-					float nextAngle = curModBone._transformMatrix._angleDeg + deltaAngleW;
+					float nextAngle = curModBone._transformMatrix._angleDeg + rotateBoneAngleW;
 
 
 					//변경 20.1.21 : 각도 제한이 "무조건" > "옵션에 따라"로 변경
@@ -3310,8 +3360,11 @@ namespace AnyPortrait
 			if (isFirstRotate)
 			{
 				apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Anim_Gizmo_RotateVertex, 
-													Editor, linkedModifier, 
-													null, false);
+													Editor, 
+													linkedModifier, 
+													//null, 
+													false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 
@@ -3580,12 +3633,18 @@ namespace AnyPortrait
 																		Editor._portrait,
 																		targetMeshGroup,
 																		linkedModifier, 
-																		null, false);
+																		//null, 
+																		false,
+																		apEditorUtil.UNDO_STRUCT.ValueOnly);
 				}
 				else
 				{
-					apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Anim_Gizmo_ScaleTransform,
-														Editor, linkedModifier, null, false);
+					apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Anim_Gizmo_ScaleTransform,
+														Editor, 
+														linkedModifier, 
+														//null, 
+														false,
+														apEditorUtil.UNDO_STRUCT.ValueOnly);
 				}
 			}
 
@@ -3929,9 +3988,12 @@ namespace AnyPortrait
 			//Undo
 			if (isFirstScale)
 			{
-				apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Anim_Gizmo_ScaleVertex,
-													Editor, linkedModifier,
-													null, false);
+				apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Anim_Gizmo_ScaleVertex,
+													Editor, 
+													linkedModifier,
+													//null, 
+													false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 			Vector2 centerPos2 = Editor.Select.ModRenderVertsCenterPos;
@@ -4287,12 +4349,18 @@ namespace AnyPortrait
 																	Editor._portrait,
 																	targetMeshGroup,
 																	linkedModifier,
-																	null, false);
+																	//null, 
+																	false,
+																	apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 			else
 			{
 				apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Anim_Gizmo_MoveTransform,
-													Editor, linkedModifier, null, false);
+													Editor, 
+													linkedModifier, 
+													//null, 
+													false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 
@@ -4644,7 +4712,12 @@ namespace AnyPortrait
 			}
 
 			//Undo
-			apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Anim_Gizmo_MoveVertex, Editor, linkedModifier, null, false);
+			apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Anim_Gizmo_MoveVertex, 
+												Editor, 
+												linkedModifier, 
+												//null, 
+												false,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 
 			
@@ -4832,12 +4905,18 @@ namespace AnyPortrait
 																	Editor._portrait,
 																	targetMeshGroup,
 																	linkedModifier,
-																	null, false);
+																	//null, 
+																	false,
+																	apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 			else
 			{
 				apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Anim_Gizmo_RotateTransform,
-													Editor, linkedModifier, null, false);
+													Editor, 
+													linkedModifier, 
+													//null, 
+													false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 
@@ -5217,12 +5296,18 @@ namespace AnyPortrait
 																	Editor._portrait,
 																	targetMeshGroup,
 																	linkedModifier,
-																	null, false);
+																	//null, 
+																	false,
+																	apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 			else
 			{
 				apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Anim_Gizmo_ScaleTransform,
-													Editor, linkedModifier, null, false);
+													Editor, 
+													linkedModifier, 
+													//null, 
+													false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 
@@ -5579,7 +5664,12 @@ namespace AnyPortrait
 
 			
 			//Undo
-			apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Anim_Gizmo_Color, Editor, linkedModifier, null, false);
+			apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Anim_Gizmo_Color, 
+												Editor, 
+												linkedModifier, 
+												//null, 
+												false,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 
 			//이제 ModMesh/ModBone들을 선택해서 편집하자
@@ -6067,12 +6157,18 @@ namespace AnyPortrait
 																		Editor._portrait,
 																		targetMeshGroup,
 																		linkedModifier, 
-																		null, false);
+																		//null, 
+																		false,
+																		apEditorUtil.UNDO_STRUCT.ValueOnly);
 				}
 				else
 				{
-					apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Anim_Gizmo_MoveTransform,
-														Editor, linkedModifier, null, false);
+					apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Anim_Gizmo_MoveTransform,
+														Editor, 
+														linkedModifier, 
+														//null, 
+														false,
+														apEditorUtil.UNDO_STRUCT.ValueOnly);
 				}
 			}
 
@@ -6645,12 +6741,19 @@ namespace AnyPortrait
 																		Editor._portrait,
 																		targetMeshGroup,
 																		linkedModifier, 
-																		null, false);
+																		//null, 
+																		false,
+																		apEditorUtil.UNDO_STRUCT.ValueOnly);
 				}
 				else
 				{
-					apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Anim_Gizmo_RotateTransform,
-														Editor, linkedModifier, null, false);
+					apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Anim_Gizmo_RotateTransform,
+														Editor, 
+														linkedModifier, 
+														//null, 
+														false,
+														apEditorUtil.UNDO_STRUCT.ValueOnly
+														);
 				}
 			}
 
@@ -6830,9 +6933,16 @@ namespace AnyPortrait
 					bone = curModBone._bone;
 					if (bone == null) { continue; }
 
+
+					//추가 : 21.7.3 : 본의 World Matrix가 반전된 상태면 Delta Angle을 뒤집는다.
+					float rotateBoneAngleW = deltaAngleW;					
+					if(curModBone._bone._worldMatrix.Is1AxisFlipped())
+					{
+						rotateBoneAngleW = -deltaAngleW;
+					}
+
 					//Default Angle은 -180 ~ 180 범위 안에 들어간다.
-					//float nextAngle = bone._defaultMatrix._angleDeg + deltaAngleW;
-					float nextAngle = curModBone._transformMatrix._angleDeg + deltaAngleW;
+					float nextAngle = curModBone._transformMatrix._angleDeg + rotateBoneAngleW;
 
 
 					//변경 20.1.21 : 각도 제한이 "무조건" > "옵션에 따라"로 변경
@@ -7023,12 +7133,18 @@ namespace AnyPortrait
 																		Editor._portrait,
 																		targetMeshGroup,
 																		linkedModifier, 
-																		null, false);
+																		//null, 
+																		false,
+																		apEditorUtil.UNDO_STRUCT.ValueOnly);
 				}
 				else
 				{
-					apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Anim_Gizmo_ScaleTransform,
-														Editor, linkedModifier, null, false);
+					apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Anim_Gizmo_ScaleTransform,
+														Editor, 
+														linkedModifier, 
+														//null, 
+														false,
+														apEditorUtil.UNDO_STRUCT.ValueOnly);
 				}
 			}
 
@@ -7384,7 +7500,9 @@ namespace AnyPortrait
 				apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Anim_Gizmo_MoveVertex, 
 													Editor, 
 													linkedModifier, 
-													null, false);
+													//null, 
+													false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 
@@ -7602,7 +7720,9 @@ namespace AnyPortrait
 			{
 				apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Anim_Gizmo_RotateVertex, 
 													Editor, linkedModifier, 
-													null, false);
+													//null, 
+													false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 
@@ -7793,7 +7913,9 @@ namespace AnyPortrait
 			{
 				apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Anim_Gizmo_ScaleVertex,
 													Editor, linkedModifier,
-													null, false);
+													//null,
+													false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 			Vector2 centerPos2 = Editor.Select.ModRenderVertsCenterPos;
@@ -8053,7 +8175,11 @@ namespace AnyPortrait
 			if (isRecord)//추가 20.7.22 : 요청에 의해서만 Record를 하자
 			{
 				//Undo
-				apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Anim_Gizmo_FFDVertex, Editor, linkedModifier, null, true);
+				apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Anim_Gizmo_FFDVertex, 
+													Editor, linkedModifier, 
+													//null, 
+													true,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 			apSelection.ModRenderVert curMRV = null;
@@ -8389,7 +8515,12 @@ namespace AnyPortrait
 
 			if (isFirstBlur)
 			{
-				apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Anim_Gizmo_BlurVertex, Editor, linkedModifier, null, false);
+				apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Anim_Gizmo_BlurVertex, 
+													Editor, 
+													linkedModifier, 
+													//null, 
+													false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 			//1. 영역 안의 Vertex를 선택하자 + 마우스 중심점을 기준으로 Weight를 구하자 + ModValue의 가중치가 포함된 평균을 구하자
@@ -8650,6 +8781,125 @@ namespace AnyPortrait
 					mainModBone._transformMatrix._scale
 					);
 			}
+			return null;
+		}
+
+
+		public apGizmos.TransformParam PivotReturn__Animation_ColorOnly()
+		{
+			if (Editor.Select.AnimClip == null || Editor.Select.AnimClip._targetMeshGroup == null || Editor.Select.AnimTimeline == null)
+			{
+				return null;
+			}
+
+			if (Editor.Select.ExAnimEditingMode == apSelection.EX_EDIT.None || Editor.Select.IsAnimPlaying)
+			{
+				//에디팅 중이 아니다.
+				return null;
+			}
+
+			apModifierBase linkedModifier = Editor.Select.AnimTimeline._linkedModifier;
+
+			
+
+			
+			//>> [GizmoMain]
+
+			//다중 선택 + [기즈모 메인]에 
+			//- Main ModMesh나 Main ModBone이 존재
+			//- WorkKeyframe도 존재
+			//- [기즈모 메인]도 존재해야한다.
+			if (linkedModifier == null || Editor.Select.AnimWorkKeyframe_Main == null 
+				|| (Editor.Select.ModMesh_Main == null && Editor.Select.ModBone_Main == null))
+			{
+				//수정할 타겟이 없다.
+				//AutoKey일 수 있으니 별도의 리턴 함수를 이용한다.
+				//return GetPivotReturnWhenAutoKey_Transform();
+
+				//ColorOnly에서는 AutoKey를 지원하지 않는다.
+				return null;
+			}
+
+			//기즈모 메인을 대상으로 편집한다.
+			apModifiedMesh mainModMesh = Editor.Select.ModMesh_Gizmo_Main;
+			//apModifiedBone mainModBone = Editor.Select.ModBone_Gizmo_Main;//ModBone이 대상이 아니다.
+			
+			
+			bool isTransformPivot = false;
+			//bool isBonePivot = false;
+			
+			
+			
+			//>> [GizmoMain] >>
+			if (mainModMesh != null 
+				&& (mainModMesh._transform_Mesh != null || mainModMesh._transform_MeshGroup != null)
+				&& mainModMesh._renderUnit != null)
+			{
+				isTransformPivot = true;
+			}
+
+
+
+			//둘다 없으면 Null
+			if (!isTransformPivot)
+			{	
+				//수정할 타겟이 없다.
+				//추가 5.29 : AutoKey일 수 있으니 별도의 리턴 함수를 이용한다.
+				return null;
+				//return GetPivotReturnWhenAutoKey_Transform();//Color Only는 AutoKey를 지원하지 않는다.
+			}
+
+			if (isTransformPivot)
+			{
+				apMatrix resultMatrix = null;
+				
+				int transformDepth = mainModMesh._renderUnit.GetDepth();
+
+				if (mainModMesh._renderUnit._meshTransform != null)
+				{
+					resultMatrix = mainModMesh._renderUnit._meshTransform._matrix_TFResult_World;
+				}
+				else if (mainModMesh._renderUnit._meshGroupTransform != null)
+				{
+					resultMatrix = mainModMesh._renderUnit._meshGroupTransform._matrix_TFResult_World;
+				}
+				else
+				{
+					return null;
+				}
+
+				//Vector3 worldPos3 = resultMatrix.Pos3;
+				Vector2 worldPos = resultMatrix._pos;
+
+				float worldAngle = resultMatrix._angleDeg;
+				Vector2 worldScale = resultMatrix._scale;
+
+				apGizmos.TRANSFORM_UI paramType = apGizmos.TRANSFORM_UI.Color;//Color가 기본
+				
+				//추가 : Extra 옵션을 설정할 수 있다.
+				if(linkedModifier._isExtraPropertyEnabled)
+				{
+					paramType |= apGizmos.TRANSFORM_UI.Extra;
+				}
+
+				return apGizmos.TransformParam.Make(
+					worldPos,
+					worldAngle,
+					//modifiedMatrix._angleDeg,
+					worldScale,
+					//transformPivotMatrix._scale,
+					transformDepth,
+					mainModMesh._meshColor,
+					mainModMesh._isVisible,
+					//worldMatrix, 
+					//modifiedMatrix.MtrxToSpace,
+					resultMatrix.MtrxToSpace,
+					false, paramType,
+					mainModMesh._transformMatrix._pos,
+					mainModMesh._transformMatrix._angleDeg,
+					mainModMesh._transformMatrix._scale);
+			}
+			
 			return null;
 		}
 

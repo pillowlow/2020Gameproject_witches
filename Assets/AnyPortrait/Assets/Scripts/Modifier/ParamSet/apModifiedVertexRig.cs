@@ -217,6 +217,15 @@ namespace AnyPortrait
 						else
 						{
 							_totalWeight += weightPair._weight;
+
+							//검출 코드 추가 21.7.19
+							if(weightPair._bone._meshGroup != null && weightPair._bone._meshGroup != weightPair._meshGroup)
+							{
+								//Bone의 MeshGroup과 Pair의 MeshGroup이 다른 경우
+								//Debug.LogError("검출 : MeshGroup이 서로 맞지 않는다. [Bone MeshGroup : " + weightPair._bone._meshGroup._name + " / Pair MeshGroup : " + weightPair._meshGroup);
+								weightPair._meshGroup = weightPair._bone._meshGroup;
+								weightPair._meshGroupID = weightPair._bone._meshGroup._uniqueID;
+							}
 						}
 					}
 					else

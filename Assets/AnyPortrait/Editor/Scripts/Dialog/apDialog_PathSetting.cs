@@ -40,8 +40,7 @@ namespace AnyPortrait
 		private string _text_Info_NoAssetFolder = "";
 		private string _text_Info_Okay = "";
 
-		private apPathSetting _pathSetting = null;
-
+		
 		// Show Window
 		//------------------------------------------------------------------
 		[MenuItem("Window/AnyPortrait/Change Installation Path", false, 22)]
@@ -82,12 +81,8 @@ namespace AnyPortrait
 		// Init
 		//------------------------------------------------------------------
 		public void Init()
-		{
-			if(_pathSetting == null)
-			{
-				_pathSetting = new apPathSetting();
-			}
-			_text_CurrentPah = _pathSetting.Load();
+		{	
+			_text_CurrentPah = apPathSetting.I.Load();
 			
 			_language = (apEditor.LANGUAGE)EditorPrefs.GetInt("AnyPortrait_Language", (int)apEditor.LANGUAGE.English);
 
@@ -294,12 +289,8 @@ namespace AnyPortrait
 							relativePath = "Assets/" + relativePath;
 
 
-							if (_pathSetting == null)
-							{
-								_pathSetting = new apPathSetting();
-							}
-							_pathSetting.Save(relativePath);
-							_text_CurrentPah = _pathSetting.Load();
+							apPathSetting.I.Save(relativePath);
+							_text_CurrentPah = apPathSetting.I.Load();
 
 							//Debug.LogError("Relative Path : " + relativePath);
 						}
@@ -317,12 +308,8 @@ namespace AnyPortrait
 				}
 				if (GUILayout.Button(_text_UseDefaultPathButton, GUILayout.Height(25)))
 				{
-					if (_pathSetting == null)
-					{
-						_pathSetting = new apPathSetting();
-					}
-					_pathSetting.SetDefaultPath();
-					_text_CurrentPah = _pathSetting.Load();
+					apPathSetting.I.SetDefaultPath();
+					_text_CurrentPah = apPathSetting.I.Load();
 
 					apEditorUtil.ReleaseGUIFocus();
 				}

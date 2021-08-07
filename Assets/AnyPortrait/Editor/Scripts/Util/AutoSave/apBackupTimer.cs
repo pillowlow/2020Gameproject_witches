@@ -150,8 +150,10 @@ namespace AnyPortrait
 
 			try
 			{
-				fs = new FileStream(fileFolder + "/anyportraitBackupTime.dat", FileMode.Open, FileAccess.Read);
-				sr = new StreamReader(fs);
+				//변경 21.7.3 : 경로 + 인코딩 문제
+				string filePath = apUtil.ConvertEscapeToPlainText(fileFolder + "/anyportraitBackupTime.dat");
+				fs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+				sr = new StreamReader(fs, System.Text.Encoding.UTF8, true);
 
 				Clear();
 
@@ -205,8 +207,13 @@ namespace AnyPortrait
 			//Debug.Log("----------- Save Backup Timer ------------");
 			try
 			{
-				fs = new FileStream(fileFolder + "/anyportraitBackupTime.dat", FileMode.Create, FileAccess.Write);
-				sw = new StreamWriter(fs);
+				//이전
+				//fs = new FileStream(fileFolder + "/anyportraitBackupTime.dat", FileMode.Create, FileAccess.Write);
+				//sw = new StreamWriter(fs);
+
+				//변경 21.7.3
+				fs = new FileStream(apUtil.ConvertEscapeToPlainText(fileFolder + "/anyportraitBackupTime.dat"), FileMode.Create, FileAccess.Write);
+				sw = new StreamWriter(fs, System.Text.Encoding.UTF8);
 
 				sw.WriteLine("Backup Table");
 				sw.WriteLine(_units.Count);

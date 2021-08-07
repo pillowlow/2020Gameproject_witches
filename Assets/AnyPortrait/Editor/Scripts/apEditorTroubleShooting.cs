@@ -35,6 +35,13 @@ namespace AnyPortrait
 		{
 			apEditor.CloseEditor();
 			Debug.LogWarning("AnyPortrait Editor is Closed.");
+
+			bool isCurCppPlugin = EditorPrefs.GetBool("AnyPortrait_UseCPPPlugin", true);
+			if(isCurCppPlugin)
+			{
+				EditorPrefs.SetBool("AnyPortrait_UseCPPPlugin", false);
+				Debug.LogWarning("The editor's Update mode has been changed from [Accelerated Mode] to a [Compatible Mode].");
+			}
 		}
 		
 		//--------------------------------------------------------------
@@ -196,6 +203,19 @@ namespace AnyPortrait
 		{
 			apEditorUtil.OpenAssetStorePage();
 		}
+		//[MenuItem("Window/AnyPortrait/Restart Editor", false, 101)]
+		//public static void RestartEditor()
+		//{
+		//	EditorApplication.OpenProject(System.IO.Directory.GetCurrentDirectory());
+		//}
+
+		//[MenuItem("Window/AnyPortrait/Install Package Force", false, 102)]
+		//public static void RestartEditor()
+		//{
+		//	//EditorApplication.OpenProject(System.IO.Directory.GetCurrentDirectory());
+		//	apPluginUtil.I.CheckAndInstallCPPDLLPackage(true);
+
+		//}
 	}
 
 }

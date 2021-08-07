@@ -275,7 +275,12 @@ namespace AnyPortrait
 			//"Add Event"
 			if(GUILayout.Button(_editor.GetText(TEXT.DLG_AddEvent), GUILayout.Width(width - (10 + 6 + (160))), GUILayout.Height(30)))
 			{
-				apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Anim_AddEvent, _editor, _animClip._portrait, null, false);
+				apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Anim_AddEvent, 
+													_editor, 
+													_animClip._portrait, 
+													//null, 
+													false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 				if(_animClip._animEvents == null)
 				{
@@ -328,7 +333,12 @@ namespace AnyPortrait
 			{
 				if (_curSelectedEvent != null)
 				{
-					apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Anim_AddEvent, _editor, _animClip._portrait, null, false);
+					apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Anim_AddEvent, 
+														_editor, 
+														_animClip._portrait, 
+														//null, 
+														false,
+														apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 					if (_animClip._animEvents == null)
 					{
@@ -417,7 +427,12 @@ namespace AnyPortrait
 			//"Sort"
 			if(GUILayout.Button(_editor.GetText(TEXT.DLG_Sort), GUILayout.Width(80), GUILayout.Height(30)))
 			{
-				apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Anim_SortEvents, _editor, _animClip._portrait, null, false);
+				apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Anim_SortEvents, 
+													_editor, 
+													_animClip._portrait, 
+													//null, 
+													false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 				//프레임 순으로 정렬을 한다.
 				if (_animClip._animEvents != null)
@@ -541,7 +556,13 @@ namespace AnyPortrait
 
 									if(curSubParams[i]._boolValue != nextValue)
 									{
-										apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Anim_EventChanged, _editor, _animClip._portrait, null, false);
+										apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Anim_EventChanged, 
+																			_editor, 
+																			_animClip._portrait, 
+																			//null, 
+																			false,
+																			apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 										curSubParams[i]._boolValue = nextValue;
 									}
 									
@@ -556,7 +577,13 @@ namespace AnyPortrait
 
 										if (curSubParams[i]._intValue != nextValue)
 										{
-											apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Anim_EventChanged, _editor, _animClip._portrait, null, false);
+											apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Anim_EventChanged, 
+																				_editor, 
+																				_animClip._portrait, 
+																				//null, 
+																				false,
+																				apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 											curSubParams[i]._intValue = nextValue;
 										}
 									}
@@ -569,7 +596,13 @@ namespace AnyPortrait
 										if(curSubParams[i]._intValue != nextValue_Prev || 
 											curSubParams[i]._intValue_End != nextValue_Next)
 										{
-											apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Anim_EventChanged, _editor, _animClip._portrait, null, false);
+											apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Anim_EventChanged, 
+																				_editor, 
+																				_animClip._portrait, 
+																				//null, 
+																				false,
+																				apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 											curSubParams[i]._intValue = nextValue_Prev;
 											curSubParams[i]._intValue_End = nextValue_Next;
 										}
@@ -584,7 +617,13 @@ namespace AnyPortrait
 										float nextValue = EditorGUILayout.DelayedFloatField(curSubParams[i]._floatValue, GUILayout.Width(valueWidth));
 										if(curSubParams[i]._floatValue != nextValue)
 										{
-											apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Anim_EventChanged, _editor, _animClip._portrait, null, false);
+											apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Anim_EventChanged, 
+																				_editor, 
+																				_animClip._portrait, 
+																				//null, 
+																				false,
+																				apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 											curSubParams[i]._floatValue = nextValue;
 										}
 										
@@ -598,7 +637,12 @@ namespace AnyPortrait
 										if (curSubParams[i]._floatValue != nextValue_Prev ||
 											curSubParams[i]._floatValue_End != nextVelue_Next)
 										{
-											apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Anim_EventChanged, _editor, _animClip._portrait, null, false);
+											apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Anim_EventChanged, 
+																				_editor, 
+																				_animClip._portrait, 
+																				//null, 
+																				false,
+																				apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 											curSubParams[i]._floatValue = nextValue_Prev;
 											curSubParams[i]._floatValue_End = nextVelue_Next;
@@ -617,7 +661,13 @@ namespace AnyPortrait
 										if(curSubParams[i]._vec2Value.x != nextValue.x ||
 											curSubParams[i]._vec2Value.y != nextValue.y)
 										{
-											apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Anim_EventChanged, _editor, _animClip._portrait, null, false);
+											apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Anim_EventChanged, 
+																				_editor, 
+																				_animClip._portrait, 
+																				//null, 
+																				false,
+																				apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 											curSubParams[i]._vec2Value = nextValue;
 										}
 									}
@@ -633,7 +683,12 @@ namespace AnyPortrait
 											curSubParams[i]._vec2Value_End.x != nextValue_Next.x ||
 											curSubParams[i]._vec2Value_End.y != nextValue_Next.y)
 										{
-											apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Anim_EventChanged, _editor, _animClip._portrait, null, false);
+											apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Anim_EventChanged, 
+																				_editor, 
+																				_animClip._portrait, 
+																				//null, 
+																				false,
+																				apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 											curSubParams[i]._vec2Value = nextValue_Prev;
 											curSubParams[i]._vec2Value_End = nextValue_Next;
@@ -649,7 +704,13 @@ namespace AnyPortrait
 									string nextValue = EditorGUILayout.DelayedTextField(curSubParams[i]._strValue, GUILayout.Width(valueWidth));
 									if(!string.Equals(curSubParams[i]._strValue, nextValue))
 									{
-										apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Anim_EventChanged, _editor, _animClip._portrait, null, false);
+										apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Anim_EventChanged, 
+																			_editor, 
+																			_animClip._portrait, 
+																			//null, 
+																			false,
+																			apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 										curSubParams[i]._strValue = nextValue;
 									} 
 								}
@@ -708,7 +769,12 @@ namespace AnyPortrait
 				{
 					if (isSelected && curSubParams != null && curSubParams.Count == curNumSubParams)
 					{
-						apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Anim_EventChanged, _editor, _animClip._portrait, null, false);
+						apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Anim_EventChanged, 
+															_editor, 
+															_animClip._portrait, 
+															//null, 
+															false,
+															apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 						curSubParams.Add(new apAnimEvent.SubParameter());
 					}
@@ -739,7 +805,13 @@ namespace AnyPortrait
 				{
 					if(_curSelectedEvent != null && _animClip._animEvents.Contains(_curSelectedEvent))
 					{
-						apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Anim_RemoveEvent, _editor, _animClip._portrait, null, false);
+						apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Anim_RemoveEvent,
+															_editor, 
+															_animClip._portrait, 
+															//null, 
+															false,
+															apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 						_animClip._animEvents.Remove(_curSelectedEvent);
 
 						_curSelectedEvent = null;
@@ -772,7 +844,13 @@ namespace AnyPortrait
 						int index = _curSelectedEvent._subParams.IndexOf(targetSubParam);
 						if(index > 0)
 						{
-							apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Anim_EventChanged, _editor, _animClip._portrait, null, false);
+							apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Anim_EventChanged, 
+																_editor, 
+																_animClip._portrait, 
+																//null, 
+																false,
+																apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 							_curSelectedEvent._subParams.Remove(targetSubParam);
 							_curSelectedEvent._subParams.Insert(index - 1, targetSubParam);
 						}
@@ -783,7 +861,13 @@ namespace AnyPortrait
 						int index = _curSelectedEvent._subParams.IndexOf(targetSubParam);
 						if(index < _curSelectedEvent._subParams.Count - 1)
 						{
-							apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Anim_EventChanged, _editor, _animClip._portrait, null, false);
+							apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Anim_EventChanged, 
+																_editor, 
+																_animClip._portrait, 
+																//null, 
+																false,
+																apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 							_curSelectedEvent._subParams.Remove(targetSubParam);
 							_curSelectedEvent._subParams.Insert(index + 1, targetSubParam);
 						}
@@ -791,7 +875,13 @@ namespace AnyPortrait
 					else if(isRemoveParam)
 					{
 						//삭제한다.
-						apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Anim_EventChanged, _editor, _animClip._portrait, null, false);
+						apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Anim_EventChanged, 
+															_editor, 
+															_animClip._portrait, 
+															//null, 
+															false,
+															apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 						_curSelectedEvent._subParams.Remove(targetSubParam);
 					}
 
@@ -803,7 +893,12 @@ namespace AnyPortrait
 					_curSelectedEvent._eventName != curName ||
 					_curSelectedEvent._callType != curCallType)
 				{
-					apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Anim_EventChanged, _editor, _animClip._portrait, null, false);
+					apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Anim_EventChanged, 
+														_editor, 
+														_animClip._portrait, 
+														//null, 
+														false,
+														apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 					_curSelectedEvent._frameIndex = curFrameIndex;
 					_curSelectedEvent._frameIndex_End = curFrameIndex_End;

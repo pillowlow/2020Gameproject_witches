@@ -145,6 +145,13 @@ namespace AnyPortrait
 
 			CalculatePattern_Transform(tDelta);
 		}
+
+		public override void Calculate_DLL(float tDelta)
+		{
+			base.Calculate_DLL(tDelta);
+
+			CalculatePattern_Transform_DLL(tDelta);
+		}
 	}
 
 }

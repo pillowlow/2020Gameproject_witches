@@ -108,7 +108,8 @@ namespace AnyPortrait
 		/// 실행시 정확한 보간이 되는 프레임 (실수형)
 		/// 게임 프레임에 동기화된다. (정확한 정수형 프레임 값은 안나온다)
 		/// </summary>
-		public float CurFrameFloat { get { return _curFrame + (_tUpdate / TimePerFrame); } }
+		//public float CurFrameFloat { get { return _curFrame + (_tUpdate / TimePerFrame); } }
+		public float CurFrameFloat { get { return _curFrame + (_tUpdate / _secPerFrame); } }//TimePerFrame > _secPerFrame
 
 		
 		public bool IsPlaying_Editor { get { return _isPlaying; } }
@@ -425,6 +426,7 @@ namespace AnyPortrait
 		private DateTime _sampleDateTime = new DateTime();
 #endif
 
+		#if UNITY_EDITOR
 		/// <summary>
 		/// [Editor] 업데이트를 한다.
 		/// FPS에 맞게 프레임을 증가시킨다.
@@ -433,11 +435,11 @@ namespace AnyPortrait
 		/// </summary>
 		/// <param name="tDelta"></param>
 		/// <param name="isUpdateVertsAlways">단순 재생에는 False, 작업시에는 True로 설정</param>
-		public void Update_Editor(float tDelta, bool isUpdateVertsAlways, bool isBoneIKMatrix, bool isBoneIKRigging)
+		public void Update_Editor(float tDelta, bool isUpdateVertsAlways, bool isBoneIKMatrix, bool isBoneIKRigging, bool isUseCPPDLL)
 		{
 
 
-#if UNITY_EDITOR
+
 			//시간을 따로 계산하자
 			float multiply = 1.0f;
 			if (_tDelta_Editor < 0)
@@ -468,15 +470,23 @@ namespace AnyPortrait
 
 
 
-#endif
-
 			if (!_isPlaying)
 			{
 				if (_targetMeshGroup != null)
 				{
 					_targetMeshGroup.SetBoneIKEnabled(isBoneIKMatrix, isBoneIKRigging);
 				}
-				UpdateMeshGroup_Editor(false, tDelta, isUpdateVertsAlways);//<<강제로 업데이트 하지 않는다.
+
+				if(isUseCPPDLL)
+				{
+					//추가 21.5.14 : C++ DLL로 업데이트를 하는 경우 
+					UpdateMeshGroup_Editor_DLL(false, tDelta, isUpdateVertsAlways);//<<강제로 업데이트 하지 않는다.
+				}
+				else
+				{
+					UpdateMeshGroup_Editor(false, tDelta, isUpdateVertsAlways);//<<강제로 업데이트 하지 않는다.
+				}
+				
 
 				if (_targetMeshGroup != null)
 				{
@@ -531,13 +541,27 @@ namespace AnyPortrait
 				_targetMeshGroup.SetBoneIKEnabled(isBoneIKMatrix, isBoneIKRigging);
 			}
 
-			UpdateMeshGroup_Editor(true, tDelta, isUpdateVertsAlways);
+			//UnityEngine.Debug.Log("Update Anim Clip C++ : " + isUseCPPDLL);
+			if (isUseCPPDLL)
+			{
+				//C++ DLL로 업데이트를 하는 경우
+				
+				UpdateMeshGroup_Editor_DLL(true, tDelta, isUpdateVertsAlways);
+			}
+			else
+			{
+				//일반 스크립트로 업데이트를 하는 경우
+				UpdateMeshGroup_Editor(true, tDelta, isUpdateVertsAlways);
+			}
+			
 
 			if (_targetMeshGroup != null)
 			{
 				_targetMeshGroup.SetBoneIKEnabled(false, false);
 			}
 		}
+#endif
+
 
 		/// <summary>
 		/// [Editor] 플레이를 정지한다.
@@ -877,7 +901,10 @@ namespace AnyPortrait
 		/// <param name="isForce"></param>
 		/// <param name="tDelta"></param>
 		/// <param name="isUpdateVertsAlways">단순 재생시에는 False, 작업시에는 True로 설정한다.</param>
-		public void UpdateMeshGroup_Editor(bool isForce, float tDelta, bool isUpdateVertsAlways, bool isDepthChanged = false)
+		public void UpdateMeshGroup_Editor(	bool isForce, 
+											float tDelta, 
+											bool isUpdateVertsAlways,
+											bool isDepthChanged = false)
 		{
 			if (_targetMeshGroup == null)
 			{
@@ -895,6 +922,30 @@ namespace AnyPortrait
 			}
 
 		}
+
+#if UNITY_EDITOR
+		//추가 21.5.14 : DLL을 이용하여 업데이트를 하는 경우
+		public void UpdateMeshGroup_Editor_DLL(	bool isForce,
+												float tDelta,
+												bool isUpdateVertsAlways,
+												bool isDepthChanged = false)
+		{
+			if (_targetMeshGroup == null)
+			{
+				//Debug.LogError("Update Failed : No Target Mesh Group");
+				return;
+			}
+			if (isForce)
+			{
+				_targetMeshGroup.RefreshForce_DLL(isDepthChanged, tDelta);
+			}
+			else
+			{
+				_targetMeshGroup.UpdateRenderUnits_DLL(tDelta, isUpdateVertsAlways);
+			}
+
+		}
+#endif
 
 
 		// Opt용 Update / Opt 플레이 제어
@@ -1176,6 +1227,60 @@ namespace AnyPortrait
 			}
 
 			return isEnd;
+		}
+
+
+
+		// 추가 21.6.10 : 동기화된 업데이트
+		public void UpdateSync_Opt(apAnimClip syncAnimClip)
+		{
+			//_tUpdate += tDelta;
+			//_tUpdateTotal += tDelta;
+
+			//애니메이션 길이와 FPS가 같으면
+			if (_startFrame == syncAnimClip._startFrame
+				&& _endFrame == syncAnimClip._endFrame
+				&& _FPS == syncAnimClip.FPS)
+			{
+				//서브 업데이트 시간 (CurFrameFloat 계산을 위해)
+				_tUpdate = syncAnimClip._tUpdate;
+				if (_tUpdate > TimePerFrame)
+				{
+					while (_tUpdate > TimePerFrame)
+					{
+						_tUpdate -= TimePerFrame;
+					}
+				}
+				_tUpdateTotal = syncAnimClip._tUpdateTotal;
+				_curFrame = syncAnimClip._curFrame;//프레임 동기화
+			}
+			else
+			{
+				//같지 않다면 비율로 계산한다.
+				//전체 애니메이션 플레이 비율을 구한다.
+				int nSyncFrames = Mathf.Max(syncAnimClip._endFrame - syncAnimClip._startFrame, 0) + 1;
+				int nFrames = Mathf.Max(_endFrame - _startFrame, 0) + 1;
+
+				float syncAnimFrameRatio = Mathf.Clamp01((syncAnimClip.CurFrameFloat - syncAnimClip._startFrame) / (float)nSyncFrames);//비율
+				//재생 비율을 프레임(Float)로 변환
+				float curAnimFrameF = (syncAnimFrameRatio * nFrames) + _startFrame;
+				int curAnimFrameInt = (int)curAnimFrameF;
+				float curTUpdate = Mathf.Clamp(curAnimFrameF - (float)curAnimFrameInt, 0.0f, _secPerFrame);
+				if(curAnimFrameInt > _endFrame)
+				{
+					curAnimFrameInt = _endFrame;
+				}
+
+				//변환된 프레임을 입력
+				_tUpdate = curTUpdate;
+				_curFrame = curAnimFrameInt;
+				_tUpdateTotal = syncAnimClip._tUpdateTotal;
+			}
+
+			//애니메이션 이벤트는 호출하지 않는다.
+			
+			//컨트롤 파라미터 동기화
+			UpdateControlParamOpt();
 		}
 
 

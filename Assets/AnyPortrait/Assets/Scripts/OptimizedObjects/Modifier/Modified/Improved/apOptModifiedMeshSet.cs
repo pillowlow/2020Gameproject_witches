@@ -168,9 +168,10 @@ namespace AnyPortrait
 				Bake_Physics(srcModMesh.PhysicParam, srcModMesh._vertWeights, portrait);
 			}
 
-
+			
 			if (((int)(srcModMesh._modValueType & apModifiedMesh.MOD_VALUE_TYPE.VertexPosList) != 0)
 				|| ((int)(srcModMesh._modValueType & apModifiedMesh.MOD_VALUE_TYPE.TransformMatrix) != 0)
+				|| ((int)(srcModMesh._modValueType & apModifiedMesh.MOD_VALUE_TYPE.Color) != 0)//추가 21.7.20
 				)
 			{
 				//Morph, Transform 모디파이어에서..

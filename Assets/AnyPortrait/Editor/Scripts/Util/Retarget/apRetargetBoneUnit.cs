@@ -302,18 +302,18 @@ namespace AnyPortrait
 
 				_defaultMatrix.SetIdentity();
 				_defaultMatrix.SetTRS(
-					new Vector2(float.Parse(strUnits[iStr]), float.Parse(strUnits[iStr + 1])),
-					float.Parse(strUnits[iStr + 2]),
-					new Vector2(float.Parse(strUnits[iStr + 3]), float.Parse(strUnits[iStr + 4])),
+					new Vector2(apUtil.ParseFloat(strUnits[iStr]), apUtil.ParseFloat(strUnits[iStr + 1])),
+					apUtil.ParseFloat(strUnits[iStr + 2]),
+					new Vector2(apUtil.ParseFloat(strUnits[iStr + 3]), apUtil.ParseFloat(strUnits[iStr + 4])),
 					true
 					);
 
 				iStr += 5;
 
-				_color.r = float.Parse(strUnits[iStr]);
-				_color.g = float.Parse(strUnits[iStr + 1]);
-				_color.b = float.Parse(strUnits[iStr + 2]);
-				_color.a = float.Parse(strUnits[iStr + 3]);
+				_color.r = apUtil.ParseFloat(strUnits[iStr]);
+				_color.g = apUtil.ParseFloat(strUnits[iStr + 1]);
+				_color.b = apUtil.ParseFloat(strUnits[iStr + 2]);
+				_color.a = apUtil.ParseFloat(strUnits[iStr + 3]);
 				iStr += 4;
 
 				_shapeWidth = int.Parse(strUnits[iStr]);
@@ -331,9 +331,9 @@ namespace AnyPortrait
 				iStr += 3;
 
 				_isIKAngleRange = (int.Parse(strUnits[iStr]) == 1) ? true : false;
-				_IKAngleRange_Lower = float.Parse(strUnits[iStr + 1]);
-				_IKAngleRange_Upper = float.Parse(strUnits[iStr + 2]);
-				_IKAnglePreferred = float.Parse(strUnits[iStr + 3]);
+				_IKAngleRange_Lower = apUtil.ParseFloat(strUnits[iStr + 1]);
+				_IKAngleRange_Upper = apUtil.ParseFloat(strUnits[iStr + 2]);
+				_IKAnglePreferred = apUtil.ParseFloat(strUnits[iStr + 3]);
 				iStr += 4;
 
 				_isSocketEnabled = (int.Parse(strUnits[iStr]) == 1) ? true : false;
@@ -346,13 +346,13 @@ namespace AnyPortrait
 					_isJigglePropertyImported = true;//Import가 되었다.
 
 					_isJiggle = (int.Parse(strUnits[iStr]) == 1) ? true : false;
-					_jiggle_Mass = float.Parse(strUnits[iStr + 1]);
-					_jiggle_K = float.Parse(strUnits[iStr + 2]);
-					_jiggle_Drag = float.Parse(strUnits[iStr + 3]);
-					_jiggle_Damping = float.Parse(strUnits[iStr + 4]);
+					_jiggle_Mass = apUtil.ParseFloat(strUnits[iStr + 1]);
+					_jiggle_K = apUtil.ParseFloat(strUnits[iStr + 2]);
+					_jiggle_Drag = apUtil.ParseFloat(strUnits[iStr + 3]);
+					_jiggle_Damping = apUtil.ParseFloat(strUnits[iStr + 4]);
 					_isJiggleAngleConstraint = (int.Parse(strUnits[iStr + 5]) == 1) ? true : false;
-					_jiggle_AngleLimit_Min = float.Parse(strUnits[iStr + 6]);
-					_jiggle_AngleLimit_Max = float.Parse(strUnits[iStr + 7]);
+					_jiggle_AngleLimit_Min = apUtil.ParseFloat(strUnits[iStr + 6]);
+					_jiggle_AngleLimit_Max = apUtil.ParseFloat(strUnits[iStr + 7]);
 					iStr += 8;
 				}
 				else

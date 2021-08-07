@@ -94,6 +94,8 @@ namespace AnyPortrait
 
 		private string[] _rootBoneScaleOptionLabel = new string[] { "Default", "Non-Uniform Scale"};
 
+		private string[] _editorUpdateModeLabel = new string[] {"Accelerated Mode (Native Plugin)", "Compatible Mode" };
+
 		private GUIStyle _guiStyle_WrapLabel_Default = null;
 		private GUIStyle _guiStyle_WrapLabel_Changed = null;
 
@@ -102,6 +104,9 @@ namespace AnyPortrait
 		private GUIStyle _guiStyle_Label_Changed = null;
 
 		private GUIStyle _guiStyle_Text_About = null;
+
+		private GUIStyle _guiStyle_Box = null;
+
 		private string _aboutText_1_PSD = null;
 		private string _aboutText_2_NGif = null;
 		private string _aboutText_3_Font = null;
@@ -254,7 +259,12 @@ namespace AnyPortrait
 						_guiStyle_Label_Changed.normal.textColor = new Color(1.0f, 0.0f, 0.8f, 1.0f);
 					}
 				}
-
+				if(_guiStyle_Box == null)
+				{
+					_guiStyle_Box = new GUIStyle(GUI.skin.box);
+					_guiStyle_Box.alignment = TextAnchor.MiddleCenter;
+					_guiStyle_Box.wordWrap = true;
+				}
 
 
 				//탭
@@ -309,7 +319,13 @@ namespace AnyPortrait
 							string nextName = EditorGUILayout.DelayedTextField(_editor.GetText(TEXT.DLG_Name), _targetPortrait.name);//"Name"
 							if (nextName != _targetPortrait.name)
 							{
-								apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Portrait_SettingChanged, _editor, _targetPortrait, null, false);
+								apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Portrait_SettingChanged, 
+																	_editor, 
+																	_targetPortrait, 
+																	//null, 
+																	false,
+																	apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 								_targetPortrait.name = nextName;
 
 							}
@@ -322,7 +338,13 @@ namespace AnyPortrait
 							bool nextImportant = EditorGUILayout.Toggle(_guiContent_IsImportant.Content, _targetPortrait._isImportant);
 							if (nextImportant != _targetPortrait._isImportant)
 							{
-								apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Portrait_SettingChanged, _editor, _targetPortrait, null, false);
+								apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Portrait_SettingChanged, 
+																	_editor, 
+																	_targetPortrait, 
+																	//null, 
+																	false,
+																	apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 								_targetPortrait._isImportant = nextImportant;
 							}
 
@@ -330,7 +352,13 @@ namespace AnyPortrait
 							int nextFPS = EditorGUILayout.DelayedIntField(_guiContent_FPS.Content, _targetPortrait._FPS);
 							if (_targetPortrait._FPS != nextFPS)
 							{
-								apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Portrait_SettingChanged, _editor, _targetPortrait, null, false);
+								apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Portrait_SettingChanged, 
+																	_editor, 
+																	_targetPortrait, 
+																	//null, 
+																	false,
+																	apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 								if (nextFPS < 10)
 								{
 									nextFPS = 10;
@@ -349,7 +377,13 @@ namespace AnyPortrait
 							int iNextRootBoneScaleOption = EditorGUILayout.Popup(_editor.GetText(TEXT.Setting_ScaleOfRootBone), (int)_targetPortrait._rootBoneScaleMethod, _rootBoneScaleOptionLabel);
 							if (iNextRootBoneScaleOption != (int)_targetPortrait._rootBoneScaleMethod)
 							{
-								apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Portrait_SettingChanged, _editor, _targetPortrait, null, false);
+								apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Portrait_SettingChanged, 
+																	_editor, 
+																	_targetPortrait, 
+																	//null, 
+																	false,
+																	apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 								_targetPortrait._rootBoneScaleMethod = (apPortrait.ROOT_BONE_SCALE_METHOD)iNextRootBoneScaleOption;
 
 								//모든 본에 대해서 ScaleOption을 적용해야한다.
@@ -386,6 +420,9 @@ namespace AnyPortrait
 									}
 									else
 									{
+										//추가 21.7.3 : 이스케이프 문자 삭제
+										savePath = apUtil.ConvertEscapeToPlainText(savePath);
+
 										_editor.Backup.SaveBackupManual(savePath, _targetPortrait);
 										_editor.Notification("Backup Saved [" + savePath + "]", false, true);
 
@@ -435,7 +472,7 @@ namespace AnyPortrait
 
 							bool prevGUIFPS = _editor._guiOption_isFPSVisible;
 							bool prevGUIStatistics = _editor._guiOption_isStatisticsVisible;
-
+							bool prevUseCPPDLL = _editor._cppPluginOption_UsePlugin;
 
 							Color prevColor_Background = _editor._colorOption_Background;
 							Color prevColor_GridCenter = _editor._colorOption_GridCenter;
@@ -481,9 +518,85 @@ namespace AnyPortrait
 							int nextLangIndex = Layout_Popup(TEXT.DLG_Setting_Language, prevLangIndex, _strLanguageName, defLangIndex);
 							_editor._language = (apEditor.LANGUAGE)_validLanguageIndex[nextLangIndex];
 
-							GUILayout.Space(10);
+							GUILayout.Space(5);
 							_editor._guiOption_isFPSVisible = Layout_Toggle(TEXT.DLG_Setting_ShowFPS, _editor._guiOption_isFPSVisible, apEditor.DefaultGUIOption_ShowFPS);//"Show FPS"
 							_editor._guiOption_isStatisticsVisible = Layout_Toggle(TEXT.DLG_Setting_ShowStatistics, _editor._guiOption_isStatisticsVisible, apEditor.DefaultGUIOption_ShowStatistics);// "Show Statistics"
+
+							//TODO : C++ Plugin 사용 여부 설정 UI 만들기 (토글대신 드롭다운, 경고문, Validation)
+							GUILayout.Space(5);
+							int iCPPPluginMode = Layout_Popup(TEXT.Setting_UpdateMode, _editor._cppPluginOption_UsePlugin ? 0 : 1, _editorUpdateModeLabel, apEditor.DefaultEditorOption_UsePlugin ? 0 : 1);
+							_editor._cppPluginOption_UsePlugin = (iCPPPluginMode == 0);
+
+							//만약 플러그인 사용 안함 > 사용함인 경으 플러그인 호환성을 다시 테스트한다.
+							if(_editor._cppPluginOption_UsePlugin
+								&& (!prevUseCPPDLL || _editor._cppPluginValidateResult == apPluginUtil.VALIDATE_RESULT.Unknown))
+							{
+								_editor._cppPluginValidateResult = apPluginUtil.I.ValidateDLL();
+							}
+							else if(prevUseCPPDLL && !_editor._cppPluginOption_UsePlugin)
+							{
+								//만약 플러그인 비활성화했다면 설치 요청을 해제한다.
+								apPluginUtil.I.ReleaseAllInstallRequests();
+							}
+
+							
+							//CPP Plugin을 사용할때 에러가 발생하는지 체크
+							if((_editor._cppPluginOption_UsePlugin && _editor._cppPluginValidateResult != apPluginUtil.VALIDATE_RESULT.Valid))
+							{
+								Color prevGUIColor = GUI.color;
+								GUI.color = new Color(prevGUIColor.r * 1.2f, prevGUIColor.g * 0.7f, prevGUIColor.b * 0.7f, 1.0f);
+
+								TEXT warningMsg = TEXT.Setting_WarningAccPlugin_NotInstalled;
+								int height_warningBox = 30;//짧은 경우
+								switch (_editor._cppPluginValidateResult)
+								{
+									case apPluginUtil.VALIDATE_RESULT.Unknown:
+									case apPluginUtil.VALIDATE_RESULT.NotSupported:
+									case apPluginUtil.VALIDATE_RESULT.InstalledButInvalid:
+										warningMsg = TEXT.Setting_WarningAccPlugin_NotSupported;
+										break;
+
+									case apPluginUtil.VALIDATE_RESULT.NotInstalled:
+										warningMsg = TEXT.Setting_WarningAccPlugin_NotInstalled;
+										//height_warningBox = 50;//이건 줄이 길다
+										break;
+
+									case apPluginUtil.VALIDATE_RESULT.InstallationRequested:
+										warningMsg = TEXT.Setting_WarningAccPlugin_InstallReserved;
+										break;
+
+									case apPluginUtil.VALIDATE_RESULT.InstalledButOldVersion:
+										warningMsg = TEXT.Setting_WarningAccPlugin_PrevVersion;
+										//height_warningBox = 50;//이건 줄이 길다
+										break;
+								}
+								GUILayout.Box(_editor.GetText(warningMsg), _guiStyle_Box, GUILayout.Width(_width), GUILayout.Height(height_warningBox));
+								GUI.color = prevGUIColor;
+
+								//설치 버튼
+								if (_editor._cppPluginValidateResult == apPluginUtil.VALIDATE_RESULT.NotInstalled
+									|| _editor._cppPluginValidateResult == apPluginUtil.VALIDATE_RESULT.InstalledButOldVersion)
+								{
+									//설치가 안되었거나 이전 버전이라면
+									//지금 설치하기
+									if (GUILayout.Button(_editor.GetText(TEXT.Setting_AccPlugin_Install), GUILayout.Height(20)))
+									{
+										bool isResult = EditorUtility.DisplayDialog(_editor.GetText(TEXT.DLG_AccPluginInstall_Title),
+														_editor.GetText(TEXT.DLG_AccPluginInstall_Body),
+														_editor.GetText(TEXT.Okay),
+														_editor.GetText(TEXT.Cancel));
+
+										if(isResult)
+										{
+											//설치 요청 + 다시 Validate
+											apPluginUtil.I.RequestInstall();
+											_editor._cppPluginValidateResult = apPluginUtil.I.ValidateDLL();
+										}
+									}
+
+								}
+							}
+
 
 
 							GUILayout.Space(10);
@@ -545,7 +658,9 @@ namespace AnyPortrait
 										Uri baseUri = new Uri(Application.dataPath);
 
 										string relativePath = baseUri.MakeRelativeUri(targetUri).ToString();
-										_editor._backupOption_BaseFolderName = relativePath;
+
+										_editor._backupOption_BaseFolderName = apUtil.ConvertEscapeToPlainText(relativePath);//변경 21.7.3 : 이스케이프 문자 삭제
+
 										//Debug.Log("상대 경로 [" + relativePath + "]");
 										apEditorUtil.SetEditorDirty();
 
@@ -609,7 +724,7 @@ namespace AnyPortrait
 
 									string relativePath = baseUri.MakeRelativeUri(targetUri).ToString();
 
-									_editor._bonePose_BaseFolderName = relativePath;
+									_editor._bonePose_BaseFolderName = apUtil.ConvertEscapeToPlainText(relativePath);//이스케이프 문자 삭제
 
 									apEditorUtil.SetEditorDirty();
 
@@ -863,6 +978,7 @@ namespace AnyPortrait
 							if (prevLanguage != _editor._language ||
 								prevGUIFPS != _editor._guiOption_isFPSVisible ||
 								prevGUIStatistics != _editor._guiOption_isStatisticsVisible ||
+								prevUseCPPDLL != _editor._cppPluginOption_UsePlugin ||
 								prevColor_Background != _editor._colorOption_Background ||
 								prevColor_GridCenter != _editor._colorOption_GridCenter ||
 								prevColor_Grid != _editor._colorOption_Grid ||

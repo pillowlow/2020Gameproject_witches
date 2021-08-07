@@ -82,6 +82,12 @@ namespace AnyPortrait
 		// Set Record 계열 함수
 		//----------------------------------------------------------------------------------------------------------
 
+		public enum UNDO_STRUCT
+		{
+			StructChanged,
+			ValueOnly
+		}
+
 		//private static int _lastUndoID = -1;
 		
 		private static void SetRecordMeshGroupRecursive(apUndoGroupData.ACTION action, apMeshGroup meshGroup, apMeshGroup rootGroup)
@@ -119,14 +125,17 @@ namespace AnyPortrait
 		public static void SetRecord_Portrait(apUndoGroupData.ACTION action,
 									apEditor editor,
 									apPortrait portrait,
-									object keyObject,
-									bool isCallContinuous)
+									//object keyObject,
+									bool isCallContinuous,
+									UNDO_STRUCT structChanged
+									)
 		{
 			if (editor._portrait == null) { return; }
 
 			//연속된 기록이면 Undo/Redo시 한번에 묶어서 실행되어야 한다. (예: 버텍스의 실시간 이동 기록)
 			//이전에 요청되었던 기록이면 Undo ID를 유지해야한다.
-			bool isNewAction = apUndoGroupData.I.SetAction(action, portrait, null, null, null, keyObject, isCallContinuous, apUndoGroupData.SAVE_TARGET.Portrait);
+			//bool isNewAction = apUndoGroupData.I.SetAction(action, portrait, null, null, null, keyObject, isCallContinuous, apUndoGroupData.SAVE_TARGET.Portrait);
+			bool isNewAction = apUndoGroupData.I.SetAction(action, portrait, null, null, null, isCallContinuous, apUndoGroupData.SAVE_TARGET.Portrait);//변경
 
 
 			EditorSceneManager.MarkAllScenesDirty();
@@ -148,6 +157,8 @@ namespace AnyPortrait
 			////Prefab Apply
 			//SetPortraitPrefabApply(portrait);
 			
+			//추가 21.6.26 : History에 기록을 남기자 (더 수정해야함. 일단 테스트)
+			apUndoHistory.I.AddRecord(Undo.GetCurrentGroup(), Undo.GetCurrentGroupName(), structChanged == UNDO_STRUCT.StructChanged);
 		}
 
 
@@ -160,15 +171,16 @@ namespace AnyPortrait
 														apEditor editor,
 														apPortrait portrait,
 														apMeshGroup meshGroup,
-														object keyObject,
+														//object keyObject,
 														bool isCallContinuous,
-														bool isChildRecursive)
+														bool isChildRecursive,
+														UNDO_STRUCT structChanged)
 		{
 			if (editor._portrait == null) { return; }
 
 			//연속된 기록이면 Undo/Redo시 한번에 묶어서 실행되어야 한다. (예: 버텍스의 실시간 이동 기록)
 			//이전에 요청되었던 기록이면 Undo ID를 유지해야한다.
-			bool isNewAction = apUndoGroupData.I.SetAction(action, portrait, null, null, null, keyObject, isCallContinuous, apUndoGroupData.SAVE_TARGET.Portrait | apUndoGroupData.SAVE_TARGET.AllMeshGroups);
+			bool isNewAction = apUndoGroupData.I.SetAction(action, portrait, null, null, null, /*keyObject, */isCallContinuous, apUndoGroupData.SAVE_TARGET.Portrait | apUndoGroupData.SAVE_TARGET.AllMeshGroups);
 
 
 			
@@ -203,6 +215,9 @@ namespace AnyPortrait
 			
 			////Prefab Apply
 			//SetPortraitPrefabApply(portrait);
+
+			//추가 21.6.26 : History에 기록을 남기자 (더 수정해야함. 일단 테스트)
+			apUndoHistory.I.AddRecord(Undo.GetCurrentGroup(), Undo.GetCurrentGroupName(), structChanged == UNDO_STRUCT.StructChanged);
 		}
 
 
@@ -214,14 +229,15 @@ namespace AnyPortrait
 		public static void SetRecord_PortraitAllMeshGroup(apUndoGroupData.ACTION action,
 									apEditor editor,
 									apPortrait portrait,
-									object keyObject,
-									bool isCallContinuous)
+									//object keyObject,
+									bool isCallContinuous,
+									UNDO_STRUCT structChanged)
 		{
 			if (editor._portrait == null) { return; }
 
 			//연속된 기록이면 Undo/Redo시 한번에 묶어서 실행되어야 한다. (예: 버텍스의 실시간 이동 기록)
 			//이전에 요청되었던 기록이면 Undo ID를 유지해야한다.
-			bool isNewAction = apUndoGroupData.I.SetAction(action, portrait, null, null, null, keyObject, isCallContinuous, apUndoGroupData.SAVE_TARGET.Portrait | apUndoGroupData.SAVE_TARGET.AllMeshGroups);
+			bool isNewAction = apUndoGroupData.I.SetAction(action, portrait, null, null, null, /*keyObject,*/ isCallContinuous, apUndoGroupData.SAVE_TARGET.Portrait | apUndoGroupData.SAVE_TARGET.AllMeshGroups);
 
 
 			EditorSceneManager.MarkAllScenesDirty();
@@ -247,6 +263,9 @@ namespace AnyPortrait
 
 			////Prefab Apply
 			//SetPortraitPrefabApply(portrait);
+
+			//추가 21.6.26 : History에 기록을 남기자 (더 수정해야함. 일단 테스트)
+			apUndoHistory.I.AddRecord(Undo.GetCurrentGroup(), Undo.GetCurrentGroupName(), structChanged == UNDO_STRUCT.StructChanged);
 		}
 
 
@@ -258,14 +277,15 @@ namespace AnyPortrait
 									apEditor editor,
 									apPortrait portrait,
 									apMeshGroup meshGroup,
-									object keyObject,
-									bool isCallContinuous)
+									//object keyObject,
+									bool isCallContinuous,
+									UNDO_STRUCT structChanged)
 		{
 			if (editor._portrait == null) { return; }
 
 			//연속된 기록이면 Undo/Redo시 한번에 묶어서 실행되어야 한다. (예: 버텍스의 실시간 이동 기록)
 			//이전에 요청되었던 기록이면 Undo ID를 유지해야한다.
-			bool isNewAction = apUndoGroupData.I.SetAction(action, portrait, null, meshGroup, null, keyObject, isCallContinuous, apUndoGroupData.SAVE_TARGET.Portrait | apUndoGroupData.SAVE_TARGET.MeshGroup | apUndoGroupData.SAVE_TARGET.AllModifiers);
+			bool isNewAction = apUndoGroupData.I.SetAction(action, portrait, null, meshGroup, null, /*keyObject,*/ isCallContinuous, apUndoGroupData.SAVE_TARGET.Portrait | apUndoGroupData.SAVE_TARGET.MeshGroup | apUndoGroupData.SAVE_TARGET.AllModifiers);
 
 
 			EditorSceneManager.MarkAllScenesDirty();
@@ -297,6 +317,9 @@ namespace AnyPortrait
 
 			////Prefab Apply
 			//SetPortraitPrefabApply(portrait);
+
+			//추가 21.6.26 : History에 기록을 남기자 (더 수정해야함. 일단 테스트)
+			apUndoHistory.I.AddRecord(Undo.GetCurrentGroup(), Undo.GetCurrentGroupName(), structChanged == UNDO_STRUCT.StructChanged);
 		}
 
 
@@ -310,14 +333,15 @@ namespace AnyPortrait
 									apPortrait portrait,
 									apMeshGroup meshGroup,
 									apModifierBase modifier,
-									object keyObject,
-									bool isCallContinuous)
+									//object keyObject,
+									bool isCallContinuous,
+									UNDO_STRUCT structChanged)
 		{
 			if (editor._portrait == null) { return; }
 
 			//연속된 기록이면 Undo/Redo시 한번에 묶어서 실행되어야 한다. (예: 버텍스의 실시간 이동 기록)
 			//이전에 요청되었던 기록이면 Undo ID를 유지해야한다.
-			bool isNewAction = apUndoGroupData.I.SetAction(action, portrait, null, meshGroup, modifier, keyObject, isCallContinuous, apUndoGroupData.SAVE_TARGET.Portrait | apUndoGroupData.SAVE_TARGET.MeshGroup | apUndoGroupData.SAVE_TARGET.AllModifiers);
+			bool isNewAction = apUndoGroupData.I.SetAction(action, portrait, null, meshGroup, modifier, /*keyObject,*/ isCallContinuous, apUndoGroupData.SAVE_TARGET.Portrait | apUndoGroupData.SAVE_TARGET.MeshGroup | apUndoGroupData.SAVE_TARGET.AllModifiers);
 
 
 			EditorSceneManager.MarkAllScenesDirty();
@@ -353,6 +377,9 @@ namespace AnyPortrait
 
 			////Prefab Apply
 			//SetPortraitPrefabApply(portrait);
+
+			//추가 21.6.26 : History에 기록을 남기자 (더 수정해야함. 일단 테스트)
+			apUndoHistory.I.AddRecord(Undo.GetCurrentGroup(), Undo.GetCurrentGroupName(), structChanged == UNDO_STRUCT.StructChanged);
 		}
 
 
@@ -365,14 +392,15 @@ namespace AnyPortrait
 									apEditor editor,
 									apPortrait portrait,
 									apModifierBase modifier,
-									object keyObject,
-									bool isCallContinuous)
+									//object keyObject,
+									bool isCallContinuous,
+									UNDO_STRUCT structChanged)
 		{
 			if (editor._portrait == null) { return; }
 
 			//연속된 기록이면 Undo/Redo시 한번에 묶어서 실행되어야 한다. (예: 버텍스의 실시간 이동 기록)
 			//이전에 요청되었던 기록이면 Undo ID를 유지해야한다.
-			bool isNewAction = apUndoGroupData.I.SetAction(action, portrait, null, null, modifier, keyObject, isCallContinuous, apUndoGroupData.SAVE_TARGET.Portrait | apUndoGroupData.SAVE_TARGET.MeshGroup | apUndoGroupData.SAVE_TARGET.AllModifiers);
+			bool isNewAction = apUndoGroupData.I.SetAction(action, portrait, null, null, modifier, /*keyObject,*/ isCallContinuous, apUndoGroupData.SAVE_TARGET.Portrait | apUndoGroupData.SAVE_TARGET.MeshGroup | apUndoGroupData.SAVE_TARGET.AllModifiers);
 
 
 			EditorSceneManager.MarkAllScenesDirty();
@@ -401,6 +429,9 @@ namespace AnyPortrait
 			
 			////Prefab Apply
 			//SetPortraitPrefabApply(portrait);
+
+			//추가 21.6.26 : History에 기록을 남기자 (더 수정해야함. 일단 테스트)
+			apUndoHistory.I.AddRecord(Undo.GetCurrentGroup(), Undo.GetCurrentGroupName(), structChanged == UNDO_STRUCT.StructChanged);
 		}
 
 
@@ -411,14 +442,15 @@ namespace AnyPortrait
 		public static void SetRecord_PortraitAllMeshGroupAndAllModifiers(apUndoGroupData.ACTION action,
 									apEditor editor,
 									apPortrait portrait,
-									object keyObject,
-									bool isCallContinuous)
+									//object keyObject,
+									bool isCallContinuous,
+									UNDO_STRUCT structChanged)
 		{
 			if (editor._portrait == null) { return; }
 
 			//연속된 기록이면 Undo/Redo시 한번에 묶어서 실행되어야 한다. (예: 버텍스의 실시간 이동 기록)
 			//이전에 요청되었던 기록이면 Undo ID를 유지해야한다.
-			bool isNewAction = apUndoGroupData.I.SetAction(action, portrait, null, null, null, keyObject, isCallContinuous, apUndoGroupData.SAVE_TARGET.Portrait | apUndoGroupData.SAVE_TARGET.AllMeshGroups | apUndoGroupData.SAVE_TARGET.AllModifiers);
+			bool isNewAction = apUndoGroupData.I.SetAction(action, portrait, null, null, null, /*keyObject,*/ isCallContinuous, apUndoGroupData.SAVE_TARGET.Portrait | apUndoGroupData.SAVE_TARGET.AllMeshGroups | apUndoGroupData.SAVE_TARGET.AllModifiers);
 
 
 			EditorSceneManager.MarkAllScenesDirty();
@@ -453,6 +485,9 @@ namespace AnyPortrait
 
 			////Prefab Apply
 			//SetPortraitPrefabApply(portrait);
+
+			//추가 21.6.26 : History에 기록을 남기자 (더 수정해야함. 일단 테스트)
+			apUndoHistory.I.AddRecord(Undo.GetCurrentGroup(), Undo.GetCurrentGroupName(), structChanged == UNDO_STRUCT.StructChanged);
 		}
 
 
@@ -463,23 +498,25 @@ namespace AnyPortrait
 		public static void SetRecord_Mesh(apUndoGroupData.ACTION action,
 									apEditor editor,
 									apMesh mesh,
-									object keyObject,
-									bool isCallContinuous)
+									//object keyObject,
+									bool isCallContinuous,
+									UNDO_STRUCT structChanged)
 		{
 			if (editor._portrait == null) { return; }
 
 			//연속된 기록이면 Undo/Redo시 한번에 묶어서 실행되어야 한다. (예: 버텍스의 실시간 이동 기록)
 			//이전에 요청되었던 기록이면 Undo ID를 유지해야한다.
-			bool isNewAction = apUndoGroupData.I.SetAction(action, null, mesh, null, null, keyObject, isCallContinuous, apUndoGroupData.SAVE_TARGET.Mesh);
+			bool isNewAction = apUndoGroupData.I.SetAction(action, null, mesh, null, null, /*keyObject,*/ isCallContinuous, apUndoGroupData.SAVE_TARGET.Mesh);
 
 
 			EditorSceneManager.MarkAllScenesDirty();
 
+			
 			//새로운 변동 사항이라면 UndoID 증가
 			if (isNewAction)
 			{
 				Undo.IncrementCurrentGroup();
-				//_lastUndoID = Undo.GetCurrentGroup();
+				//_lastUndoID = Undo.GetCurrentGroup();				
 			}
 
 			//Undo.RecordObject(mesh, apUndoGroupData.GetLabel(action));
@@ -489,6 +526,9 @@ namespace AnyPortrait
 
 			////Prefab Apply
 			//SetPortraitPrefabApply(editor._portrait);
+
+			//추가 21.6.26 : History에 기록을 남기자 (더 수정해야함. 일단 테스트)
+			apUndoHistory.I.AddRecord(Undo.GetCurrentGroup(), Undo.GetCurrentGroupName(), structChanged == UNDO_STRUCT.StructChanged);
 		}
 
 
@@ -503,14 +543,15 @@ namespace AnyPortrait
 									apEditor editor,
 									apMesh mesh,
 									List<apMeshGroup> meshGroups,
-									object keyObject,
-									bool isCallContinuous)
+									//object keyObject,
+									bool isCallContinuous,
+									UNDO_STRUCT structChanged)
 		{
 			if (editor._portrait == null) { return; }
 
 			//연속된 기록이면 Undo/Redo시 한번에 묶어서 실행되어야 한다. (예: 버텍스의 실시간 이동 기록)
 			//이전에 요청되었던 기록이면 Undo ID를 유지해야한다.
-			bool isNewAction = apUndoGroupData.I.SetAction(action, null, mesh, null, null, keyObject, isCallContinuous, apUndoGroupData.SAVE_TARGET.Mesh | apUndoGroupData.SAVE_TARGET.AllMeshGroups);
+			bool isNewAction = apUndoGroupData.I.SetAction(action, null, mesh, null, null, /*keyObject,*/ isCallContinuous, apUndoGroupData.SAVE_TARGET.Mesh | apUndoGroupData.SAVE_TARGET.AllMeshGroups);
 
 
 			EditorSceneManager.MarkAllScenesDirty();
@@ -542,6 +583,9 @@ namespace AnyPortrait
 
 			////Prefab Apply
 			//SetPortraitPrefabApply(editor._portrait);
+
+			//추가 21.6.26 : History에 기록을 남기자 (더 수정해야함. 일단 테스트)
+			apUndoHistory.I.AddRecord(Undo.GetCurrentGroup(), Undo.GetCurrentGroupName(), structChanged == UNDO_STRUCT.StructChanged);
 		}
 
 		/// <summary>
@@ -551,15 +595,16 @@ namespace AnyPortrait
 		public static void SetRecord_MeshGroup(apUndoGroupData.ACTION action,
 									apEditor editor,
 									apMeshGroup meshGroup,
-									object keyObject,
+									//object keyObject,
 									bool isCallContinuous,
-									bool isChildRecursive)
+									bool isChildRecursive,
+									UNDO_STRUCT structChanged)
 		{
 			if (editor._portrait == null) { return; }
 
 			//연속된 기록이면 Undo/Redo시 한번에 묶어서 실행되어야 한다. (예: 버텍스의 실시간 이동 기록)
 			//이전에 요청되었던 기록이면 Undo ID를 유지해야한다.
-			bool isNewAction = apUndoGroupData.I.SetAction(action, null, null, meshGroup, null, keyObject, isCallContinuous, apUndoGroupData.SAVE_TARGET.MeshGroup);
+			bool isNewAction = apUndoGroupData.I.SetAction(action, null, null, meshGroup, null, /*keyObject,*/ isCallContinuous, apUndoGroupData.SAVE_TARGET.MeshGroup);
 
 
 			EditorSceneManager.MarkAllScenesDirty();
@@ -583,6 +628,9 @@ namespace AnyPortrait
 
 			////Prefab Apply
 			//SetPortraitPrefabApply(editor._portrait);
+
+			//추가 21.6.26 : History에 기록을 남기자 (더 수정해야함. 일단 테스트)
+			apUndoHistory.I.AddRecord(Undo.GetCurrentGroup(), Undo.GetCurrentGroupName(), structChanged == UNDO_STRUCT.StructChanged);
 		}
 
 
@@ -594,14 +642,15 @@ namespace AnyPortrait
 									apEditor editor,
 									apMeshGroup meshGroup,
 									apModifierBase modifier,
-									object keyObject,
-									bool isCallContinuous)
+									//object keyObject,
+									bool isCallContinuous,
+									UNDO_STRUCT structChanged)
 		{
 			if (editor._portrait == null) { return; }
 
 			//연속된 기록이면 Undo/Redo시 한번에 묶어서 실행되어야 한다. (예: 버텍스의 실시간 이동 기록)
 			//이전에 요청되었던 기록이면 Undo ID를 유지해야한다.
-			bool isNewAction = apUndoGroupData.I.SetAction(action, null, null, meshGroup, modifier, keyObject, isCallContinuous, apUndoGroupData.SAVE_TARGET.MeshGroup | apUndoGroupData.SAVE_TARGET.Modifier);
+			bool isNewAction = apUndoGroupData.I.SetAction(action, null, null, meshGroup, modifier, /*keyObject,*/ isCallContinuous, apUndoGroupData.SAVE_TARGET.MeshGroup | apUndoGroupData.SAVE_TARGET.Modifier);
 
 
 			EditorSceneManager.MarkAllScenesDirty();
@@ -628,6 +677,9 @@ namespace AnyPortrait
 
 			////Prefab Apply
 			//SetPortraitPrefabApply(editor._portrait);
+
+			//추가 21.6.26 : History에 기록을 남기자 (더 수정해야함. 일단 테스트)
+			apUndoHistory.I.AddRecord(Undo.GetCurrentGroup(), Undo.GetCurrentGroupName(), structChanged == UNDO_STRUCT.StructChanged);
 		}
 
 
@@ -639,14 +691,15 @@ namespace AnyPortrait
 		public static void SetRecord_MeshGroupAllModifiers(apUndoGroupData.ACTION action,
 									apEditor editor,
 									apMeshGroup meshGroup,
-									object keyObject,
-									bool isCallContinuous)
+									//object keyObject,
+									bool isCallContinuous,
+									UNDO_STRUCT structChanged)
 		{
 			if (editor._portrait == null) { return; }
 
 			//연속된 기록이면 Undo/Redo시 한번에 묶어서 실행되어야 한다. (예: 버텍스의 실시간 이동 기록)
 			//이전에 요청되었던 기록이면 Undo ID를 유지해야한다.
-			bool isNewAction = apUndoGroupData.I.SetAction(action, null, null, meshGroup, null, keyObject, isCallContinuous, apUndoGroupData.SAVE_TARGET.MeshGroup | apUndoGroupData.SAVE_TARGET.AllModifiers);
+			bool isNewAction = apUndoGroupData.I.SetAction(action, null, null, meshGroup, null, /*keyObject,*/ isCallContinuous, apUndoGroupData.SAVE_TARGET.MeshGroup | apUndoGroupData.SAVE_TARGET.AllModifiers);
 
 
 			EditorSceneManager.MarkAllScenesDirty();
@@ -672,6 +725,9 @@ namespace AnyPortrait
 
 			////Prefab Apply
 			//SetPortraitPrefabApply(editor._portrait);
+
+			//추가 21.6.26 : History에 기록을 남기자 (더 수정해야함. 일단 테스트)
+			apUndoHistory.I.AddRecord(Undo.GetCurrentGroup(), Undo.GetCurrentGroupName(), structChanged == UNDO_STRUCT.StructChanged);
 		}
 
 
@@ -683,14 +739,15 @@ namespace AnyPortrait
 		public static void SetRecord_Modifier(apUndoGroupData.ACTION action,
 									apEditor editor,
 									apModifierBase modifier,
-									object keyObject,
-									bool isCallContinuous)
+									//object keyObject,
+									bool isCallContinuous,
+									UNDO_STRUCT structChanged)
 		{
 			if (editor._portrait == null) { return; }
 
 			//연속된 기록이면 Undo/Redo시 한번에 묶어서 실행되어야 한다. (예: 버텍스의 실시간 이동 기록)
 			//이전에 요청되었던 기록이면 Undo ID를 유지해야한다.
-			bool isNewAction = apUndoGroupData.I.SetAction(action, null, null, null, modifier, keyObject, isCallContinuous, apUndoGroupData.SAVE_TARGET.MeshGroup | apUndoGroupData.SAVE_TARGET.Modifier);
+			bool isNewAction = apUndoGroupData.I.SetAction(action, null, null, null, modifier, /*keyObject,*/ isCallContinuous, apUndoGroupData.SAVE_TARGET.MeshGroup | apUndoGroupData.SAVE_TARGET.Modifier);
 
 
 			EditorSceneManager.MarkAllScenesDirty();
@@ -709,6 +766,9 @@ namespace AnyPortrait
 
 			////Prefab Apply
 			//SetPortraitPrefabApply(editor._portrait);
+
+			//추가 21.6.26 : History에 기록을 남기자 (더 수정해야함. 일단 테스트)
+			apUndoHistory.I.AddRecord(Undo.GetCurrentGroup(), Undo.GetCurrentGroupName(), structChanged == UNDO_STRUCT.StructChanged);
 		}
 
 
@@ -738,6 +798,9 @@ namespace AnyPortrait
 
 			////Prefab Apply
 			//SetPortraitPrefabApply(portrait);
+
+			//추가 21.6.26 : History에 기록을 남기자 (더 수정해야함. 일단 테스트)
+			apUndoHistory.I.AddRecord(Undo.GetCurrentGroup(), Undo.GetCurrentGroupName(), true);
 		}
 
 
@@ -759,7 +822,8 @@ namespace AnyPortrait
 			
 			//Undo.FlushUndoRecordObjects();
 
-			
+			//추가 21.6.26 : History에 기록을 남기자 (더 수정해야함. 일단 테스트)
+			apUndoHistory.I.AddRecord(Undo.GetCurrentGroup(), Undo.GetCurrentGroupName(), true);
 		}
 
 
@@ -775,7 +839,8 @@ namespace AnyPortrait
 
 			//Undo.FlushUndoRecordObjects();
 
-			
+			//추가 21.6.26 : History에 기록을 남기자 (더 수정해야함. 일단 테스트)
+			apUndoHistory.I.AddRecord(Undo.GetCurrentGroup(), Undo.GetCurrentGroupName(), true);
 		}
 
 
@@ -793,16 +858,22 @@ namespace AnyPortrait
 			
 
 			//Undo.FlushUndoRecordObjects();
+
+			//추가 21.6.26 : History에 기록을 남기자 (더 수정해야함. 일단 테스트)
+			apUndoHistory.I.AddRecord(Undo.GetCurrentGroup(), Undo.GetCurrentGroupName(), true);
 		}
 
 		
 
 
-		public static int SetRecordBeforeCreateOrDestroyMultipleObjects(apPortrait portrait, string label)
+		public static int SetRecordBeforeCreateOrDestroyMultipleObjects(apPortrait portrait, string label, bool isSkipUndoIncrement = false)
 		{
 			EditorSceneManager.MarkAllScenesDirty();
-			Undo.IncrementCurrentGroup();
-			Undo.SetCurrentGroupName(label);
+			if (!isSkipUndoIncrement)
+			{
+				Undo.IncrementCurrentGroup();
+				Undo.SetCurrentGroupName(label);
+			}
 			int undoID = Undo.GetCurrentGroup();
 			
 			//Portrait, Mesh, MeshGroup, Modifier를 저장하자
@@ -827,6 +898,9 @@ namespace AnyPortrait
 
 			////Prefab Apply
 			//SetPortraitPrefabApply(portrait);
+
+			//추가 21.6.26 : History에 기록을 남기자 (더 수정해야함. 일단 테스트)
+			apUndoHistory.I.AddRecord(Undo.GetCurrentGroup(), Undo.GetCurrentGroupName(), true);
 
 			return undoID;
 		}
@@ -863,6 +937,9 @@ namespace AnyPortrait
 			Undo.CollapseUndoOperations(undoID);
 			
 			//Undo.FlushUndoRecordObjects();
+
+			//추가 21.6.26 : History에 기록을 남기자 (더 수정해야함. 일단 테스트)
+			apUndoHistory.I.AddRecord(Undo.GetCurrentGroup(), Undo.GetCurrentGroupName(), true);
 		}
 
 
@@ -879,24 +956,38 @@ namespace AnyPortrait
 		/// <summary>
 		/// Undo는 "같은 메뉴"에서만 가능하다. 메뉴를 전환할 때에는 Undo를 초기화해야한다.
 		/// </summary>
-		public static void ResetUndo(apEditor editor)
+		public static void ResetUndo(/*apEditor editor*/)
 		{
 			//apUndoManager.I.Clear();
-			if (editor._portrait != null)
-			{
-				//Undo.ClearUndo(editor._portrait);//이건 일단 빼보자
-				apUndoGroupData.I.Clear();
-			}
+			//if (editor._portrait != null)
+			//{
+			//	//Undo.ClearUndo(editor._portrait);//이건 일단 빼보자
+			//	apUndoGroupData.I.Clear();
+			//}
+
+			apUndoGroupData.I.Clear();
+		}
+
+		public static void ResetUndoContinuous()
+		{
+			//Debug.Log("Reset Undo Continuous");
+			apUndoGroupData.I.ResetContinuous();
 		}
 
 
-		public static void OnUndoRedoPerformed()
+		public static apUndoHistory.UNDO_RESULT OnUndoRedoPerformed()
 		{
 			apUndoGroupData.I.Clear();
+
+			return apUndoHistory.I.OnUndoRedoPerformed();
 		}
 		
 
-
+		public static void OnAnyObjectAddedOrRemoved()
+		{
+			//마지막 기록에 객체가 추가/삭제되었음을 알리자
+			apUndoHistory.I.SetAnyAddedOrRemovedToLastRecord();
+		}
 		
 
 
@@ -4649,6 +4740,13 @@ namespace AnyPortrait
 				case apModifierBase.MODIFIER_TYPE.AnimatedFFD:
 					return apImageSet.PRESET.Modifier_AnimatedFFD;
 
+					//추가 21.7.20 : 색상 모디파이어
+				case apModifierBase.MODIFIER_TYPE.ColorOnly:
+					return apImageSet.PRESET.Modifier_ColorOnly;
+
+				case apModifierBase.MODIFIER_TYPE.AnimatedColorOnly:
+					return apImageSet.PRESET.Modifier_AnimatedColorOnly;
+
 			}
 			return apImageSet.PRESET.Modifier_Volume;
 		}
@@ -4771,6 +4869,13 @@ namespace AnyPortrait
 
 				case apModifierBase.MODIFIER_TYPE.AnimatedFFD:
 					return apImageSet.PRESET.SmallMod_ControlLayer;
+
+					//추가 21.7.20 : 색상 모디파이어
+				case apModifierBase.MODIFIER_TYPE.ColorOnly:
+					return apImageSet.PRESET.SmallMod_ColorOnly;
+
+				case apModifierBase.MODIFIER_TYPE.AnimatedColorOnly:
+					return apImageSet.PRESET.SmallMod_AnimColorOnly;
 			}
 			return apImageSet.PRESET.Modifier_Volume;
 		}

@@ -112,8 +112,15 @@ namespace AnyPortrait
 				StreamReader sr = null;
 				try
 				{
-					fs = new FileStream(fi.FullName, FileMode.Open, FileAccess.Read);
-					sr = new StreamReader(fs);
+					//이전
+					//fs = new FileStream(fi.FullName, FileMode.Open, FileAccess.Read);
+					//sr = new StreamReader(fs);
+
+					//변경 21.7.3 : 경로 문제와 인코딩 문제
+					fs = new FileStream(apUtil.ConvertEscapeToPlainText(fi.FullName), FileMode.Open, FileAccess.Read);
+					sr = new StreamReader(fs, System.Text.Encoding.UTF8, true);
+
+
 
 					sr.ReadLine();//"----------------"
 					sr.ReadLine();//" Pose Data		 "

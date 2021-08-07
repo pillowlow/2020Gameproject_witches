@@ -437,33 +437,57 @@ namespace AnyPortrait
 				//}
 
 				//>>Bone Set으로 변경
+				//변경 21.7.20 : 출력 순서와 완전히 반대로 해야한다. (렌더링은 뒤에서부터, 선택은 앞에서부터)
+				//Hidden 본 선택 로직이 Recursive 안에 들어가야 한다.
+
 				apMeshGroup.BoneListSet boneSet = null;
-				for (int iSet = 0; iSet < meshGroup._boneListSets.Count; iSet++)
+				//int selectedBoneDepth = -100;
+				if (meshGroup._boneListSets != null && meshGroup._boneListSets.Count > 0)
 				{
-					boneSet = meshGroup._boneListSets[iSet];
-					for (int iRoot = 0; iRoot < boneSet._bones_Root.Count; iRoot++)
+					//for (int iSet = 0; iSet < meshGroup._boneListSets.Count; iSet++)//출력 순서
+					for (int iSet = meshGroup._boneListSets.Count - 1; iSet >= 0; iSet--)//선택 순서
 					{
-						bone = CheckBoneClickRecursive(boneSet._bones_Root[iRoot], mousePosW, mousePosGL, Editor._boneGUIRenderMode, -1, Editor.Select.IsBoneIKRenderable, true);
-						if (bone != null)
+						boneSet = meshGroup._boneListSets[iSet];
+
+						if (boneSet._bones_Root != null && boneSet._bones_Root.Count > 0)
 						{
-							//추가 : 만약 본을 선택하는데 제약이 있을 수 있다.
-							if(isLimitSelectBones && bone != prevBone && selectType != apGizmos.SELECT_TYPE.Subtract)
+							//for (int iRoot = 0; iRoot < boneSet._bones_Root.Count; iRoot++)//출력 순서
+							for (int iRoot = boneSet._bones_Root.Count - 1; iRoot >= 0; iRoot--)//선택 순서
 							{
-								if(!Editor.Select.LinkedToModifierBones.ContainsKey(bone))
+								bone = CheckBoneClickRecursive(boneSet._bones_Root[iRoot],
+																mousePosW, mousePosGL,
+																Editor._boneGUIRenderMode,
+																//ref selectedBoneDepth, 
+																Editor.Select.IsBoneIKRenderable, true,
+																isLimitSelectBones//추가 21.7.20
+																);
+								if (bone != null)
 								{
-									//이건 선택에 제한이 있다.
-									continue;
+									//만약 본을 선택하는데 제약이 있을 수 있다.									
+									//> 삭제 21.7.20 : 해당 조건문 체크를 CheckBoneClickRecursive 함수에 넣었다.
+									//if (isLimitSelectBones && bone != prevBone && selectType != apGizmos.SELECT_TYPE.Subtract)
+									//{
+									//	if (!Editor.Select.LinkedToModifierBones.ContainsKey(bone))
+									//	{
+									//		//이건 선택에 제한이 있다.
+									//		continue;
+									//	}
+									//}
+
+									resultBone = bone;
+									break;//다른 Root를 볼 필요가 없다.
 								}
 							}
-							resultBone = bone;
+						}
+						
+						if (resultBone != null)
+						{
+							//다른 Set을 볼 필요가 없다.
+							break;
 						}
 					}
-					if(resultBone != null)
-					{
-						//이 Set에서 선택이 완료되었다.
-						break;
-					}
 				}
+				
 
 				if (resultBone != null)
 				{
@@ -547,7 +571,8 @@ namespace AnyPortrait
 							renderUnit = renderUnits[iUnit];
 							if (renderUnit._meshTransform != null && renderUnit._meshTransform._mesh != null)
 							{
-								if (renderUnit._meshTransform._isVisible_Default && renderUnit._meshColor2X.a > 0.1f)//Alpha 옵션 추가
+								//if (renderUnit._meshTransform._isVisible_Default && renderUnit._meshColor2X.a > 0.1f)//이전
+								if (renderUnit._isVisible && renderUnit._meshColor2X.a > 0.1f)//변경 21.7.21
 								{
 									//Debug.LogError("TODO : Mouse Picking 바꿀것");
 									bool isPick = apEditorUtil.IsMouseInRenderUnitMesh(
@@ -945,8 +970,15 @@ namespace AnyPortrait
 				return false;
 			}
 
+			//추가 : 21.7.3 : 본의 World Matrix가 반전된 상태면 Delta Angle을 뒤집는다.
+			float rotateBoneAngleW = deltaAngleW;					
+			if(bone._worldMatrix.Is1AxisFlipped())
+			{
+				rotateBoneAngleW = -deltaAngleW;
+			}
+
 			//Default Angle은 -180 ~ 180 범위 안에 들어간다.
-			float nextAngle = bone._rigTestMatrix._angleDeg + deltaAngleW;
+			float nextAngle = bone._rigTestMatrix._angleDeg + rotateBoneAngleW;
 			if (nextAngle < -180.0f) { nextAngle += 360.0f; }
 			if (nextAngle > 180.0f) { nextAngle -= 360.0f; }
 
@@ -1400,8 +1432,17 @@ namespace AnyPortrait
 				return;
 			}
 
+
+			//추가 : 21.7.3 : 본의 World Matrix가 반전된 상태면 Delta Angle을 뒤집는다.
+			float rotateBoneAngleW = deltaAngleW;					
+			if(bone._worldMatrix.Is1AxisFlipped())
+			{
+				rotateBoneAngleW = -deltaAngleW;
+			}
+
+
 			//Default Angle은 -180 ~ 180 범위 안에 들어간다.
-			float nextAngle = apUtil.AngleTo180(bone._rigTestMatrix._angleDeg + deltaAngleW);
+			float nextAngle = apUtil.AngleTo180(bone._rigTestMatrix._angleDeg + rotateBoneAngleW);
 
 			bone._rigTestMatrix.SetRotate(nextAngle, true);
 			
@@ -1866,7 +1907,12 @@ namespace AnyPortrait
 			//일단 SetRecord
 			if(isFirstBrush)
 			{
-				apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Modifier_RiggingWeightChanged, Editor, Editor.Select.Modifier, targetRenderUnit, false);
+				apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Modifier_RiggingWeightChanged, 
+													Editor, 
+													Editor.Select.Modifier, 
+													//targetRenderUnit, 
+													false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 

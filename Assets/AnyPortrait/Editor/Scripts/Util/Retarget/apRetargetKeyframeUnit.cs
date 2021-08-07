@@ -233,30 +233,30 @@ namespace AnyPortrait
 				_activeFrameIndexMax_Dummy =	int.Parse(strUnits[10]);
 				
 				_curve_PrevTangentType = (apAnimCurve.TANGENT_TYPE)int.Parse(strUnits[11]);
-				_curve_PrevSmoothX = float.Parse(strUnits[12]);
-				_curve_PrevSmoothY = float.Parse(strUnits[13]);
+				_curve_PrevSmoothX = apUtil.ParseFloat(strUnits[12]);
+				_curve_PrevSmoothY = apUtil.ParseFloat(strUnits[13]);
 				_curve_NextTangentType = (apAnimCurve.TANGENT_TYPE)int.Parse(strUnits[14]);
-				_curve_NextSmoothX = float.Parse(strUnits[15]);
-				_curve_NextSmoothY = float.Parse(strUnits[16]);
+				_curve_NextSmoothX = apUtil.ParseFloat(strUnits[15]);
+				_curve_NextSmoothY = apUtil.ParseFloat(strUnits[16]);
 				
 				_conSyncValue_Int = int.Parse(strUnits[17]);
-				_conSyncValue_Float = float.Parse(strUnits[18]);
-				_conSyncValue_Vector2.x = float.Parse(strUnits[19]);
-				_conSyncValue_Vector2.y = float.Parse(strUnits[20]);
+				_conSyncValue_Float = apUtil.ParseFloat(strUnits[18]);
+				_conSyncValue_Vector2.x = apUtil.ParseFloat(strUnits[19]);
+				_conSyncValue_Vector2.y = apUtil.ParseFloat(strUnits[20]);
 				
 				_isModMeshType = (int.Parse(strUnits[21]) == 1) ? true : false;
 				_isModBoneType = (int.Parse(strUnits[22]) == 1) ? true : false;
 
-				_modTransformMatrix._pos.x = float.Parse(strUnits[23]);
-				_modTransformMatrix._pos.y = float.Parse(strUnits[24]);
-				_modTransformMatrix._angleDeg = float.Parse(strUnits[25]);
-				_modTransformMatrix._scale.x = float.Parse(strUnits[26]);
-				_modTransformMatrix._scale.y = float.Parse(strUnits[27]);
+				_modTransformMatrix._pos.x = apUtil.ParseFloat(strUnits[23]);
+				_modTransformMatrix._pos.y = apUtil.ParseFloat(strUnits[24]);
+				_modTransformMatrix._angleDeg = apUtil.ParseFloat(strUnits[25]);
+				_modTransformMatrix._scale.x = apUtil.ParseFloat(strUnits[26]);
+				_modTransformMatrix._scale.y = apUtil.ParseFloat(strUnits[27]);
 				
-				_modMeshColor.r = float.Parse(strUnits[28]);
-				_modMeshColor.g = float.Parse(strUnits[29]);
-				_modMeshColor.b = float.Parse(strUnits[30]);
-				_modMeshColor.a = float.Parse(strUnits[31]);
+				_modMeshColor.r = apUtil.ParseFloat(strUnits[28]);
+				_modMeshColor.g = apUtil.ParseFloat(strUnits[29]);
+				_modMeshColor.b = apUtil.ParseFloat(strUnits[30]);
+				_modMeshColor.a = apUtil.ParseFloat(strUnits[31]);
 
 				_modVisible = (int.Parse(strUnits[32]) == 1) ? true : false;
 			}

@@ -108,7 +108,11 @@ namespace AnyPortrait
 		#endregion
 		
 		//레이어 리스트
-		private apPSDLayerData _selectedLayerData = null;
+		//이전 : 한개의 레이어 선택
+		//private apPSDLayerData _selectedLayerData = null;
+
+		//변경 : 여러개의 레이어를 선택할 수 있다.
+		private List<apPSDLayerData> _selectedLayerDataList = null;
 
 
 		private apPSDLoader _psdLoader = null;
@@ -1034,6 +1038,9 @@ namespace AnyPortrait
 
 				EditorGUILayout.EndVertical();
 
+
+				//렌더링 중인 Pass를 종료
+				_gl.EndPass();
 				
 				//if (Event.current.type == EventType.Repaint
 				//	&& _isRequestCloseDialog)
@@ -1160,6 +1167,9 @@ namespace AnyPortrait
 							string filePath = EditorUtility.OpenFilePanel("Open PSD File", apEditorUtil.GetLastOpenSaveFileDirectoryPath(apEditorUtil.SAVED_LAST_FILE_PATH.PSD_ExternalFile), "psd");
 							if (!string.IsNullOrEmpty(filePath))
 							{
+								//추가 21.7.3 : 이스케이프 문자 삭제
+								filePath = apUtil.ConvertEscapeToPlainText(filePath);
+
 								//이전 코드
 								//LoadPsdFile(filePath);
 								apEditorUtil.SetLastExternalOpenSaveFilePath(filePath, apEditorUtil.SAVED_LAST_FILE_PATH.PSD_ExternalFile);//21.3.1
@@ -1304,7 +1314,17 @@ namespace AnyPortrait
 						continue;
 					}
 
-					bool isOutline = (curImageLayer == _selectedLayerData);
+					//이전
+					//bool isOutline = (curImageLayer == _selectedLayerData);
+
+					//변경 21.7.31 : 다중 선택 지원
+					bool isOutline = false;
+					if(_selectedLayerDataList != null && _selectedLayerDataList.Contains(curImageLayer))
+					{
+						isOutline = true;
+					}
+
+
 					_gl.DrawTexture(curImageLayer._image,
 										//curImageLayer._posOffset - _imageCenterPosOffset,
 										curImageLayer._posOffset - _psdLoader.PSDCenterOffset,
@@ -1358,7 +1378,13 @@ namespace AnyPortrait
 			{
 				if (IsGUIUsable)
 				{
-					_selectedLayerData = null;
+					//이전
+					//_selectedLayerData = null;
+
+					if(_selectedLayerDataList != null)
+					{
+						_selectedLayerDataList.Clear();
+					}
 				}
 			}
 
@@ -1383,7 +1409,18 @@ namespace AnyPortrait
 				{
 					//curLayer = _layerDataList[i];
 					curLayer = _psdLoader.PSDLayerDataList[i];
-					if (_selectedLayerData == curLayer)
+
+
+					//if (_selectedLayerData == curLayer)//이전
+
+					//변경 21.7.3 : 다중 선택 지원
+					bool isSelected = false;
+					if(_selectedLayerDataList != null && _selectedLayerDataList.Contains(curLayer))
+					{
+						isSelected = true;
+					}
+
+					if(isSelected)
 					{
 						Rect lastRect = GUILayoutUtility.GetLastRect();
 						Color prevColor = GUI.backgroundColor;
@@ -1402,11 +1439,11 @@ namespace AnyPortrait
 						int xPos = (int)(_scroll_LayerCheckList.x + 0.5f);
 						if (iList == 0)
 						{
-							GUI.Box(new Rect(lastRect.x + 1 + xPos, lastRect.y + 1, width + 10, itemHeight), "");
+							GUI.Box(new Rect(lastRect.x + 1 + xPos, lastRect.y + 1, width + 10, itemHeight + 1), "");
 						}
 						else
 						{
-							GUI.Box(new Rect(lastRect.x + 1 + xPos, lastRect.y + 30, width + 10, itemHeight), "");
+							GUI.Box(new Rect(lastRect.x + 1 + xPos, lastRect.y + 30, width + 10, itemHeight + 1), "");
 						}
 
 						GUI.backgroundColor = prevColor;
@@ -1440,7 +1477,8 @@ namespace AnyPortrait
 					{
 						curGUIStyle = guiStyle_Btn_NotBake;
 					}
-					else if (curLayer == _selectedLayerData)
+					//else if (curLayer == _selectedLayerData)
+					else if(isSelected)
 					{
 						curGUIStyle = guiStyle_Btn_Selected;
 					}
@@ -1453,9 +1491,44 @@ namespace AnyPortrait
 					}
 					if (GUILayout.Button("  " + curLayer._name, curGUIStyle, GUILayout.Width(btnWidth), GUILayout.Height(itemHeight)))
 					{
+#if UNITY_EDITOR_OSX
+						bool isCtrl = Event.current.command;
+#else
+						bool isCtrl = Event.current.control;
+#endif
+						bool isShift = Event.current.shift;
+
 						if (IsGUIUsable)
 						{
-							_selectedLayerData = curLayer;
+							//이전
+							//_selectedLayerData = curLayer;
+
+							if(_selectedLayerDataList == null)
+							{
+								_selectedLayerDataList = new List<apPSDLayerData>();
+							}
+
+							//변경 21.7.3 : 다중 선택
+							if(isCtrl || isShift)
+							{
+								//선택된 상태라면 제외
+								if(_selectedLayerDataList.Contains(curLayer))
+								{
+									//이미 선택된 상태다. > 제외
+									_selectedLayerDataList.Remove(curLayer);
+								}
+								else
+								{
+									//선택되지 않았다. > 추가
+									_selectedLayerDataList.Add(curLayer);
+								}
+							}
+							else
+							{
+								//그냥 선택시 Clear후 선택
+								_selectedLayerDataList.Clear();
+								_selectedLayerDataList.Add(curLayer);
+							}
 						}
 					}
 
@@ -1485,62 +1558,86 @@ namespace AnyPortrait
 
 			GUILayout.Space(10);
 
-			if (_selectedLayerData != null)
+			int nSelectedLayerData = _selectedLayerDataList != null ? _selectedLayerDataList.Count : 0;//추가 21.7.3
+
+			//if (_selectedLayerData != null)//이전
+			if(nSelectedLayerData == 1)
 			{
+				//[ 1개 선택된 경우 ]
+				apPSDLayerData selectedLayer = _selectedLayerDataList[0];
+
 				//현재 레이어 정보를 표시한다.
 				//적용 여부도 설정
-				bool prev_isClipping = _selectedLayerData._isClipping;
-				bool prev_isBakable = _selectedLayerData._isBakable;
+				bool prev_isClipping = selectedLayer._isClipping;
+				bool prev_isBakable = selectedLayer._isBakable;
 
-				EditorGUILayout.LabelField(_editor.GetText(TEXT.DLG_PSD_Layer) + " " + _selectedLayerData._layerIndex, GUILayout.Width(width));//"Layer"
+				EditorGUILayout.LabelField(_editor.GetText(TEXT.DLG_PSD_Layer) + " " + selectedLayer._layerIndex, GUILayout.Width(width));//"Layer"
 
 				GUILayout.Space(5);
-				EditorGUILayout.LabelField(_selectedLayerData._name, GUILayout.Width(width));
+				EditorGUILayout.LabelField(selectedLayer._name, GUILayout.Width(width));
 				//"Rect", "Position", "Size"
-				EditorGUILayout.LabelField(_editor.GetText(TEXT.DLG_PSD_Rect) + " (LBRT : " + _selectedLayerData._posOffset_Left + ", " + _selectedLayerData._posOffset_Top + ", " + _selectedLayerData._posOffset_Right + ", " + _selectedLayerData._posOffset_Bottom + " )", GUILayout.Width(width));
-				EditorGUILayout.LabelField(_editor.GetText(TEXT.DLG_PSD_Position) + " : " + _selectedLayerData._posOffset.x + ", " + _selectedLayerData._posOffset.y, GUILayout.Width(width));
-				EditorGUILayout.LabelField(_editor.GetText(TEXT.DLG_PSD_Size) + " : " + _selectedLayerData._width + " x " + _selectedLayerData._height, GUILayout.Width(width));
+				EditorGUILayout.LabelField(_editor.GetText(TEXT.DLG_PSD_Rect) + " (LBRT : " + selectedLayer._posOffset_Left + ", " + selectedLayer._posOffset_Top + ", " + selectedLayer._posOffset_Right + ", " + selectedLayer._posOffset_Bottom + " )", GUILayout.Width(width));
+				EditorGUILayout.LabelField(_editor.GetText(TEXT.DLG_PSD_Position) + " : " + selectedLayer._posOffset.x + ", " + selectedLayer._posOffset.y, GUILayout.Width(width));
+				EditorGUILayout.LabelField(_editor.GetText(TEXT.DLG_PSD_Size) + " : " + selectedLayer._width + " x " + selectedLayer._height, GUILayout.Width(width));
 
 				GUILayout.Space(5);
-				EditorGUILayout.LabelField(_editor.GetText(TEXT.DLG_PSD_Level) + " : " + _selectedLayerData._hierarchyLevel, GUILayout.Width(width));//"Level"
-				if (_selectedLayerData._parentLayer != null)
+				EditorGUILayout.LabelField(_editor.GetText(TEXT.DLG_PSD_Level) + " : " + selectedLayer._hierarchyLevel, GUILayout.Width(width));//"Level"
+				if (selectedLayer._parentLayer != null)
 				{
-					EditorGUILayout.LabelField(_editor.GetText(TEXT.DLG_PSD_Parent) + " : " + _selectedLayerData._parentLayer._name, GUILayout.Width(width));//"Parent"
+					EditorGUILayout.LabelField(_editor.GetText(TEXT.DLG_PSD_Parent) + " : " + selectedLayer._parentLayer._name, GUILayout.Width(width));//"Parent"
 				}
 
 
 
 				GUILayout.Space(5);
-				bool next_isClipping = EditorGUILayout.Toggle(_editor.GetText(TEXT.DLG_PSD_Clipping), _selectedLayerData._isClipping, GUILayout.Width(width));//"Clipping"
+				//이전
+				//bool next_isClipping = EditorGUILayout.Toggle(_editor.GetText(TEXT.DLG_PSD_Clipping), selectedLayer._isClipping, GUILayout.Width(width));//"Clipping"
+				
+				//변경 21.7.3
+				bool next_isClipping = selectedLayer._isClipping;
+				if(apEditorUtil.ToggledButton_2Side(_editor.GetText(TEXT.DLG_PSD_Clipping), next_isClipping, true, width, 25))
+				{
+					next_isClipping = !next_isClipping;
+				}
+
 
 				GUILayout.Space(5);
-				bool next_isBakable = EditorGUILayout.Toggle(_editor.GetText(TEXT.DLG_PSD_BakeTarget), _selectedLayerData._isBakable, GUILayout.Width(width));//"Bake Target"
+				//이전
+				//bool next_isBakable = EditorGUILayout.Toggle(_editor.GetText(TEXT.DLG_PSD_BakeTarget), selectedLayer._isBakable, GUILayout.Width(width));//"Bake Target"
+
+				//변경
+				bool next_isBakable = selectedLayer._isBakable;
+				if(apEditorUtil.ToggledButton_2Side(_editor.GetText(TEXT.DLG_PSD_BakeTarget), next_isBakable, true, width, 30))
+				{
+					next_isBakable = !next_isBakable;
+				}
 
 				if (IsGUIUsable)
 				{
 					//스레드가 작동 안될때에만 적용하자
-					_selectedLayerData._isClipping = next_isClipping;
-					_selectedLayerData._isBakable = next_isBakable;
+					selectedLayer._isClipping = next_isClipping;
+					selectedLayer._isBakable = next_isBakable;
 				}
 
-				if (_selectedLayerData._isClipping && !_selectedLayerData._isClippingValid)
-				{
-					GUILayout.Space(10);
+				//클리핑 제한 없어짐
+				//if (selectedLayer._isClipping && !selectedLayer._isClippingValid)
+				//{
+				//	GUILayout.Space(10);
 
-					Color prevColor = GUI.backgroundColor;
-					GUI.backgroundColor = new Color(1.0f, 0.6f, 0.6f, 1.0f);
+				//	Color prevColor = GUI.backgroundColor;
+				//	GUI.backgroundColor = new Color(1.0f, 0.6f, 0.6f, 1.0f);
 
-					GUIStyle guiStyle_WarningBox = new GUIStyle(GUI.skin.box);
-					guiStyle_WarningBox.alignment = TextAnchor.MiddleCenter;
-					guiStyle_WarningBox.normal.textColor = apEditorUtil.BoxTextColor;
+				//	GUIStyle guiStyle_WarningBox = new GUIStyle(GUI.skin.box);
+				//	guiStyle_WarningBox.alignment = TextAnchor.MiddleCenter;
+				//	guiStyle_WarningBox.normal.textColor = apEditorUtil.BoxTextColor;
 
-					GUILayout.Box("Warning\nClipped Layers are Over 3", guiStyle_WarningBox, GUILayout.Width(width), GUILayout.Height(70));
+				//	GUILayout.Box("Warning\nClipped Layers are Over 3", guiStyle_WarningBox, GUILayout.Width(width), GUILayout.Height(70));
 
-					GUI.backgroundColor = prevColor;
-				}
+				//	GUI.backgroundColor = prevColor;
+				//}
 
-				if (prev_isClipping != _selectedLayerData._isClipping
-					|| prev_isBakable != _selectedLayerData._isBakable)
+				if (prev_isClipping != selectedLayer._isClipping
+					|| prev_isBakable != selectedLayer._isBakable)
 				{
 					_isNeedBakeCheck = true;//<<다시 Bake할 수 있도록 하자
 
@@ -1548,6 +1645,102 @@ namespace AnyPortrait
 					//CheckClippingValidation();
 					_psdLoader.CheckClippingValidation();//PSD Loader 이용
 				}
+			}
+			else if(nSelectedLayerData > 1)
+			{
+				//[ 2개 이상 선택된 경우 ] (추가 21.7.3)
+				bool isClipping_All = false;//모두 클리핑 되는가
+				bool isBakable_All = false;//모두 Bake 대상인가
+				bool isClipping_Sync = true;//클리핑 속성이 모두 동기화 되었는가
+				bool isBakable_Sync = true;//Bakable 속성이 모두 동기화 되었는가
+
+				apPSDLayerData curSelectedLayer = _selectedLayerDataList[0];
+
+				//일단 첫번째 값을 설정
+				isClipping_All = curSelectedLayer._isClipping;
+				isBakable_All = curSelectedLayer._isBakable;
+
+				isClipping_Sync = true;
+				isBakable_Sync = true;
+
+				for (int i = 1; i < nSelectedLayerData; i++)
+				{
+					curSelectedLayer = _selectedLayerDataList[i];
+					if(isClipping_All != curSelectedLayer._isClipping)
+					{
+						//값이 다르다면
+						isClipping_Sync = false;
+					}
+
+					if(isBakable_All != curSelectedLayer._isBakable)
+					{
+						//값이 다르다면
+						isBakable_Sync = false;
+					}
+
+				}
+
+				//현재 레이어 정보를 표시한다.
+				//적용 여부도 설정
+
+				//변경 21.7.3
+				if(apEditorUtil.ToggledButton_2Side_Sync(_editor.GetText(TEXT.DLG_PSD_Clipping), _editor.GetText(TEXT.DLG_PSD_Clipping), isClipping_All, true, isClipping_Sync, width, 25))
+				{
+					if (IsGUIUsable)
+					{
+						bool isNextClipping = false;
+						if (isClipping_Sync)
+						{
+							//동기화 되었다면 > 값의 반대
+							isNextClipping = !isClipping_All;
+						}
+						else
+						{
+							//동기화 되지 않았다면 > 모두 Enable
+							isNextClipping = true;
+						}
+
+						for (int i = 0; i < nSelectedLayerData; i++)
+						{
+							curSelectedLayer = _selectedLayerDataList[i];
+							curSelectedLayer._isClipping = isNextClipping;
+						}
+
+						_isNeedBakeCheck = true;//<<다시 Bake할 수 있도록 하자
+						_psdLoader.CheckClippingValidation();//PSD Loader 이용
+					}
+				}
+
+
+				GUILayout.Space(5);
+				
+				//변경
+				if(apEditorUtil.ToggledButton_2Side_Sync(_editor.GetText(TEXT.DLG_PSD_BakeTarget), _editor.GetText(TEXT.DLG_PSD_BakeTarget), isBakable_All, true, isBakable_Sync, width, 30))
+				{
+					if (IsGUIUsable)
+					{
+						bool isNextBakable = false;
+						if (isBakable_Sync)
+						{
+							//동기화 되었다면 > 값의 반대
+							isNextBakable = !isBakable_All;
+						}
+						else
+						{
+							//동기화 되지 않았다면 > 모두 Enable
+							isNextBakable = true;
+						}
+
+						for (int i = 0; i < nSelectedLayerData; i++)
+						{
+							curSelectedLayer = _selectedLayerDataList[i];
+							curSelectedLayer._isBakable = isNextBakable;
+						}
+
+						_isNeedBakeCheck = true;//<<다시 Bake할 수 있도록 하자
+						_psdLoader.CheckClippingValidation();//PSD Loader 이용
+					}
+				}				
 			}
 			else
 			{
@@ -1819,6 +2012,10 @@ namespace AnyPortrait
 						{
 							_bakeDstFileRelativePath += _bakeDstFilePath.Substring(subStartLength);
 						}
+
+						//추가 21.7.3 : 이스케이프 문자 삭제
+						_bakeDstFilePath = apUtil.ConvertEscapeToPlainText(_bakeDstFilePath);
+						_bakeDstFileRelativePath = apUtil.ConvertEscapeToPlainText(_bakeDstFileRelativePath);
 					}
 				}
 				//_bakeDstFilePath = EditorUtility.SaveFilePanelInProject("Set Atlas Save Path with File Name", _fileNameOnly, "png", "Please enter a file name to save the atlas set.\nFiles are name with an index.");

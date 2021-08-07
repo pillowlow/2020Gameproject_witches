@@ -356,6 +356,37 @@ namespace AnyPortrait
 			_portrait._controller.CompleteLayerUpdate();
 		}
 
+		//추가 21.6.8 : 동기화된 경우, 
+		public void UpdateAsSyncChild(float tDelta, apSyncPlay syncPlay)
+		{
+			//컨트롤러 초기화 먼저
+			_portrait._controller.ReadyToLayerUpdate();
+
+
+			if(syncPlay._nSyncSet_AnimClip > 0)
+			{
+				apSyncSet_AnimClip curSyncSet = null;
+				for (int i = 0; i < syncPlay._nSyncSet_AnimClip; i++)
+				{
+					curSyncSet = syncPlay._syncSet_AnimClip[i];
+					if(curSyncSet._animClip == null)
+					{
+						continue;
+					}
+
+					//동기화 및 업데이트를 한다.
+					curSyncSet.SyncAndUpdate();					
+				}
+			}
+
+
+			//컨트롤러 적용
+			_portrait._controller.CompleteLayerUpdate();
+		}
+
+
+
+
 
 		//AnimPlayData가 생성 또는 삭제 되었을 때, PlayOrder를 다시 매겨준다.
 		/// <summary>
@@ -1216,6 +1247,7 @@ namespace AnyPortrait
 		// [에디터] Functions
 		//-------------------------------------------------------
 		// 업데이트 함수
+#if UNITY_EDITOR
 		/// <summary>
 		/// [Please do not use it] Update in Editor
 		/// </summary>
@@ -1229,11 +1261,11 @@ namespace AnyPortrait
 			}
 
 			int curFrame = _curAnimClipInEditor.CurFrame;
-			_curAnimClipInEditor.Update_Editor(tDelta, false, false, false);
+			_curAnimClipInEditor.Update_Editor(tDelta, false, false, false, false);
 
 			return curFrame != _curAnimClipInEditor.CurFrame;
 		}
-
+#endif
 
 		// 제어 함수
 		/// <summary>

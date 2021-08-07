@@ -339,6 +339,13 @@ namespace AnyPortrait
 					return "Changing shape\nwith free-form deformation\naccording to [Controller]";
 				case apModifierBase.MODIFIER_TYPE.AnimatedFFD:
 					return "Changing shape\nwith free-form deformation\naccording to [Animation]";
+
+				//추가 21.7.20
+				case apModifierBase.MODIFIER_TYPE.ColorOnly:					
+					return _editor.GetText(TEXT.DLG_ModInfo_ColorOnly);
+				case apModifierBase.MODIFIER_TYPE.AnimatedColorOnly:					
+					return _editor.GetText(TEXT.DLG_ModInfo_AnimatedColorOnly);
+
 			}
 			return "?? Unknown Type : " + _curSelectedMod._modType;
 		}
@@ -373,6 +380,13 @@ namespace AnyPortrait
 
 				case apModifierBase.MODIFIER_TYPE.AnimatedFFD:
 					return _editor.ImageSet.Get(apImageSet.PRESET.Modifier_AnimatedFFD);
+
+				//추가 21.7.20 : 색상 모디파이어
+				case apModifierBase.MODIFIER_TYPE.ColorOnly:
+					return _editor.ImageSet.Get(apImageSet.PRESET.Modifier_ColorOnly);
+
+				case apModifierBase.MODIFIER_TYPE.AnimatedColorOnly:
+					return _editor.ImageSet.Get(apImageSet.PRESET.Modifier_AnimatedColorOnly);
 
 				default:
 					Debug.LogError("TODO : 알 수 없는 Modifier [" + modType + "]");

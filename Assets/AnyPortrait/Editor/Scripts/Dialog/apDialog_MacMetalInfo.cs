@@ -98,7 +98,7 @@ namespace AnyPortrait
 			_editor = editor;
 			
 			_language = language;
-			string basePath = _editor.PathSetting.CurrentPath;
+			string basePath = apPathSetting.I.CurrentPath;
 			
 			//_img_Info = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/AnyPortrait/Editor/Images/MacTurnOffMetalEditor.png");//기존
 			_img_Info = AssetDatabase.LoadAssetAtPath<Texture2D>(basePath + "Editor/Images/MacTurnOffMetalEditor.png");//변경 20.4.21

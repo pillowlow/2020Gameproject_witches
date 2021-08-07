@@ -26,14 +26,28 @@ namespace AnyPortrait
 	{
 		// Members
 		//-------------------------------------------------------------
-		public delegate void FUNC_SELECT_MIGRATE_MESHGROUP(bool isSuccess, object loadKey, apMeshGroup dstMeshGroup, apTransform_Mesh targetMeshTransform, apMeshGroup srcMeshGroup, bool isSelectParent);
+		public delegate void FUNC_SELECT_MIGRATE_MESHGROUP(	bool isSuccess, 
+															object loadKey, 
+															apMeshGroup dstMeshGroup, 
+															bool isSingleTF, 
+															apTransform_Mesh targetMeshTransform, 
+															List<apTransform_Mesh> targetMeshTransforms, 
+															apMeshGroup srcMeshGroup, bool isSelectParent);
 
 		private static apDialog_SelectMigrateMeshGroup s_window = null;
 
 		private apEditor _editor = null;
 		private object _loadKey = null;
 		//private apMeshGroup _dstMeshGroup = null;
+
+		private enum TARGET_MODE
+		{
+			Single,
+			Multiple
+		}
+		private TARGET_MODE _targetMode = TARGET_MODE.Single;
 		private apTransform_Mesh _targetMeshTransform = null;
+		private List<apTransform_Mesh> _targetMeshTransforms = null;
 		private apMeshGroup _srcMeshGroup = null;
 
 		private FUNC_SELECT_MIGRATE_MESHGROUP _funcResult;
@@ -85,7 +99,9 @@ namespace AnyPortrait
 
 		// Show Window / Close Dialog
 		//------------------------------------------------------------------------
-		public static object ShowDialog(apEditor editor, apTransform_Mesh targetMeshTransform, FUNC_SELECT_MIGRATE_MESHGROUP funcResult)
+		public static object ShowDialog(apEditor editor, apTransform_Mesh targetMeshTransform, 
+										List<apTransform_Mesh> targetMeshTransforms,
+										FUNC_SELECT_MIGRATE_MESHGROUP funcResult)
 		{
 			CloseDialog();
 
@@ -124,7 +140,7 @@ namespace AnyPortrait
 				s_window.position = new Rect((editor.position.xMin + editor.position.xMax) / 2 - (width / 2),
 												(editor.position.yMin + editor.position.yMax) / 2 - (height / 2),
 												width, height);
-				s_window.Init(editor, loadKey, targetMeshTransform, srcMeshGroup, funcResult);
+				s_window.Init(editor, loadKey, targetMeshTransform, targetMeshTransforms, srcMeshGroup, funcResult);
 
 				return loadKey;
 			}
@@ -155,12 +171,25 @@ namespace AnyPortrait
 
 		// Init
 		//---------------------------------------------------------------------------------------------------------------
-		private void Init(apEditor editor, object loadKey, apTransform_Mesh targetMeshTransform, apMeshGroup srcMeshGroup, FUNC_SELECT_MIGRATE_MESHGROUP funcResult)
+		private void Init(apEditor editor, object loadKey, apTransform_Mesh targetMeshTransform, 
+							List<apTransform_Mesh> targetMeshTransforms,
+							apMeshGroup srcMeshGroup, FUNC_SELECT_MIGRATE_MESHGROUP funcResult)
 		{
 			_editor = editor;
 			_loadKey = loadKey;
 			//_dstMeshGroup = null;
 			_targetMeshTransform = targetMeshTransform;
+			_targetMeshTransforms = targetMeshTransforms;
+
+			if (_targetMeshTransforms == null || _targetMeshTransforms.Count == 1)
+			{
+				_targetMode = TARGET_MODE.Single;
+			}
+			else
+			{
+				_targetMode = TARGET_MODE.Multiple;
+			}
+
 			_srcMeshGroup = srcMeshGroup;
 
 			_funcResult = funcResult;
@@ -334,16 +363,16 @@ namespace AnyPortrait
 					{
 						if (_selectedUnit._isSelectable)
 						{
-							_funcResult(true, _loadKey, _selectedUnit._meshGroup, _targetMeshTransform, _srcMeshGroup, _selectedUnit._isParent);
+							_funcResult(true, _loadKey, _selectedUnit._meshGroup, _targetMode == TARGET_MODE.Single, _targetMeshTransform, _targetMeshTransforms, _srcMeshGroup, _selectedUnit._isParent);
 						}
 						else
 						{
-							_funcResult(false, _loadKey, null, null, null, false);
+							_funcResult(false, _loadKey, null, true, null, null, null, false);
 						}
 					}
 					else
 					{
-						_funcResult(false, _loadKey, null, null, null, false);
+						_funcResult(false, _loadKey, null, true, null, null, null, false);
 					}
 				}
 				
@@ -351,7 +380,7 @@ namespace AnyPortrait
 			}
 			if (GUILayout.Button(_editor.GetText(TEXT.DLG_Close), GUILayout.Height(30)))//"Close"
 			{
-				_funcResult(false, _loadKey, null, null, null, false);
+				_funcResult(false, _loadKey, null, true, null, null, null, false);
 				isClose = true;
 			}
 			EditorGUILayout.EndHorizontal();

@@ -492,7 +492,7 @@ namespace AnyPortrait
 							if (renderUnit._isVisible)
 							{
 								//RenderTexture.active = _renderTexture_GrayscaleAlpha;
-								apGL.DrawRenderUnit_Basic_Alpha2White(renderUnit);
+								apGL.DrawRenderUnit_Basic_Alpha2White_ForExport(renderUnit);
 							}
 						}
 						else if (renderUnit._meshTransform._isClipping_Child)
@@ -505,7 +505,7 @@ namespace AnyPortrait
 							if (renderUnit._isVisible)
 							{
 								//RenderTexture.active = _renderTexture_GrayscaleAlpha;
-								apGL.DrawRenderUnit_Basic_Alpha2White(renderUnit);
+								apGL.DrawRenderUnit_Basic_Alpha2White_ForExport(renderUnit);
 							}
 						}
 					}
@@ -618,7 +618,7 @@ namespace AnyPortrait
 							if (renderUnit._isVisible)
 							{
 								RenderTexture.active = _renderTexture;
-								apGL.DrawRenderUnit_Basic(renderUnit);
+								apGL.DrawRenderUnit_Basic_ForExport(renderUnit);
 							}
 						}
 					}
@@ -1254,7 +1254,7 @@ namespace AnyPortrait
 			string basePath = "Assets/AnyPortrait/";
 			if(_editor != null)
 			{
-				basePath = _editor.PathSetting.CurrentPath;
+				basePath = apPathSetting.I.CurrentPath;
 			}
 			//ComputeShader cShader = UnityEditor.AssetDatabase.LoadAssetAtPath<ComputeShader>("Assets/AnyPortrait/Editor/Scripts/Subtool/CShader/apCShader_Blur.compute");
 			ComputeShader cShader = UnityEditor.AssetDatabase.LoadAssetAtPath<ComputeShader>(basePath + "Editor/Scripts/Subtool/CShader/apCShader_Blur.compute");
@@ -1331,7 +1331,7 @@ namespace AnyPortrait
 			string basePath = "Assets/AnyPortrait/";
 			if(_editor != null)
 			{
-				basePath = _editor.PathSetting.CurrentPath;
+				basePath = apPathSetting.I.CurrentPath;
 			}
 
 			//ComputeShader cShader = UnityEditor.AssetDatabase.LoadAssetAtPath<ComputeShader>("Assets/AnyPortrait/Editor/Scripts/Subtool/CShader/apCShader_ResizeTexture.compute");
@@ -1426,7 +1426,7 @@ namespace AnyPortrait
 			string basePath = "Assets/AnyPortrait/";
 			if(_editor != null)
 			{
-				basePath = _editor.PathSetting.CurrentPath;
+				basePath = apPathSetting.I.CurrentPath;
 			}
 
 			//ComputeShader cShader = UnityEditor.AssetDatabase.LoadAssetAtPath<ComputeShader>("Assets/AnyPortrait/Editor/Scripts/Subtool/CShader/apCShader_MergeChannels.compute");

@@ -338,8 +338,13 @@ namespace AnyPortrait
 				}
 
 
-				fs = new FileStream(filePath, FileMode.Create, FileAccess.Write);
-				sw = new StreamWriter(fs);
+				//이전
+				//fs = new FileStream(filePath, FileMode.Create, FileAccess.Write);
+				//sw = new StreamWriter(fs);
+
+				//변경 21.7.3 : 경로 + 인코딩 문제
+				fs = new FileStream(apUtil.ConvertEscapeToPlainText(filePath), FileMode.Create, FileAccess.Write);
+				sw = new StreamWriter(fs, System.Text.Encoding.UTF8);
 
 				sw.WriteLine("---------------------------------------");
 				sw.WriteLine(" Mapping Data");
@@ -399,8 +404,14 @@ namespace AnyPortrait
 				List<Mapping> map_Timeline = new List<Mapping>();
 				List<Mapping> map_Event = new List<Mapping>();
 
-				fs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-				sr = new StreamReader(fs);
+				//이전
+				//fs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+				//sr = new StreamReader(fs);
+
+				//변경 21.7.3 : 경로 문제와 인코딩 문제
+				fs = new FileStream(apUtil.ConvertEscapeToPlainText(filePath), FileMode.Open, FileAccess.Read);
+				sr = new StreamReader(fs, System.Text.Encoding.UTF8, true);
+
 
 				sr.ReadLine();//"----------"
 				sr.ReadLine();//"Mapping Data"

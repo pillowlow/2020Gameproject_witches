@@ -92,7 +92,6 @@ namespace AnyPortrait
 		
 
 		//추가 20.4.21 : 이미지 경로
-		private apPathSetting _pathSetting = null;
 		private string _basePath = "";
 
 
@@ -128,11 +127,7 @@ namespace AnyPortrait
 				return;
 			}
 
-			if(_pathSetting == null)
-			{
-				_pathSetting = new apPathSetting();
-			}
-			_basePath = _pathSetting.Load();
+			_basePath = apPathSetting.I.Load();
 
 			_img_EditorIsOpen = LoadImage("InspectorIcon_EditorIsOpen");
 

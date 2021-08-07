@@ -1406,6 +1406,39 @@ namespace AnyPortrait
 
 			_snapSize = srcParam._snapSize;
 		}
+
+
+		public void CopyFromControlParamWithoutName(apControlParam srcParam)
+		{
+			_category = srcParam._category;
+			_iconPreset = srcParam._iconPreset;
+			_isIconChanged = srcParam._isIconChanged;
+
+			_valueType = srcParam._valueType;
+
+			_int_Def = srcParam._int_Def;
+			_float_Def = srcParam._float_Def;
+			_vec2_Def = srcParam._vec2_Def;
+
+			_int_Min = srcParam._int_Min;
+			_int_Max = srcParam._int_Max;
+
+			_float_Min = srcParam._float_Min;
+			_float_Max = srcParam._float_Max;
+
+			_vec2_Min = srcParam._vec2_Min;
+			_vec2_Max = srcParam._vec2_Max;
+
+
+			_label_Min = srcParam._label_Min;
+			_label_Max = srcParam._label_Max;
+
+			//_uniqueID = srcParam._uniqueID;
+			//_keyName = srcParam._keyName;
+			//_isReserved = srcParam._isReserved;
+
+			_snapSize = srcParam._snapSize;
+		}
 	}
 
 }

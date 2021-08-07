@@ -401,10 +401,11 @@ namespace AnyPortrait
 		public void ReadyToUpdate()
 		{
 			//1. Child Mesh와 기본 Reday
-			if (_childMesh != null)
-			{
-				_childMesh.ReadyToUpdate();
-			}
+			//삭제 21.5.23 : 미사용 함수
+			//if (_childMesh != null)
+			//{
+			//	_childMesh.ReadyToUpdate();
+			//}
 
 			//2. Calculate Stack Ready
 			if (_calculatedStack != null)
@@ -705,7 +706,8 @@ namespace AnyPortrait
 
 
 
-				_matrix_TFResult_WorldWithoutMod.RMultiply(_matrix_TF_ParentWorld_NonModified, true);//<<[R]
+				_matrix_TFResult_WorldWithoutMod.RMultiply(_matrix_TF_ParentWorld_NonModified, false);//<<[R]
+				_matrix_TFResult_WorldWithoutMod.MakeMatrix(true);
 
 				//추가 2.25 : Flipped > 마저 삭제 20.8.10 (코드가 원래 동작 안하던뎅..)
 				//if(_isFlippedRoot_X || _isFlippedRoot_Y)
@@ -718,12 +720,20 @@ namespace AnyPortrait
 				//리깅용 단축식을 추가한다.
 				if (_childMesh != null)
 				{
-					_vertLocal2MeshWorldMatrix = _matrix_TFResult_WorldWithoutMod.MtrxToSpace;
-					_vertLocal2MeshWorldMatrix *= _childMesh._matrix_Vert2Mesh;
+					//이전
+					//_vertLocal2MeshWorldMatrix = _matrix_TFResult_WorldWithoutMod.MtrxToSpace;
+					//_vertLocal2MeshWorldMatrix *= _childMesh._matrix_Vert2Mesh;
+					
+					//변경 21.5.25
+					_vertLocal2MeshWorldMatrix.SetAndMultiply(ref _matrix_TFResult_WorldWithoutMod._mtrxToSpace, ref _childMesh._matrix_Vert2Mesh);
 
-					_vertWorld2MeshLocalMatrix = _childMesh._matrix_Vert2Mesh_Inverse;
-					_vertWorld2MeshLocalMatrix *= _matrix_TFResult_WorldWithoutMod.MtrxToLowerSpace;
-
+					//이전
+					//_vertWorld2MeshLocalMatrix = _childMesh._matrix_Vert2Mesh_Inverse;
+					//_vertWorld2MeshLocalMatrix *= _matrix_TFResult_WorldWithoutMod.MtrxToLowerSpace;
+					
+					//변경 21.5.25
+					_vertWorld2MeshLocalMatrix.SetAndMultiply(ref _childMesh._matrix_Vert2Mesh_Inverse, ref _matrix_TFResult_WorldWithoutMod._mtrxToLowerSpace);
+					
 					_vertMeshWorldNoModMatrix = _matrix_TFResult_WorldWithoutMod.MtrxToSpace;
 					_vertMeshWorldNoModInverseMatrix = _matrix_TFResult_WorldWithoutMod.MtrxToLowerSpace;
 				}
@@ -1100,10 +1110,16 @@ namespace AnyPortrait
 
 		public void ResetCalculateStackForBake(bool isRoot)
 		{
-			if(_calculatedStack != null)
+			if(_calculatedStack == null)
 			{
-				_calculatedStack.ResetVerticesOnBake();
+				_calculatedStack = new apOptCalculatedResultStack(this);//다시 설정
 			}
+			else
+			{
+				_calculatedStack.ReconnectTransformForBake(this);
+			}
+			_calculatedStack.ResetVerticesOnBake();			
+			
 
 			//CalResultParam을 모두 삭제한다.
 

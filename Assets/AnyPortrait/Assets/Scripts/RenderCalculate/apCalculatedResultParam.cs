@@ -624,7 +624,7 @@ namespace AnyPortrait
 		public void Calculate()
 		{
 			//_totalParamSetGroupWeight = 0.0f;//<<이건 Modifier에서 넣어준다.
-			
+
 			//변경 : Transform / Color로 나눔
 			_totalParamSetGroupWeight_Transform = 0.0f;
 			_totalParamSetGroupWeight_Color = 0.0f;
@@ -633,6 +633,7 @@ namespace AnyPortrait
 			{
 				_subParamKeyValueList[i].Calculate();
 			}
+
 		}
 
 

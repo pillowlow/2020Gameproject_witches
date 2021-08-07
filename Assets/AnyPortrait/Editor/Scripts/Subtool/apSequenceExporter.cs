@@ -1819,8 +1819,13 @@ namespace AnyPortrait
 				 
 			try
 			{
-				fs = new FileStream(jsonFilePath, FileMode.Create, FileAccess.Write);
-				sw = new StreamWriter(fs);
+				//이전
+				//fs = new FileStream(jsonFilePath, FileMode.Create, FileAccess.Write);
+				//sw = new StreamWriter(fs);
+
+				//변경 21.7.3 : 경로 + 인코딩 문제
+				fs = new FileStream(apUtil.ConvertEscapeToPlainText(jsonFilePath), FileMode.Create, FileAccess.Write);
+				sw = new StreamWriter(fs, System.Text.Encoding.UTF8);
 
 				//AnimtionClip이 먼저
 				//인덱스, 이름, FPS, Frame개수, Loop 여부
@@ -1951,8 +1956,13 @@ namespace AnyPortrait
 				 
 			try
 			{
-				fs = new FileStream(txtFilePath, FileMode.Create, FileAccess.Write);
-				sw = new StreamWriter(fs);
+				//이전
+				//fs = new FileStream(txtFilePath, FileMode.Create, FileAccess.Write);
+				//sw = new StreamWriter(fs);
+
+				//변경 21.7.3 : 경로 + 인코딩 문제
+				fs = new FileStream(apUtil.ConvertEscapeToPlainText(txtFilePath), FileMode.Create, FileAccess.Write);
+				sw = new StreamWriter(fs, System.Text.Encoding.UTF8);
 
 				//AnimtionClip이 먼저
 				//인덱스, 이름, FPS, Frame개수, Loop 여부

@@ -54,8 +54,13 @@ namespace AnyPortrait
 			{
 				MakeReservedPresets();//Reserved가 추가되지 않았으면 자동으로 미리 추가하자
 
-				fs = new FileStream(filePath, FileMode.Create, FileAccess.Write);
-				sw = new StreamWriter(fs);
+				//이전
+				//fs = new FileStream(filePath, FileMode.Create, FileAccess.Write);
+				//sw = new StreamWriter(fs);
+
+				//변경 21.7.3 : 경로 + 인코딩 문제
+				fs = new FileStream(apUtil.ConvertEscapeToPlainText(filePath), FileMode.Create, FileAccess.Write);
+				sw = new StreamWriter(fs, System.Text.Encoding.UTF8);
 
 				for (int i = 0; i < _units.Count; i++)
 				{
@@ -111,8 +116,13 @@ namespace AnyPortrait
 
 			try
 			{
-				fs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-				sr = new StreamReader(fs);
+				//이전
+				//fs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+				//sr = new StreamReader(fs);
+
+				//변경 21.7.3 : 경로, 인코딩 문제
+				fs = new FileStream(apUtil.ConvertEscapeToPlainText(filePath), FileMode.Open, FileAccess.Read);
+				sr = new StreamReader(fs, System.Text.Encoding.UTF8, true);
 
 				List<string> strData = new List<string>();
 				//유효한 데이터를 긁어온 후,
@@ -577,17 +587,17 @@ namespace AnyPortrait
 					}
 					else if (strKey == "FLDF")
 					{
-						_float_Def = float.Parse(strValue);
+						_float_Def = apUtil.ParseFloat(strValue);
 						//sw.WriteLine("FLDF" + _float_Def);
 					}
 					else if (strKey == "VXDF")
 					{
-						_vec2_Def.x = float.Parse(strValue);
+						_vec2_Def.x = apUtil.ParseFloat(strValue);
 						//sw.WriteLine("VXDF" + _vec2_Def.x);
 					}
 					else if (strKey == "VYDF")
 					{
-						_vec2_Def.y = float.Parse(strValue);
+						_vec2_Def.y = apUtil.ParseFloat(strValue);
 						//sw.WriteLine("VYDF" + _vec2_Def.y);
 					}
 					else if (strKey == "ITMN")
@@ -602,32 +612,32 @@ namespace AnyPortrait
 					}
 					else if (strKey == "FLMN")
 					{
-						_float_Min = float.Parse(strValue);
+						_float_Min = apUtil.ParseFloat(strValue);
 						//sw.WriteLine("FLMN" + _float_Min);
 					}
 					else if (strKey == "FLMX")
 					{
-						_float_Max = float.Parse(strValue);
+						_float_Max = apUtil.ParseFloat(strValue);
 						//sw.WriteLine("FLMX" + _float_Max);
 					}
 					else if (strKey == "VXMN")
 					{
-						_vec2_Min.x = float.Parse(strValue);
+						_vec2_Min.x = apUtil.ParseFloat(strValue);
 						//sw.WriteLine("VXMN" + _vec2_Min.x);
 					}
 					else if (strKey == "VYMN")
 					{
-						_vec2_Min.y = float.Parse(strValue);
+						_vec2_Min.y = apUtil.ParseFloat(strValue);
 						//sw.WriteLine("VYMN" + _vec2_Min.y);
 					}
 					else if (strKey == "VXMX")
 					{
-						_vec2_Max.x = float.Parse(strValue);
+						_vec2_Max.x = apUtil.ParseFloat(strValue);
 						//sw.WriteLine("VXMX" + _vec2_Max.x);
 					}
 					else if (strKey == "VYMX")
 					{
-						_vec2_Max.y = float.Parse(strValue);
+						_vec2_Max.y = apUtil.ParseFloat(strValue);
 						//sw.WriteLine("VYMX" + _vec2_Max.y);
 					}
 					else if (strKey == "LBMN")

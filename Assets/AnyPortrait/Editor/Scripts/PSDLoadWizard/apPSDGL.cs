@@ -116,6 +116,9 @@ namespace AnyPortrait
 			_glScreenClippingSize.w = (float)(posY + windowHeight) / (float)totalEditorHeight;
 
 			_matBatch.CheckMaskTexture(_windowWidth, _windowHeight);
+
+			//추가 21.5.19 : 클리핑 사이즈를 바로 설정
+			_matBatch.SetClippingSizeToAllMaterial(_glScreenClippingSize);
 		}
 
 		public Vector2 World2GL(Vector2 pos)
@@ -141,25 +144,33 @@ namespace AnyPortrait
 
 		// 최적화형
 		//-------------------------------------------------------------------------------
-		public void BeginBatch_ColoredPolygon()
+		//public void BeginBatch_ColoredPolygon()
+		//{
+		//	_matBatch.SetPass_Color();
+		//	_matBatch.SetClippingSize(_glScreenClippingSize);
+
+		//	GL.Begin(GL.TRIANGLES);
+		//}
+
+		//public void BeginBatch_ColoredLine()
+		//{
+		//	_matBatch.SetPass_Color();
+		//	_matBatch.SetClippingSize(_glScreenClippingSize);
+
+		//	GL.Begin(GL.LINES);
+		//}
+
+		//public void EndBatch()
+		//{
+		//	GL.End();
+		//	GL.Flush();
+		//}
+
+
+		public void EndPass()
 		{
-			_matBatch.SetPass_Color();
-			_matBatch.SetClippingSize(_glScreenClippingSize);
-
-			GL.Begin(GL.TRIANGLES);
-		}
-
-		public void BeginBatch_ColoredLine()
-		{
-			_matBatch.SetPass_Color();
-			_matBatch.SetClippingSize(_glScreenClippingSize);
-
-			GL.Begin(GL.LINES);
-		}
-
-		public void EndBatch()
-		{
-			GL.End();
+			//렌더링중인게 있다면 종료
+			_matBatch.EndPass();
 		}
 
 		//-------------------------------------------------------------------------------
@@ -190,19 +201,23 @@ namespace AnyPortrait
 
 			if (isNeedResetMat)
 			{
-				_matBatch.SetPass_Color();
-				_matBatch.SetClippingSize(_glScreenClippingSize);
+				//변경 21.5.19
+				_matBatch.BeginPass_Color(GL.LINES);
+				//_matBatch.SetClippingSize(_glScreenClippingSize);
 
-				GL.Begin(GL.LINES);
+				//GL.Begin(GL.LINES);
 			}
 
 			GL.Color(color);
 			GL.Vertex(new Vector3(pos1.x, pos1.y, 0.0f));
 			GL.Vertex(new Vector3(pos2.x, pos2.y, 0.0f));
 
+			//변경 21.5.19
 			if (isNeedResetMat)
 			{
-				GL.End();
+				//GL.End();//<변환 완료>
+				//GL.Flush();
+				_matBatch.EndPass();
 			}
 		}
 
@@ -238,13 +253,10 @@ namespace AnyPortrait
 
 			if (isNeedResetMat)
 			{
-				//_mat_Color.SetPass(0);
-				//_mat_Color.SetVector("_ScreenSize", _glScreenClippingSize);
-				_matBatch.SetPass_Color();
-				_matBatch.SetClippingSize(_glScreenClippingSize);
-
-
-				GL.Begin(GL.TRIANGLES);
+				//변경 21.5.19
+				_matBatch.BeginPass_Color(GL.TRIANGLES);
+				//_matBatch.SetClippingSize(_glScreenClippingSize);
+				//GL.Begin(GL.TRIANGLES);
 			}
 			GL.Color(color);
 			GL.Vertex(pos_0); // 0
@@ -279,9 +291,12 @@ namespace AnyPortrait
 			GL.Vertex(pos_4); // 4
 			GL.Vertex(pos_3); // 3
 
+			//변경 21.5.19
 			if (isNeedResetMat)
 			{
-				GL.End();
+				//GL.End();//<변환 완료>
+				//GL.Flush();
+				_matBatch.EndPass();
 			}
 		}
 
@@ -350,15 +365,10 @@ namespace AnyPortrait
 			// | 0   1
 			// | 		
 			// | 3   2
-			//_mat_Texture.SetPass(0);
-			//_mat_Texture.SetTexture("_MainTex", image);
-			//_mat_Texture.SetColor("_Color", color2X);
-			//_mat_Texture.SetVector("_ScreenSize", _glScreenClippingSize);
-			_matBatch.SetPass_Texture_Normal(color2X, image, apPortrait.SHADER_TYPE.AlphaBlend);
-			_matBatch.SetClippingSize(_glScreenClippingSize);
-
-
-			GL.Begin(GL.TRIANGLES);
+			//변경 21.5.19
+			_matBatch.BeginPass_Texture_Normal(GL.TRIANGLES, color2X, image, apPortrait.SHADER_TYPE.AlphaBlend);
+			//_matBatch.SetClippingSize(_glScreenClippingSize);
+			//GL.Begin(GL.TRIANGLES);
 
 			GL.TexCoord(uv_0);
 			GL.Vertex(new Vector3(pos_0.x, pos_0.y, depth)); // 0
@@ -373,23 +383,29 @@ namespace AnyPortrait
 			GL.Vertex(new Vector3(pos_3.x, pos_3.y, depth)); // 3
 			GL.TexCoord(uv_0);
 			GL.Vertex(new Vector3(pos_0.x, pos_0.y, depth)); // 0
-			GL.End();
+			
+			//삭제 21.5.19
+			//GL.End();//<전환완료>
 
 
 			if (isOutlineRender)
 			{
-				_matBatch.SetPass_Color();
-				_matBatch.SetClippingSize(_glScreenClippingSize);
-				GL.Begin(GL.TRIANGLES);
+				//변경 21.5.19
+				_matBatch.BeginPass_Color(GL.TRIANGLES);
+				//_matBatch.SetClippingSize(_glScreenClippingSize);
+				//GL.Begin(GL.TRIANGLES);
 
 				DrawBoldLine(GL2World(pos_0), GL2World(pos_1), 6.0f, _lineColor_Outline, false);
 				DrawBoldLine(GL2World(pos_1), GL2World(pos_2), 6.0f, _lineColor_Outline, false);
 				DrawBoldLine(GL2World(pos_2), GL2World(pos_3), 6.0f, _lineColor_Outline, false);
 				DrawBoldLine(GL2World(pos_3), GL2World(pos_0), 6.0f, _lineColor_Outline, false);
 
-				GL.End();
+				//삭제 21.5.19
+				//GL.End();//<전환완료>
 			}
 			//GL.Flush();
+			_matBatch.EndPass();
+
 		}
 
 
@@ -431,19 +447,18 @@ namespace AnyPortrait
 			// | 0   1
 			// | 		
 			// | 3   2
+			//변경 21.5.19
 			if (!isDrawToneOutline)
 			{
-				_matBatch.SetPass_Texture_Normal(color2X, image, apPortrait.SHADER_TYPE.AlphaBlend);
+				_matBatch.BeginPass_Texture_Normal(GL.TRIANGLES, color2X, image, apPortrait.SHADER_TYPE.AlphaBlend);
 			}
 			else
 			{
 
-				_matBatch.SetPass_ToneColor_Custom(color2X, image, 0.0f, 0.0f);
+				_matBatch.BeginPass_ToneColor_Custom(GL.TRIANGLES, color2X, image, 0.0f, 0.0f);
 			}
-			_matBatch.SetClippingSize(_glScreenClippingSize);
-
-
-			GL.Begin(GL.TRIANGLES);
+			//_matBatch.SetClippingSize(_glScreenClippingSize);
+			//GL.Begin(GL.TRIANGLES);
 
 			GL.TexCoord(uv_0);	GL.Vertex(new Vector3(pos_0.x, pos_0.y, depth)); // 0
 			GL.TexCoord(uv_1);	GL.Vertex(new Vector3(pos_1.x, pos_1.y, depth)); // 1
@@ -453,8 +468,10 @@ namespace AnyPortrait
 			GL.TexCoord(uv_3);	GL.Vertex(new Vector3(pos_3.x, pos_3.y, depth)); // 3
 			GL.TexCoord(uv_0);	GL.Vertex(new Vector3(pos_0.x, pos_0.y, depth)); // 0
 
-
-			GL.End();
+			//삭제 21.5.19
+			//GL.End();//<전환 완료>
+			
+			_matBatch.EndPass();
 		}
 
 		//------------------------------------------------------------------------------------------------
@@ -635,14 +652,14 @@ namespace AnyPortrait
 					//------------------------------------------
 					// Drawcall Batch를 했을때
 					// Debug.Log("Texture Color : " + textureColor);
-					Color color0 = Color.black, color1 = Color.black, color2 = Color.black;
+					//Color color0 = Color.black, color1 = Color.black, color2 = Color.black;
 					
+					//변경 21.5.19
+					_matBatch.BeginPass_Texture_VColor(GL.TRIANGLES, textureColor, mesh.LinkedTextureData._image, 0.0f, renderUnit.ShaderType, false, Vector4.zero);
+					//_matBatch.SetClippingSize(_glScreenClippingSize);
+					//GL.Begin(GL.TRIANGLES);
 
-					_matBatch.SetPass_Texture_VColor(textureColor, mesh.LinkedTextureData._image, 0.0f, renderUnit.ShaderType);
-					_matBatch.SetClippingSize(_glScreenClippingSize);
 
-
-					GL.Begin(GL.TRIANGLES);
 					//------------------------------------------
 					//apVertex vert0, vert1, vert2;
 					apRenderVertex rVert0 = null, rVert1 = null, rVert2 = null;
@@ -656,6 +673,9 @@ namespace AnyPortrait
 					Vector2 uv_0 = Vector2.zero;
 					Vector2 uv_1 = Vector2.zero;
 					Vector2 uv_2 = Vector2.zero;
+
+					//색상은 한번만
+					GL.Color(Color.black);
 
 					for (int i = 0; i < mesh._indexBuffer.Count; i += 3)
 					{
@@ -693,19 +713,21 @@ namespace AnyPortrait
 						
 						////------------------------------------------
 
-						GL.Color(color0); GL.TexCoord(uv_0); GL.Vertex(pos_0); // 0
-						GL.Color(color1); GL.TexCoord(uv_1); GL.Vertex(pos_1); // 1
-						GL.Color(color2); GL.TexCoord(uv_2); GL.Vertex(pos_2); // 2
+						/*GL.Color(color0);*/ GL.TexCoord(uv_0); GL.Vertex(pos_0); // 0
+						/*GL.Color(color1);*/ GL.TexCoord(uv_1); GL.Vertex(pos_1); // 1
+						/*GL.Color(color2);*/ GL.TexCoord(uv_2); GL.Vertex(pos_2); // 2
 
 						// Back Side
-						GL.Color(color2); GL.TexCoord(uv_2); GL.Vertex(pos_2); // 2
-						GL.Color(color1); GL.TexCoord(uv_1); GL.Vertex(pos_1); // 1
-						GL.Color(color0); GL.TexCoord(uv_0); GL.Vertex(pos_0); // 0
+						/*GL.Color(color2);*/ GL.TexCoord(uv_2); GL.Vertex(pos_2); // 2
+						/*GL.Color(color1);*/ GL.TexCoord(uv_1); GL.Vertex(pos_1); // 1
+						/*GL.Color(color0);*/ GL.TexCoord(uv_0); GL.Vertex(pos_0); // 0
 
 						////------------------------------------------
 					}
-					GL.End();
 
+					//삭제 21.5.19
+					//GL.End();//<전환 완료>
+					_matBatch.EndPass();
 				}
 
 				
@@ -767,7 +789,7 @@ namespace AnyPortrait
 				apRenderVertex rVert0 = null, rVert1 = null, rVert2 = null;
 
 				Color vertexChannelColor = Color.black;
-				Color vColor0 = Color.black, vColor1 = Color.black, vColor2 = Color.black;
+				//Color vColor0 = Color.black, vColor1 = Color.black, vColor2 = Color.black;
 
 				Vector2 posGL_0 = Vector2.zero;
 				Vector2 posGL_1 = Vector2.zero;
@@ -781,7 +803,7 @@ namespace AnyPortrait
 				Vector2 uv_1 = Vector2.zero;
 				Vector2 uv_2 = Vector2.zero;
 
-
+				
 				
 				RenderTexture.active = null;
 
@@ -793,11 +815,15 @@ namespace AnyPortrait
 						isRenderTexture = true;
 					}
 					
-					_matBatch.SetPass_Mask(textureColor, mesh.LinkedTextureData._image, 0.0f, renderUnit.ShaderType, isRenderTexture);
-					_matBatch.SetClippingSize(_glScreenClippingSize);
+					//변경 21.5.19
+					_matBatch.BeginPass_Mask(GL.TRIANGLES, textureColor, mesh.LinkedTextureData._image, 0.0f, renderUnit.ShaderType, isRenderTexture, false, Vector4.zero);
+					//_matBatch.SetClippingSize(_glScreenClippingSize);
+					//GL.Begin(GL.TRIANGLES);
 
 
-					GL.Begin(GL.TRIANGLES);
+					//색상은 한번만
+					GL.Color(Color.black);
+
 					//------------------------------------------
 					for (int i = 0; i < mesh._indexBuffer.Count; i += 3)
 					{
@@ -816,9 +842,9 @@ namespace AnyPortrait
 						rVert1 = renderUnit._renderVerts[mesh._indexBuffer[i + 1]];
 						rVert2 = renderUnit._renderVerts[mesh._indexBuffer[i + 2]];
 
-						vColor0 = Color.black;
-						vColor1 = Color.black;
-						vColor2 = Color.black;
+						//vColor0 = Color.black;
+						//vColor1 = Color.black;
+						//vColor2 = Color.black;
 
 
 
@@ -854,20 +880,22 @@ namespace AnyPortrait
 						uv_2 = mesh._vertexData[mesh._indexBuffer[i + 2]]._uv;
 
 						
-						GL.Color(vColor0); GL.TexCoord(uv_0); GL.Vertex(pos_0); // 0
-						GL.Color(vColor1); GL.TexCoord(uv_1); GL.Vertex(pos_1); // 1
-						GL.Color(vColor2); GL.TexCoord(uv_2); GL.Vertex(pos_2); // 2
+						/*GL.Color(vColor0);*/ GL.TexCoord(uv_0); GL.Vertex(pos_0); // 0
+						/*GL.Color(vColor1);*/ GL.TexCoord(uv_1); GL.Vertex(pos_1); // 1
+						/*GL.Color(vColor2);*/ GL.TexCoord(uv_2); GL.Vertex(pos_2); // 2
 
 						// Back Side
-						GL.Color(vColor2); GL.TexCoord(uv_2); GL.Vertex(pos_2); // 2
-						GL.Color(vColor1); GL.TexCoord(uv_1); GL.Vertex(pos_1); // 1
-						GL.Color(vColor0); GL.TexCoord(uv_0); GL.Vertex(pos_0); // 0
+						/*GL.Color(vColor2);*/ GL.TexCoord(uv_2); GL.Vertex(pos_2); // 2
+						/*GL.Color(vColor1);*/ GL.TexCoord(uv_1); GL.Vertex(pos_1); // 1
+						/*GL.Color(vColor0);*/ GL.TexCoord(uv_0); GL.Vertex(pos_0); // 0
 					}
 
 
 
 					//------------------------------------------
-					GL.End();
+					//삭제 21.5.19
+					//GL.End();//<전환 완료>
+					_matBatch.EndPass();
 				}
 
 				if (externalRenderTexture == null)
@@ -901,15 +929,19 @@ namespace AnyPortrait
 						continue;
 					}
 
-					_matBatch.SetPass_Clipped(	clipRenderUnit._meshTransform._meshColor2X_Default, 
+					//변경 21.5.19
+					_matBatch.BeginPass_Clipped(GL.TRIANGLES, clipRenderUnit._meshTransform._meshColor2X_Default, 
 												clipMesh.LinkedTextureData._image, 
 												0.0f, 
 												clipRenderUnit.ShaderType, 
 												renderUnit._meshTransform._meshColor2X_Default);
 					
-					_matBatch.SetClippingSize(_glScreenClippingSize);
+					//_matBatch.SetClippingSize(_glScreenClippingSize);
+					//GL.Begin(GL.TRIANGLES);
 
-					GL.Begin(GL.TRIANGLES);
+					//색상은 한번만
+					GL.Color(Color.black);
+
 					//------------------------------------------
 					for (int i = 0; i < clipMesh._indexBuffer.Count; i += 3)
 					{
@@ -928,9 +960,9 @@ namespace AnyPortrait
 						rVert2 = clipRenderUnit._renderVerts[clipMesh._indexBuffer[i + 2]];
 
 
-						vColor0 = Color.black;
-						vColor1 = Color.black;
-						vColor2 = Color.black;
+						//vColor0 = Color.black;
+						//vColor1 = Color.black;
+						//vColor2 = Color.black;
 
 
 
@@ -964,19 +996,21 @@ namespace AnyPortrait
 						uv_2 = clipMesh._vertexData[clipMesh._indexBuffer[i + 2]]._uv;
 
 
-						GL.Color(vColor0);	GL.TexCoord(uv_0);	GL.Vertex(pos_0); // 0
-						GL.Color(vColor1);	GL.TexCoord(uv_1);	GL.Vertex(pos_1); // 1
-						GL.Color(vColor2);	GL.TexCoord(uv_2);	GL.Vertex(pos_2); // 2
+						/*GL.Color(vColor0);*/	GL.TexCoord(uv_0);	GL.Vertex(pos_0); // 0
+						/*GL.Color(vColor1);*/	GL.TexCoord(uv_1);	GL.Vertex(pos_1); // 1
+						/*GL.Color(vColor2);*/	GL.TexCoord(uv_2);	GL.Vertex(pos_2); // 2
 
 						//Back Side
-						GL.Color(vColor2);	GL.TexCoord(uv_2);	GL.Vertex(pos_2); // 2
-						GL.Color(vColor1);	GL.TexCoord(uv_1);	GL.Vertex(pos_1); // 1
-						GL.Color(vColor0);	GL.TexCoord(uv_0);	GL.Vertex(pos_0); // 0
+						/*GL.Color(vColor2);*/	GL.TexCoord(uv_2);	GL.Vertex(pos_2); // 2
+						/*GL.Color(vColor1);*/	GL.TexCoord(uv_1);	GL.Vertex(pos_1); // 1
+						/*GL.Color(vColor0);*/	GL.TexCoord(uv_0);	GL.Vertex(pos_0); // 0
 
 
 					}
 					//------------------------------------------------
-					GL.End();
+					//삭제 21.5.19
+					//GL.End();//<전환 완료>
+					_matBatch.EndPass();
 
 				}
 
@@ -1015,10 +1049,11 @@ namespace AnyPortrait
 			{
 				if (isNeedResetMat)
 				{
-					_matBatch.SetPass_Color();
-					_matBatch.SetClippingSize(_glScreenClippingSize);
+					//변경 21.5.19
+					_matBatch.BeginPass_Color(GL.LINES);
+					//_matBatch.SetClippingSize(_glScreenClippingSize);
 
-					GL.Begin(GL.LINES);
+					//GL.Begin(GL.LINES);
 				}
 
 				GL.Color(color);
@@ -1033,9 +1068,12 @@ namespace AnyPortrait
 
 				GL.Vertex(pos_3);
 				GL.Vertex(pos_0);
+
+				//삭제 21.5.19
 				if (isNeedResetMat)
 				{
-					GL.End();
+					//GL.End();//<전환 완료>
+					_matBatch.EndPass();
 				}
 			}
 			else
@@ -1047,11 +1085,11 @@ namespace AnyPortrait
 				// | 3   2
 				if (isNeedResetMat)
 				{
-					_matBatch.SetPass_Color();
-					_matBatch.SetClippingSize(_glScreenClippingSize);
+					//변경 21.5.19
+					_matBatch.BeginPass_Color(GL.TRIANGLES);
 
-
-					GL.Begin(GL.TRIANGLES);
+					//_matBatch.SetClippingSize(_glScreenClippingSize);
+					//GL.Begin(GL.TRIANGLES);
 				}
 				GL.Color(color);
 				GL.Vertex(pos_0); // 0
@@ -1062,9 +1100,11 @@ namespace AnyPortrait
 				GL.Vertex(pos_3); // 3
 				GL.Vertex(pos_0); // 0
 
+				//삭제 21.5.19
 				if (isNeedResetMat)
 				{
-					GL.End();
+					//GL.End();//<변환 완료>
+					_matBatch.EndPass();
 				}
 			}
 
@@ -1112,23 +1152,26 @@ namespace AnyPortrait
 				//2. 메시를 렌더링하자
 				if (mesh._indexBuffer.Count >= 3)
 				{
+					//변경 21.5.19
 					if (!isDrawToneOutline)
 					{
-						_matBatch.SetPass_Texture_Normal(color2X, mesh.LinkedTextureData._image, apPortrait.SHADER_TYPE.AlphaBlend);
+						_matBatch.BeginPass_Texture_Normal(GL.TRIANGLES, color2X, mesh.LinkedTextureData._image, apPortrait.SHADER_TYPE.AlphaBlend);
 					}
 					else
 					{
-						_matBatch.SetPass_ToneColor_Custom(color2X, mesh.LinkedTextureData._image, 0.0f, 0.0f);
+						_matBatch.BeginPass_ToneColor_Custom(GL.TRIANGLES, color2X, mesh.LinkedTextureData._image, 0.0f, 0.0f);
 					}
 					
-					_matBatch.SetClippingSize(_glScreenClippingSize);
+					//_matBatch.SetClippingSize(_glScreenClippingSize);
+					//GL.Begin(GL.TRIANGLES);
 
-					GL.Begin(GL.TRIANGLES);
 					//------------------------------------------
 					apVertex vert0, vert1, vert2;
 					//Color color0 = Color.black, color1 = Color.black, color2 = Color.black;
-					Color color0 = Color.white, color1 = Color.white, color2 = Color.white;
+					//Color color0 = Color.white, color1 = Color.white, color2 = Color.white;
 					
+					//색상은 한번만
+					GL.Color(Color.black);
 
 					for (int i = 0; i < mesh._indexBuffer.Count; i += 3)
 					{
@@ -1160,20 +1203,23 @@ namespace AnyPortrait
 						uv_2 = mesh._vertexData[mesh._indexBuffer[i + 2]]._uv;
 
 						
-						GL.Color(color0); GL.TexCoord(uv_0); GL.Vertex(pos_0); // 0
-						GL.Color(color1); GL.TexCoord(uv_1); GL.Vertex(pos_1); // 1
-						GL.Color(color2); GL.TexCoord(uv_2); GL.Vertex(pos_2); // 2
+						/*GL.Color(color0);*/ GL.TexCoord(uv_0); GL.Vertex(pos_0); // 0
+						/*GL.Color(color1);*/ GL.TexCoord(uv_1); GL.Vertex(pos_1); // 1
+						/*GL.Color(color2);*/ GL.TexCoord(uv_2); GL.Vertex(pos_2); // 2
 
 						//Back Side
-						GL.Color(color2); GL.TexCoord(uv_2); GL.Vertex(pos_2); // 2
-						GL.Color(color1); GL.TexCoord(uv_1); GL.Vertex(pos_1); // 1
-						GL.Color(color0); GL.TexCoord(uv_0); GL.Vertex(pos_0); // 0
+						/*GL.Color(color2);*/ GL.TexCoord(uv_2); GL.Vertex(pos_2); // 2
+						/*GL.Color(color1);*/ GL.TexCoord(uv_1); GL.Vertex(pos_1); // 1
+						/*GL.Color(color0);*/ GL.TexCoord(uv_0); GL.Vertex(pos_0); // 0
 
 						
 
 						////------------------------------------------
 					}
-					GL.End();
+
+					//삭제 21.5.19
+					//GL.End();//<전환 완료>
+					_matBatch.EndPass();
 
 				}
 
@@ -1184,17 +1230,19 @@ namespace AnyPortrait
 					Vector2 pos_LB = matrix.MultiplyPoint(new Vector2(mesh._atlasFromPSD_LT.x, mesh._atlasFromPSD_RB.y));
 					Vector2 pos_RB = matrix.MultiplyPoint(new Vector2(mesh._atlasFromPSD_RB.x, mesh._atlasFromPSD_RB.y));
 
-
-					_matBatch.SetPass_Color();
-					_matBatch.SetClippingSize(_glScreenClippingSize);
-					GL.Begin(GL.LINES);
+					//변경 21.5.19
+					_matBatch.BeginPass_Color(GL.LINES);
+					//_matBatch.SetClippingSize(_glScreenClippingSize);
+					//GL.Begin(GL.LINES);
 
 					DrawLine(pos_LT, pos_RT, atlasBorderColor, false);
 					DrawLine(pos_RT, pos_RB, atlasBorderColor, false);
 					DrawLine(pos_RB, pos_LB, atlasBorderColor, false);
 					DrawLine(pos_LB, pos_LT, atlasBorderColor, false);
-
-					GL.End();
+					
+					//삭제 21.5.19
+					//GL.End();//<전환 완료>
+					_matBatch.EndPass();
 				}
 
 				//외곽선을 그려주자
@@ -1209,17 +1257,19 @@ namespace AnyPortrait
 				Vector2 pos_TexOutline_LB = matrix.MultiplyPoint(new Vector2(-imageWidthHalf, imageHeightHalf));
 				Vector2 pos_TexOutline_RB = matrix.MultiplyPoint(new Vector2(imageWidthHalf, imageHeightHalf));
 
-
-				_matBatch.SetPass_Color();
-				_matBatch.SetClippingSize(_glScreenClippingSize);
-				GL.Begin(GL.LINES);
+				//변경 21.5.19
+				_matBatch.BeginPass_Color(GL.LINES);
+				//_matBatch.SetClippingSize(_glScreenClippingSize);
+				//GL.Begin(GL.LINES);
 
 				DrawLine(pos_TexOutline_LT, pos_TexOutline_RT, atlasBorderColor, false);
 				DrawLine(pos_TexOutline_RT, pos_TexOutline_RB, atlasBorderColor, false);
 				DrawLine(pos_TexOutline_RB, pos_TexOutline_LB, atlasBorderColor, false);
 				DrawLine(pos_TexOutline_LB, pos_TexOutline_LT, atlasBorderColor, false);
 
-				GL.End();
+				//삭제 21.5.19
+				//GL.End();//<전환 완료>
+				_matBatch.EndPass();
 
 
 				//3. Edge를 렌더링하자 (전체 / Ouline)
@@ -1228,9 +1278,12 @@ namespace AnyPortrait
 					Vector2 pos0 = Vector2.zero, pos1 = Vector2.zero;
 					if (mesh._edges.Count > 0)
 					{
-						_matBatch.SetPass_Color();
-						_matBatch.SetClippingSize(_glScreenClippingSize);
-						GL.Begin(GL.LINES);
+						//변경 21.5.19
+						_matBatch.BeginPass_Color(GL.LINES);
+						//_matBatch.SetClippingSize(_glScreenClippingSize);
+						//GL.Begin(GL.LINES);
+
+
 						for (int i = 0; i < mesh._edges.Count; i++)
 						{
 							pos0 = matrix.MultiplyPoint(mesh._edges[i]._vert1._pos);
@@ -1253,7 +1306,9 @@ namespace AnyPortrait
 
 						}
 
-						GL.End();
+						//삭제 21.5.19
+						//GL.End();//<전환 완료>
+						_matBatch.EndPass();
 					}
 				}
 				
@@ -1289,9 +1344,13 @@ namespace AnyPortrait
 				Vector2 pos0 = Vector2.zero, pos1 = Vector2.zero;
 				if (mesh._edges.Count > 0)
 				{
-					_matBatch.SetPass_Color();
-					_matBatch.SetClippingSize(_glScreenClippingSize);
-					GL.Begin(GL.LINES);
+					//변경 21.5.19
+					_matBatch.BeginPass_Color(GL.LINES);
+					//_matBatch.SetClippingSize(_glScreenClippingSize);
+					//GL.Begin(GL.LINES);
+
+
+
 					for (int i = 0; i < mesh._edges.Count; i++)
 					{
 						pos0 = matrix.MultiplyPoint(mesh._edges[i]._vert1._pos);
@@ -1314,7 +1373,9 @@ namespace AnyPortrait
 
 					}
 
-					GL.End();
+					//삭제 21.5.19
+					//GL.End();//<전환 완료>
+					_matBatch.EndPass();
 				}
 				
 

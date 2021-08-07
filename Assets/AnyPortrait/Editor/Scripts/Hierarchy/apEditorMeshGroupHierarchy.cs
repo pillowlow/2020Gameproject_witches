@@ -75,6 +75,16 @@ namespace AnyPortrait
 		}
 
 
+
+		//추가 21.6.12 : 우클릭에 대한 메뉴 멤버 추가
+		private apEditorHierarchyMenu _rightMenu = null;
+		private object _loadKey_Rename = null;//이름 변경 다이얼로그의 유효성 테스트를 위한 로드키 
+		private object _loadKey_Search = null;
+		private object _loadKey_DuplicateBone = null;
+		private apMeshGroup _requestMeshGroup = null;//팝업이 떴을 때의 MeshGroup
+
+
+
 		//Visible Icon에 대한 GUIContent
 		private apGUIContentWrapper _guiContent_Visible_Current = null;
 		private apGUIContentWrapper _guiContent_NonVisible_Current = null;
@@ -112,6 +122,8 @@ namespace AnyPortrait
 			{
 				_unitPool = new apEditorHierarchyUnitPool();
 			}
+
+			_rightMenu = new apEditorHierarchyMenu(_editor, OnSelectRightMenu);
 		}
 
 
@@ -285,7 +297,7 @@ namespace AnyPortrait
 
 			//변경된 코드
 			//재귀적인 구조를 만들고 싶다면 여길 수정하자
-			AddTransformOfMeshGroup(Editor.Select.MeshGroup, _rootUnit_Meshes);
+			AddTransformOfMeshGroup(Editor.Select.MeshGroup, Editor.Select.MeshGroup, _rootUnit_Meshes);
 
 			//Bone도 만들어주자
 			//Main과 Sub 모두
@@ -359,6 +371,11 @@ namespace AnyPortrait
 			return newUnit;
 		}
 
+		private enum RIGHTCLICK_MENU
+		{
+			None, Enabled
+		}
+
 
 		private apEditorHierarchyUnit AddUnit_ToggleButton_Visible(Texture2D icon,
 																		string text,
@@ -370,7 +387,8 @@ namespace AnyPortrait
 																		apEditorHierarchyUnit.VISIBLE_TYPE visibleType_Postfix,
 																		bool isModRegisted,
 																		HIERARCHY_TYPE hierarchyType,
-																		bool isRefreshVisiblePrefixWhenRender)
+																		bool isRefreshVisiblePrefixWhenRender,
+																		RIGHTCLICK_MENU rightClickSupported)
 		{
 			//이전
 			//apEditorHierarchyUnit newUnit = new apEditorHierarchyUnit();
@@ -410,6 +428,12 @@ namespace AnyPortrait
 
 			newUnit.SetModRegistered(isModRegisted);
 
+			//추가 21.6.13 : 우클릭 지원
+			if(rightClickSupported == RIGHTCLICK_MENU.Enabled)
+			{
+				newUnit.SetRightClickEvent(OnUnitRightClick);
+			}
+
 			_units_All.Add(newUnit);
 			if (isRoot)
 			{
@@ -439,7 +463,8 @@ namespace AnyPortrait
 																		object savedObj,
 																		bool isRoot, bool isModRegisted,
 																		apEditorHierarchyUnit parent,
-																		HIERARCHY_TYPE hierarchyType)
+																		HIERARCHY_TYPE hierarchyType,
+																		RIGHTCLICK_MENU rightClickSupported)
 		{
 			//이전
 			//apEditorHierarchyUnit newUnit = new apEditorHierarchyUnit();
@@ -461,6 +486,14 @@ namespace AnyPortrait
 			newUnit.SetToggleButton(icon, text, (int)savedKey, savedObj, true);
 
 			newUnit.SetModRegistered(isModRegisted);
+
+
+			//추가 21.6.13 : 우클릭 지원
+			if(rightClickSupported == RIGHTCLICK_MENU.Enabled)
+			{
+				newUnit.SetRightClickEvent(OnUnitRightClick);
+			}
+
 
 			_units_All.Add(newUnit);
 			if (isRoot)
@@ -487,7 +520,7 @@ namespace AnyPortrait
 
 		// 추가 : Transform 리스트를 재귀적으로 만든다.
 		//-----------------------------------------------------------------------------------------
-		private void AddTransformOfMeshGroup(apMeshGroup targetMeshGroup, apEditorHierarchyUnit parentUnit)
+		private void AddTransformOfMeshGroup(apMeshGroup rootMeshGroup, apMeshGroup targetMeshGroup, apEditorHierarchyUnit parentUnit)
 		{
 			List<apTransform_Mesh> childMeshTransforms = targetMeshGroup._childMeshTransforms;
 			List<apTransform_MeshGroup> childMeshGroupTransforms = targetMeshGroup._childMeshGroupTransforms;
@@ -525,11 +558,12 @@ namespace AnyPortrait
 												false,
 												//_rootUnit_Mesh,
 												parentUnit,
-												GetVisibleIconType(meshTransform, isModRegisted, true),
-												GetVisibleIconType(meshTransform, isModRegisted, false),
+												GetVisibleIconType(/*rootMeshGroup, */meshTransform, isModRegisted, true),
+												GetVisibleIconType(/*rootMeshGroup, */meshTransform, isModRegisted, false),
 												isModRegisted,
 												HIERARCHY_TYPE.Meshes,
-												true
+												true,
+												RIGHTCLICK_MENU.Enabled
 												);
 
 
@@ -553,16 +587,17 @@ namespace AnyPortrait
 													//_rootUnit_MeshGroup,
 													parentUnit,
 													//meshGroupTransform._isVisible_Default,
-													GetVisibleIconType(meshGroupTransform, isModRegisted, true),
-													GetVisibleIconType(meshGroupTransform, isModRegisted, false),
+													GetVisibleIconType(/*rootMeshGroup, */meshGroupTransform, isModRegisted, true),
+													GetVisibleIconType(/*rootMeshGroup, */meshGroupTransform, isModRegisted, false),
 													isModRegisted,
 													HIERARCHY_TYPE.Meshes,
-													true);
+													true,
+													RIGHTCLICK_MENU.Enabled);
 
 
 				if (meshGroupTransform._meshGroup != null)
 				{
-					AddTransformOfMeshGroup(meshGroupTransform._meshGroup, newUnit);
+					AddTransformOfMeshGroup(rootMeshGroup, meshGroupTransform._meshGroup, newUnit);
 				}
 			}
 		}
@@ -649,7 +684,8 @@ namespace AnyPortrait
 														apEditorHierarchyUnit.VISIBLE_TYPE.None,
 														isModRegisted,
 														HIERARCHY_TYPE.Bones,
-														false
+														false,
+														RIGHTCLICK_MENU.Enabled
 														);
 
 			for (int i = 0; i < bone._childBones.Count; i++)
@@ -729,11 +765,17 @@ namespace AnyPortrait
 			#endregion
 
 
+
+			
 			//신버전 : 재귀적으로 탐색 및 갱신을 한다.
 			List<apTransform_Mesh> childMeshTransforms = new List<apTransform_Mesh>();
 			List<apTransform_MeshGroup> childMeshGroupTransforms = new List<apTransform_MeshGroup>();
 
-			SearchMeshGroupTransforms(Editor.Select.MeshGroup, _rootUnit_Meshes, childMeshTransforms, childMeshGroupTransforms);
+			SearchMeshGroupTransforms(Editor.Select.MeshGroup, Editor.Select.MeshGroup, _rootUnit_Meshes, childMeshTransforms, childMeshGroupTransforms);
+
+			//Debug.Log(">>> Hierarchy 갱신 완료 > 검색된 MeshTF : " + childMeshTransforms.Count + " / MeshGroupTF : " + childMeshGroupTransforms.Count);
+
+
 
 			CheckRemovableUnits<apTransform_Mesh>(deletedUnits, CATEGORY.Mesh_Item, childMeshTransforms);
 			CheckRemovableUnits<apTransform_MeshGroup>(deletedUnits, CATEGORY.MeshGroup_Item, childMeshGroupTransforms);
@@ -788,6 +830,7 @@ namespace AnyPortrait
 			CheckRemovableUnits<apBone>(deletedUnits, CATEGORY.Bone_Item, resultBones);
 
 
+			//Debug.Log("Refresh Unit > 삭제 : " + deletedUnits.Count);
 			for (int i = 0; i < deletedUnits.Count; i++)
 			{
 				//1. 먼저 All에서 없앤다.
@@ -798,6 +841,7 @@ namespace AnyPortrait
 					dUnit._parentUnit._childUnits.Remove(dUnit);
 				}
 
+				//Debug.Log("-" + dUnit._text);
 				_units_All.Remove(dUnit);
 
 				//추가 20.3.18 : 그냥 삭제하면 안되고, Pool에 반납해야 한다.
@@ -864,7 +908,41 @@ namespace AnyPortrait
 			{
 				if (obj != null)
 				{
-					return (CATEGORY)a._savedKey == category && a._savedObj == obj;
+					if ((CATEGORY)a._savedKey == category)
+					{
+						if (a._savedObj == obj)
+						{
+							return true;
+						}
+
+						if(a._savedObj is apTransform_Mesh && obj is apTransform_Mesh)
+						{
+							if((a._savedObj as apTransform_Mesh)._transformUniqueID == (obj as apTransform_Mesh)._transformUniqueID)
+							{
+								//Debug.Log("찾음 : 레퍼런스는 다르지만 Mesh TF ID가 동일하다.");
+								return true;
+							}
+						}
+						else if(a._savedObj is apTransform_MeshGroup && obj is apTransform_MeshGroup)
+						{
+							if((a._savedObj as apTransform_MeshGroup)._transformUniqueID == (obj as apTransform_MeshGroup)._transformUniqueID)
+							{
+								//Debug.Log("찾음 : 레퍼런스는 다르지만 MeshGroup TF ID가 동일하다.");
+								return true;
+							}
+						}
+						else if(a._savedObj is apBone && obj is apBone)
+						{
+							if((a._savedObj as apBone)._uniqueID == (obj as apBone)._uniqueID)
+							{
+								//Debug.Log("찾음 : 레퍼런스는 다르지만 Bone ID가 동일하다.");
+								return true;
+							}
+						}
+					}
+					return false;
+					
+					//return (CATEGORY)a._savedKey == category && a._savedObj == obj;
 				}
 				else
 				{
@@ -877,8 +955,15 @@ namespace AnyPortrait
 				objName = "";
 			}
 
+			
+
 			if (unit != null)
 			{
+				if(unit._savedObj != null && obj != null)
+				{
+					unit._savedObj = obj;//ID만 같은 경우를 대비해서 다시 갱신
+				}
+				
 				if (selectedObj != null && unit._savedObj == selectedObj)
 				{
 					//unit._isSelected = true;
@@ -938,16 +1023,16 @@ namespace AnyPortrait
 				}
 			}
 			else
-			{
+			{	
 
 				if (hierarchyType == HIERARCHY_TYPE.Meshes)
 				{
-					unit = AddUnit_ToggleButton_Visible(iconImage, objName, category, obj, false, parentUnit, visibleType_Prefix, visibleType_Postfix, isModRegistered, HIERARCHY_TYPE.Meshes, true);
+					unit = AddUnit_ToggleButton_Visible(iconImage, objName, category, obj, false, parentUnit, visibleType_Prefix, visibleType_Postfix, isModRegistered, HIERARCHY_TYPE.Meshes, true, RIGHTCLICK_MENU.Enabled);
 				}
 				else
 				{
 					//unit = AddUnit_ToggleButton(iconImage, objName, category, obj, false, isModRegistered, parentUnit, HIERARCHY_TYPE.Bones);
-					unit = AddUnit_ToggleButton_Visible(iconImage, objName, category, obj, false, parentUnit, visibleType_Prefix, visibleType_Postfix, isModRegistered, HIERARCHY_TYPE.Bones, false);
+					unit = AddUnit_ToggleButton_Visible(iconImage, objName, category, obj, false, parentUnit, visibleType_Prefix, visibleType_Postfix, isModRegistered, HIERARCHY_TYPE.Bones, false, RIGHTCLICK_MENU.Enabled);
 					
 				}
 				if (selectedObj == obj)
@@ -994,7 +1079,7 @@ namespace AnyPortrait
 		/// <param name="parentUnit"></param>
 		/// <param name="resultMeshTransforms"></param>
 		/// <param name="resultMeshGroupTransforms"></param>
-		private void SearchMeshGroupTransforms(apMeshGroup targetMeshGroup, apEditorHierarchyUnit parentUnit, List<apTransform_Mesh> resultMeshTransforms, List<apTransform_MeshGroup> resultMeshGroupTransforms)
+		private void SearchMeshGroupTransforms(apMeshGroup rootMeshGroup, apMeshGroup targetMeshGroup, apEditorHierarchyUnit parentUnit, List<apTransform_Mesh> resultMeshTransforms, List<apTransform_MeshGroup> resultMeshGroupTransforms)
 		{
 			List<apTransform_Mesh> childMeshTransforms = targetMeshGroup._childMeshTransforms;
 			List<apTransform_MeshGroup> childMeshGroupTransforms = targetMeshGroup._childMeshGroupTransforms;
@@ -1033,8 +1118,8 @@ namespace AnyPortrait
 								Editor.Select.MeshTF_Main,
 								Editor.Select.IsSubSelected,
 								//meshTransform._isVisible_Default,
-								GetVisibleIconType(meshTransform, isModRegistered, true),
-								GetVisibleIconType(meshTransform, isModRegistered, false),
+								GetVisibleIconType(/*rootMeshGroup, */meshTransform, isModRegistered, true),
+								GetVisibleIconType(/*rootMeshGroup, */meshTransform, isModRegistered, false),
 								isModRegistered,
 								true,
 								//_rootUnit_Mesh
@@ -1064,8 +1149,8 @@ namespace AnyPortrait
 													Editor.Select.MeshGroupTF_Main,
 													Editor.Select.IsSubSelected,
 													//meshGroupTransform._isVisible_Default,
-													GetVisibleIconType(meshGroupTransform, isModRegistered, true),
-													GetVisibleIconType(meshGroupTransform, isModRegistered, false),
+													GetVisibleIconType(/*rootMeshGroup, */meshGroupTransform, isModRegistered, true),
+													GetVisibleIconType(/*rootMeshGroup, */meshGroupTransform, isModRegistered, false),
 													isModRegistered,
 													true,
 													//_rootUnit_MeshGroup
@@ -1076,8 +1161,12 @@ namespace AnyPortrait
 
 				if (meshGroupTransform._meshGroup != null)
 				{
-					SearchMeshGroupTransforms(meshGroupTransform._meshGroup, existUnit, resultMeshTransforms, resultMeshGroupTransforms);
+					SearchMeshGroupTransforms(rootMeshGroup, meshGroupTransform._meshGroup, existUnit, resultMeshTransforms, resultMeshGroupTransforms);
 				}
+				//else
+				//{
+				//	Debug.LogError("meshGroupTransform._meshGroup이 Null : " + meshGroupTransform._nickName);
+				//}
 			}
 		}
 
@@ -2096,7 +2185,13 @@ namespace AnyPortrait
 					if (Editor._meshGroupEditMode == apEditor.MESHGROUP_EDIT_MODE.Setting)
 					{
 						//Setting 탭에서는 Default Visible을 토글한다.
-						apEditorUtil.SetRecord_MeshGroup(apUndoGroupData.ACTION.MeshGroup_DefaultSettingChanged, Editor, Editor.Select.MeshGroup, savedObj, false, true);
+						apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_DefaultSettingChanged, 
+															Editor, 
+															Editor.Select.MeshGroup, 
+															//savedObj, 
+															false, 
+															true,
+															apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 						if (meshTransform != null)
 						{
@@ -2122,7 +2217,12 @@ namespace AnyPortrait
 							//apEditorUtil.SetRecord(apUndoGroupData.ACTION.Modifier_SettingChanged, Editor.Select.MeshGroup, savedObj, false, Editor);
 
 							//MeshGroup이 아닌 Modifier를 저장할것
-							apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Modifier_SettingChanged, Editor, Editor.Select.Modifier, null, false);
+							apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Modifier_SettingChanged, 
+																Editor, 
+																Editor.Select.Modifier, 
+																//null, 
+																false,
+																apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 							//색상을 지원한다면
 							//현재 객체를 선택하고,
@@ -2258,6 +2358,8 @@ namespace AnyPortrait
 			Editor.RefreshControllerAndHierarchy(true);
 		}
 
+
+
 		//------------------------------------------------------------------------------------------------------------
 		// Modifier에 등록되었는지 체크
 		//------------------------------------------------------------------------------------------------------------
@@ -2376,7 +2478,7 @@ namespace AnyPortrait
 		}
 
 
-		private apEditorHierarchyUnit.VISIBLE_TYPE GetVisibleIconType(object targetObject, bool isModRegistered, bool isPrefix)
+		private apEditorHierarchyUnit.VISIBLE_TYPE GetVisibleIconType(/*apMeshGroup rootMeshGroup, */object targetObject, bool isModRegistered, bool isPrefix)
 		{
 
 			apRenderUnit linkedRenderUnit = null;
@@ -2386,11 +2488,25 @@ namespace AnyPortrait
 			{
 				meshTransform = targetObject as apTransform_Mesh;
 				linkedRenderUnit = meshTransform._linkedRenderUnit;
+
+				//디버그
+				//apRenderUnit renderUnitFound = rootMeshGroup.GetRenderUnit(meshTransform);
+				//if(linkedRenderUnit != renderUnitFound)
+				//{
+				//	Debug.LogError("실제 RenderUnit과 다름 [" + meshTransform._nickName + "]");
+				//}
 			}
 			else if (targetObject is apTransform_MeshGroup)
 			{
 				meshGroupTransform = targetObject as apTransform_MeshGroup;
 				linkedRenderUnit = meshGroupTransform._linkedRenderUnit;
+
+				//디버그
+				//apRenderUnit renderUnitFound = rootMeshGroup.GetRenderUnit(meshGroupTransform);
+				//if(linkedRenderUnit != renderUnitFound)
+				//{
+				//	Debug.LogError("실제 RenderUnit과 다름 [" + meshGroupTransform._nickName + "]");
+				//}
 			}
 			else
 			{
@@ -2560,33 +2676,6 @@ namespace AnyPortrait
 			//bool isVisible = linkedRenderUnit._isVisible;
 
 
-			//이전
-			//if (linkedRenderUnit._isVisibleCalculated != linkedRenderUnit._isVisible_WithoutParent)
-			//{
-			//	if (isVisible)
-			//	{
-			//		unit._visibleType_Prefix = apEditorHierarchyUnit.VISIBLE_TYPE.TmpWork_Visible;
-			//	}
-			//	else
-			//	{
-			//		unit._visibleType_Prefix = apEditorHierarchyUnit.VISIBLE_TYPE.TmpWork_NonVisible;
-			//	}
-			//}
-			//else
-			//{
-			//	//TmpWork의 영향을 받지 않았다.
-			//	if (isVisible)
-			//	{
-			//		unit._visibleType_Prefix = apEditorHierarchyUnit.VISIBLE_TYPE.Current_Visible;
-			//	}
-			//	else
-			//	{
-			//		unit._visibleType_Prefix = apEditorHierarchyUnit.VISIBLE_TYPE.Current_NonVisible;
-			//	}
-
-			//	//PostFix는 뭐 알아서 잘 하겠징
-			//}
-
 			//변경 21.1.31
 			if (linkedRenderUnit._isVisibleCalculated != linkedRenderUnit._isVisible_WithoutParent)
 			{
@@ -2625,6 +2714,766 @@ namespace AnyPortrait
 			}
 		}
 
+
+
+
+
+
+
+
+
+
+
+
+		// 우클릭 이벤트
+		//--------------------------------------------------------------------------------
+		//추가 21.6.12
+		//우클릭시 메뉴가 마우스에서 나온다.
+		public void OnUnitRightClick(apEditorHierarchyUnit eventUnit, int savedKey, object savedObj)
+		{
+			//Debug.Log("우클릭");
+			if(_rightMenu != null && savedObj != null)
+			{
+				//리깅, 물리 모디파이어에서는 다중 선택이 불가능하다.
+				bool isRiggingPhysicsModifier = false;
+
+				if(Editor.Select.Modifier != null)
+				{
+					if(Editor.Select.Modifier.ModifierType == apModifierBase.MODIFIER_TYPE.Rigging)
+					{
+						isRiggingPhysicsModifier = true;
+					}
+					else if(Editor.Select.Modifier.ModifierType == apModifierBase.MODIFIER_TYPE.Physic)
+					{
+						isRiggingPhysicsModifier = true;
+					}
+				}
+
+				//우클릭 메뉴를 열자 (해당되는 항목만)
+				CATEGORY category = (CATEGORY)savedKey;
+				switch (category)
+				{
+					case CATEGORY.Mesh_Item:					
+					case CATEGORY.Bone_Item:
+						{
+							if (isRiggingPhysicsModifier)
+							{
+								_rightMenu.ShowMenu(apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Rename
+													| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveUp
+													| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveDown
+													| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Search
+													//| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.SelectAll//여러개 선택 불가
+													| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Duplicate
+													| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Remove,
+													savedKey, savedObj);
+							}
+							else
+							{
+								_rightMenu.ShowMenu(apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Rename
+													| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveUp
+													| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveDown
+													| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Search
+													| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.SelectAll
+													| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Duplicate
+													| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Remove,
+													savedKey, savedObj);
+							}
+						}
+						break;
+					case CATEGORY.MeshGroup_Item:
+						{
+							if (isRiggingPhysicsModifier)
+							{
+								_rightMenu.ShowMenu(apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Rename
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveUp
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveDown
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Search
+												//| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.SelectAll//여러개 선택 불가
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Duplicate
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Remove,
+												savedKey, savedObj);
+							}
+							else
+							{
+								//TODO : 본 탭의 메시 그룹은 MoveUp/MoveDown 제외 대상이다.
+								_rightMenu.ShowMenu(apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Rename
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveUp
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveDown
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Search
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.SelectAll
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Duplicate
+												| apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Remove,
+												savedKey, savedObj);
+							}
+							
+						}
+						break;
+				}
+				
+			}
+		}
+
+
+		//우클릭 메뉴에서 항목을 선택했을 때
+		private void OnSelectRightMenu(apEditorHierarchyMenu.MENU_ITEM_HIERARCHY menuType, int hierachyUnitType, object requestedObj)
+		{
+			if(_editor == null || _editor._portrait == null)
+			{
+				return;
+			}
+
+			apMeshGroup curMeshGroup = Editor.Select.MeshGroup;
+			if(curMeshGroup == null)
+			{
+				return;
+			}
+
+
+			//리깅, 물리 모디파이어에서는 다중 선택이 불가능하다.
+			bool isRiggingPhysicsModifier = false;
+
+			if(Editor.Select.Modifier != null)
+			{
+				if(Editor.Select.Modifier.ModifierType == apModifierBase.MODIFIER_TYPE.Rigging)
+				{
+					isRiggingPhysicsModifier = true;
+				}
+				else if(Editor.Select.Modifier.ModifierType == apModifierBase.MODIFIER_TYPE.Physic)
+				{
+					isRiggingPhysicsModifier = true;
+				}
+			}
+
+			CATEGORY category = (CATEGORY)hierachyUnitType;
+			switch (category)
+			{
+				case CATEGORY.Mesh_Item:
+					{
+						apTransform_Mesh meshTransform = requestedObj as apTransform_Mesh;
+						if (meshTransform != null)
+						{
+							switch (menuType)
+							{
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Rename:
+									_requestMeshGroup = curMeshGroup;
+									_loadKey_Rename = apDialog_Rename.ShowDialog(_editor, meshTransform, meshTransform._nickName, OnObjectRenamed);
+									break;
+
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveUp:
+									if(meshTransform._linkedRenderUnit != null)
+									{
+										apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_DepthChanged, 
+																			Editor, 
+																			curMeshGroup, 
+																			//meshTransform._linkedRenderUnit, 
+																			false, true,
+																			apEditorUtil.UNDO_STRUCT.ValueOnly);
+
+										curMeshGroup.ChangeRenderUnitDepth(meshTransform._linkedRenderUnit, meshTransform._linkedRenderUnit.GetDepth() + 1);
+										Editor.OnAnyObjectAddedOrRemoved(true);
+									}
+									break;
+
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveDown:
+									if(meshTransform._linkedRenderUnit != null)
+									{
+										apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_DepthChanged, 
+																			Editor, 
+																			curMeshGroup, 
+																			//meshTransform._linkedRenderUnit, 
+																			false, true,
+																			apEditorUtil.UNDO_STRUCT.ValueOnly);
+
+										curMeshGroup.ChangeRenderUnitDepth(meshTransform._linkedRenderUnit, meshTransform._linkedRenderUnit.GetDepth() - 1);
+										Editor.OnAnyObjectAddedOrRemoved(true);
+									}
+									break;
+
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Search:
+									_requestMeshGroup = curMeshGroup;
+									_loadKey_Search = apDialog_SearchObjects.ShowDialog_SubObjects(_editor, curMeshGroup, true, !isRiggingPhysicsModifier, OnObjectSearched, OnMultipleObjectSearched);
+									break;
+
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.SelectAll:
+									OnSelectAll(true);
+									break;
+
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Duplicate:
+									Editor.Controller.DuplicateMeshTransformInSameMeshGroup(meshTransform);
+									break;
+
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Remove:
+									{
+										//경고 메시지를 보여준다.
+										string strDialogInfo = Editor.Controller.GetRemoveItemMessage(
+																		Editor._portrait,
+																		meshTransform,
+																		5,
+																		Editor.GetText(TEXT.Detach_Body),
+																		Editor.GetText(TEXT.DLG_RemoveItemChangedWarning));
+
+										bool isResult = EditorUtility.DisplayDialog(Editor.GetText(TEXT.Detach_Title),
+																				//Editor.GetText(TEXT.Detach_Body),
+																				strDialogInfo,
+																				Editor.GetText(TEXT.Detach_Ok),
+																				Editor.GetText(TEXT.Cancel)
+																				);
+
+										if (isResult)
+										{
+											bool isResetSelection = Editor.Select.MeshTFs_All != null && Editor.Select.MeshTFs_All.Contains(meshTransform);
+											
+											Editor.Controller.DetachMeshInMeshGroup(meshTransform, curMeshGroup);
+											if(isResetSelection)
+											{
+												Editor.Select.SetSubMeshInGroup(null, apSelection.MULTI_SELECT.Main);
+											}
+										}
+									}
+									break;
+							}
+						}
+					}
+					break;
+
+				case CATEGORY.MeshGroup_Item:
+					{
+						apTransform_MeshGroup meshGroupTransform = requestedObj as apTransform_MeshGroup;
+						if (meshGroupTransform != null)
+						{
+							switch (menuType)
+							{
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Rename:
+									_requestMeshGroup = curMeshGroup;
+									_loadKey_Rename = apDialog_Rename.ShowDialog(_editor, meshGroupTransform, meshGroupTransform._nickName, OnObjectRenamed);
+									break;
+
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveUp:
+									if(meshGroupTransform._linkedRenderUnit != null)
+									{
+										apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_DepthChanged, 
+																			Editor, 
+																			curMeshGroup, 
+																			//meshGroupTransform._linkedRenderUnit, 
+																			false, true,
+																			apEditorUtil.UNDO_STRUCT.ValueOnly);
+
+										curMeshGroup.ChangeRenderUnitDepth(meshGroupTransform._linkedRenderUnit, meshGroupTransform._linkedRenderUnit.GetDepth() + 1);
+										Editor.OnAnyObjectAddedOrRemoved(true);
+									}
+									break;
+
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveDown:
+									if(meshGroupTransform._linkedRenderUnit != null)
+									{
+										apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_DepthChanged, 
+																			Editor, 
+																			curMeshGroup, 
+																			//meshGroupTransform._linkedRenderUnit, 
+																			false, true,
+																			apEditorUtil.UNDO_STRUCT.ValueOnly);
+
+										curMeshGroup.ChangeRenderUnitDepth(meshGroupTransform._linkedRenderUnit, meshGroupTransform._linkedRenderUnit.GetDepth() - 1);
+										Editor.OnAnyObjectAddedOrRemoved(true);
+									}
+									break;
+
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Search:
+									_requestMeshGroup = curMeshGroup;
+									_loadKey_Search = apDialog_SearchObjects.ShowDialog_SubObjects(_editor, curMeshGroup, true, !isRiggingPhysicsModifier, OnObjectSearched, OnMultipleObjectSearched);
+									break;
+
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.SelectAll:
+									OnSelectAll(true);
+									break;
+
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Duplicate:
+									Editor.Controller.DuplicateMeshGroupTransformInSameMeshGroup(meshGroupTransform);
+									break;
+
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Remove:
+									{
+										//경고 메시지를 보여준다.
+										string strDialogInfo = Editor.Controller.GetRemoveItemMessage(
+																		Editor._portrait,
+																		meshGroupTransform,
+																		5,
+																		Editor.GetText(TEXT.Detach_Body),
+																		Editor.GetText(TEXT.DLG_RemoveItemChangedWarning));
+
+										bool isResult = EditorUtility.DisplayDialog(Editor.GetText(TEXT.Detach_Title),
+																				//Editor.GetText(TEXT.Detach_Body),
+																				strDialogInfo,
+																				Editor.GetText(TEXT.Detach_Ok),
+																				Editor.GetText(TEXT.Cancel)
+																				);
+
+										if (isResult)
+										{
+											bool isResetSelection = Editor.Select.MeshGroupTFs_All != null && Editor.Select.MeshGroupTFs_All.Contains(meshGroupTransform);
+											
+											Editor.Controller.DetachMeshGroupInMeshGroup(meshGroupTransform, curMeshGroup);
+											if(isResetSelection)
+											{
+												Editor.Select.SetSubMeshGroupInGroup(null, apSelection.MULTI_SELECT.Main);
+											}
+										}
+									}
+									break;
+							}
+						}
+					}
+					break;
+
+				case CATEGORY.Bone_Item:
+					{
+						apBone bone = requestedObj as apBone;
+						if (bone != null)
+						{
+							switch (menuType)
+							{
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Rename:
+									_requestMeshGroup = curMeshGroup;
+									_loadKey_Rename = apDialog_Rename.ShowDialog(_editor, bone, bone._name, OnObjectRenamed);
+									break;
+
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveUp:
+									apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_DepthChanged, 
+																		Editor, 
+																		curMeshGroup, 
+																		//bone, 
+																		false, true,
+																		apEditorUtil.UNDO_STRUCT.ValueOnly);
+
+									curMeshGroup.ChangeBoneDepth(bone, bone._depth + 1);
+									break;
+
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.MoveDown:
+									apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_DepthChanged, 
+																		Editor, 
+																		curMeshGroup, 
+																		//bone, 
+																		false, true,
+																		apEditorUtil.UNDO_STRUCT.ValueOnly);
+
+									curMeshGroup.ChangeBoneDepth(bone, bone._depth - 1);
+									break;
+
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Search:
+									_requestMeshGroup = curMeshGroup;
+									_loadKey_Search = apDialog_SearchObjects.ShowDialog_SubObjects(_editor, curMeshGroup, false, !isRiggingPhysicsModifier, OnObjectSearched, OnMultipleObjectSearched);
+									break;
+
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.SelectAll:
+									OnSelectAll(false);
+									break;
+
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Duplicate:
+									_requestMeshGroup = curMeshGroup;
+									_loadKey_DuplicateBone = apDialog_DuplicateBone.ShowDialog(Editor, bone, OnDuplicateBoneResult);
+									break;
+
+								case apEditorHierarchyMenu.MENU_ITEM_HIERARCHY.Remove:
+									{
+										//경고 메시지, 자식 본 같이 삭제 여부
+										string strRemoveBoneText = Editor.Controller.GetRemoveItemMessage(
+																						Editor._portrait,
+																						bone,
+																						5,
+																						Editor.GetTextFormat(TEXT.RemoveBone_Body, bone._name),
+																						Editor.GetText(TEXT.DLG_RemoveItemChangedWarning)
+																						);
+
+										int btnIndex = EditorUtility.DisplayDialogComplex(	Editor.GetText(TEXT.RemoveBone_Title),
+																						strRemoveBoneText,
+																						Editor.GetText(TEXT.Remove),
+																						Editor.GetText(TEXT.RemoveBone_RemoveAllChildren),
+																						Editor.GetText(TEXT.Cancel));
+
+										if (btnIndex == 0)
+										{
+											//Bone을 삭제한다.
+											Editor.Controller.RemoveBone(bone, false);
+										}
+										else if (btnIndex == 1)
+										{
+											//Bone과 자식을 모두 삭제한다.
+											Editor.Controller.RemoveBone(bone, true);
+										}
+										
+									}
+									break;
+							}
+						}
+					}
+					break;
+			}
+
+			//메뉴를 선택하면 변경이 될 것이므로 Dirty
+			apEditorUtil.SetEditorDirty();
+			Editor.RefreshControllerAndHierarchy(false);
+		}
+
+		//오브젝트 이름 바꾸기 다이얼로그 결과
+		public void OnObjectRenamed(bool isSuccess, object loadKey, object targetObject, string name)
+		{
+			if(!isSuccess
+				|| loadKey == null
+				|| _loadKey_Rename != loadKey
+				|| targetObject == null
+				|| string.IsNullOrEmpty(name)
+				|| _editor == null
+				|| _editor._portrait == null
+				|| _requestMeshGroup != Editor.Select.MeshGroup)
+			{
+				_requestMeshGroup = null;
+				_loadKey_Rename = null;
+				return;
+			}
+
+			_loadKey_Rename = null;
+
+			//대상에 따라 다르다.
+			if(targetObject is apTransform_Mesh)
+			{
+				apTransform_Mesh meshTransform = targetObject as apTransform_Mesh;
+				if(meshTransform != null)
+				{
+					apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_DefaultSettingChanged, 
+														Editor, 
+														_requestMeshGroup, 
+														//meshTransform,
+														false, true,
+														apEditorUtil.UNDO_STRUCT.ValueOnly);
+					meshTransform._nickName = name;
+				}
+			}
+			else if(targetObject is apTransform_MeshGroup)
+			{
+				apTransform_MeshGroup meshGroupTransform = targetObject as apTransform_MeshGroup;
+				if(meshGroupTransform != null)
+				{
+					apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_DefaultSettingChanged, 
+														Editor, 
+														_requestMeshGroup, 
+														//meshGroupTransform, 
+														false, true,
+														apEditorUtil.UNDO_STRUCT.ValueOnly);
+					meshGroupTransform._nickName = name;
+				}
+			}
+			else if(targetObject is apBone)
+			{
+				apBone bone = targetObject as apBone;
+				if(bone != null)
+				{
+					apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_BoneSettingChanged, 
+														Editor, 
+														bone._meshGroup, 
+														//bone, 
+														false, false,
+														apEditorUtil.UNDO_STRUCT.ValueOnly);
+					bone._name = name;
+				}
+			}
+			
+
+			Editor.RefreshControllerAndHierarchy(false);
+		}
+
+
+		//오브젝트 찾기 다이얼로그 결과
+		private void OnObjectSearched(object loadKey, object targetObject)
+		{	
+			
+			if(_loadKey_Search != loadKey
+				|| loadKey == null
+				|| _editor == null
+				|| _editor._portrait == null
+				|| _requestMeshGroup != Editor.Select.MeshGroup
+				|| Editor.Select.MeshGroup == null)
+			{
+				_loadKey_Search = null;
+				return;
+			}
+
+			//창이 열린 이후에 연속으로 이 이벤트가 호출될 수 있다.
+			//_loadKey_Search = null;//null로 만들면 안된다.
+
+			if(targetObject == null)
+			{
+				return;
+			}
+
+			//현재 모디파이어가 선택되어 있는가
+			//> 리깅 모디파이어가 선택된 상태가 아니라면, Mesh/MeshGroup Transform 선택시 Bone을 null로, 또는 그 반대로 설정해야한다.
+			bool isRiggingModifier = false;
+			
+			if(Editor.Select.Modifier != null)
+			{
+				if(Editor.Select.Modifier.ModifierType == apModifierBase.MODIFIER_TYPE.Rigging)
+				{
+					isRiggingModifier = true;
+				}				
+			}
+
+
+			if(targetObject is apTransform_Mesh)
+			{
+				apTransform_Mesh meshTransform = targetObject as apTransform_Mesh;
+				if(meshTransform != null)
+				{
+					if (isRiggingModifier)
+					{
+						//리깅 모디파이어인 경우
+						//- 메시 1개, 본 1개 따로 선택 가능
+						Editor.Select.SetSubMeshInGroup(meshTransform, apSelection.MULTI_SELECT.Main);
+					}
+					else
+					{
+						Editor.Select.SetSubObjectInGroup(meshTransform, null, null, 
+																	apSelection.MULTI_SELECT.Main,
+																	apSelection.TF_BONE_SELECT.Exclusive);
+					}
+				}
+			}
+			else if(targetObject is apTransform_MeshGroup)
+			{
+				apTransform_MeshGroup meshGroupTransform = targetObject as apTransform_MeshGroup;
+				if(meshGroupTransform != null)
+				{
+					if(isRiggingModifier)
+					{
+						//리깅 모디파이어인 경우
+						//- 메시 1개, 본 1개 따로 선택 가능
+						Editor.Select.SetSubMeshGroupInGroup(meshGroupTransform, apSelection.MULTI_SELECT.Main);
+					}
+					else
+					{
+						Editor.Select.SetSubObjectInGroup(null, meshGroupTransform, null, 
+															apSelection.MULTI_SELECT.Main,
+															apSelection.TF_BONE_SELECT.Exclusive);
+					}
+				}
+			}
+			else if(targetObject is apBone)
+			{
+				apBone bone = targetObject as apBone;
+				if (bone != null)
+				{
+					if (isRiggingModifier)
+					{
+						//리깅 모디파이어인 경우
+						//- 메시 1개, 본 1개 따로 선택 가능
+						Editor.Select.SetBone(bone, apSelection.MULTI_SELECT.Main);
+					}
+					else
+					{
+						Editor.Select.SetSubObjectInGroup(null, null, bone, 
+														apSelection.MULTI_SELECT.Main,
+														apSelection.TF_BONE_SELECT.Exclusive);
+					}
+				}
+			}			
+			
+
+			Editor.RefreshControllerAndHierarchy(false);
+		}
+
+
+
+
+		private void OnMultipleObjectSearched(object loadKey, List<object> targetObjects)
+		{
+			
+			if(_loadKey_Search != loadKey
+				|| loadKey == null
+				|| _editor == null
+				|| _editor._portrait == null
+				|| _requestMeshGroup != Editor.Select.MeshGroup
+				|| Editor.Select.MeshGroup == null)
+			{
+				_loadKey_Search = null;
+				return;
+			}
+
+			//창이 열린 이후에 연속으로 이 이벤트가 호출될 수 있다.
+			//_loadKey_Search = null; //null로 만들면 안된다.
+
+			if(targetObjects == null || targetObjects.Count == 0)
+			{
+				return;
+			}
+
+			//현재 모디파이어가 선택되어 있는가
+			//> 리깅 모디파이어가 선택된 상태가 아니라면, Mesh/MeshGroup Transform 선택시 Bone을 null로, 또는 그 반대로 설정해야한다.
+			//> 리깅과 물리 모디파이어는 단일 선택만 지원한다.
+			bool isRiggingModifier = false;
+			bool isPhysicModifier = false;
+
+			if(Editor.Select.Modifier != null)
+			{
+				if(Editor.Select.Modifier.ModifierType == apModifierBase.MODIFIER_TYPE.Rigging)
+				{
+					isRiggingModifier = true;
+				}
+				else if(Editor.Select.Modifier.ModifierType == apModifierBase.MODIFIER_TYPE.Physic)
+				{
+					isPhysicModifier = true;
+				}
+			}
+
+			//다중 선택이 있으므로, MeshTF / MeshGroupTF와 Bone 리스트를 구분한다.
+			List<apTransform_Mesh> meshTFs = new List<apTransform_Mesh>();
+			List<apTransform_MeshGroup> meshGroupTFs = new List<apTransform_MeshGroup>();
+			List<apBone> bones = new List<apBone>();
+
+			object curObj = null;
+			for (int i = 0; i < targetObjects.Count; i++)
+			{
+				curObj = targetObjects[i];
+				if(curObj == null)
+				{
+					continue;
+				}
+				if(curObj is apTransform_Mesh)
+				{
+					meshTFs.Add(curObj as apTransform_Mesh);
+				}
+				else if(curObj is apTransform_MeshGroup)
+				{
+					meshGroupTFs.Add(curObj as apTransform_MeshGroup);
+				}
+				else if(curObj is apBone)
+				{
+					bones.Add(curObj as apBone);
+				}
+			}
+
+			//일단 선택을 초기화
+			Editor.Select.SetSubObjectInGroup(null, null, null, apSelection.MULTI_SELECT.Main, apSelection.TF_BONE_SELECT.Exclusive);
+
+			//리깅/물리 모디파이어에서는 단일 선택만 지원
+			if(bones.Count > 0)
+			{
+				//Bone을 검색했나보다.
+				if(isRiggingModifier || isPhysicModifier)
+				{
+					//하나만 선택하자
+					Editor.Select.SetBone(bones[0], apSelection.MULTI_SELECT.Main);
+				}
+				else
+				{
+					//모두 선택하자
+					for (int iBone = 0; iBone < bones.Count; iBone++)
+					{
+						Editor.Select.SetSubObjectInGroup(null, null, bones[iBone],
+															apSelection.MULTI_SELECT.AddOrSubtract,
+															apSelection.TF_BONE_SELECT.Exclusive);
+					}
+				}
+			}
+			else if(meshTFs.Count > 0 || meshGroupTFs.Count > 0)
+			{
+				//Mesh를 검색했나보다.
+				if(isRiggingModifier || isPhysicModifier)
+				{
+					//하나만 선택하자. MeshTF 먼저
+					if(meshTFs.Count > 0)
+					{
+						Editor.Select.SetSubMeshInGroup(meshTFs[0], apSelection.MULTI_SELECT.Main);
+					}
+					else if(meshGroupTFs.Count > 0)
+					{
+						Editor.Select.SetSubMeshGroupInGroup(meshGroupTFs[0], apSelection.MULTI_SELECT.Main);
+					}
+				}
+				else
+				{
+					//모두 선택하자
+					if(meshTFs.Count > 0)
+					{
+						for (int iMeshTF = 0; iMeshTF < meshTFs.Count; iMeshTF++)
+						{
+							Editor.Select.SetSubObjectInGroup(	meshTFs[iMeshTF], null, null, 
+																apSelection.MULTI_SELECT.AddOrSubtract,
+																apSelection.TF_BONE_SELECT.Exclusive);
+						}
+					}
+					if(meshGroupTFs.Count > 0)
+					{
+						for (int iMeshGroupTF = 0; iMeshGroupTF < meshGroupTFs.Count; iMeshGroupTF++)
+						{
+							Editor.Select.SetSubObjectInGroup(	null, meshGroupTFs[iMeshGroupTF], null, 
+																apSelection.MULTI_SELECT.AddOrSubtract,
+																apSelection.TF_BONE_SELECT.Exclusive);
+						}
+					}
+				}
+				
+			}
+
+			Editor.RefreshControllerAndHierarchy(false);
+		}
+
+
+
+		private void OnDuplicateBoneResult(bool isSuccess, apBone targetBone, object loadKey, float offsetX, float offsetY, bool isDuplicateChildren)
+		{
+			if (!isSuccess
+				|| Editor._portrait == null
+				|| _loadKey_DuplicateBone != loadKey
+				|| targetBone == null
+				|| Editor.Select.SelectionType != apSelection.SELECTION_TYPE.MeshGroup
+				|| targetBone._meshGroup == null
+				|| _requestMeshGroup != Editor.Select.MeshGroup)
+			{
+				_loadKey_DuplicateBone = null;
+				return;
+			}
+			_loadKey_DuplicateBone = null;
+
+			
+			//복제 함수를 호출하자.
+			Editor.Controller.DuplicateBone(_requestMeshGroup, targetBone, offsetX, offsetY, isDuplicateChildren);
+		}
+
+
+		//모든 객체를 선택한다.
+		private void OnSelectAll(bool isMeshTransforms)
+		{
+			if(_editor == null
+				|| _editor._portrait == null
+				|| Editor.Select.MeshGroup == null)
+			{
+				return;
+			}
+
+			//모든 객체를 돌면서 선택하자
+
+
+			apMeshGroup curMeshGroup = Editor.Select.MeshGroup;
+
+			//일단 선택을 초기화
+			Editor.Select.SetSubObjectInGroup(null, null, null, apSelection.MULTI_SELECT.Main, apSelection.TF_BONE_SELECT.Exclusive);
+
+			//단, 리깅, 물리 모디파이어에서는 전체 선택이 지원되지 않는다.
+			if(Editor.Select.Modifier != null)
+			{
+				if(Editor.Select.Modifier.ModifierType == apModifierBase.MODIFIER_TYPE.Rigging)
+				{
+					return;
+				}
+				else if(Editor.Select.Modifier.ModifierType == apModifierBase.MODIFIER_TYPE.Physic)
+				{
+					return;
+				}
+			}
+
+			Editor.Select.SetAllSubObjectsInGroup(isMeshTransforms);
+
+			Editor.RefreshControllerAndHierarchy(false);
+		}
 
 
 

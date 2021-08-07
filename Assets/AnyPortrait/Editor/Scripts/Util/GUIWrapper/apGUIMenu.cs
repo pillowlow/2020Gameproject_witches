@@ -70,6 +70,10 @@ namespace AnyPortrait
 			RotoscopingData,
 
 			HowToEdit,
+
+			ToggleGuidelines,
+			GuideLinesSettings,
+
 			
 		}
 		public class MenuCallBackParam
@@ -347,10 +351,6 @@ namespace AnyPortrait
 						}
 					}
 				}
-
-
-				
-				
 			}
 
 			if (_editor.Select.SelectionType == apSelection.SELECTION_TYPE.Animation ||
@@ -421,6 +421,23 @@ namespace AnyPortrait
 										MakeParam(MENU_ITEM__GUIVIEW.RotoscopingData, curImageSetData));
 					}
 				}
+
+
+				//추가 21.6.4 : 가이드라인
+				newGenericMenu.AddSeparator(STR_EMPTY);
+
+
+				//"Guidelines/Show Guidelines"
+				newGenericMenu.AddItem(	MakeTextHotkey(apHotKeyMapping.KEY_TYPE.ToggleGuidelines, _editor.GetUIWord(UIWORD.GUIMenu_Guidelines), _editor.GetUIWord(UIWORD.GUIMenu_ShowGuidelines)),
+										_editor._isEnableGuideLine,
+										callback, MakeParam(MENU_ITEM__GUIVIEW.ToggleGuidelines));
+
+				//"Guidelines/"
+				newGenericMenu.AddSeparator(MakeSeparatorPath(_editor.GetUIWord(UIWORD.GUIMenu_Guidelines)));
+
+				//"Rotoscoping/Settings"
+				newGenericMenu.AddItem(MakeText(_editor.GetUIWord(UIWORD.GUIMenu_Guidelines), _editor.GetUIWord(UIWORD.GUIMenu_Settings)), 
+										false, callback, MakeParam(MENU_ITEM__GUIVIEW.GuideLinesSettings));
 			}
 
 			

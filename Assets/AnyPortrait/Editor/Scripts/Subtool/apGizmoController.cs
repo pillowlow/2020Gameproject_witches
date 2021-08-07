@@ -177,14 +177,9 @@ namespace AnyPortrait
 						apRenderUnit renderUnit = renderUnits[iUnit];
 						if (renderUnit._meshTransform != null && renderUnit._meshTransform._mesh != null)
 						{
-							if (renderUnit._meshTransform._isVisible_Default)
+							//if (renderUnit._meshTransform._isVisible_Default)//이전
+							if (renderUnit._isVisible)//변경 21.7.20
 							{
-								//Debug.LogError("TODO : Mouse Picking 바꿀것");
-								//bool isPick = apEditorUtil.IsMouseInMesh(
-								//	mousePosGL,
-								//	renderUnit._meshTransform._mesh,
-								//	renderUnit.WorldMatrixOfNode.inverse
-								//	);
 								bool isPick = apEditorUtil.IsMouseInRenderUnitMesh(
 									mousePosGL, renderUnit);
 
@@ -203,28 +198,6 @@ namespace AnyPortrait
 
 				if (selectedMeshTransform != null)
 				{
-					//이전 버전
-					#region [미사용 코드]
-					//>> 만약 ChildMeshGroup에 속한 거라면, Mesh Group 자체를 선택해야 한다.
-					//apMeshGroup parentMeshGroup = Editor.Select.MeshGroup.FindParentMeshGroupOfMeshTransform(selectedMeshTransform);
-					//if (parentMeshGroup == null || parentMeshGroup == Editor.Select.MeshGroup)
-					//{
-					//	Editor.Select.SetSubMeshInGroup(selectedMeshTransform);
-					//}
-					//else
-					//{
-					//	apTransform_MeshGroup childMeshGroupTransform = Editor.Select.MeshGroup.FindChildMeshGroupTransform(parentMeshGroup);
-					//	if (childMeshGroupTransform != null)
-					//	{
-					//		Editor.Select.SetSubMeshGroupInGroup(childMeshGroupTransform);
-					//	}
-					//	else
-					//	{
-					//		Editor.Select.SetSubMeshInGroup(selectedMeshTransform);
-					//	}
-					//} 
-					#endregion
-
 					//수정된 버전
 					//>> 그냥 MeshGroup Transform은 마우스로 선택 못하는 걸로 하자
 					Editor.Select.SetSubMeshInGroup(selectedMeshTransform, multiSelect);//다중 선택 가능
@@ -302,7 +275,7 @@ namespace AnyPortrait
 			}
 
 			apMatrix targetMatrix = null;
-			object targetObj = null;
+			//object targetObj = null;//<삭제 21.6.30>
 			apMatrix worldMatrix = null;
 			apMatrix parentWorldMatrix = null;
 
@@ -380,13 +353,13 @@ namespace AnyPortrait
 			if (isFirstMove)
 			{	
 				//Undo에 저장하기 위해서 데이터를 미리 모아야 한다. <중요>
-				targetObj = null;
+				//targetObj = null;
 				isRootMeshGroup = true;//하나라도 RootMeshGroup에 속하지 않았으면 Undo에는 재귀적으로 기록해야한다.
 
 				//targetObj = (Editor.Select.MeshTF_Main != null ? (object)Editor.Select.MeshTF_Main : (object)Editor.Select.MeshGroupTF_Main);
 				
-				//>> [GizmoMain] >>
-				targetObj = (Editor.Select.SubObjects.GizmoMeshTF != null ? (object)Editor.Select.SubObjects.GizmoMeshTF : (object)Editor.Select.SubObjects.GizmoMeshGroupTF);
+				//>> [GizmoMain] >> (삭제 21.6.30)
+				//targetObj = (Editor.Select.SubObjects.GizmoMeshTF != null ? (object)Editor.Select.SubObjects.GizmoMeshTF : (object)Editor.Select.SubObjects.GizmoMeshGroupTF);
 
 				#region [미사용 코드]
 				//if (nGizmoMeshGroupTF > 0)
@@ -428,8 +401,9 @@ namespace AnyPortrait
 				apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_Gizmo_MoveTransform, 
 													Editor, 
 													Editor.Select.MeshGroup, 
-													targetObj,
-													false, !isRootMeshGroup);
+													//targetObj,
+													false, !isRootMeshGroup,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 			
 			
@@ -551,12 +525,12 @@ namespace AnyPortrait
 			//Undo
 			if (isFirstRotate)
 			{
-				object targetObj = null;
+				//object targetObj = null;//<삭제 21.6.30>
 				bool isRootMeshGroup = false;
 
 				//targetObj = (Editor.Select.MeshTF_Main != null ? (object)Editor.Select.MeshTF_Main : (object)Editor.Select.MeshGroupTF_Main);
-				//>> [GizmoMain] >>
-				targetObj = (Editor.Select.SubObjects.GizmoMeshTF != null ? (object)Editor.Select.SubObjects.GizmoMeshTF : (object)Editor.Select.SubObjects.GizmoMeshGroupTF);
+				//>> [GizmoMain] >> 삭제 21.6.30
+				//targetObj = (Editor.Select.SubObjects.GizmoMeshTF != null ? (object)Editor.Select.SubObjects.GizmoMeshTF : (object)Editor.Select.SubObjects.GizmoMeshGroupTF);
 
 				if (Editor.Select.SubObjects.IsChildMeshGroupObjectSelectedForGizmo(true, false))
 				{
@@ -568,7 +542,12 @@ namespace AnyPortrait
 					//루트 메시 그룹의 객체들만 포함되었다.
 					isRootMeshGroup = true;
 				}
-				apEditorUtil.SetRecord_MeshGroup(apUndoGroupData.ACTION.MeshGroup_Gizmo_RotateTransform, Editor, Editor.Select.MeshGroup, targetObj, false, !isRootMeshGroup);
+				apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_Gizmo_RotateTransform, 
+													Editor, 
+													Editor.Select.MeshGroup, 
+													//targetObj, 
+													false, !isRootMeshGroup,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 			apTransform_Mesh curMeshTF = null;
@@ -755,12 +734,12 @@ namespace AnyPortrait
 			//Undo
 			if (isFirstScale)
 			{
-				object targetObj = null;
+				//object targetObj = null;//삭제 21.6.30
 				bool isRootMeshGroup = false;
 
 				//targetObj = (Editor.Select.MeshTF_Main != null ? (object)Editor.Select.MeshTF_Main : (object)Editor.Select.MeshGroupTF_Main);
-				//>> [GizmoMain] >>
-				targetObj = (Editor.Select.SubObjects.GizmoMeshTF != null ? (object)Editor.Select.SubObjects.GizmoMeshTF : (object)Editor.Select.SubObjects.GizmoMeshGroupTF);
+				//>> [GizmoMain] >> 삭제 21.6.30
+				//targetObj = (Editor.Select.SubObjects.GizmoMeshTF != null ? (object)Editor.Select.SubObjects.GizmoMeshTF : (object)Editor.Select.SubObjects.GizmoMeshGroupTF);
 
 				if (Editor.Select.SubObjects.IsChildMeshGroupObjectSelectedForGizmo(true, false))
 				{
@@ -773,7 +752,12 @@ namespace AnyPortrait
 					isRootMeshGroup = true;
 				}
 
-				apEditorUtil.SetRecord_MeshGroup(apUndoGroupData.ACTION.MeshGroup_Gizmo_ScaleTransform, Editor, Editor.Select.MeshGroup, targetObj, false, !isRootMeshGroup);
+				apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_Gizmo_ScaleTransform, 
+													Editor, 
+													Editor.Select.MeshGroup, 
+													//targetObj, 
+													false, !isRootMeshGroup,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 			apTransform_Mesh curMeshTF = null;
@@ -910,8 +894,10 @@ namespace AnyPortrait
 			apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_Gizmo_MoveTransform, 
 												Editor, 
 												Editor.Select.MeshGroup, 
-												targetObj, 
-												false, true);
+												//targetObj, 
+												false, true,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 
 			//이제 선택된 객체들을 하나씩 확인하면서 수정한다.
 			apTransform_Mesh curMeshTF = null;
@@ -1062,8 +1048,9 @@ namespace AnyPortrait
 			apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_Gizmo_RotateTransform, 
 												Editor, 
 												Editor.Select.MeshGroup, 
-												targetObj, 
-												false, true);
+												//targetObj, 
+												false, true,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 			//이제 선택된 객체들을 하나씩 확인하면서 수정한다.
 			apTransform_Mesh curMeshTF = null;
@@ -1211,8 +1198,9 @@ namespace AnyPortrait
 			apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_Gizmo_ScaleTransform, 
 												Editor, 
 												Editor.Select.MeshGroup, 
-												targetObj, 
-												false, true);
+												//targetObj, 
+												false, true,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 			//이제 선택된 객체들을 하나씩 확인하면서 수정한다.
 			apTransform_Mesh curMeshTF = null;
@@ -1301,7 +1289,7 @@ namespace AnyPortrait
 
 			//코멘트 20.6.25 : Depth는 다중 선택을 지원하지 않는다.
 
-			object targetObj = null;
+			//object targetObj = null;//삭제 21.6.30
 
 			//if (Editor.Select.MeshTF_Main != null)
 			//{
@@ -1320,12 +1308,12 @@ namespace AnyPortrait
 			if (Editor.Select.SubObjects.GizmoMeshTF != null)
 			{
 				curRenderUnit = Editor.Select.SubObjects.GizmoMeshTF._linkedRenderUnit;
-				targetObj = Editor.Select.SubObjects.GizmoMeshTF;
+				//targetObj = Editor.Select.SubObjects.GizmoMeshTF;
 			}
 			else if (Editor.Select.SubObjects.GizmoMeshGroupTF != null)
 			{
 				curRenderUnit = Editor.Select.SubObjects.GizmoMeshGroupTF._linkedRenderUnit;
-				targetObj = Editor.Select.SubObjects.GizmoMeshGroupTF;
+				//targetObj = Editor.Select.SubObjects.GizmoMeshGroupTF;
 			}
 
 
@@ -1334,13 +1322,20 @@ namespace AnyPortrait
 			if (curRenderUnit == null) { return; }
 
 			//Undo
-			apEditorUtil.SetRecord_MeshGroup(apUndoGroupData.ACTION.MeshGroup_Gizmo_MoveTransform, Editor, Editor.Select.MeshGroup, targetObj, false, true);
+			apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_Gizmo_MoveTransform, 
+												Editor, 
+												Editor.Select.MeshGroup, 
+												//targetObj, 
+												false, true,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 			bool bSort = false;
 			if (curRenderUnit.GetDepth() != depth)
 			{
 				//curRenderUnit.SetDepth(depth);
 				Editor.Select.MeshGroup.ChangeRenderUnitDepth(curRenderUnit, depth);
+
+				Editor.OnAnyObjectAddedOrRemoved(true);
 
 				bSort = true;
 				apEditorUtil.ReleaseGUIFocus();
@@ -1405,26 +1400,17 @@ namespace AnyPortrait
 			#endregion
 
 			//변경 20.6.24 : 다중 처리
-			object targetObj = null;
+			//object targetObj = null;//삭제 21.6.310
 
-			//if (Editor.Select.MeshTF_Main != null)
+			//>> [GizmoMain] >> 삭제 21.6.30
+			//if (Editor.Select.SubObjects.GizmoMeshTF != null)
 			//{
-			//	targetObj = Editor.Select.MeshTF_Main;
+			//	targetObj = Editor.Select.SubObjects.GizmoMeshTF;
 			//}
-			//else if (Editor.Select.MeshGroupTF_Main != null)
+			//else if (Editor.Select.SubObjects.GizmoMeshGroupTF != null)
 			//{
-			//	targetObj = Editor.Select.MeshGroupTF_Main;
+			//	targetObj = Editor.Select.SubObjects.GizmoMeshGroupTF;
 			//}
-
-			//>> [GizmoMain] >>
-			if (Editor.Select.SubObjects.GizmoMeshTF != null)
-			{
-				targetObj = Editor.Select.SubObjects.GizmoMeshTF;
-			}
-			else if (Editor.Select.SubObjects.GizmoMeshGroupTF != null)
-			{
-				targetObj = Editor.Select.SubObjects.GizmoMeshGroupTF;
-			}
 
 
 
@@ -1432,7 +1418,9 @@ namespace AnyPortrait
 			apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_Gizmo_Color, 
 												Editor, 
 												Editor.Select.MeshGroup, 
-												targetObj, false, true);
+												//targetObj, 
+												false, true,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 
 			int nGizmoMeshTF = Editor.Select.SubObjects.NumGizmoMeshTF;
@@ -1719,7 +1707,7 @@ namespace AnyPortrait
 			}
 
 			apMatrix targetMatrix = null;
-			object targetObj = null;
+			//object targetObj = null;//삭제 21.6.30
 			apMatrix worldMatrix = null;
 			apMatrix parentWorldMatrix = null;
 
@@ -1750,13 +1738,13 @@ namespace AnyPortrait
 			if (isFirstMove)
 			{	
 				//Undo에 저장하기 위해서 데이터를 미리 모아야 한다. <중요>
-				targetObj = null;
+				//targetObj = null;
 				isRootMeshGroup = true;//하나라도 RootMeshGroup에 속하지 않았으면 Undo에는 재귀적으로 기록해야한다.
 
 				//targetObj = (Editor.Select.MeshTF_Main != null ? (object)Editor.Select.MeshTF_Main : (object)Editor.Select.MeshGroupTF_Main);
 
-				//>> [GizmoMain] >>
-				targetObj = (Editor.Select.SubObjects.GizmoMeshTF != null ? (object)Editor.Select.SubObjects.GizmoMeshTF : (object)Editor.Select.SubObjects.GizmoMeshGroupTF);
+				//>> [GizmoMain] >> 삭제 21.6.30
+				//targetObj = (Editor.Select.SubObjects.GizmoMeshTF != null ? (object)Editor.Select.SubObjects.GizmoMeshTF : (object)Editor.Select.SubObjects.GizmoMeshGroupTF);
 
 				
 				//위의 코드와 같은 역할을 하는 함수이다.
@@ -1769,8 +1757,9 @@ namespace AnyPortrait
 				apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_Gizmo_MoveTransform, 
 													Editor, 
 													Editor.Select.MeshGroup, 
-													targetObj,
-													false, !isRootMeshGroup);
+													//targetObj,
+													false, !isRootMeshGroup,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 			
 			
@@ -1836,13 +1825,13 @@ namespace AnyPortrait
 			//Undo
 			if (isFirstRotate)
 			{
-				object targetObj = null;
+				//object targetObj = null;//삭제 21.6.30
 				bool isRootMeshGroup = false;
 				
 				//targetObj = (Editor.Select.MeshTF_Main != null ? (object)Editor.Select.MeshTF_Main : (object)Editor.Select.MeshGroupTF_Main);
 				
-				//>> [GizmoMain] >>
-				targetObj = (Editor.Select.SubObjects.GizmoMeshTF != null ? (object)Editor.Select.SubObjects.GizmoMeshTF : (object)Editor.Select.SubObjects.GizmoMeshGroupTF);
+				//>> [GizmoMain] >> 삭제 21.6.30
+				//targetObj = (Editor.Select.SubObjects.GizmoMeshTF != null ? (object)Editor.Select.SubObjects.GizmoMeshTF : (object)Editor.Select.SubObjects.GizmoMeshGroupTF);
 
 
 
@@ -1858,8 +1847,10 @@ namespace AnyPortrait
 				}
 				apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_Gizmo_RotateTransform, 
 													Editor, 
-													Editor.Select.MeshGroup, targetObj, 
-													false, !isRootMeshGroup);
+													Editor.Select.MeshGroup, 
+													//targetObj, 
+													false, !isRootMeshGroup,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 			apTransform_Mesh curMeshTF = null;
@@ -1943,13 +1934,13 @@ namespace AnyPortrait
 			//Undo
 			if (isFirstScale)
 			{
-				object targetObj = null;
+				//object targetObj = null;//삭제 21.6.30
 				bool isRootMeshGroup = false;
 
 				//targetObj = (Editor.Select.MeshTF_Main != null ? (object)Editor.Select.MeshTF_Main : (object)Editor.Select.MeshGroupTF_Main);
 
-				//>> [GizmoMain] >>
-				targetObj = (Editor.Select.SubObjects.GizmoMeshTF != null ? (object)Editor.Select.SubObjects.GizmoMeshTF : (object)Editor.Select.SubObjects.GizmoMeshGroupTF);
+				//>> [GizmoMain] >> 삭제 21.6.30
+				//targetObj = (Editor.Select.SubObjects.GizmoMeshTF != null ? (object)Editor.Select.SubObjects.GizmoMeshTF : (object)Editor.Select.SubObjects.GizmoMeshGroupTF);
 
 
 				if (Editor.Select.SubObjects.IsChildMeshGroupObjectSelectedForGizmo(true, false))
@@ -1965,7 +1956,9 @@ namespace AnyPortrait
 
 				apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_Gizmo_ScaleTransform, 
 													Editor, Editor.Select.MeshGroup, 
-													targetObj, false, !isRootMeshGroup);
+													//targetObj, 
+													false, !isRootMeshGroup,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 			apTransform_Mesh curMeshTF = null;

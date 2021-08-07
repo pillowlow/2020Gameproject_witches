@@ -518,7 +518,8 @@ namespace AnyPortrait
 						renderUnit = renderUnits[iUnit];
 						if (renderUnit._meshTransform != null && renderUnit._meshTransform._mesh != null)
 						{
-							if (renderUnit._meshTransform._isVisible_Default && renderUnit._meshColor2X.a > 0.1f)//Alpha 옵션 추가
+							//if (renderUnit._meshTransform._isVisible_Default && renderUnit._meshColor2X.a > 0.1f)//이전
+							if (renderUnit._isVisible && renderUnit._meshColor2X.a > 0.1f)//변경
 							{
 								//Debug.LogError("TODO : Mouse Picking 바꿀것");
 								bool isPick = apEditorUtil.IsMouseInRenderUnitMesh(

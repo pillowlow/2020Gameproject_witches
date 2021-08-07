@@ -67,6 +67,29 @@ namespace AnyPortrait
 			_childMeshGroup.SetBoneIKEnabled(false, false);
 		}
 
+#if UNITY_EDITOR
+		/// <summary>
+		/// 추가 21.5.13 : C++ DLL을 이용하여 루트유닛/메시 그룹을 업데이트한다.
+		/// </summary>
+		/// <param name="tDelta"></param>
+		/// <param name="isBoneIKMatrix"></param>
+		/// <param name="isBoneIKRigging"></param>
+		public void Update_DLL(float tDelta, bool isBoneIKMatrix, bool isBoneIKRigging)
+		{
+			if (_childMeshGroup == null)
+			{
+				return;
+			}
+			_childMeshGroup.SetBoneIKEnabled(isBoneIKMatrix, isBoneIKRigging);
+			
+			//_childMeshGroup.UpdateRenderUnits(tDelta, false);//기본
+			_childMeshGroup.UpdateRenderUnits_DLL(tDelta, false);//DLL 이용
+			
+			_childMeshGroup.SetBoneIKEnabled(false, false);
+		}
+
+#endif
+
 
 		// Functions
 		//--------------------------------------

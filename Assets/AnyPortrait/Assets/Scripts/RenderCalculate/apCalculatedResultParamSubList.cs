@@ -733,12 +733,27 @@ namespace AnyPortrait
 
 			Vector2 curValue = controlParam._vec2_Cur;
 
+
+			
+
 			if (_cpLerpAreaLastSelected == null || !_cpLerpAreaLastSelected.IsInclude(curValue))
 			{
-				_cpLerpAreaLastSelected = _cpLerpAreas.Find(delegate (apCalculatedLerpArea a)
+				//TODO : 이부분 성능 최적화 필요
+				//여기서 delegate때문에 약간의 메모리 할당이 발생한다.
+				//_cpLerpAreaLastSelected = _cpLerpAreas.Find(delegate (apCalculatedLerpArea a)
+				//{
+				//	return a.IsInclude(curValue);
+				//});
+
+				//성능은 떨어지지만 메모리 할당이 발생하지 않는 부분
+				for (int i = 0; i < _cpLerpAreas.Count; i++)
 				{
-					return a.IsInclude(curValue);
-				});
+					if(_cpLerpAreas[i].IsInclude(curValue))
+					{
+						_cpLerpAreaLastSelected = _cpLerpAreas[i];
+						break;
+					}
+				}
 			}
 			if (_cpLerpAreaLastSelected == null)
 			{

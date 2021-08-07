@@ -29,6 +29,10 @@ namespace AnyPortrait
 	/// </summary>
 	public class apPathSetting
 	{
+		//싱글톤으로 변경 21.5.30
+		private static apPathSetting s_instance = null;
+		public static apPathSetting I { get { if (s_instance == null) { s_instance = new apPathSetting(); } return s_instance; } }
+
 		// Members
 		//-----------------------------------------------------
 		public const string DEFAULT_PATH = "Assets/AnyPortrait/";
@@ -40,7 +44,7 @@ namespace AnyPortrait
 
 		// Init
 		//-----------------------------------------------------
-		public apPathSetting()
+		private apPathSetting()
 		{
 			_curPath = DEFAULT_PATH;
 			_isFirstLoaded = false;//처음으로 로드를 했는가
@@ -67,8 +71,13 @@ namespace AnyPortrait
 			StreamReader sr = null;
 			try
 			{
-				fs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-				sr = new StreamReader(fs);
+				//이전
+				//fs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+				//sr = new StreamReader(fs);
+
+				//변경 21.7.3 : 경로 문제와 인코딩 문제
+				fs = new FileStream(apUtil.ConvertEscapeToPlainText(filePath), FileMode.Open, FileAccess.Read);
+				sr = new StreamReader(fs, System.Text.Encoding.UTF8, true);
 
 				_curPath = sr.ReadLine();
 
@@ -108,15 +117,25 @@ namespace AnyPortrait
 
 		public bool Save(string path)
 		{
-			_curPath = path;
+			//이전
+			//_curPath = path;
+
+			//변경 21.7.3 : 이스케이프 문자 삭제
+			_curPath = apUtil.ConvertEscapeToPlainText(path);
+
 			string filePath = Application.dataPath + "/../AnyPortrait_EditorPath.txt";
 
 			FileStream fs = null;
 			StreamWriter sw = null;
 			try
 			{
-				fs = new FileStream(filePath, FileMode.Create, FileAccess.Write);
-				sw = new StreamWriter(fs);
+				//이전
+				//fs = new FileStream(filePath, FileMode.Create, FileAccess.Write);
+				//sw = new StreamWriter(fs);
+
+				//변경 21.7.3 : 경로 + 인코딩 문제
+				fs = new FileStream(apUtil.ConvertEscapeToPlainText(filePath), FileMode.Create, FileAccess.Write);
+				sw = new StreamWriter(fs, System.Text.Encoding.UTF8);
 
 				sw.WriteLine(path);
 				sw.Flush();

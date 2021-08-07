@@ -106,6 +106,13 @@ namespace AnyPortrait
 
 
 
+		//추가 21.6.3 : 작업 편의를 위한 가이드라인들
+		[NonBackupField, SerializeField]
+		private apGuideLines _guideLines = new apGuideLines();
+		public apGuideLines GuideLines { get { if(_guideLines == null) { _guideLines = new apGuideLines(); } return _guideLines; } }
+
+
+
 
 		//Runtime 계열 Members
 		// 이후 "최적화" 버전에서는 이하의 Member만 적용한다.
@@ -526,6 +533,41 @@ namespace AnyPortrait
 		private Matrix4x4 _invRotationOnlyMatrixIfBillboard = Matrix4x4.identity;
 
 
+
+		//추가 21.6.7 : 다른 Portrait에 연동해서 재생할 수 있다.
+		//애니메이션, 컨트롤 파라미터 따로 연동할 수 있다.
+		[NonSerialized]
+		private bool _isSyncParent = false;//다른 Portrait가 이 Portrait에 자식으로서 동기화 되었는가
+
+		[NonSerialized]
+		private List<apPortrait> _syncChildPortraits = null;//동기화된 자식 Portrait들
+
+		[NonSerialized]
+		private bool _isSyncChild = false;//다른 Portrait에 애니메이션이나 컨트롤 파라미터가 연동된다.
+
+		private enum SYNC_METHOD
+		{
+			None,
+			/// <summary>애니메이션만 동기화된다.</summary>
+			AnimationOnly,
+			/// <summary>컨트롤 파라미터만 동기화된다.</summary>
+			ControlParamOnly,
+			/// <summary>애니메이션과 컨트롤 파라미터가 동기화된다.</summary>
+			AnimationAndControlParam
+		}
+		[NonSerialized]
+		private SYNC_METHOD _syncMethod = SYNC_METHOD.None;
+
+		[NonSerialized]
+		private apPortrait _syncParentPortrait = null;
+
+		//TODO : 애니메이션, 컨트롤 파라미터 동기화
+		[NonSerialized]
+		private apSyncPlay _syncPlay = null;
+
+
+
+
 		// Init
 		//-----------------------------------------------------
 		void Awake()
@@ -622,7 +664,11 @@ namespace AnyPortrait
 					//추가 2.28 : 
 					if(!_isImportant)
 					{
-						_updateToken = apOptUpdateChecker.I.AddRequest(_updateToken, _FPS, Time.deltaTime);
+						//이전
+						//_updateToken = apOptUpdateChecker.I.AddRequest(_updateToken, _FPS, Time.deltaTime);
+
+						//변경 : TimeScale을 변경하였을 때도 UpdateToken은 정상적으로 동작해야한다.
+						_updateToken = apOptUpdateChecker.I.AddRequest(_updateToken, _FPS, Time.unscaledDeltaTime);
 					}
 
 					
@@ -722,6 +768,13 @@ namespace AnyPortrait
 				return;
 			}
 
+			//추가 21.6.8 : 동기화되어서 수동적으로 동작해야한다면 여기서 업데이트를 하지 않는다. (부모가 업데이트 함수를 호출해줘야 한다.)
+			if (_isSyncChild)
+			{
+				return;
+			}
+
+
 			//추가 20.7.9 : 물리에서 공통적으로 사용할 DeltaTime을 계산한다.
 			CalculatePhysicsTimer();
 
@@ -800,13 +853,47 @@ namespace AnyPortrait
 					}
 				}
 
-				//#if UNITY_EDITOR
-				//					Profiler.EndSample();
-				//#endif			
 			}
 
 			PostUpdate();//추가 20.9.15 : 현재 프레임의 위치등을 저장하자.
-			#endregion
+
+			//추가 21.6.8 : 동기화된 객체라면, 자식 객체들의 업데이트를 대신 해주자
+			if (_isSyncParent)
+			{
+				int nChildPortrait = _syncChildPortraits.Count;
+				apPortrait childPortrait = null;
+				bool isAnyRemovedPortrait = false;
+				for (int i = 0; i < nChildPortrait; i++)
+				{
+					childPortrait = _syncChildPortraits[i];
+					if(childPortrait == null)
+					{
+						isAnyRemovedPortrait = true;
+						continue;
+					}
+
+					//업데이트를 대신 호출해준다.
+					childPortrait.UpdateAsSyncChild();
+				}
+				if(isAnyRemovedPortrait)
+				{
+					//알게모르게 삭제된게 있었다;
+					//리스트에서 제거해주자
+					_syncChildPortraits.RemoveAll(delegate(apPortrait a)
+					{
+						return a == null;
+					});
+
+					//만약 모두 삭제되었다.
+					if(_syncChildPortraits.Count == 0)
+					{
+						//동기화 해제
+						_isSyncParent = false;
+						_syncChildPortraits = null;
+					}
+				}
+			}
+#endregion
 		}
 
 
@@ -835,8 +922,9 @@ namespace AnyPortrait
 
 				if (_animPlayManager.IsPlaying_Editor)
 				{
+#if UNITY_EDITOR
 					_animPlayManager.Update_Editor(0.0f);
-
+#endif
 				}
 				else
 				{
@@ -858,6 +946,127 @@ namespace AnyPortrait
 			}
 #endif
 		}
+
+
+		//추가 21.6.8
+		//애니메이션이나 컨트롤 파라미터가 다른 Portrait에 동기화된 경우, 부모 apPortrait로부터 업데이트를 대신 호출받는다.
+		public void UpdateAsSyncChild()
+		{
+			if(!_isSyncChild || _syncPlay == null)
+			{
+				return;
+			}
+
+
+			if (_initStatus != INIT_STATUS.Completed)
+			{
+				//로딩이 다 되지 않았다면 처리를 하지 않는다.
+				return;
+			}
+
+			//추가 21.4.3 : 출력할게 없다면 스크립트를 중단한다.
+			if (_curPlayingOptRootUnit == null)
+			{
+				return;
+			}
+
+			//추가 20.7.9 : 물리에서 공통적으로 사용할 DeltaTime을 계산한다.
+			CalculatePhysicsTimer();
+
+
+			//힘 관련 업데이트
+			ForceManager.Update(Time.deltaTime);
+
+			//애니메이션 업데이트 <동기화>
+			if(_syncMethod == SYNC_METHOD.AnimationOnly
+				|| _syncMethod == SYNC_METHOD.AnimationAndControlParam)
+			{
+				//동기화된 업데이트
+				_animPlayManager.UpdateAsSyncChild(Time.deltaTime, _syncPlay);
+			}
+			else
+			{
+				//일반 업데이트
+				_animPlayManager.Update(Time.deltaTime);
+			}
+			
+
+			//추가 20.11.23 : 애니메이션 정보가 모디파이어 처리에 반영되도록 매핑 클래스를 동작시킨다.
+			_animPlayMapping.Update();
+
+
+			//컨트롤 파라미터 동기화를 하자 <동기화>
+			if(_syncMethod == SYNC_METHOD.ControlParamOnly
+				|| _syncMethod == SYNC_METHOD.AnimationAndControlParam)
+			{
+				_syncPlay.SyncControlParams();
+			}
+
+			//다른 스크립트에서 요청한 ControlParam 수정 정보를 반영한다.
+			_controller.CompleteRequests();
+
+			
+
+
+
+			if (_curPlayingOptRootUnit != null)
+			{
+				//추가 9.19 : Camera 체크
+				//if(_billboardType != BILLBOARD_TYPE.None)
+				//{
+				//	CheckAndRefreshCameras();
+				//} >> 이전 : 빌보드가 아닌 경우 생략
+
+				//변경 : 언제나
+				CheckAndRefreshCameras();
+
+
+				//전체 업데이트하는 코드
+				//일정 프레임마다 업데이트를 한다.
+				//#if UNITY_EDITOR
+				//					Profiler.BeginSample("Portrait - Update Transform");
+				//#endif
+				if (_isImportant)
+				{
+					_curPlayingOptRootUnit.UpdateTransforms(Time.deltaTime);
+				}
+				else
+				{
+					//이전 방식 : 랜덤값이 포함된 간헐적 업데이트
+					//if (_tDelta > _timePerFrame)
+					//{
+					//	//Important가 꺼진다면 프레임 FPS를 나누어서 처리한다.
+					//	_curPlayingOptRootUnit.UpdateTransforms(_timePerFrame);
+
+					//	_tDelta -= _timePerFrame;
+					//}
+					//else
+					//{
+					//	//추가 4.8
+					//	//만약 Important가 꺼진 상태에서 MaskMesh가 있다면
+					//	//Mask Mesh의 RenderTexture가 매 프레임 갱신 안될 수 있다.
+					//	//따라서 RenderTexture 만큼은 매 프레임 갱신해야한다.
+					//	_curPlayingOptRootUnit.UpdateTransformsOnlyMaskMesh();
+					//}
+
+					//새로운 방식 : 중앙에서 관리하는 토큰 업데이트
+					if (apOptUpdateChecker.I.GetUpdatable(_updateToken))
+					{
+						_curPlayingOptRootUnit.UpdateTransforms(_updateToken.ResultElapsedTime);
+						//_tDelta -= _timePerFrame;
+					}
+					else
+					{
+						_curPlayingOptRootUnit.UpdateTransformsOnlyMaskMesh();
+					}
+				}
+
+			}
+
+			PostUpdate();//추가 20.9.15 : 현재 프레임의 위치등을 저장하자.
+		}
+
+
 
 
 #if UNITY_2017_1_OR_NEWER
@@ -1159,9 +1368,11 @@ namespace AnyPortrait
 			//추가 21.4.3
 			//StopAll이 적용되려면 업데이트가 한번 되어야 한다.
 			//Hide되면 애니메이션이 업데이트되지 않으므로, 여기서 강제로 업데이트를 한번 더 하자
-			//_animPlayManager.Update(0.0f);
-			_animPlayManager.ReleaseAllPlayUnitAndQueues();
-
+			if (!_isUsingMecanim)
+			{
+				//_animPlayManager.Update(0.0f);
+				_animPlayManager.ReleaseAllPlayUnitAndQueues();
+			}
 
 			//모두 숨기기
 			_curPlayingOptRootUnit = null;
@@ -1279,7 +1490,8 @@ namespace AnyPortrait
 			_invRotationOnlyMatrixIfBillboard = Matrix4x4.identity;
 
 
-			HideRootUnits();
+			
+			//HideRootUnits();//삭제 21.5.27
 
 			_funcAyncLinkCompleted = null;
 			_isAutoPlayCheckable = true;
@@ -1325,7 +1537,7 @@ namespace AnyPortrait
 				_optMeshes[i].InstantiateMaterial(_optBatchedMaterial);//재질 Batch 정보를 넣고 초기화
 			}
 
-			HideRootUnits();
+			//HideRootUnits();//삭제 21.5.27
 
 			for (int iOptTransform = 0; iOptTransform < _optTransforms.Count; iOptTransform++)
 			{
@@ -1472,6 +1684,8 @@ namespace AnyPortrait
 			_animPlayManager.LinkPortrait(this);
 
 			
+			//여기로 옮기기
+			HideRootUnits();
 
 			
 			//로딩 끝
@@ -2785,7 +2999,7 @@ namespace AnyPortrait
 		// 물리 제어
 		//---------------------------------------------------------------------------------------
 		/// <summary>
-		/// Initializes all forces and physical effects by touch.
+		/// Initialize all forces and physical effects by touch.
 		/// This function is equivalent to executing "ClearForce()" and "ClearTouch()" together.
 		/// </summary>
 		public void ClearForceAndTouch()
@@ -2798,6 +3012,17 @@ namespace AnyPortrait
 		{
 			_forceManager.ClearForce();
 		}
+
+		/// <summary>
+		/// Remove the target force.
+		/// </summary>
+		/// <param name="forceUnit">The target force you want to remove</param>
+		public void RemoveForce(apForceUnit forceUnit)
+		{
+			_forceManager.RemoveForce(forceUnit);
+		}
+
+		
 
 
 		/// <summary>
@@ -2877,6 +3102,15 @@ namespace AnyPortrait
 		public void RemoveTouch(int touchID)
 		{
 			_forceManager.RemoveTouch(touchID);
+		}
+
+		/// <summary>
+		/// Removes physical effects by touch with the requested Data.
+		/// </summary>
+		/// <param name="touchID">Touch Data</param>
+		public void RemoveTouch(apPullTouch touch)
+		{
+			_forceManager.RemoveTouch(touch);
 		}
 
 		/// <summary>
@@ -6125,9 +6359,11 @@ namespace AnyPortrait
 		/// <summary>[Please do not use it]</summary>
 		/// <param name="curSelectedMeshGroup">현재 선택된 메시 그룹. RenderUnit과 Mod 정보를 한번 더 갱신한다. (이것 외의 링크를 제한하는 역할은 없음)</param>
 		/// <param name="targetAnimClip">현재 편집중인 AnimClip. 이게 null이면 전체 갱신. 대상이 있다면 불필요한 링크 작업은 생략된다.(isResetLink가 false인 경우에 한해서)</param>
-		public void LinkAndRefreshInEditor(bool isResetLink,	apUtil.LinkRefreshRequest linkRefreshRequest
-																//apMeshGroup curSelectedMeshGroup, apAnimClip targetAnimClip
-																)
+		public void LinkAndRefreshInEditor(bool isResetLink,
+											apUtil.LinkRefreshRequest linkRefreshRequest
+											//apMeshGroup editorSelectedMeshGroup
+											//, apAnimClip targetAnimClip
+											)
 		{
 			
 			//Debug.Log("LinkAndRefreshInEditor (isResetLink : " + isResetLink + " / MeshGroup : " + (curSelectedMeshGroup != null) + " / AnimClip : " + (targetAnimClip != null) + ")");
@@ -6477,7 +6713,7 @@ namespace AnyPortrait
 
 					meshGroup.ResetRenderUnitsWithoutRefreshEditor();
 					meshGroup.RefreshAutoClipping();
-					if(meshGroup._rootRenderUnit != null)
+					if (meshGroup._rootRenderUnit != null)
 					{
 						meshGroup._rootRenderUnit.ReadyToUpdate();
 					}
@@ -6485,7 +6721,7 @@ namespace AnyPortrait
 					{
 						//Debug.LogError("Root Rendr Unit이 없다.");
 					}
-					
+
 					
 				}
 
@@ -7683,6 +7919,8 @@ namespace AnyPortrait
 				_physicsTimer.Reset();
 				_physicsTimer.Start();
 			}
+
+			//_physicsDeltaTime = Time.unscaledDeltaTime;
 		}
 
 		//화면 캡쳐시에는 물리 시간이 강제된다.
@@ -8096,6 +8334,187 @@ namespace AnyPortrait
 				return a._isDefault;
 			});
 		}
+
+
+
+		// 다른 포트레이트와 동기화 (21.6.7)
+		//--------------------------------------------------------------------------
+		/// <summary>
+		/// If it is synchronized with other apPortraits, unsynchronize it.
+		/// If this is a synchronized parent, all child objects are unsynchronized.
+		/// If this is a synchronized child, exclude it from its parent.
+		/// </summary>
+		public void Unsynchronize()
+		{
+			if(_isSyncParent)
+			{
+				if(_syncChildPortraits != null)
+				{
+					//자식들의 동기화를 모두 해제한다.
+					apPortrait childPortrait = null;
+					for (int i = 0; i < _syncChildPortraits.Count; i++)
+					{	
+						childPortrait = _syncChildPortraits[i];
+						if(childPortrait == null || childPortrait == this)
+						{
+							continue;
+						}
+						childPortrait._isSyncChild = false;
+						childPortrait._isSyncParent = false;
+						childPortrait._syncChildPortraits = null;
+						childPortrait._syncParentPortrait = null;
+						childPortrait._syncPlay = null;
+					}
+				}
+				_isSyncParent = false;
+				_syncChildPortraits = null;
+			}
+			if(_isSyncChild)
+			{
+				if(_syncParentPortrait != null)
+				{
+					//부모로부터 동기화를 해제한다.
+					if(_syncParentPortrait._syncChildPortraits != null
+						&& _syncParentPortrait._syncChildPortraits.Contains(this))
+					{
+						_syncParentPortrait._syncChildPortraits.Remove(this);
+
+						if(_syncParentPortrait._syncChildPortraits.Count == 0)
+						{
+							//부모 객체의 모든 동기화가 해제되었다.
+							_syncParentPortrait._isSyncParent = false;
+							_syncParentPortrait._syncChildPortraits = null;
+							_syncParentPortrait._isSyncChild = false;
+							_syncParentPortrait._syncParentPortrait = null;
+							_syncParentPortrait._syncPlay = null;
+						}
+					}
+				}
+				
+				_isSyncChild = false;
+				_syncParentPortrait = null;
+				_syncMethod = SYNC_METHOD.None;
+				_syncPlay = null;
+			}
+		}
+
+		/// <summary>
+		/// Synchronizes the updated values of animation or control parameters with other apPortrait.
+		/// If synchronization succeeds, this apPortrait is registered and updated as a child of the target's apPortrait.
+		/// </summary>
+		/// <param name="targetPortrait">Target parent apPortrait.</param>
+		/// <param name="syncAnimation">Synchronizes the playback state of animation clips of the same name.</param>
+		/// <param name="syncControlParam">Synchronizes the values of control parameters of the same name.</param>
+		/// <returns>Returns True if synchronization is successful.</returns>
+		public bool Synchronize(apPortrait targetPortrait, bool syncAnimation, bool syncControlParam)
+		{
+			if (targetPortrait == null || targetPortrait == this)
+			{
+				Debug.LogError("AnyPortrait : [Sync failed] Target is null");
+				return false;
+			}
+			if(_isSyncParent)
+			{
+				Debug.LogError("AnyPortrait : [Sync failed] This apPortrait is a parent object that has already been synced.");
+				return false;
+			}
+
+			if(targetPortrait._isSyncChild)
+			{
+				Debug.LogError("AnyPortrait : [Sync failed] The target is already synced to another apPortrait.");
+				return false;
+			}
+
+			if(!syncAnimation && !syncControlParam)
+			{
+				Debug.LogError("AnyPortrait : [Sync failed] This function does not work because both animation and control parameters are not synchronized. To unsynchronize, use the Unsynchronize() function instead.");
+				return false;
+			}
+
+			//연동할게 없다면 요청 항목에서 삭제
+			if (syncAnimation)
+			{
+				if (_animClips == null || targetPortrait._animClips == null)
+				{
+					syncAnimation = false;
+				}
+			}
+
+			if (syncControlParam)
+			{
+				if(_controller._controlParams == null || targetPortrait._controller._controlParams == null)
+				{
+					syncControlParam = false;
+				}
+			}
+			
+			if(!syncAnimation && !syncControlParam)
+			{
+				return false;
+			}
+
+			
+
+			if(_isSyncChild)
+			{
+				if(targetPortrait == _syncParentPortrait)
+				{
+					//이미 동기화가 되었다.
+					//부모의 입장에서 이 객체가 등록되었는지 한번 더 확인하자
+					_syncParentPortrait._isSyncParent = true;
+					if(_syncParentPortrait._syncChildPortraits == null)
+					{
+						_syncParentPortrait._syncChildPortraits = new List<apPortrait>();
+					}
+					if(!_syncParentPortrait._syncChildPortraits.Contains(this))
+					{
+						_syncParentPortrait._syncChildPortraits.Add(this);
+					}
+					return true;
+				}
+			}
+
+			//만약 새로 등록하는 거라면
+			_isSyncChild = true;
+			_syncParentPortrait = targetPortrait;
+
+			
+			if(syncAnimation && syncControlParam)
+			{
+				_syncMethod = SYNC_METHOD.AnimationAndControlParam;
+			}
+			else if(syncAnimation && !syncControlParam)
+			{
+				_syncMethod = SYNC_METHOD.AnimationOnly;
+			}
+			else if(!syncAnimation && syncControlParam)
+			{
+				_syncMethod = SYNC_METHOD.ControlParamOnly;
+			}
+			else
+			{
+				_syncMethod = SYNC_METHOD.None;
+			}
+
+			//동기화용 객체 생성
+			_syncPlay = new apSyncPlay(this, _syncParentPortrait, syncAnimation, syncControlParam);
+
+			_syncParentPortrait._isSyncParent = true;
+			if(_syncParentPortrait._syncChildPortraits == null)
+			{
+				_syncParentPortrait._syncChildPortraits = new List<apPortrait>();
+			}
+			if(!_syncParentPortrait._syncChildPortraits.Contains(this))
+			{
+				_syncParentPortrait._syncChildPortraits.Add(this);
+			}
+
+			return true;
+		}
+
+		
+
+		
 	}
 
 }
