@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using UnityEngine;
 
 public class Door : MonoBehaviour
@@ -9,121 +10,71 @@ public class Door : MonoBehaviour
     public GameObject UI;
     public GameObject UnlockUI;
     public GameObject OpenUI;
-    public GameObject Hint;
     public bool isLocked = false;
     public bool isClosed = true;
-    public LayerMask playerLayer;
     public int UnseenAreaIndex = 0;
     private InputManager input;
     private Renderer shader;
     private static bool Yes = false;
     private static bool No = false;
     private bool UnlockOrOpen = true;
-    private int shaderID;
-    private Material mat;
-    public float maxEffectStrength = 0.04f;
 
-    private void OnEnable()
-    {
-        shader = ClosedDoor.GetComponent<Renderer>();
-        mat = shader.material;
-        shaderID = Shader.PropertyToID("Vector1_4C8E13CA");
-        mat.SetFloat(shaderID, 0);
-    }
     private void Start()
     {
         input = PlayerManager.instance.input;
     }
-
-    private void OnTriggerEnter2D(Collider2D collision)
-    {
-        if (isClosed && ((1 << collision.gameObject.layer) & playerLayer) != 0)
-        {
-            mat.SetFloat(shaderID, maxEffectStrength);
-            Hint.SetActive(true);
-            StopWaiting = false;
-        }
-    }
+    
     bool StopWaiting = false;
-    private void OnTriggerExit2D(Collider2D collision)
-    {
-        if (((1 << collision.gameObject.layer) & playerLayer) != 0)
-        {
-            mat.SetFloat(shaderID, 0);
-            Hint.SetActive(false);
-            UI.SetActive(false);
-            StopWaiting = true;
-        }
-    }
-
-    private void OnTriggerStay2D(Collider2D collision)
-    {
-        if (((1 << collision.gameObject.layer) & playerLayer) != 0)
-        {
-            if (input.GetKeyDown(InputAction.Interact) && isClosed)
-            {
-                if (isLocked)
-                {
-                    //Check whether player has the key
-                    if (true)
-                    {
-                        QueryToUnlockDoor();
-                    }
-                }
-                else
-                {
-                    QueryToOpenDoor();
-                }
-            }
-        }
-    }
-
-    private void QueryToUnlockDoor()
+    
+    
+    public void QueryToUnlockDoor(OnInteract interact)
     {
         UI.SetActive(true);
         UnlockOrOpen = true;
-        StartCoroutine(nameof(WaitForRespone));
+        StartCoroutine(WaitForRespone(interact));
     }
 
-    private void QueryToOpenDoor()
+    public void QueryToOpenDoor(OnInteract interact)
     {
         UI.SetActive(true);
         UnlockOrOpen = false;
-        StartCoroutine(nameof(WaitForRespone));
+        StartCoroutine(WaitForRespone(interact));
     }
 
     public void SetState(bool s)
     {
         if(s)
         {
-            CloseDoor();
+            CloseDoor(null);
         }
         else
         {
-            OpenDoor();
+            OpenDoor(null);
         }
+        StartCoroutine(WaitForRespone(null));
     }
-
-    private void OpenDoor()
+    
+    public void OpenDoor([CanBeNull]OnInteract interact)
     {
         OpenedDoor.SetActive(true);
         ClosedDoor.SetActive(false);
         isClosed = false;
-        Hint.SetActive(false);
         if(UnseenAreaIndex>=0)
         {
             CameraController.instance.UnseenAreas[UnseenAreaIndex].enable = false;
         }
     }
 
-    private void CloseDoor()
+    private void CloseDoor([CanBeNull]OnInteract interact)
     {
         OpenedDoor.SetActive(false);
         ClosedDoor.SetActive(true);
         isClosed = true;
+        CameraController.instance.UnseenAreas[UnseenAreaIndex].enable = false;
+        if(interact != null) interact.SetEventDone(transform);
     }
 
-    IEnumerator WaitForRespone()
+    IEnumerator WaitForRespone([CanBeNull]OnInteract interact)
     {
         if (UnlockOrOpen)
         {
@@ -146,7 +97,7 @@ public class Door : MonoBehaviour
             if(Yes)
             {
                 UnlockUI.SetActive(false);
-                OpenDoor();
+                OpenDoor(interact);
                 CameraController.instance.StartCameraMovement(0);
             }
         }
@@ -155,12 +106,13 @@ public class Door : MonoBehaviour
             if (Yes)
             {
                 OpenUI.SetActive(false);
-                OpenDoor();
+                OpenDoor(interact);
             }
         }
         Yes = false;
         No = false;
         UI.SetActive(false);
+        if(isClosed) interact.SetEventDone(false);
     }
 
 

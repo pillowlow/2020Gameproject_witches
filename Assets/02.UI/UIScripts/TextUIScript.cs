@@ -40,7 +40,7 @@ public class TextUIScript : MonoBehaviour
                 index = 0;
                 if (Instance)
                 {
-                    Instance.SetEventDone();
+                    Instance.SetEventDone(true);
                     Instance = null;
                 }
             }
