@@ -170,9 +170,9 @@ namespace AnyPortrait
 			for (int i = 0; i < _nLUT; i++)
 			{
 				curUnit = _LUT[i];
-				curUnit._resultMatrix.SetMatrix(_parentTransform._vertMeshWorldNoModInverseMatrix);
-				curUnit._resultMatrix.Multiply(curUnit._linkedBone._vertWorld2BoneModWorldMatrix);
-				curUnit._resultMatrix.Multiply(_parentTransform._vertMeshWorldNoModMatrix);
+				curUnit._resultMatrix.SetMatrix(ref _parentTransform._vertMeshWorldNoModInverseMatrix);
+				curUnit._resultMatrix.Multiply(ref curUnit._linkedBone._vertWorld2BoneModWorldMatrix);
+				curUnit._resultMatrix.Multiply(ref _parentTransform._vertMeshWorldNoModMatrix);
 			}
 		}
 

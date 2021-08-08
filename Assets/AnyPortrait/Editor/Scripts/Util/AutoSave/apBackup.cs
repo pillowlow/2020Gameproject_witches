@@ -592,8 +592,15 @@ namespace AnyPortrait
 
 									if (_async_SubProcessIndex >= 1)
 									{
-										_async_FileStream = new FileStream(_autoSave_FilePath, FileMode.Create, FileAccess.Write);
-										_async_StreamWriter = new StreamWriter(_async_FileStream);
+										//이전
+										//_async_FileStream = new FileStream(_autoSave_FilePath, FileMode.Create, FileAccess.Write);
+										//_async_StreamWriter = new StreamWriter(_async_FileStream);
+
+										//변경 21.7.3 : 경로 + 인코딩 문제
+										_async_FileStream = new FileStream(apUtil.ConvertEscapeToPlainText(_autoSave_FilePath), FileMode.Create, FileAccess.Write);
+										_async_StreamWriter = new StreamWriter(_async_FileStream, System.Text.Encoding.UTF8);
+
+
 
 										_async_StreamWriter.WriteLine(apVersion.I.APP_VERSION_INT + "");
 										_async_StreamWriter.WriteLine(_autoSave_PortraitName);
@@ -954,9 +961,13 @@ namespace AnyPortrait
 			StreamWriter sw = null;
 			try
 			{
-				
-				fs = new FileStream(filePath, FileMode.Create, FileAccess.Write);
-				sw = new StreamWriter(fs);
+				//이전
+				//fs = new FileStream(filePath, FileMode.Create, FileAccess.Write);
+				//sw = new StreamWriter(fs);
+
+				//변경 21.7.3 : 경로 + 인코딩 문제
+				fs = new FileStream(apUtil.ConvertEscapeToPlainText(filePath), FileMode.Create, FileAccess.Write);
+				sw = new StreamWriter(fs, System.Text.Encoding.UTF8);
 
 				sw.WriteLine(apVersion.I.APP_VERSION_INT + "");
 				sw.WriteLine(targetPortrait.name);
@@ -1257,8 +1268,13 @@ namespace AnyPortrait
 
 			try
 			{
-				fs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-				sr = new StreamReader(fs);
+				//이전
+				//fs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+				//sr = new StreamReader(fs);
+
+				//변경 21.7.3 : 경로 + 인코딩 문제
+				fs = new FileStream(apUtil.ConvertEscapeToPlainText(filePath), FileMode.Open, FileAccess.Read);
+				sr = new StreamReader(fs, System.Text.Encoding.UTF8, true);
 
 				//일단 리스트로 모두 파싱하자
 				List<apBackupUnit> parsedUnit = new List<AnyPortrait.apBackupUnit>();
@@ -1786,7 +1802,11 @@ namespace AnyPortrait
 										monoType.Equals(typeof(apModifier_Physic)) ||
 										monoType.Equals(typeof(apModifier_Rigging)) ||
 										monoType.Equals(typeof(apModifier_TF)) ||
-										monoType.Equals(typeof(apModifier_Volume)))
+										monoType.Equals(typeof(apModifier_Volume)) ||
+										//추가 21.7.21
+										monoType.Equals(typeof(apModifier_ColorOnly)) ||
+										monoType.Equals(typeof(apModifier_AnimatedColorOnly))
+										)
 									{
 										groupGameObject = targetPortrait._subObjectGroup_Modifier;
 									}

@@ -245,7 +245,8 @@ namespace AnyPortrait
 
 						string relativePath = baseUri.MakeRelativeUri(targetUri).ToString();
 
-						_editor._bonePose_BaseFolderName = relativePath;
+
+						_editor._bonePose_BaseFolderName = apUtil.ConvertEscapeToPlainText(relativePath);//변경 21.7.3 : 이스케이프 문자 삭제
 						
 						apEditorUtil.SetEditorDirty();
 

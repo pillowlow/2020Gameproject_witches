@@ -65,8 +65,13 @@ namespace AnyPortrait
 			{
 				MakeReservedPresets();//Reserved가 추가되지 않았으면 자동으로 미리 추가하자
 
-				fs = new FileStream(filePath, FileMode.Create, FileAccess.Write);
-				sw = new StreamWriter(fs);
+				//이전
+				//fs = new FileStream(filePath, FileMode.Create, FileAccess.Write);
+				//sw = new StreamWriter(fs);
+
+				//변경 21.7.3 : 경로 + 인코딩 문제
+				fs = new FileStream(apUtil.ConvertEscapeToPlainText(filePath), FileMode.Create, FileAccess.Write);
+				sw = new StreamWriter(fs, System.Text.Encoding.UTF8);
 
 				for (int i = 0; i < _units.Count; i++)
 				{
@@ -125,8 +130,13 @@ namespace AnyPortrait
 			{
 				MakeReservedPresets();//Reserved가 추가되지 않았으면 자동으로 미리 추가하자
 
-				fs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-				sr = new StreamReader(fs);
+				//이전
+				//fs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+				//sr = new StreamReader(fs);
+
+				//변경 21.7.3 : 경로 문제와 인코딩 문제
+				fs = new FileStream(apUtil.ConvertEscapeToPlainText(filePath), FileMode.Open, FileAccess.Read);
+				sr = new StreamReader(fs, System.Text.Encoding.UTF8, true);
 
 				List<string> strData = new List<string>();
 				//유효한 데이터를 긁어온 후,
@@ -703,33 +713,33 @@ namespace AnyPortrait
 					else if (strKey == "SMX")
 					{
 						//sw.WriteLine("STR" + _stretchRange);
-						_stretchRange_Max = float.Parse(strValue);
+						_stretchRange_Max = apUtil.ParseFloat(strValue);
 					}
 					else if (strKey == "MRG")
 					{
 						//sw.WriteLine("STR" + _stretchRange);
-						_moveRange = float.Parse(strValue);
+						_moveRange = apUtil.ParseFloat(strValue);
 					}
 					else if (strKey == "STK")
 					{
 						//sw.WriteLine("STK" + _stretchK);
-						_stretchK = float.Parse(strValue);
+						_stretchK = apUtil.ParseFloat(strValue);
 					}
 					else if (strKey == "INK")
 					{
 						//sw.WriteLine("INK" + _inertiaK);
-						_inertiaK = float.Parse(strValue);
+						_inertiaK = apUtil.ParseFloat(strValue);
 					}
 					else if (strKey == "DMP")
 					{
 						//sw.WriteLine("DMP" + _damping);
-						_damping = float.Parse(strValue);
+						_damping = apUtil.ParseFloat(strValue);
 
 					}
 					else if (strKey == "MSS")
 					{
 						//sw.WriteLine("MSS" + _mass);
-						_mass = float.Parse(strValue);
+						_mass = apUtil.ParseFloat(strValue);
 					}
 					else if (strKey == "GPT")
 					{
@@ -739,12 +749,12 @@ namespace AnyPortrait
 					else if (strKey == "GVX")
 					{
 						//sw.WriteLine("GVX" + _gravityConstValue.x);
-						_gravityConstValue.x = float.Parse(strValue);
+						_gravityConstValue.x = apUtil.ParseFloat(strValue);
 					}
 					else if (strKey == "GVY")
 					{
 						//sw.WriteLine("GVY" + _gravityConstValue.y);
-						_gravityConstValue.y = float.Parse(strValue);
+						_gravityConstValue.y = apUtil.ParseFloat(strValue);
 					}
 					else if (strKey == "WPT")
 					{
@@ -754,38 +764,38 @@ namespace AnyPortrait
 					else if (strKey == "WVX")
 					{
 						//sw.WriteLine("WVX" + _windConstValue.x);
-						_windConstValue.x = float.Parse(strValue);
+						_windConstValue.x = apUtil.ParseFloat(strValue);
 					}
 					else if (strKey == "WVY")
 					{
 						//sw.WriteLine("WVY" + _windConstValue.y);
-						_windConstValue.y = float.Parse(strValue);
+						_windConstValue.y = apUtil.ParseFloat(strValue);
 					}
 					else if (strKey == "WRX")
 					{
 						//sw.WriteLine("WRX" + _windRandomRange.x);
-						_windRandomRange.x = float.Parse(strValue);
+						_windRandomRange.x = apUtil.ParseFloat(strValue);
 
 					}
 					else if (strKey == "WRY")
 					{
 						//sw.WriteLine("WRY" + _windRandomRange.y);
-						_windRandomRange.y = float.Parse(strValue);
+						_windRandomRange.y = apUtil.ParseFloat(strValue);
 					}
 					else if (strKey == "ADG")
 					{
 						//sw.WriteLine("ADG" + _airDrag);
-						_airDrag = float.Parse(strValue);
+						_airDrag = apUtil.ParseFloat(strValue);
 					}
 					else if (strKey == "VCS")
 					{
 						//sw.WriteLine("VCS" + _viscosity);
-						_viscosity = float.Parse(strValue);
+						_viscosity = apUtil.ParseFloat(strValue);
 					}
 					else if (strKey == "RST")
 					{
 						//sw.WriteLine("RST" + _restoring);
-						_restoring = float.Parse(strValue);
+						_restoring = apUtil.ParseFloat(strValue);
 					}
 					else
 					{

@@ -591,7 +591,12 @@ namespace AnyPortrait
 				{
 					if(isFirstMove)
 					{
-						apEditorUtil.SetRecord_Mesh(apUndoGroupData.ACTION.MeshEdit_AtlasChanged, Editor, Editor.Select.Mesh, Editor.Select.Mesh, false);
+						apEditorUtil.SetRecord_Mesh(	apUndoGroupData.ACTION.MeshEdit_AtlasChanged, 
+														Editor, 
+														Editor.Select.Mesh, 
+														//Editor.Select.Mesh, 
+														false,
+														apEditorUtil.UNDO_STRUCT.ValueOnly);
 					}
 
 					Vector2 inputPosW = apGL.GL2World(mousePos) + selectedMesh._offsetPos;
@@ -811,7 +816,12 @@ namespace AnyPortrait
 											{
 												//Debug.Log("Ctrl");
 												//Undo - Add Edge
-												apEditorUtil.SetRecord_Mesh(apUndoGroupData.ACTION.MeshEdit_AddEdge, Editor, Editor.Select.Mesh, null, false);
+												apEditorUtil.SetRecord_Mesh(	apUndoGroupData.ACTION.MeshEdit_AddEdge, 
+																				Editor, 
+																				Editor.Select.Mesh, 
+																				//null, 
+																				false,
+																				apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 												Editor.Select.Mesh.MakeNewEdge(prevSelectedVert, nearestVert, isShift);
 												isAnyAddVertOrMesh = true;
@@ -857,7 +867,12 @@ namespace AnyPortrait
 													&& Editor.VertController.Vertex != null)
 												{
 													//Undo - Add Edge
-													apEditorUtil.SetRecord_Mesh(apUndoGroupData.ACTION.MeshEdit_AddEdge, Editor, Editor.Select.Mesh, null, false);
+													apEditorUtil.SetRecord_Mesh(	apUndoGroupData.ACTION.MeshEdit_AddEdge, 
+																					Editor, 
+																					Editor.Select.Mesh, 
+																					//null, 
+																					false,
+																					apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 													Editor.Select.Mesh.MakeNewEdge(prevSelectedVert, Editor.VertController.Vertex, isShift);
 													isAnyAddVertOrMesh = true;
@@ -891,7 +906,12 @@ namespace AnyPortrait
 										if (Editor.VertController.Vertex == null)
 										{
 											//Undo - Vertex 추가
-											apEditorUtil.SetRecord_Mesh(apUndoGroupData.ACTION.MeshEdit_AddVertex, Editor, Editor.Select.Mesh, null, false);
+											apEditorUtil.SetRecord_Mesh(	apUndoGroupData.ACTION.MeshEdit_AddVertex, 
+																			Editor, 
+																			Editor.Select.Mesh, 
+																			//null, 
+																			false,
+																			apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 											// <<< 버텍스 추가 >>>
 											Vector2 mouseWorld = apGL.GL2World(mousePos) + Editor.Select.Mesh._offsetPos;
@@ -987,7 +1007,12 @@ namespace AnyPortrait
 										if (_isHiddenEdgeTurnable)
 										{
 											//Undo - Vertex 추가
-											apEditorUtil.SetRecord_Mesh(apUndoGroupData.ACTION.MeshEdit_EditEdge, Editor, Editor.Select.Mesh, null, false);
+											apEditorUtil.SetRecord_Mesh(	apUndoGroupData.ACTION.MeshEdit_EditEdge, 
+																			Editor, 
+																			Editor.Select.Mesh, 
+																			//null, 
+																			false,
+																			apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 											//아무것도 선택하지 않았다면..
 											//Hidden Edge의 Trun을 한번 해보자
@@ -1045,7 +1070,12 @@ namespace AnyPortrait
 									{
 										//Debug.Log("Start Vertex Edit");
 										//Undo - MeshEdit Vertex Pos Changed
-										apEditorUtil.SetRecord_Mesh(apUndoGroupData.ACTION.MeshEdit_EditVertex, Editor, Editor.Select.Mesh, Editor.VertController.Vertex, false);
+										apEditorUtil.SetRecord_Mesh(	apUndoGroupData.ACTION.MeshEdit_EditVertex, 
+																		Editor, 
+																		Editor.Select.Mesh, 
+																		//Editor.VertController.Vertex, 
+																		false,
+																		apEditorUtil.UNDO_STRUCT.ValueOnly);
 									}
 								}
 							}
@@ -1097,7 +1127,12 @@ namespace AnyPortrait
 
 									//버텍스 이동
 									//Undo - MeshEdit Vertex Pos Changed
-									apEditorUtil.SetRecord_Mesh(apUndoGroupData.ACTION.MeshEdit_EditVertex, Editor, Editor.Select.Mesh, Editor.VertController.Vertex, false);
+									//apEditorUtil.SetRecord_Mesh(	apUndoGroupData.ACTION.MeshEdit_EditVertex, 
+									//								Editor, 
+									//								Editor.Select.Mesh, 
+									//								//Editor.VertController.Vertex, 
+									//								true,
+									//								apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 									Vector2 prevPos = Editor.VertController.Vertex._pos;
 									Vector2 nextPos = apGL.GL2World(mousePos) + Editor.Select.Mesh._offsetPos;
@@ -1192,7 +1227,13 @@ namespace AnyPortrait
 										if (IsVertexClickable(posGL, mousePos))
 										{
 											// Undo - MeshEdit_VertexRemoved
-											apEditorUtil.SetRecord_Mesh(apUndoGroupData.ACTION.MeshEdit_RemoveVertex, Editor, Editor.Select.Mesh, vertex, false);
+											apEditorUtil.SetRecord_Mesh(	apUndoGroupData.ACTION.MeshEdit_RemoveVertex, 
+																			Editor, 
+																			Editor.Select.Mesh, 
+																			//vertex, 
+																			false,
+																			apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 
 											Editor.Select.Mesh.RemoveVertex(vertex, isShift);
 
@@ -1263,7 +1304,13 @@ namespace AnyPortrait
 										{
 											//삭제합시더
 											// Undo - MeshEdit_EdgeRemoved
-											apEditorUtil.SetRecord_Mesh(apUndoGroupData.ACTION.MeshEdit_RemoveEdge, Editor, Editor.Select.Mesh, selectEdge, false);
+											apEditorUtil.SetRecord_Mesh(	apUndoGroupData.ACTION.MeshEdit_RemoveEdge, 
+																			Editor, 
+																			Editor.Select.Mesh, 
+																			//selectEdge, 
+																			false,
+																			apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 
 											Editor.Select.Mesh.RemoveEdge(selectEdge);
 											isVertEdgeRemovalble = false;
@@ -2128,7 +2175,13 @@ namespace AnyPortrait
 					linkedMeshGroups.Add(meshGroup);
 				}
 			}
-			apEditorUtil.SetRecord_MeshAndMeshGroups(apUndoGroupData.ACTION.MeshEdit_SetPivot, Editor, mesh, linkedMeshGroups, mesh, false);
+			apEditorUtil.SetRecord_MeshAndMeshGroups(	apUndoGroupData.ACTION.MeshEdit_SetPivot, 
+														Editor, 
+														mesh, 
+														linkedMeshGroups, 
+														//mesh, 
+														false,
+														apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 			Vector2 prevOffset = mesh._offsetPos;
 			apMatrix3x3 prevOffsetMatrix = apMatrix3x3.TRS(new Vector2(-prevOffset.x, -prevOffset.y), 0, Vector2.one);
@@ -2151,7 +2204,8 @@ namespace AnyPortrait
 				for (int iMesh = 0; iMesh < meshTransforms.Count; iMesh++)
 				{
 					apTransform_Mesh meshTF = meshTransforms[iMesh];
-					prevDefaultMatrix.SetMatrix(meshTF._matrix.MtrxToSpace);
+					//prevDefaultMatrix.SetMatrix(meshTF._matrix.MtrxToSpace);
+					prevDefaultMatrix.SetMatrix(ref meshTF._matrix._mtrxToSpace);
 
 					float newPosX = prevDefaultMatrix._m00 * (prevOffsetMatrix._m02 - nextOffsetMatrix._m02)
 									+ prevDefaultMatrix._m01 * (prevOffsetMatrix._m12 - nextOffsetMatrix._m12)
@@ -3919,7 +3973,12 @@ namespace AnyPortrait
 			}
 
 			//Undo - Add Image
-			apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Main_AddImage, Editor, Editor._portrait, null, false);
+			apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Main_AddImage, 
+												Editor, 
+												Editor._portrait, 
+												//null, 
+												false,
+												apEditorUtil.UNDO_STRUCT.StructChanged);
 
 			//apTextureData newTexture = new apTextureData(Editor._portrait._textureData.Count);
 
@@ -4972,7 +5031,12 @@ namespace AnyPortrait
 
 			if (isUndoRecord)
 			{
-				apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.PSDSet_AddNewPSDSet, Editor, Editor._portrait, Editor._portrait, false);
+				apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.PSDSet_AddNewPSDSet, 
+													Editor, 
+													Editor._portrait, 
+													//Editor._portrait, 
+													false,
+													apEditorUtil.UNDO_STRUCT.StructChanged);
 			}
 
 
@@ -5453,7 +5517,12 @@ namespace AnyPortrait
 			apMesh mesh = Editor.Select.Mesh;
 			apTextureData textureData = Editor.Select.Mesh.LinkedTextureData;
 
-			apEditorUtil.SetRecord_Mesh(apUndoGroupData.ACTION.MeshEdit_VertexCopied, Editor, mesh, mesh, false);
+			apEditorUtil.SetRecord_Mesh(	apUndoGroupData.ACTION.MeshEdit_VertexCopied, 
+											Editor, 
+											mesh, 
+											//mesh,
+											false,
+											apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 			//Vector2 meshOffset = mesh._offsetPos;
 			//Vector2 imageHalfOffset = new Vector2(textureData._width * 0.5f, textureData._height * 0.5f);
@@ -5600,7 +5669,12 @@ namespace AnyPortrait
 				return;
 			}
 
-			apEditorUtil.SetRecord_Mesh(apUndoGroupData.ACTION.MeshEdit_VertexMoved, Editor, mesh, mesh, true);
+			apEditorUtil.SetRecord_Mesh(	apUndoGroupData.ACTION.MeshEdit_VertexMoved, 
+											Editor, 
+											mesh, 
+											//mesh, 
+											true,
+											apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 			apVertex vert = null;
 			float minX = 0.0f;
@@ -5798,7 +5872,12 @@ namespace AnyPortrait
 			if (iBtn == 0)
 			{
 				//Undo
-				apEditorUtil.SetRecord_Mesh(apUndoGroupData.ACTION.MeshEdit_RemoveAllVertices, Editor, mesh, null, false);
+				apEditorUtil.SetRecord_Mesh(	apUndoGroupData.ACTION.MeshEdit_RemoveAllVertices, 
+												Editor, 
+												mesh, 
+												//null, 
+												false,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 				mesh._vertexData.Clear();
 				mesh._indexBuffer.Clear();
@@ -5819,7 +5898,12 @@ namespace AnyPortrait
 			{
 				//추가 21.3.4 : PSD 파일에서 처음 열때 바로 메시 생성 가능
 				//Generate 버튼
-				apEditorUtil.SetRecord_Mesh(apUndoGroupData.ACTION.MeshEdit_AutoGen, Editor, mesh, null, false);
+				apEditorUtil.SetRecord_Mesh(	apUndoGroupData.ACTION.MeshEdit_AutoGen, 
+												Editor, 
+												mesh, 
+												//null, 
+												false,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 				if (mesh._vertexData.Count > 0)
 				{
@@ -5895,7 +5979,12 @@ namespace AnyPortrait
 		public void AddParam()
 		{
 			//Undo - Add Param
-			apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Main_AddParam, Editor, Editor._portrait, null, false);
+			apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Main_AddParam, 
+												Editor, 
+												Editor._portrait, 
+												//null, 
+												false,
+												apEditorUtil.UNDO_STRUCT.StructChanged);
 
 
 			//int iNextIndex = Editor._portrait.MakeUniqueID_ControlParam();
@@ -5941,6 +6030,88 @@ namespace AnyPortrait
 			Editor.OnAnyObjectAddedOrRemoved();
 		}
 
+
+
+		//추가 21.6.13 : 파라미터 복사하기
+		public apControlParam DuplicateParam(apControlParam srcParam)
+		{
+			if(srcParam == null)
+			{
+				return null;
+			}
+
+			//Undo - Add Param
+			apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.ControlParam_Duplicated, 
+												Editor, 
+												Editor._portrait, 
+												//null, 
+												false,
+												apEditorUtil.UNDO_STRUCT.StructChanged);
+
+
+			//int iNextIndex = Editor._portrait.MakeUniqueID_ControlParam();
+			string nextName = srcParam._keyName + " Copy";
+
+			if(Editor.ParamControl.FindParam(nextName) != null)
+			{
+				//"기존 이름 + Copy"가 겹친다. 숫자를 넣어서 겹치지 않는 이름을 찾자
+				int iNextIndex = 1;
+
+				while (true)
+				{
+					nextName = srcParam._keyName + " Copy (" + iNextIndex + ")";
+					apControlParam existParam = Editor.ParamControl.FindParam(nextName);
+					if (existParam != null)
+					{
+						iNextIndex++;
+					}
+					else
+					{
+						break;
+					}
+				}
+			}
+
+			
+			Editor.ParamControl.Ready(Editor._portrait);
+			apControlParam newParam = Editor.ParamControl.AddParam_Float(nextName, false, apControlParam.CATEGORY.Etc, 0.0f);
+			if (newParam == null)
+			{
+				EditorUtility.DisplayDialog(
+									Editor.GetText(TEXT.DemoLimitation_Title),
+									Editor.GetText(TEXT.DemoLimitation_Body_AddParam),
+									Editor.GetText(TEXT.Okay)
+									);
+				return null;
+			}
+
+			newParam.Ready(Editor._portrait);
+
+
+			newParam.CopyFromControlParamWithoutName(srcParam);
+
+
+			//if (newParam != null)
+			//{
+			//	Editor.Select.SetParam(newParam);
+			//}
+
+			//Editor.Hierarchy.RefreshUnits();
+			Editor.RefreshControllerAndHierarchy(false);
+
+			//Param Hierarchy Filter를 활성화한다.
+			Editor.SetHierarchyFilter(apEditor.HIERARCHY_FILTER.Param, true);
+
+			//4.1 추가된 데이터가 있으면 일단 호출한다.
+			Editor.OnAnyObjectAddedOrRemoved();
+
+			return newParam;
+		}
+
+
+
+
+
 		public void ChangeParamName(apControlParam cParam, string strNextName)
 		{
 			if (Editor._portrait == null)
@@ -5951,31 +6122,14 @@ namespace AnyPortrait
 
 			//string prevName = cParam._keyName;
 
-			apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.ControlParam_SettingChanged, Editor, Editor._portrait, null, false);
+			apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.ControlParam_SettingChanged, 
+												Editor, 
+												Editor._portrait, 
+												//null, 
+												false,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 
-			#region [미사용 코드] string 값으로 Param을 저장했을때의 코드(지금은 int형 ID)
-			//for (int iMeshGroup = 0; iMeshGroup < Editor._portrait._meshGroups.Count; iMeshGroup++)
-			//{
-			//	apMeshGroup meshGroup = Editor._portrait._meshGroups[iMeshGroup];
-			//	for (int iMod = 0; iMod < meshGroup._modifierStack._modifiers.Count; iMod++)
-			//	{
-			//		apModifierBase mod = meshGroup._modifierStack._modifiers[iMod];
-
-			//		for (int iParamSetGroup = 0; iParamSetGroup < mod._paramSetGroup_controller.Count; iParamSetGroup++)
-			//		{
-			//			apModifierParamSetGroup paramSetGroup = mod._paramSetGroup_controller[iParamSetGroup];
-
-			//			//같다면 이름을 바꾸자
-			//			if(paramSetGroup._keyControlParam != null && 
-			//				paramSetGroup._keyControlParam == cParam)
-			//			{
-			//				paramSetGroup._keyControlParamName = strNextName;
-			//			}
-			//		}
-			//	}
-			//} 
-			#endregion
-
+			
 			cParam._keyName = strNextName;
 			Editor.RefreshControllerAndHierarchy(false);
 		}
@@ -6019,7 +6173,12 @@ namespace AnyPortrait
 			{
 				return;
 			}
-			apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.ControlParam_SettingChanged, Editor, Editor._portrait, cParam, false);
+			apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.ControlParam_SettingChanged, 
+												Editor, 
+												Editor._portrait, 
+												//cParam,
+												false,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 			//이름이 겹치는 건 피해야한다.
 			string nextName = preset._keyName;
@@ -6073,7 +6232,12 @@ namespace AnyPortrait
 			if (isSetRecord)
 			{
 				//Undo - Add Animation
-				apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Main_AddAnimation, Editor, Editor._portrait, null, false);
+				apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Main_AddAnimation, 
+													Editor, 
+													Editor._portrait, 
+													//null, 
+													false,
+													apEditorUtil.UNDO_STRUCT.StructChanged);
 			}
 
 			//int iNextIndex = Editor._portrait.MakeUniqueID_AnimClip();
@@ -6195,7 +6359,12 @@ namespace AnyPortrait
 
 
 			//Undo - Anim Clip 복사
-			apEditorUtil.SetRecord_PortraitAllMeshGroupAndAllModifiers(apUndoGroupData.ACTION.Anim_DupAnimClip, Editor, Editor._portrait, null, false);
+			apEditorUtil.SetRecord_PortraitAllMeshGroupAndAllModifiers(	apUndoGroupData.ACTION.Anim_DupAnimClip, 
+																		Editor, 
+																		Editor._portrait, 
+																		//null, 
+																		false,
+																		apEditorUtil.UNDO_STRUCT.StructChanged);
 
 			//일단 복사
 			apAnimClip dupAnimClip = AddAnimClip(true);
@@ -6949,7 +7118,13 @@ namespace AnyPortrait
 			}
 
 			//Undo
-			apEditorUtil.SetRecord_PortraitMeshGroupAndAllModifiers(apUndoGroupData.ACTION.Anim_ImportAnimClip, Editor, Editor._portrait, targetMeshGroup, null, false);
+			apEditorUtil.SetRecord_PortraitMeshGroupAndAllModifiers(	apUndoGroupData.ACTION.Anim_ImportAnimClip, 
+																		Editor, 
+																		Editor._portrait, 
+																		targetMeshGroup, 
+																		//null, 
+																		false,
+																		apEditorUtil.UNDO_STRUCT.StructChanged);
 
 
 			//유효한 리스트만 정리한다. (타임라인레이어는 따로 정리해야한다.)
@@ -7449,7 +7624,13 @@ namespace AnyPortrait
 			//Timeline을 추가해야한다.
 			if (isSetRecordAndRefresh)
 			{
-				apEditorUtil.SetRecord_PortraitMeshGroupAndAllModifiers(apUndoGroupData.ACTION.Anim_AddTimeline, Editor, Editor._portrait, targetAnimClip._targetMeshGroup, null, false);
+				apEditorUtil.SetRecord_PortraitMeshGroupAndAllModifiers(	apUndoGroupData.ACTION.Anim_AddTimeline, 
+																			Editor, 
+																			Editor._portrait, 
+																			targetAnimClip._targetMeshGroup, 
+																			//null, 
+																			false,
+																			apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 			int nextTimelineID = Editor._portrait.MakeUniqueID(apIDManager.TARGET.AnimTimeline);
@@ -7589,8 +7770,9 @@ namespace AnyPortrait
 																		Editor._portrait,
 																		parentTimeline._parentAnimClip._targetMeshGroup,
 																		parentTimeline._linkedModifier,
-																		null,
-																		false
+																		//null,
+																		false,
+																		apEditorUtil.UNDO_STRUCT.StructChanged
 																		);
 				}
 				else
@@ -7599,8 +7781,9 @@ namespace AnyPortrait
 																				Editor, 
 																				Editor._portrait, 
 																				parentTimeline._parentAnimClip._targetMeshGroup, 
-																				null, 
-																				false);
+																				//null, 
+																				false,
+																				apEditorUtil.UNDO_STRUCT.StructChanged);
 				}
 				
 			}
@@ -7838,7 +8021,13 @@ namespace AnyPortrait
 			if (isRecordAndRefresh)
 			{
 				//Undo - Add TimelineLayer
-				apEditorUtil.SetRecord_PortraitMeshGroupAndAllModifiers(apUndoGroupData.ACTION.Anim_AddTimelineLayer, Editor, Editor._portrait, parentTimeline._parentAnimClip._targetMeshGroup, null, false);
+				apEditorUtil.SetRecord_PortraitMeshGroupAndAllModifiers(	apUndoGroupData.ACTION.Anim_AddTimelineLayer, 
+																			Editor, 
+																			Editor._portrait, 
+																			parentTimeline._parentAnimClip._targetMeshGroup, 
+																			//null, 
+																			false,
+																			apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 
@@ -8073,7 +8262,13 @@ namespace AnyPortrait
 			}
 
 			//Undo - Add TimelineLayer
-			apEditorUtil.SetRecord_PortraitMeshGroupAndAllModifiers(apUndoGroupData.ACTION.Anim_AddTimelineLayer, Editor, Editor._portrait, parentMeshGroup, null, false);
+			apEditorUtil.SetRecord_PortraitMeshGroupAndAllModifiers(	apUndoGroupData.ACTION.Anim_AddTimelineLayer, 
+																		Editor, 
+																		Editor._portrait, 
+																		parentMeshGroup, 
+																		//null, 
+																		false,
+																		apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 			List<object> targetObjects = new List<object>();
 
@@ -8604,7 +8799,11 @@ namespace AnyPortrait
 				apEditorUtil.SetRecord_PortraitMeshGroupModifier(apUndoGroupData.ACTION.Anim_AddKeyframe, Editor,
 																	Editor._portrait,
 																	parentLayer._parentAnimClip._targetMeshGroup,
-																	parentLayer._parentTimeline._linkedModifier, null, false);
+																	parentLayer._parentTimeline._linkedModifier, 
+																	//null, 
+																	false,
+																	apEditorUtil.UNDO_STRUCT.ValueOnly
+																	);
 			}
 
 			apAnimKeyframe existFrame = parentLayer.GetKeyframeByFrameIndex(targetFrame);
@@ -8729,7 +8928,10 @@ namespace AnyPortrait
 					//모든 타임라인 체크
 					apEditorUtil.SetRecord_PortraitMeshGroupAndAllModifiers(apUndoGroupData.ACTION.Anim_AddKeyframe, Editor,
 																	Editor._portrait,
-																	animClip._targetMeshGroup, null, false);
+																	animClip._targetMeshGroup, 
+																	//null, 
+																	false,
+																	apEditorUtil.UNDO_STRUCT.ValueOnly);
 				}
 				else
 				{
@@ -8737,7 +8939,10 @@ namespace AnyPortrait
 					apEditorUtil.SetRecord_PortraitMeshGroupModifier(apUndoGroupData.ACTION.Anim_AddKeyframe, Editor,
 																	Editor._portrait,
 																	animClip._targetMeshGroup,
-																	commonTimeline._linkedModifier, null, false);
+																	commonTimeline._linkedModifier, 
+																	//null, 
+																	false,
+																	apEditorUtil.UNDO_STRUCT.ValueOnly);
 				}
 				
 			}
@@ -8832,7 +9037,9 @@ namespace AnyPortrait
 																	Editor._portrait,
 																	parentLayer._parentAnimClip._targetMeshGroup,
 																	parentLayer._parentTimeline._linkedModifier,
-																	null, false);
+																	//null, 
+																	false,
+																	apEditorUtil.UNDO_STRUCT.StructChanged);
 			}
 
 			int nextKeyframeID = Editor._portrait.MakeUniqueID(apIDManager.TARGET.AnimKeyFrame);
@@ -8984,7 +9191,10 @@ namespace AnyPortrait
 			apEditorUtil.SetRecord_PortraitMeshGroupAndAllModifiers(apUndoGroupData.ACTION.Anim_AddKeyframe,
 																	Editor,
 																	Editor._portrait,
-																	animClip._targetMeshGroup, null, false);
+																	animClip._targetMeshGroup, 
+																	//null,
+																	false,
+																	apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 
 			List<apAnimKeyframe> resultKeyframes = new List<apAnimKeyframe>();
@@ -9082,11 +9292,14 @@ namespace AnyPortrait
 			if (isSetRecordAndRefresh)
 			{
 				//Undo - Remove Keyframe
-				apEditorUtil.SetRecord_PortraitMeshGroupModifier(apUndoGroupData.ACTION.Anim_RemoveKeyframe,
-					Editor,
-					Editor._portrait,
-					targetMeshGroup,
-					animKeyframe._parentTimelineLayer._parentTimeline._linkedModifier, animKeyframe, false);
+				apEditorUtil.SetRecord_PortraitMeshGroupModifier(	apUndoGroupData.ACTION.Anim_RemoveKeyframe,
+																	Editor,
+																	Editor._portrait,
+																	targetMeshGroup,
+																	animKeyframe._parentTimelineLayer._parentTimeline._linkedModifier, 
+																	//animKeyframe, 
+																	false,
+																	apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 			//ID 반탑
@@ -9145,7 +9358,9 @@ namespace AnyPortrait
 																	Editor,
 																	Editor._portrait,
 																	targetMeshGroup,
-																	null, false);
+																	//null,
+																	false,
+																	apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 			List<apAnimKeyframe> targetKeyframes = new List<apAnimKeyframe>();
@@ -9775,7 +9990,12 @@ namespace AnyPortrait
 			bool isCopyToAllLayers = (iBtn == 1);
 
 			//이건 Modified를 수정하지 않으므로 Portrait만 수정하자
-			apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Anim_KeyframeValueChanged, Editor, Editor._portrait, null, false);
+			apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Anim_KeyframeValueChanged, 
+												Editor, 
+												Editor._portrait, 
+												//null, 
+												false,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 			if (isCopyToAllLayers)
 			{
@@ -9857,7 +10077,10 @@ namespace AnyPortrait
 			//Record
 			apEditorUtil.SetRecord_PortraitMeshGroupAndAllModifiers(apUndoGroupData.ACTION.Anim_CopyKeyframe, Editor,
 																	Editor._portrait,
-																	animClip._targetMeshGroup, animClip, false);
+																	animClip._targetMeshGroup,
+																	//animClip,
+																	false,
+																	apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 			apSnapShot_Keyframe curSnapshot = null;
 			for (int iData = 0; iData < snapshotData.Count; iData++)
@@ -9954,7 +10177,10 @@ namespace AnyPortrait
 			//Record
 			apEditorUtil.SetRecord_PortraitMeshGroupAndAllModifiers(apUndoGroupData.ACTION.Anim_CopyKeyframe, Editor,
 																	Editor._portrait,
-																	targetAnimClip._targetMeshGroup, targetAnimClip, false);
+																	targetAnimClip._targetMeshGroup,
+																	//targetAnimClip,
+																	false,
+																	apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 			apSnapShot_Keyframe curSnapshot = null;
 			for (int iData = 0; iData < snapshotData.Count; iData++)
@@ -10205,7 +10431,12 @@ namespace AnyPortrait
 			//apEditorUtil.SetRecord_PortraitMeshGroupAndAllModifiers(apUndoGroupData.ACTION.Anim_SetMeshGroup, Editor, Editor._portrait, nextMeshGroup, null, false);
 
 			//변경 20.3.19 : 되돌아갈때를 위해서 원래 두개의 메시 그룹과 해당 모든 모디파이어를 저장해야하지만, 그냥 다 하자.
-			apEditorUtil.SetRecord_PortraitAllMeshGroupAndAllModifiers(apUndoGroupData.ACTION.Anim_SetMeshGroup, Editor, Editor._portrait, nextMeshGroup, false);
+			apEditorUtil.SetRecord_PortraitAllMeshGroupAndAllModifiers(	apUndoGroupData.ACTION.Anim_SetMeshGroup, 
+																		Editor, 
+																		Editor._portrait, 
+																		//nextMeshGroup, 
+																		false,
+																		apEditorUtil.UNDO_STRUCT.StructChanged);
 
 			//타임라인 데이터를 유지한 상태에서 소유권을 바꾼다.
 			apMeshGroup prevMeshGroup = animClip._targetMeshGroup;
@@ -10689,6 +10920,8 @@ namespace AnyPortrait
 				return;
 			}
 
+			bool isNeedToNone = Editor.Select.MeshGroup == meshGroup;
+
 			//Undo - Remove MeshGroup
 			//apEditorUtil.SetRecord_PortraitMeshGroupAndAllModifiers(apUndoGroupData.ACTION.Main_RemoveMeshGroup, 
 			//														Editor,
@@ -10760,6 +10993,12 @@ namespace AnyPortrait
 			Editor.OnAnyObjectAddedOrRemoved();
 
 			Editor._portrait.LinkAndRefreshInEditor(true, apUtil.LinkRefresh.Set_AllObjects(null));//<<전체 링크 갱신
+
+			if(isNeedToNone)
+			{
+				Editor.Select.SetNone();
+			}
+
 
 			Editor.Hierarchy.SetNeedReset();
 			Editor.RefreshControllerAndHierarchy(false);
@@ -10891,7 +11130,7 @@ namespace AnyPortrait
 													bool isRoot,
 													bool isDuplicateAnimClip,
 													string undoName = null,
-													bool isRefresh = true)
+													bool isRefresh = true, bool isSkipUndoIncrement = false)
 		{
 			if (apVersion.I.IsDemo)
 			{
@@ -10910,7 +11149,7 @@ namespace AnyPortrait
 
 			try
 			{
-				int undoID = apEditorUtil.SetRecordBeforeCreateOrDestroyMultipleObjects(Editor._portrait, undoName == null ? "Duplicate Mesh Group" : undoName);
+				int undoID = apEditorUtil.SetRecordBeforeCreateOrDestroyMultipleObjects(Editor._portrait, undoName == null ? "Duplicate Mesh Group" : undoName, isSkipUndoIncrement);
 
 				//자식 메시 그룹들도 복사해야한다.
 				
@@ -11313,7 +11552,7 @@ namespace AnyPortrait
 
 		//추가 20.1.17 : MeshTransform과 MeshGroupTransform을 복제하기 (내부에서)
 		//중요 > 단순히 객체를 복사하는건 이미 있지만, Modifier / AnimClip과 연동하는게 필요해서 코드가 길어진다. 힝
-		public apTransform_Mesh DuplicateMeshTransformInSameMeshGroup(apTransform_Mesh srcMeshTransform)
+		public apTransform_Mesh DuplicateMeshTransformInSameMeshGroup(apTransform_Mesh srcMeshTransform, bool isUndoAndRefresh = true)
 		{
 			if (apVersion.I.IsDemo)
 			{
@@ -11370,17 +11609,32 @@ namespace AnyPortrait
 			try
 			{
 				//일단 Undo에 등록
-				if(srcMeshGroupsAll.Count == 1)
+				if (isUndoAndRefresh)
 				{
-					//한개의 MeshGroup만 체크
-					apEditorUtil.SetRecord_PortraitMeshGroupAndAllModifiers(apUndoGroupData.ACTION.MeshGroup_DuplicateMeshTransform, Editor, Editor._portrait, srcMeshGroup, srcMeshTransform, false);
+					if (srcMeshGroupsAll.Count == 1)
+					{
+						//한개의 MeshGroup만 체크
+						apEditorUtil.SetRecord_PortraitMeshGroupAndAllModifiers(	apUndoGroupData.ACTION.MeshGroup_DuplicateMeshTransform, 
+																					Editor, 
+																					Editor._portrait, 
+																					srcMeshGroup, 
+																					//srcMeshTransform, 
+																					false,
+																					apEditorUtil.UNDO_STRUCT.StructChanged);
+					}
+					else
+					{
+						//전부 Undo에 등록
+						apEditorUtil.SetRecord_PortraitAllMeshGroupAndAllModifiers(	apUndoGroupData.ACTION.MeshGroup_DuplicateMeshTransform, 
+																					Editor, 
+																					Editor._portrait, 
+																					//srcMeshTransform, 
+																					false,
+																					apEditorUtil.UNDO_STRUCT.StructChanged);
+					}
+
+					
 				}
-				else
-				{
-					//전부 Undo에 등록
-					apEditorUtil.SetRecord_PortraitAllMeshGroupAndAllModifiers(apUndoGroupData.ACTION.MeshGroup_DuplicateMeshTransform, Editor, Editor._portrait, srcMeshTransform, false);
-				}
-				
 
 				//변환 정보도 하나 만들자
 				MeshGroupDupcliateConvert convertInfo = new MeshGroupDupcliateConvert();
@@ -11811,30 +12065,34 @@ namespace AnyPortrait
 				}
 
 
-				apUtil.LinkRefresh.Set_MeshGroup_AllModifiers(srcMeshGroup);
+				if (isUndoAndRefresh)
+				{
+					Editor.OnAnyObjectAddedOrRemoved(true);
 
-				Editor._portrait.LinkAndRefreshInEditor(true, apUtil.LinkRefresh);
+					apUtil.LinkRefresh.Set_MeshGroup_AllModifiers(srcMeshGroup);
 
-				//Refresh 추가
-				Editor.Select.RefreshAnimEditing(true);
+					Editor._portrait.LinkAndRefreshInEditor(true, apUtil.LinkRefresh);
 
-				//메시 그룹 선택
-				//Editor.Select.SetMeshGroup(newMeshGroup);
-				Editor.Select.MeshGroup.ResetRenderUnits(apUtil.LinkRefresh);
-				Editor.Select.MeshGroup.RefreshModifierLink(apUtil.LinkRefresh);
-				Editor.Select.MeshGroup.SortRenderUnits(true);
+					//Refresh 추가
+					Editor.Select.RefreshAnimEditing(true);
 
-				Editor.Select.SetSubMeshInGroup(dstMeshTransform, apSelection.MULTI_SELECT.Main);
+					//메시 그룹 선택
+					//Editor.Select.SetMeshGroup(newMeshGroup);
+					Editor.Select.MeshGroup.ResetRenderUnits(apUtil.LinkRefresh);
+					Editor.Select.MeshGroup.RefreshModifierLink(apUtil.LinkRefresh);
+					Editor.Select.MeshGroup.SortRenderUnits(true);
 
-				////프리팹이었으면 Apply
-				//apEditorUtil.SetPortraitPrefabApply(Editor._portrait);
+					Editor.Select.SetSubMeshInGroup(dstMeshTransform, apSelection.MULTI_SELECT.Main);
 
-				Editor.ResetHierarchyAll();
-				Editor.RefreshControllerAndHierarchy(true);
-				Editor.Notification(dstMeshTransform._nickName + " is Duplicated", true, false);
+					////프리팹이었으면 Apply
+					//apEditorUtil.SetPortraitPrefabApply(Editor._portrait);
 
-				apEditorUtil.ReleaseGUIFocus();
+					Editor.ResetHierarchyAll();
+					Editor.RefreshControllerAndHierarchy(true);
+					Editor.Notification(dstMeshTransform._nickName + " is Duplicated", true, false);
 
+					apEditorUtil.ReleaseGUIFocus();
+				}
 				return dstMeshTransform;
 			}
 			catch (Exception ex)
@@ -11848,7 +12106,7 @@ namespace AnyPortrait
 
 
 		//추가 20.1.18 : MeshGroupTransform 복제하기 (내부에서)
-		public apTransform_MeshGroup DuplicateMeshGroupTransformInSameMeshGroup(apTransform_MeshGroup srcMeshGroupTransform)
+		public apTransform_MeshGroup DuplicateMeshGroupTransformInSameMeshGroup(apTransform_MeshGroup srcMeshGroupTransform, bool isUndoAndRefresh = true)
 		{
 			if (apVersion.I.IsDemo)
 			{
@@ -11915,7 +12173,10 @@ namespace AnyPortrait
 			{
 				MeshGroupDupcliateConvert convertInfo = new MeshGroupDupcliateConvert();
 
-				apMeshGroup dstLinkedMeshGroup = DuplicateMeshGroup(srcLinkedMeshGroup, convertInfo, true, false, "Duplicate MeshGroup Transform", false);
+				//여기서 Undo가 된다.
+				bool isSkipUndoIncrement = isUndoAndRefresh ? false : true;//Undo를 요청하지 않았다면 MeshGroup을 Duplicate할 때 UndoGroup을 증가시키지 않는다.
+
+				apMeshGroup dstLinkedMeshGroup = DuplicateMeshGroup(srcLinkedMeshGroup, convertInfo, true, false, "Duplicate MeshGroup Transform", false, isSkipUndoIncrement);
 				if(dstLinkedMeshGroup == null)
 				{
 					//원본 메시 그룹의 복사 실패
@@ -12112,32 +12373,36 @@ namespace AnyPortrait
 					}
 				}
 
-				//현재 선택된 메시 그룹(복사되는 서브 메시 그룹 말고)에 대해서 Link
-				apUtil.LinkRefresh.Set_MeshGroup_AllModifiers(Editor.Select.MeshGroup);
+				if (isUndoAndRefresh)
+				{
+					Editor.OnAnyObjectAddedOrRemoved(true);
 
-				Editor._portrait.LinkAndRefreshInEditor(true, apUtil.LinkRefresh);
-				Editor.RefreshTimelineLayers(apEditor.REFRESH_TIMELINE_REQUEST.All, null, null);
+					//현재 선택된 메시 그룹(복사되는 서브 메시 그룹 말고)에 대해서 Link
+					apUtil.LinkRefresh.Set_MeshGroup_AllModifiers(Editor.Select.MeshGroup);
 
-				//Refresh 추가
-				Editor.Select.RefreshAnimEditing(true);
+					Editor._portrait.LinkAndRefreshInEditor(true, apUtil.LinkRefresh);
+					Editor.RefreshTimelineLayers(apEditor.REFRESH_TIMELINE_REQUEST.All, null, null);
 
-				//메시 그룹 선택
-				//Editor.Select.SetMeshGroup(newMeshGroup);
-				Editor.Select.MeshGroup.ResetRenderUnits(apUtil.LinkRefresh);
-				Editor.Select.MeshGroup.RefreshModifierLink(apUtil.LinkRefresh);
-				Editor.Select.MeshGroup.SortRenderUnits(true);
+					//Refresh 추가
+					Editor.Select.RefreshAnimEditing(true);
 
-				Editor.Select.SetSubMeshGroupInGroup(dstMeshGroupTransform, apSelection.MULTI_SELECT.Main);
+					//메시 그룹 선택
+					//Editor.Select.SetMeshGroup(newMeshGroup);
+					Editor.Select.MeshGroup.ResetRenderUnits(apUtil.LinkRefresh);
+					Editor.Select.MeshGroup.RefreshModifierLink(apUtil.LinkRefresh);
+					Editor.Select.MeshGroup.SortRenderUnits(true);
 
-				////프리팹이었으면 Apply
-				//apEditorUtil.SetPortraitPrefabApply(Editor._portrait);
+					Editor.Select.SetSubMeshGroupInGroup(dstMeshGroupTransform, apSelection.MULTI_SELECT.Main);
 
-				Editor.ResetHierarchyAll();
-				Editor.RefreshControllerAndHierarchy(true);
-				Editor.Notification(dstMeshGroupTransform._nickName + " is Duplicated", true, false);
+					////프리팹이었으면 Apply
+					//apEditorUtil.SetPortraitPrefabApply(Editor._portrait);
 
-				apEditorUtil.ReleaseGUIFocus();
+					Editor.ResetHierarchyAll();
+					Editor.RefreshControllerAndHierarchy(true);
+					Editor.Notification(dstMeshGroupTransform._nickName + " is Duplicated", true, false);
 
+					apEditorUtil.ReleaseGUIFocus();
+				}
 				return dstMeshGroupTransform;
 
 			}
@@ -12148,6 +12413,294 @@ namespace AnyPortrait
 
 			return null;
 		}
+
+
+		/// <summary>
+		/// 추가 21.6.21 : 다중 선택된 MeshTF와 MeshGroupTF
+		/// </summary>
+		/// <param name="meshTFs"></param>
+		/// <param name="meshGroupTFs"></param>
+		public void DuplicateMultipleTFsInSameMeshGroup(List<apTransform_Mesh> meshTFs, List<apTransform_MeshGroup> meshGroupTFs)
+		{
+			//실제로 복사할 수 있는 리스트를 만들자.
+			//만약 meshTF나 meshGroupTF 중에서 상위 meshGroupTF가 선택된 상태라면 제외
+			if (apVersion.I.IsDemo)
+			{
+				Debug.LogError("AnyPortrait : The demo version does not support this feature.");
+				return;
+			}
+			int nSrcMeshTFs = meshTFs != null ? meshTFs.Count : 0;
+			int nSrcMeshGroupTFs = meshGroupTFs != null ? meshGroupTFs.Count : 0;
+
+			if(nSrcMeshTFs + nSrcMeshGroupTFs == 0
+				|| Editor == null
+				|| Editor.Select == null
+				|| Editor.Select.MeshGroup == null
+				|| Editor._portrait == null)
+			{
+				return;
+			}
+
+			apMeshGroup rootMeshGroup = Editor.Select.MeshGroup;
+			apTransform_Mesh curMeshTF = null;
+			apTransform_MeshGroup curMeshGroupTF = null;
+
+			List<apTransform_Mesh> targetMeshTFs = new List<apTransform_Mesh>();
+			List<apTransform_MeshGroup> targetMeshGroupTFs = new List<apTransform_MeshGroup>();
+
+			if(nSrcMeshGroupTFs > 0)
+			{
+				List<apMeshGroup> selectedMeshGroups = new List<apMeshGroup>();
+				for (int iMeshGroupTF = 0; iMeshGroupTF < nSrcMeshGroupTFs; iMeshGroupTF++)
+				{
+					selectedMeshGroups.Add(meshGroupTFs[iMeshGroupTF]._meshGroup);
+				}
+
+				//MeshGroup TF를 선택했다면,
+				//다른 TF들의 MeshGroup들을 확인하여, 루트가 아닌 부모중 하나라도 선택된 서브 MeshGroupTF에 속한다면 복제를 하지 않는다.
+				if(nSrcMeshTFs > 0)
+				{	
+					for (int iMeshTF = 0; iMeshTF < nSrcMeshTFs; iMeshTF++)
+					{
+						curMeshTF = meshTFs[iMeshTF];
+						apMeshGroup parentMeshGroup = Editor._portrait._meshGroups.Find(delegate(apMeshGroup a)
+						{
+							if(a._childMeshTransforms == null)
+							{
+								return false;
+							}
+							return a._childMeshTransforms.Contains(curMeshTF);
+						});
+						if(parentMeshGroup == null)
+						{
+							continue;
+						}
+
+						if(parentMeshGroup == rootMeshGroup)
+						{
+							//Root MeshGroup에 속해있으니 바로 복제 가능하다.
+							targetMeshTFs.Add(curMeshTF);
+						}
+						else
+						{
+							//parentMeshGroup 또는 그 부모 메시 그룹들이
+							//모두 meshGroupTFs에 속하면 안된다.
+							//상위로 올라가면서 반복 탐색해야한다.
+							bool isInSelectedMeshGroupTF = false;
+							while(true)
+							{
+								if(selectedMeshGroups.Contains(parentMeshGroup))
+								{
+									//메시 그룹 TF에 속한 메시 TF다. > 복제 대상이 아님
+									isInSelectedMeshGroupTF = true;
+									break;
+								}
+
+								if(parentMeshGroup._parentMeshGroup == null || parentMeshGroup._parentMeshGroup == rootMeshGroup)
+								{
+									//더 탐색 불가
+									break;
+								}
+
+								//위로 탐색
+								parentMeshGroup = parentMeshGroup._parentMeshGroup;
+							}
+
+							if(!isInSelectedMeshGroupTF)
+							{
+								//복제되는 다른 MeshGroupTF에 속하지 않았다.
+								//복제 가능
+								targetMeshTFs.Add(curMeshTF);
+							}
+						}
+					}
+				}
+
+				for (int iMeshGroupTF = 0; iMeshGroupTF < nSrcMeshGroupTFs; iMeshGroupTF++)
+				{
+					curMeshGroupTF = meshGroupTFs[iMeshGroupTF];
+					if(curMeshGroupTF._meshGroup == null)
+					{
+						continue;
+					}
+
+					apMeshGroup parentMeshGroup = curMeshGroupTF._meshGroup._parentMeshGroup;
+					if(parentMeshGroup == rootMeshGroup)
+					{
+						//루트 메시 그룹의 1차 자식이면 복제 가능
+						targetMeshGroupTFs.Add(curMeshGroupTF);
+						continue;
+					}
+
+					
+					//이 메시 그룹의 부모가 (당사자 말고) 선택된 메시 그룹에 포함되어 있다면
+					//복제 불가
+					bool isInSelectedMeshGroupTF = false;
+					while(true)
+					{
+						if(selectedMeshGroups.Contains(parentMeshGroup))
+						{
+							//메시 그룹 TF에 속한 메시 TF다. > 복제 대상이 아님
+							isInSelectedMeshGroupTF = true;
+							break;
+						}
+
+						if(parentMeshGroup._parentMeshGroup == null || parentMeshGroup._parentMeshGroup == rootMeshGroup)
+						{
+							//더 탐색 불가
+							break;
+						}
+
+						//위로 탐색
+						parentMeshGroup = parentMeshGroup._parentMeshGroup;
+					}
+
+					if(!isInSelectedMeshGroupTF)
+					{
+						//복제되는 다른 MeshGroupTF에 속하지 않았다.
+						//복제 가능
+						targetMeshGroupTFs.Add(curMeshGroupTF);
+					}
+				}
+				
+			}
+			else
+			{
+				//그게 아니라면, 모두 복제 (MeshTF만 있는 경우)
+				for (int i = 0; i < nSrcMeshTFs; i++)
+				{
+					targetMeshTFs.Add(meshTFs[i]);
+				}
+			}
+
+
+			if(targetMeshTFs.Count == 0 && targetMeshGroupTFs.Count == 0)
+			{
+				//복제될게 없다.
+				return;
+			}
+
+			//Undo 등록 (모든 MeshGroup복사)
+			apEditorUtil.SetRecord_PortraitAllMeshGroupAndAllModifiers(	apUndoGroupData.ACTION.MeshGroup_DuplicateMeshTransform, 
+																		Editor, 
+																		Editor._portrait, 
+																		//null, 
+																		false,
+																		apEditorUtil.UNDO_STRUCT.StructChanged);
+
+			//TODO : 복제하기
+			//복제 전에, MeshTF와 MeshGroupTF를 합쳐서 depth 순서대로 정렬하자. depth가 낮은것부터 복사를 하도록
+			List<object> targetObjs = new List<object>();
+			for (int i = 0; i < targetMeshTFs.Count; i++)
+			{
+				targetObjs.Add(targetMeshTFs[i]);
+			}
+
+			for (int i = 0; i < targetMeshGroupTFs.Count; i++)
+			{
+				targetObjs.Add(targetMeshGroupTFs[i]);
+			}
+
+			targetObjs.Sort(delegate(object a, object b)
+			{
+				int depthA = 0;
+				int depthB = 0;
+
+				if(a is apTransform_Mesh)
+				{
+					depthA = (a as apTransform_Mesh)._depth;
+				}
+				else if(a is apTransform_MeshGroup)
+				{
+					depthA = (a as apTransform_MeshGroup)._depth;
+				}
+
+				if(b is apTransform_Mesh)
+				{
+					depthB = (b as apTransform_Mesh)._depth;
+				}
+				else if(b is apTransform_MeshGroup)
+				{
+					depthB = (b as apTransform_MeshGroup)._depth;
+				}
+
+				return depthA - depthB;//오름차순
+			});
+
+			//이제 하나씩 복사를 하자
+			List<object> duplicatedObjs = new List<object>();
+
+			object curObj = null;
+			for (int i = 0; i < targetObjs.Count; i++)
+			{
+				curObj = targetObjs[i];
+				if(curObj is apTransform_Mesh)
+				{
+					curMeshTF = curObj as apTransform_Mesh;
+					apTransform_Mesh dupMeshTF = DuplicateMeshTransformInSameMeshGroup(curMeshTF, false);
+					if(dupMeshTF != null)
+					{
+						duplicatedObjs.Add(dupMeshTF);
+					}
+				}
+				else if(curObj is apTransform_MeshGroup)
+				{
+					curMeshGroupTF = curObj as apTransform_MeshGroup;
+					apTransform_MeshGroup dupMeshGroupTF = DuplicateMeshGroupTransformInSameMeshGroup(curMeshGroupTF, false);
+					if(dupMeshGroupTF != null)
+					{
+						duplicatedObjs.Add(dupMeshGroupTF);
+					}
+				}
+
+				//중간에 SortRenderUnit을 하자
+				Editor.Select.MeshGroup.SortRenderUnits(true);
+			}
+
+			Editor.OnAnyObjectAddedOrRemoved(true);
+
+			apUtil.LinkRefresh.Set_AllObjects(Editor.Select.MeshGroup);
+
+			Editor._portrait.LinkAndRefreshInEditor(true, apUtil.LinkRefresh);
+			Editor.RefreshTimelineLayers(apEditor.REFRESH_TIMELINE_REQUEST.All, null, null);
+
+			//Refresh 추가
+			Editor.Select.RefreshAnimEditing(true);
+
+			//메시 그룹 선택
+			//Editor.Select.SetMeshGroup(newMeshGroup);
+			Editor.Select.MeshGroup.ResetRenderUnits(apUtil.LinkRefresh);
+			Editor.Select.MeshGroup.RefreshModifierLink(apUtil.LinkRefresh);
+			Editor.Select.MeshGroup.SortRenderUnits(true);
+
+			////프리팹이었으면 Apply
+			//apEditorUtil.SetPortraitPrefabApply(Editor._portrait);
+
+			//복사된 것을 선택한다.
+			Editor.Select.SetSubObjectInGroup(null, null, null, apSelection.MULTI_SELECT.Main, apSelection.TF_BONE_SELECT.Exclusive);
+
+			for (int i = 0; i < duplicatedObjs.Count; i++)
+			{
+				curObj = duplicatedObjs[i];
+				if (curObj is apTransform_Mesh)
+				{
+					curMeshTF = curObj as apTransform_Mesh;
+					Editor.Select.SetSubMeshInGroup(curMeshTF, apSelection.MULTI_SELECT.AddOrSubtract);
+				}
+				else if (curObj is apTransform_MeshGroup)
+				{
+					curMeshGroupTF = curObj as apTransform_MeshGroup;
+					Editor.Select.SetSubMeshGroupInGroup(curMeshGroupTF, apSelection.MULTI_SELECT.AddOrSubtract);
+				}
+			}
+
+			Editor.ResetHierarchyAll();
+			Editor.RefreshControllerAndHierarchy(true);
+			Editor.Notification(targetObjs.Count + " Objects are Duplicated", true, false);
+
+			apEditorUtil.ReleaseGUIFocus();
+		}
+
 
 
 
@@ -12170,7 +12723,7 @@ namespace AnyPortrait
 		{
 			if (srcPSG == null)
 			{
-				Debug.LogError("No srcPSG");
+				//Debug.LogError("No srcPSG");
 				return false;
 			}
 			apAnimClip linkedAnimClip = srcPSG._keyAnimClip;
@@ -12181,21 +12734,21 @@ namespace AnyPortrait
 				|| linkedTimeline == null
 				|| srcTimelineLayer == null)
 			{
-				Debug.LogError("Null KeyAnim");
+				//Debug.LogError("Null KeyAnim");
 				return false;
 			}
 
 			if(srcTimelineLayer._linkType == apAnimClip.LINK_TYPE.ControlParam)
 			{
 				//ControlParam인 경우 복사 대상이 아니다.
-				Debug.LogError("Control Param Timeline Layer");
+				//Debug.LogError("Control Param Timeline Layer");
 				return false;
 			}
 
 			if (convertInfo.Src2Dst_TimelineLayer.ContainsKey(srcTimelineLayer))
 			{
 				//이미 변환 정보가 등록되어 있다면 패스
-				Debug.LogError("이미 변환되어 복제된 타임라인 레이어 [" + srcTimelineLayer.DisplayName + "]");
+				//Debug.LogError("이미 변환되어 복제된 타임라인 레이어 [" + srcTimelineLayer.DisplayName + "]");
 				return false;
 			}
 
@@ -12904,7 +13457,7 @@ namespace AnyPortrait
 		/// <param name="srcMeshGroup"></param>
 		/// <param name="dstMeshGroup"></param>
 		/// <returns></returns>
-		public bool MigrateMeshTransformToOtherMeshGroup(apTransform_Mesh targetMeshTransform, apMeshGroup srcMeshGroup, apMeshGroup dstMeshGroup)
+		public bool MigrateMeshTransformToOtherMeshGroup(apTransform_Mesh targetMeshTransform, List<apTransform_Mesh> targetMeshTFs, apMeshGroup srcMeshGroup, apMeshGroup dstMeshGroup)
 		{
 			if (apVersion.I.IsDemo)
 			{
@@ -12934,6 +13487,44 @@ namespace AnyPortrait
 				{
 					return false;
 				}
+
+				//추가 21.6.24 : 다중 마이그레이션인지 확인
+				//아래의 처리는 무조건 리스트로 한다.
+				List<apTransform_Mesh> srcTargetMeshTFs = new List<apTransform_Mesh>();
+				
+				srcTargetMeshTFs.Add(targetMeshTransform);//메인은 일단 넣고
+
+				apTransform_Mesh curMeshTF = null;
+
+				if(targetMeshTFs != null && targetMeshTFs.Count > 0)
+				{	
+					for (int i = 0; i < targetMeshTFs.Count ; i++)
+					{
+						curMeshTF = targetMeshTFs[i];
+						if(srcTargetMeshTFs.Contains(curMeshTF))
+						{
+							//이미 있는건 패스
+							continue;
+						}
+
+						//같은 MeshGroup의 자식이어야 한다.
+						if(srcMeshGroup._childMeshTransforms.Contains(curMeshTF))
+						{
+							srcTargetMeshTFs.Add(curMeshTF);
+						}
+					}
+
+					//정렬은 Depth의 오름차순
+					srcTargetMeshTFs.Sort(delegate(apTransform_Mesh a, apTransform_Mesh b)
+					{
+						return a._depth - b._depth;
+					});
+				}
+
+
+				bool isMultiple = srcTargetMeshTFs.Count > 1;
+
+
 
 				//모든 자식/부모 메시 그룹을 일단 수집한다.
 				bool isMoveToParent = false;
@@ -13005,15 +13596,21 @@ namespace AnyPortrait
 					}
 				}
 
+				//Debug.Log("Undo > Migration 저장");
 
 				//일단 모든 상태를 저장한다.
-				apEditorUtil.SetRecord_PortraitAllMeshGroupAndAllModifiers(apUndoGroupData.ACTION.MeshGroup_MigrateMeshTransform, Editor, Editor._portrait, srcMeshGroup, false);
+				apEditorUtil.SetRecord_PortraitAllMeshGroupAndAllModifiers(	apUndoGroupData.ACTION.MeshGroup_MigrateMeshTransform, 
+																			Editor, 
+																			Editor._portrait, 
+																			//srcMeshGroup, 
+																			false,
+																			apEditorUtil.UNDO_STRUCT.StructChanged);
 
 				//1. Mesh Transform을 그대로 옮겨서 대상 메시 그룹에 넣자.
 				//Depth는 최대값을 적용한다.
 				//Dst에 넣고, Src에서 제외한다.
 				int maxDepth = 0;
-				apTransform_Mesh curMeshTF = null;
+				//apTransform_Mesh curMeshTF = null;
 				apTransform_MeshGroup curMeshGroupTF = null;
 				for (int iMeshTF = 0; iMeshTF < dstMeshGroup._childMeshTransforms.Count; iMeshTF++)
 				{
@@ -13035,265 +13632,151 @@ namespace AnyPortrait
 
 				maxDepth += 100;//여유있게 많이 추가
 
-				//대상 메시 그룹에 추가
-				if (!dstMeshGroup._childMeshTransforms.Contains(targetMeshTransform))
+				//변경 21.6.24 : 여러개의 MeshTF를 변경할 수 있다.
+				for (int iMeshTF = 0; iMeshTF < srcTargetMeshTFs.Count; iMeshTF++)
 				{
-					dstMeshGroup._childMeshTransforms.Add(targetMeshTransform);
-				}
-				//기존 메시 그룹에서 제거
-				srcMeshGroup._childMeshTransforms.Remove(targetMeshTransform);
+					curMeshTF = srcTargetMeshTFs[iMeshTF];
+					maxDepth += 10;//매번 최대 Depth를 추가 (위에 붙도록)
 
-				//MeshTransform의 기본 값 중 연결 정보 위주로 수정하자.
-				targetMeshTransform._depth = maxDepth;
-				targetMeshTransform._level = maxDepth;
 
-				//클리핑 설정은 모두 해제
-				targetMeshTransform._isClipping_Child = false;
-				targetMeshTransform._isClipping_Parent = false;
-				targetMeshTransform._clipIndexFromParent = -1;
-				targetMeshTransform._clipParentMeshTransform = null;
-				targetMeshTransform._clipChildMeshes.Clear();
-
-				targetMeshTransform._linkedRenderUnit = null;
-
-				//중요 > Matrix를 바꾸어야 한다.
-				//이전 메시 그룹/변경된 메시 그룹에서의 Local2World Matrix를 구하고
-				//이전 메시 그룹에서의 World Matrix가 동일하도록 Local Matrix를 다시 재계산하자
-				apMatrix prevLocal2WorldMatrix = new apMatrix();
-				apMatrix nextLocal2WorldMatrix = new apMatrix();
-
-				//반복문을 이용하자
-				apMeshGroup curCalMeshGroup = null;
-				apMeshGroup curCalParentMeshGroup = null;
-				apTransform_MeshGroup curSubParentMGTF = null;
-
-				//이전 행렬을 구하자
-				prevLocal2WorldMatrix.SetIdentity();
-
-				prevLocal2WorldMatrix.OnBeforeRMultiply();//추가 20.8.6 [RMultiply Scale 이슈]
-
-				curCalMeshGroup = srcMeshGroup;
-				curCalParentMeshGroup = null;
-				while (true)
-				{
-					//부모가 없다면 루트이다. 굳이 루트의 Matrix까지 넣을 필욘 없을 듯
-					if (curCalMeshGroup == null  || curCalMeshGroup._parentMeshGroup == null)
-					{	
-						break;
+					//대상 메시 그룹에 추가
+					if (!dstMeshGroup._childMeshTransforms.Contains(curMeshTF))//<대상 변경>
+					{
+						dstMeshGroup._childMeshTransforms.Add(curMeshTF);//<대상 변경>
 					}
+					//기존 메시 그룹에서 제거
+					srcMeshGroup._childMeshTransforms.Remove(curMeshTF);//<대상 변경>
 
-					//부모가 있다면, 부모 기준에서 MGTF의 Matrix를 계산에 넣자
-					curCalParentMeshGroup = curCalMeshGroup._parentMeshGroup;
-					curSubParentMGTF = curCalParentMeshGroup._childMeshGroupTransforms.Find(delegate (apTransform_MeshGroup a)
+					//MeshTransform의 기본 값 중 연결 정보 위주로 수정하자.
+					//<대상 변경>
+					curMeshTF._depth = maxDepth;
+					curMeshTF._level = maxDepth;
+
+					//클리핑 설정은 모두 해제
+					//<대상 변경>
+					curMeshTF._isClipping_Child = false;
+					curMeshTF._isClipping_Parent = false;
+					curMeshTF._clipIndexFromParent = -1;
+					curMeshTF._clipParentMeshTransform = null;
+					curMeshTF._clipChildMeshes.Clear();
+
+					curMeshTF._linkedRenderUnit = null;
+
+					//중요 > Matrix를 바꾸어야 한다.
+					//이전 메시 그룹/변경된 메시 그룹에서의 Local2World Matrix를 구하고
+					//이전 메시 그룹에서의 World Matrix가 동일하도록 Local Matrix를 다시 재계산하자
+					apMatrix prevLocal2WorldMatrix = new apMatrix();
+					apMatrix nextLocal2WorldMatrix = new apMatrix();
+
+					//반복문을 이용하자
+					apMeshGroup curCalMeshGroup = null;
+					apMeshGroup curCalParentMeshGroup = null;
+					apTransform_MeshGroup curSubParentMGTF = null;
+
+					//이전 행렬을 구하자
+					prevLocal2WorldMatrix.SetIdentity();
+
+					prevLocal2WorldMatrix.OnBeforeRMultiply();//추가 20.8.6 [RMultiply Scale 이슈]
+
+					curCalMeshGroup = srcMeshGroup;
+					curCalParentMeshGroup = null;
+					while (true)
 					{
-						return a._meshGroup == curCalMeshGroup;
-					});
-
-					if (curSubParentMGTF == null)
-					{
-						Debug.LogError("World Matrix Correction Error [Src]");
-						break;
-					}
-					prevLocal2WorldMatrix.RMultiply(curSubParentMGTF._matrix, false);
-
-					//한단계 위로 이동
-					curCalMeshGroup = curCalMeshGroup._parentMeshGroup;
-				}
-
-				prevLocal2WorldMatrix.MakeMatrix();
-				
-				//이번엔 변환 이후의 행렬을 구하자
-				nextLocal2WorldMatrix.SetIdentity();
-
-				nextLocal2WorldMatrix.OnBeforeRMultiply();//추가 20.8.6 [RMultiply Scale 이슈]
-				
-				curCalMeshGroup = dstMeshGroup;
-				curCalParentMeshGroup = null;
-				while (true)
-				{
-					//부모가 없다면 루트이다. 굳이 루트의 Matrix까지 넣을 필욘 없을 듯
-					if (curCalMeshGroup == null  || curCalMeshGroup._parentMeshGroup == null)
-					{	
-						break;
-					}
-
-					//부모가 있다면, 부모 기준에서 MGTF의 Matrix를 계산에 넣자
-					curCalParentMeshGroup = curCalMeshGroup._parentMeshGroup;
-					curSubParentMGTF = curCalParentMeshGroup._childMeshGroupTransforms.Find(delegate (apTransform_MeshGroup a)
-					{
-						return a._meshGroup == curCalMeshGroup;
-					});
-
-					if (curSubParentMGTF == null)
-					{
-						Debug.LogError("World Matrix Correction Error [Dst]");
-						break;
-					}
-					nextLocal2WorldMatrix.RMultiply(curSubParentMGTF._matrix, false);
-
-					//한단계 위로 이동
-					curCalMeshGroup = curCalMeshGroup._parentMeshGroup;
-				}
-
-				nextLocal2WorldMatrix.MakeMatrix();
-
-				//Local > PrevLocal2World > World
-				apMatrix targetWorldMatrix = new apMatrix(targetMeshTransform._matrix);
-
-				//추가 20.8.6. [RMultiply Scale 이슈]
-				targetWorldMatrix.OnBeforeRMultiply();
-				
-				targetWorldMatrix.RMultiply(prevLocal2WorldMatrix, true);
-
-				//World > NextLocal2World_Inv > NextLocal
-				apMatrix nextLocalMatrix = new apMatrix(targetWorldMatrix);
-				nextLocalMatrix.RInverse(nextLocal2WorldMatrix, true);
-
-				//변환 결과를 저장하자
-				targetMeshTransform._matrix.SetMatrix(nextLocalMatrix, true);
-				
-
-				//이제 모디파이어에서 ModMesh를 찾아서 값을 변경해야한다.
-				//부모 메시 그룹에서 이 MeshTF를 참조하는 모든 ModMesh를 찾아서 연결 정보를 갱신해야한다.
-
-				apMeshGroup curMeshGroup = null;
-				apModifierBase curModifier = null;
-				apModifierParamSetGroup curPSG = null;
-				apModifierParamSet curParamSet = null;
-				apModifiedMesh curModMesh = null;
-				for (int iParentMeshGroup = 0; iParentMeshGroup < parentMeshGroups_FromDst.Count; iParentMeshGroup++)
-				{
-					curMeshGroup = parentMeshGroups_FromDst[iParentMeshGroup];
-					if (curMeshGroup == null)
-					{
-						continue;
-					}
-
-					int nModifiers = curMeshGroup._modifierStack._modifiers == null ? 0 : curMeshGroup._modifierStack._modifiers.Count;
-					for (int iModifier = 0; iModifier < nModifiers; iModifier++)
-					{
-						curModifier = curMeshGroup._modifierStack._modifiers[iModifier];
-						if (curModifier == null)
+						//부모가 없다면 루트이다. 굳이 루트의 Matrix까지 넣을 필욘 없을 듯
+						if (curCalMeshGroup == null || curCalMeshGroup._parentMeshGroup == null)
 						{
-							continue;
+							break;
 						}
 
-						bool isAnimated = curModifier.IsAnimated;
-
-						int nPSG = curModifier._paramSetGroup_controller == null ? 0 : curModifier._paramSetGroup_controller.Count;
-						for (int iPSG = 0; iPSG < nPSG; iPSG++)
+						//부모가 있다면, 부모 기준에서 MGTF의 Matrix를 계산에 넣자
+						curCalParentMeshGroup = curCalMeshGroup._parentMeshGroup;
+						curSubParentMGTF = curCalParentMeshGroup._childMeshGroupTransforms.Find(delegate (apTransform_MeshGroup a)
 						{
-							curPSG = curModifier._paramSetGroup_controller[iPSG];
+							return a._meshGroup == curCalMeshGroup;
+						});
 
-							//- 애니메이션 타입이면 연결된 타임라인을 찾고, 해당 타임라인이 이 MeshTransform을 참조하는지 확인하자
-							//- 애니메이션 타입이 아니면 ModMesh까지 찾아야 한다.
-							bool isTargetPSG = false;
-							if (isAnimated)
-							{
-								apAnimTimelineLayer linkedTimelineLayer = curPSG._keyAnimTimelineLayer;
-								if (linkedTimelineLayer != null)
-								{
-									if (linkedTimelineLayer._linkType == apAnimClip.LINK_TYPE.AnimatedModifier
-										&& linkedTimelineLayer._linkModType == apAnimTimelineLayer.LINK_MOD_TYPE.MeshTransform
-										&& linkedTimelineLayer._linkedMeshTransform == targetMeshTransform)
-									{
-										//해당 타임라인 레이어가 대상 메시 트랜스폼과 연결된 경우
-										isTargetPSG = true;
-									}
-								}
-							}
-							else
-							{
-								//애니메이션 타입이 아니면 ModMesh를 직접 보기 전까진 모른다.
-								isTargetPSG = true;
-
-							}
-							if (!isTargetPSG)
-							{
-								//이 PSG는 안봐도 되겠당
-								continue;
-							}
-
-							int nPS = curPSG._paramSetList == null ? 0 : curPSG._paramSetList.Count;
-							for (int iParamSet = 0; iParamSet < nPS; iParamSet++)
-							{
-								curParamSet = curPSG._paramSetList[iParamSet];
-								if (curParamSet == null)
-								{
-									continue;
-								}
-
-								if (!isAnimated)
-								{
-									//애니메이션 타입이 아니면 여기서 검사하자
-									//메시 트랜스폼이 등록되지 않았다면 패스
-									if (!curParamSet.IsContainMeshTransform(targetMeshTransform))
-									{
-										continue;
-									}
-								}
-
-								int nModMesh = curParamSet._meshData == null ? 0 : curParamSet._meshData.Count;
-								for (int iModMesh = 0; iModMesh < nModMesh; iModMesh++)
-								{
-									curModMesh = curParamSet._meshData[iModMesh];
-									if (curModMesh == null)
-									{
-										continue;
-									}
-
-									if (!curModMesh._isMeshTransform
-										|| curModMesh._transform_Mesh == null
-										|| curModMesh._transform_Mesh != targetMeshTransform)
-									{
-										//대상이 아니라면 패스
-										continue;
-									}
-
-									//이제 연결 정보를 수정하자
-									curModMesh._meshGroupOfTransform = dstMeshGroup;//<<이제 srcMeshGroup에서 dstMeshGroup으로 바뀌어야 한다.
-									curModMesh._isRecursiveChildTransform = (curMeshGroup != dstMeshGroup);//메시 그룹이 다르다는 것은 모디파이어가 자식 메시 그룹에 연결된 것이다.
-									curModMesh._meshGroupUniqueID_Transform = dstMeshGroup._uniqueID;
-
-									//나머지는 그대로
-								}
-							}
+						if (curSubParentMGTF == null)
+						{
+							Debug.LogError("World Matrix Correction Error [Src]");
+							break;
 						}
-					}
-				}
+						prevLocal2WorldMatrix.RMultiply(curSubParentMGTF._matrix, false);
 
-
-				//부모 메시 그룹으로 이동하는 경우) srcMeshGroup을 포함한 자식 메시 그룸에 있는 ModMesh를 찾아서 모두 삭제한다,.
-				//삭제된 ModMesh/PSG 중에서 애니메이션과 관련된 경우, 삭제할 TimelineLayer를 리스트로 모은 뒤, 다 삭제하자
-				if (isMoveToParent)
-				{
-					if (!childAndSiblingsMeshGroups_FromDst.Contains(srcMeshGroup))
-					{
-						childAndSiblingsMeshGroups_FromDst.Add(srcMeshGroup);
+						//한단계 위로 이동
+						curCalMeshGroup = curCalMeshGroup._parentMeshGroup;
 					}
 
-					int nMeshGroup = childAndSiblingsMeshGroups_FromDst.Count;
+					prevLocal2WorldMatrix.MakeMatrix();
 
-					curMeshGroup = null;
-					curModifier = null;
-					curPSG = null;
-					curParamSet = null;
-					curModMesh = null;
+					//이번엔 변환 이후의 행렬을 구하자
+					nextLocal2WorldMatrix.SetIdentity();
 
-					List<apAnimTimelineLayer> removeTimelineLayers = new List<apAnimTimelineLayer>();
-					List<apModifierParamSetGroup> removePSGs = new List<apModifierParamSetGroup>();
+					nextLocal2WorldMatrix.OnBeforeRMultiply();//추가 20.8.6 [RMultiply Scale 이슈]
 
-					for (int iMeshGroup = 0; iMeshGroup < nMeshGroup; iMeshGroup++)
+					curCalMeshGroup = dstMeshGroup;
+					curCalParentMeshGroup = null;
+					while (true)
 					{
-						curMeshGroup = childAndSiblingsMeshGroups_FromDst[iMeshGroup];
+						//부모가 없다면 루트이다. 굳이 루트의 Matrix까지 넣을 필욘 없을 듯
+						if (curCalMeshGroup == null || curCalMeshGroup._parentMeshGroup == null)
+						{
+							break;
+						}
+
+						//부모가 있다면, 부모 기준에서 MGTF의 Matrix를 계산에 넣자
+						curCalParentMeshGroup = curCalMeshGroup._parentMeshGroup;
+						curSubParentMGTF = curCalParentMeshGroup._childMeshGroupTransforms.Find(delegate (apTransform_MeshGroup a)
+						{
+							return a._meshGroup == curCalMeshGroup;
+						});
+
+						if (curSubParentMGTF == null)
+						{
+							Debug.LogError("World Matrix Correction Error [Dst]");
+							break;
+						}
+						nextLocal2WorldMatrix.RMultiply(curSubParentMGTF._matrix, false);
+
+						//한단계 위로 이동
+						curCalMeshGroup = curCalMeshGroup._parentMeshGroup;
+					}
+
+					nextLocal2WorldMatrix.MakeMatrix();
+
+					//Local > PrevLocal2World > World
+					apMatrix targetWorldMatrix = new apMatrix(curMeshTF._matrix);//<대상 변경>
+
+					//추가 20.8.6. [RMultiply Scale 이슈]
+					targetWorldMatrix.OnBeforeRMultiply();
+
+					targetWorldMatrix.RMultiply(prevLocal2WorldMatrix, true);
+
+					//World > NextLocal2World_Inv > NextLocal
+					apMatrix nextLocalMatrix = new apMatrix(targetWorldMatrix);
+					nextLocalMatrix.RInverse(nextLocal2WorldMatrix, true);
+
+					//변환 결과를 저장하자
+					curMeshTF._matrix.SetMatrix(nextLocalMatrix, true);//<대상 변경>
+
+
+					//이제 모디파이어에서 ModMesh를 찾아서 값을 변경해야한다.
+					//부모 메시 그룹에서 이 MeshTF를 참조하는 모든 ModMesh를 찾아서 연결 정보를 갱신해야한다.
+
+					apMeshGroup curMeshGroup = null;
+					apModifierBase curModifier = null;
+					apModifierParamSetGroup curPSG = null;
+					apModifierParamSet curParamSet = null;
+					apModifiedMesh curModMesh = null;
+					for (int iParentMeshGroup = 0; iParentMeshGroup < parentMeshGroups_FromDst.Count; iParentMeshGroup++)
+					{
+						curMeshGroup = parentMeshGroups_FromDst[iParentMeshGroup];
 						if (curMeshGroup == null)
 						{
 							continue;
 						}
 
-
-						int nModifier = curMeshGroup._modifierStack._modifiers == null ? 0 : curMeshGroup._modifierStack._modifiers.Count;
-						for (int iModifier = 0; iModifier < nModifier; iModifier++)
+						int nModifiers = curMeshGroup._modifierStack._modifiers == null ? 0 : curMeshGroup._modifierStack._modifiers.Count;
+						for (int iModifier = 0; iModifier < nModifiers; iModifier++)
 						{
 							curModifier = curMeshGroup._modifierStack._modifiers[iModifier];
 							if (curModifier == null)
@@ -13303,20 +13786,14 @@ namespace AnyPortrait
 
 							bool isAnimated = curModifier.IsAnimated;
 
-							removeTimelineLayers.Clear();
-							removePSGs.Clear();
-
-							//애니메이션이면 연결된 PSG 자체와 타임라인 자체를 제거할 필요가 있다.
 							int nPSG = curModifier._paramSetGroup_controller == null ? 0 : curModifier._paramSetGroup_controller.Count;
 							for (int iPSG = 0; iPSG < nPSG; iPSG++)
 							{
 								curPSG = curModifier._paramSetGroup_controller[iPSG];
-								if (curPSG == null)
-								{
-									continue;
-								}
 
-								//대상이 되는 메시 트랜스폼과 연결된 PSG인가
+								//- 애니메이션 타입이면 연결된 타임라인을 찾고, 해당 타임라인이 이 MeshTransform을 참조하는지 확인하자
+								//- 애니메이션 타입이 아니면 ModMesh까지 찾아야 한다.
+								bool isTargetPSG = false;
 								if (isAnimated)
 								{
 									apAnimTimelineLayer linkedTimelineLayer = curPSG._keyAnimTimelineLayer;
@@ -13324,19 +13801,22 @@ namespace AnyPortrait
 									{
 										if (linkedTimelineLayer._linkType == apAnimClip.LINK_TYPE.AnimatedModifier
 											&& linkedTimelineLayer._linkModType == apAnimTimelineLayer.LINK_MOD_TYPE.MeshTransform
-											&& linkedTimelineLayer._linkedMeshTransform == targetMeshTransform)
+											&& linkedTimelineLayer._linkedMeshTransform == curMeshTF)//<대상 변경>
 										{
 											//해당 타임라인 레이어가 대상 메시 트랜스폼과 연결된 경우
-											//바로 이 PSG와 Timeline Layer는 문답무용으로 삭제해야한다.
-											removePSGs.Add(curPSG);
-											if (!removeTimelineLayers.Contains(linkedTimelineLayer))
-											{
-												removeTimelineLayers.Add(linkedTimelineLayer);
-											}
+											isTargetPSG = true;
 										}
 									}
+								}
+								else
+								{
+									//애니메이션 타입이 아니면 ModMesh를 직접 보기 전까진 모른다.
+									isTargetPSG = true;
 
-									//애니메이션 타입은 더 처리할 필요가 없다.
+								}
+								if (!isTargetPSG)
+								{
+									//이 PSG는 안봐도 되겠당
 									continue;
 								}
 
@@ -13349,62 +13829,189 @@ namespace AnyPortrait
 										continue;
 									}
 
-									if (!curParamSet.IsContainMeshTransform(targetMeshTransform))
+									if (!isAnimated)
 									{
-										//이 MeshTransform이 포함되지 않았습니다.
-										continue;
-									}
-
-									//이제 조건에 맞는 모든 ModMesh를 삭제하자
-									if (curParamSet._meshData != null &&
-										curParamSet._meshData.Count > 0)
-									{
-										//대상 메시 트랜스폼에 대한 ModMesh를 모두 삭제한다.
-										curParamSet._meshData.RemoveAll(delegate (apModifiedMesh a)
+										//애니메이션 타입이 아니면 여기서 검사하자
+										//메시 트랜스폼이 등록되지 않았다면 패스
+										if (!curParamSet.IsContainMeshTransform(curMeshTF))//<대상 변경>
 										{
-											return a._isMeshTransform
-											&& a._transform_Mesh != null
-											&& a._transform_Mesh == targetMeshTransform;
-										});
+											continue;
+										}
 									}
-								}
-							}
 
-							if (removeTimelineLayers.Count > 0)
-							{
-								//타임라인 레이어를 삭제하자
-								apAnimTimelineLayer rmvTLL = null;
-								for (int iTLL = 0; iTLL < removeTimelineLayers.Count; iTLL++)
-								{
-									rmvTLL = removeTimelineLayers[iTLL];
-									if (rmvTLL._parentTimeline != null)
+									int nModMesh = curParamSet._meshData == null ? 0 : curParamSet._meshData.Count;
+									for (int iModMesh = 0; iModMesh < nModMesh; iModMesh++)
 									{
-										rmvTLL._parentTimeline._layers.Remove(rmvTLL);//이 레이어를 삭제하자
+										curModMesh = curParamSet._meshData[iModMesh];
+										if (curModMesh == null)
+										{
+											continue;
+										}
+
+										if (!curModMesh._isMeshTransform
+											|| curModMesh._transform_Mesh == null
+											|| curModMesh._transform_Mesh != curMeshTF)//<대상 변경>
+										{
+											//대상이 아니라면 패스
+											continue;
+										}
+
+										//이제 연결 정보를 수정하자
+										curModMesh._meshGroupOfTransform = dstMeshGroup;//<<이제 srcMeshGroup에서 dstMeshGroup으로 바뀌어야 한다.
+										curModMesh._isRecursiveChildTransform = (curMeshGroup != dstMeshGroup);//메시 그룹이 다르다는 것은 모디파이어가 자식 메시 그룹에 연결된 것이다.
+										curModMesh._meshGroupUniqueID_Transform = dstMeshGroup._uniqueID;
+
+										//나머지는 그대로
 									}
 								}
 							}
-
-							if (removePSGs.Count > 0)
-							{
-								//PSG를 삭제하자
-								apModifierParamSetGroup rmvPSG = null;
-								for (int iRemovePSG = 0; iRemovePSG < removePSGs.Count; iRemovePSG++)
-								{
-									rmvPSG = removePSGs[iRemovePSG];
-									curModifier._paramSetGroup_controller.Remove(rmvPSG);
-								}
-							}
-							removeTimelineLayers.Clear();
-							removePSGs.Clear();
 						}
 					}
 
 
+					//부모 메시 그룹으로 이동하는 경우) srcMeshGroup을 포함한 자식 메시 그룸에 있는 ModMesh를 찾아서 모두 삭제한다,.
+					//삭제된 ModMesh/PSG 중에서 애니메이션과 관련된 경우, 삭제할 TimelineLayer를 리스트로 모은 뒤, 다 삭제하자
+					if (isMoveToParent)
+					{
+						if (!childAndSiblingsMeshGroups_FromDst.Contains(srcMeshGroup))
+						{
+							childAndSiblingsMeshGroups_FromDst.Add(srcMeshGroup);
+						}
+
+						int nMeshGroup = childAndSiblingsMeshGroups_FromDst.Count;
+
+						curMeshGroup = null;
+						curModifier = null;
+						curPSG = null;
+						curParamSet = null;
+						curModMesh = null;
+
+						List<apAnimTimelineLayer> removeTimelineLayers = new List<apAnimTimelineLayer>();
+						List<apModifierParamSetGroup> removePSGs = new List<apModifierParamSetGroup>();
+
+						for (int iMeshGroup = 0; iMeshGroup < nMeshGroup; iMeshGroup++)
+						{
+							curMeshGroup = childAndSiblingsMeshGroups_FromDst[iMeshGroup];
+							if (curMeshGroup == null)
+							{
+								continue;
+							}
+
+
+							int nModifier = curMeshGroup._modifierStack._modifiers == null ? 0 : curMeshGroup._modifierStack._modifiers.Count;
+							for (int iModifier = 0; iModifier < nModifier; iModifier++)
+							{
+								curModifier = curMeshGroup._modifierStack._modifiers[iModifier];
+								if (curModifier == null)
+								{
+									continue;
+								}
+
+								bool isAnimated = curModifier.IsAnimated;
+
+								removeTimelineLayers.Clear();
+								removePSGs.Clear();
+
+								//애니메이션이면 연결된 PSG 자체와 타임라인 자체를 제거할 필요가 있다.
+								int nPSG = curModifier._paramSetGroup_controller == null ? 0 : curModifier._paramSetGroup_controller.Count;
+								for (int iPSG = 0; iPSG < nPSG; iPSG++)
+								{
+									curPSG = curModifier._paramSetGroup_controller[iPSG];
+									if (curPSG == null)
+									{
+										continue;
+									}
+
+									//대상이 되는 메시 트랜스폼과 연결된 PSG인가
+									if (isAnimated)
+									{
+										apAnimTimelineLayer linkedTimelineLayer = curPSG._keyAnimTimelineLayer;
+										if (linkedTimelineLayer != null)
+										{
+											if (linkedTimelineLayer._linkType == apAnimClip.LINK_TYPE.AnimatedModifier
+												&& linkedTimelineLayer._linkModType == apAnimTimelineLayer.LINK_MOD_TYPE.MeshTransform
+												&& linkedTimelineLayer._linkedMeshTransform == curMeshTF)//<대상 변경>
+											{
+												//해당 타임라인 레이어가 대상 메시 트랜스폼과 연결된 경우
+												//바로 이 PSG와 Timeline Layer는 문답무용으로 삭제해야한다.
+												removePSGs.Add(curPSG);
+												if (!removeTimelineLayers.Contains(linkedTimelineLayer))
+												{
+													removeTimelineLayers.Add(linkedTimelineLayer);
+												}
+											}
+										}
+
+										//애니메이션 타입은 더 처리할 필요가 없다.
+										continue;
+									}
+
+									int nPS = curPSG._paramSetList == null ? 0 : curPSG._paramSetList.Count;
+									for (int iParamSet = 0; iParamSet < nPS; iParamSet++)
+									{
+										curParamSet = curPSG._paramSetList[iParamSet];
+										if (curParamSet == null)
+										{
+											continue;
+										}
+
+										if (!curParamSet.IsContainMeshTransform(curMeshTF))//<대상 변경>
+										{
+											//이 MeshTransform이 포함되지 않았습니다.
+											continue;
+										}
+
+										//이제 조건에 맞는 모든 ModMesh를 삭제하자
+										if (curParamSet._meshData != null &&
+											curParamSet._meshData.Count > 0)
+										{
+											//대상 메시 트랜스폼에 대한 ModMesh를 모두 삭제한다.
+											curParamSet._meshData.RemoveAll(delegate (apModifiedMesh a)
+											{
+												return a._isMeshTransform
+												&& a._transform_Mesh != null
+												&& a._transform_Mesh == curMeshTF;//<대상 변경>
+											});
+										}
+									}
+								}
+
+								if (removeTimelineLayers.Count > 0)
+								{
+									//타임라인 레이어를 삭제하자
+									apAnimTimelineLayer rmvTLL = null;
+									for (int iTLL = 0; iTLL < removeTimelineLayers.Count; iTLL++)
+									{
+										rmvTLL = removeTimelineLayers[iTLL];
+										if (rmvTLL._parentTimeline != null)
+										{
+											rmvTLL._parentTimeline._layers.Remove(rmvTLL);//이 레이어를 삭제하자
+										}
+									}
+								}
+
+								if (removePSGs.Count > 0)
+								{
+									//PSG를 삭제하자
+									apModifierParamSetGroup rmvPSG = null;
+									for (int iRemovePSG = 0; iRemovePSG < removePSGs.Count; iRemovePSG++)
+									{
+										rmvPSG = removePSGs[iRemovePSG];
+										curModifier._paramSetGroup_controller.Remove(rmvPSG);
+									}
+								}
+								removeTimelineLayers.Clear();
+								removePSGs.Clear();
+							}
+						}
+
+
+					}
 				}
+				
+				
 
-
-
-
+				//전체 Refresh
 				Editor._portrait.LinkAndRefreshInEditor(true, apUtil.LinkRefresh.Set_AllObjects(null));
 
 				//Refresh 추가
@@ -13420,6 +14027,20 @@ namespace AnyPortrait
 				Editor.Select.MeshGroup.SortRenderUnits(true);
 
 				Editor.Select.SetSubMeshInGroup(targetMeshTransform, apSelection.MULTI_SELECT.Main);
+				if(isMultiple)
+				{
+					//다중 선택이었다면, 추가로 다른 MeshTF들도 선택하자
+					for (int i = 0; i < srcTargetMeshTFs.Count; i++)
+					{
+						curMeshTF = srcTargetMeshTFs[i];
+						if(curMeshTF == targetMeshTransform)
+						{
+							continue;
+						}
+
+						Editor.Select.SetSubMeshInGroup(curMeshTF, apSelection.MULTI_SELECT.AddOrSubtract);
+					}
+				}
 
 				//추가 21.1.32 : Rule 가시성 동기화 초기화
 				ResetVisibilityPresetSync();
@@ -13431,7 +14052,18 @@ namespace AnyPortrait
 
 				Editor.ResetHierarchyAll();
 				Editor.RefreshControllerAndHierarchy(true);
-				Editor.Notification(targetMeshTransform._nickName + " is Migrated", true, false);
+
+				if(!isMultiple)
+				{
+					//한개만 이주되었다면
+					Editor.Notification(targetMeshTransform._nickName + " is Migrated", true, false);
+				}
+				else
+				{
+					//여러개가 이주되었다면
+					Editor.Notification(srcTargetMeshTFs.Count + " Sub Meshes are Migrated", true, false);
+				}
+				
 
 				apEditorUtil.ReleaseGUIFocus();
 
@@ -14075,7 +14707,12 @@ namespace AnyPortrait
 				if (result)
 				{
 					//부모 메시 그룹이 있다면 > 전체 저장
-					apEditorUtil.SetRecord_PortraitAllMeshGroup(apUndoGroupData.ACTION.MeshGroup_DefaultSettingChanged, Editor, Editor._portrait, targetMeshGroup, false);
+					apEditorUtil.SetRecord_PortraitAllMeshGroup(	apUndoGroupData.ACTION.MeshGroup_DefaultSettingChanged, 
+																	Editor, 
+																	Editor._portrait, 
+																	//targetMeshGroup, 
+																	false,
+																	apEditorUtil.UNDO_STRUCT.StructChanged);
 					targetMeshGroup._name = newName;
 
 					//Sub MeshGroup을 찾자
@@ -14090,13 +14727,23 @@ namespace AnyPortrait
 				else
 				{
 					//그냥 이것만 적용하자
-					apEditorUtil.SetRecord_MeshGroup(apUndoGroupData.ACTION.MeshGroup_DefaultSettingChanged, Editor, targetMeshGroup, null, false, false);
+					apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_DefaultSettingChanged, 
+														Editor, 
+														targetMeshGroup, 
+														//null, 
+														false, false,
+														apEditorUtil.UNDO_STRUCT.ValueOnly);
 					targetMeshGroup._name = newName;
 				}
 			}
 			else
 			{
-				apEditorUtil.SetRecord_MeshGroup(apUndoGroupData.ACTION.MeshGroup_DefaultSettingChanged, Editor, targetMeshGroup, null, false, false);
+				apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_DefaultSettingChanged, 
+													Editor, 
+													targetMeshGroup, 
+													//null, 
+													false, false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 				targetMeshGroup._name = newName;
 			}
 		}
@@ -14135,7 +14782,12 @@ namespace AnyPortrait
 
 			if (isRecordUndo)
 			{
-				apEditorUtil.SetRecord_MeshGroup(apUndoGroupData.ACTION.MeshGroup_DuplicateMeshTransform, Editor, dstMeshGroup, null, false, true);
+				apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_DuplicateMeshTransform, 
+													Editor, 
+													dstMeshGroup, 
+													//null, 
+													false, true,
+													apEditorUtil.UNDO_STRUCT.StructChanged);
 			}
 
 			//ID 발급
@@ -14289,7 +14941,12 @@ namespace AnyPortrait
 
 			if (isRecordUndo)
 			{
-				apEditorUtil.SetRecord_MeshGroup(apUndoGroupData.ACTION.MeshGroup_DuplicateMeshGroupTransform, Editor, dstMeshGroup, null, false, true);
+				apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_DuplicateMeshGroupTransform, 
+													Editor, 
+													dstMeshGroup, 
+													//null, 
+													false, true,
+													apEditorUtil.UNDO_STRUCT.StructChanged);
 			}
 
 			//ID 발급
@@ -14381,19 +15038,6 @@ namespace AnyPortrait
 				Editor.SetRepaint();
 			}
 
-			if (isRefresh)
-			{
-				dstMeshGroup.SetDirtyToReset();
-				dstMeshGroup.RefreshForce();
-
-				//추가 / 삭제시 요청한다.
-				Editor.OnAnyObjectAddedOrRemoved();
-
-				Editor.RefreshControllerAndHierarchy(false);
-				//Editor.Repaint();
-				Editor.SetRepaint();
-			}
-
 			//추가 21.1.32 : Rule 가시성 동기화 초기화
 			ResetVisibilityPresetSync();
 
@@ -14425,7 +15069,12 @@ namespace AnyPortrait
 			if (isRecordUndo)
 			{
 				//Undo
-				apEditorUtil.SetRecord_MeshGroup(apUndoGroupData.ACTION.MeshGroup_AddBone, Editor, targetMeshGroup, null, false, false);
+				apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_AddBone, 
+													Editor, 
+													targetMeshGroup, 
+													//null, 
+													false, false,
+													apEditorUtil.UNDO_STRUCT.StructChanged);
 			}
 
 			int nextID = Editor._portrait.MakeUniqueID(apIDManager.TARGET.Bone);
@@ -15178,7 +15827,12 @@ namespace AnyPortrait
 
 
 			//Undo
-			apEditorUtil.SetRecord_MeshGroup(apUndoGroupData.ACTION.MeshGroup_AttachBoneToChild, Editor, bone._meshGroup, bone, false, false);
+			apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_AttachBoneToChild, 
+												Editor, 
+												bone._meshGroup, 
+												//bone, 
+												false, false,
+												apEditorUtil.UNDO_STRUCT.StructChanged);
 
 			if (bone.GetParentRecursive(attachedBone._uniqueID) != null)
 			{
@@ -15358,7 +16012,12 @@ namespace AnyPortrait
 				return;
 			}
 			//Undo
-			apEditorUtil.SetRecord_MeshGroup(apUndoGroupData.ACTION.MeshGroup_DetachBoneFromChild, Editor, bone._meshGroup, bone, false, false);
+			apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_DetachBoneFromChild, 
+												Editor, 
+												bone._meshGroup, 
+												//bone, 
+												false, false,
+												apEditorUtil.UNDO_STRUCT.StructChanged);
 
 			apMeshGroup targetMeshGroup = bone._meshGroup;
 
@@ -15520,7 +16179,12 @@ namespace AnyPortrait
 			}
 
 			//Undo
-			apEditorUtil.SetRecord_MeshGroup(apUndoGroupData.ACTION.MeshGroup_SetBoneAsParent, Editor, bone._meshGroup, bone, false, false);
+			apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_SetBoneAsParent, 
+												Editor, 
+												bone._meshGroup, 
+												//bone, 
+												false, false,
+												apEditorUtil.UNDO_STRUCT.StructChanged);
 
 			//Parent Bone은 Null이 될 수 있다. (Root가 되는 경우)
 			apMeshGroup targetMeshGroup = bone._meshGroup;
@@ -15700,7 +16364,12 @@ namespace AnyPortrait
 				return;
 			}
 
-			apEditorUtil.SetRecord_MeshGroup(apUndoGroupData.ACTION.MeshGroup_SetBoneAsIKTarget, Editor, bone._meshGroup, bone, false, false);
+			apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_SetBoneAsIKTarget, 
+												Editor, 
+												bone._meshGroup, 
+												//bone, 
+												false, false,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 			//string prevIKTargetBoneName = "<None>";
 			//if (bone._IKTargetBone != null)
@@ -15740,7 +16409,12 @@ namespace AnyPortrait
 				return;
 			}
 
-			apEditorUtil.SetRecord_MeshGroup(apUndoGroupData.ACTION.MeshGroup_BoneIKControllerChanged, Editor, bone._meshGroup, bone, false, false);
+			apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_BoneIKControllerChanged, 
+												Editor, 
+												bone._meshGroup, 
+												//bone, 
+												false, false,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 			if (bone._IKController == null)
 			{
@@ -15770,7 +16444,12 @@ namespace AnyPortrait
 				return;
 			}
 
-			apEditorUtil.SetRecord_MeshGroup(apUndoGroupData.ACTION.MeshGroup_BoneIKControllerChanged, Editor, bone._meshGroup, bone, false, false);
+			apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_BoneIKControllerChanged, 
+												Editor, 
+												bone._meshGroup, 
+												//bone, 
+												false, false,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 			if (bone._IKController == null)
 			{
@@ -15818,7 +16497,12 @@ namespace AnyPortrait
 			{
 				return;
 			}
-			apEditorUtil.SetRecord_MeshGroup(apUndoGroupData.ACTION.MeshGroup_BoneMirrorChanged, Editor, bone._meshGroup, bone, false, false);
+			apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_BoneMirrorChanged, 
+												Editor, 
+												bone._meshGroup, 
+												//bone, 
+												false, false,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 			apBone prevMirrorBone = bone._mirrorBone;//기존의 Mirror Bone
 			if (prevMirrorBone != null
@@ -15894,7 +16578,12 @@ namespace AnyPortrait
 			}
 
 			//Undo
-			apEditorUtil.SetRecord_MeshGroup(apUndoGroupData.ACTION.MeshGroup_AddBone, Editor, meshGroup, null, false, false);
+			apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_AddBone, 
+												Editor, 
+												meshGroup, 
+												//null, 
+												false, false,
+												apEditorUtil.UNDO_STRUCT.StructChanged);
 
 			bool isCreateWithChild = (createWithChild == 0);
 
@@ -16185,7 +16874,12 @@ namespace AnyPortrait
 			}
 
 			//Undo
-			apEditorUtil.SetRecord_MeshGroup(apUndoGroupData.ACTION.MeshGroup_AddBone, Editor, meshGroup, null, false, false);
+			apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_AddBone, 
+												Editor, 
+												meshGroup, 
+												//null, 
+												false, false,
+												apEditorUtil.UNDO_STRUCT.StructChanged);
 
 			//1. 일단 본들을 생성하고, Src>Copied를 연결한다.
 			//2. IK 설정도 연결한다.
@@ -16469,7 +17163,12 @@ namespace AnyPortrait
 			//Undo
 			if(isRecordUndo)
 			{
-				apEditorUtil.SetRecord_MeshGroup(apUndoGroupData.ACTION.MeshGroup_DuplicateMeshGroupTransform, Editor, dstMeshGroup, null, false, false);
+				apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_DuplicateMeshGroupTransform, 
+													Editor, 
+													dstMeshGroup, 
+													//null, 
+													false, false,
+													apEditorUtil.UNDO_STRUCT.StructChanged);
 			}
 			
 
@@ -16800,7 +17499,12 @@ namespace AnyPortrait
 			}
 
 			//Undo
-			apEditorUtil.SetRecord_MeshGroup(apUndoGroupData.ACTION.MeshGroup_BoneSettingChanged, Editor, meshGroup, null, false, false);
+			apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_BoneSettingChanged, 
+												Editor, 
+												meshGroup, 
+												//null, 
+												false, false,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 			//World Matrix에서 위치를 보정할 것이므로, 필요한 행렬 변수를 가져오자
 			apBone parentBone = srcBone._parentBone;
@@ -16943,7 +17647,13 @@ namespace AnyPortrait
 			{
 				return;
 			}
-			apEditorUtil.SetRecord_MeshGroup(apUndoGroupData.ACTION.MeshGroup_BoneSettingChanged, Editor, meshGroup, bone, false, false);
+			apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_BoneSettingChanged, 
+												Editor, 
+												meshGroup, 
+												//bone, 
+												false, false,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 			//프리셋 색상으로부터 범위를 정한다.
 			Color newBoneColor = Color.black;
 			if (bone._parentBone != null)
@@ -17518,7 +18228,13 @@ namespace AnyPortrait
 			float importScale = retarget._importScale;
 
 			//Undo
-			apEditorUtil.SetRecord_MeshGroup(apUndoGroupData.ACTION.MeshGroup_AddBone, Editor, targetMeshGroup, null, false, false);
+			apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_AddBone, 
+												Editor, 
+												targetMeshGroup, 
+												//null, 
+												false, false,
+												apEditorUtil.UNDO_STRUCT.StructChanged);
+
 			//Unit ID -> Bone ID(새로 생성) 으로 연결하는 Map을 만들자
 			Dictionary<int, int> unitID2BoneID = new Dictionary<int, int>();
 
@@ -17723,7 +18439,13 @@ namespace AnyPortrait
 				}
 			}
 
-			apEditorUtil.SetRecord_MeshGroupAndModifier(apUndoGroupData.ACTION.Retarget_ImportSinglePoseToMod, Editor, targetMeshGroup, targetModifier, null, false);
+			apEditorUtil.SetRecord_MeshGroupAndModifier(	apUndoGroupData.ACTION.Retarget_ImportSinglePoseToMod, 
+															Editor, 
+															targetMeshGroup, 
+															targetModifier, 
+															//null, 
+															false,
+															apEditorUtil.UNDO_STRUCT.StructChanged);
 
 			//Dict
 			foreach (KeyValuePair<apBone, apRetargetBonePoseUnit> posePair in validBonePoseUnits)
@@ -17917,7 +18639,14 @@ namespace AnyPortrait
 
 
 
-			apEditorUtil.SetRecord_PortraitMeshGroupModifier(apUndoGroupData.ACTION.Retarget_ImportSinglePoseToAnim, Editor, Editor._portrait, targetMeshGroup, targetTimeline._linkedModifier, null, false);
+			apEditorUtil.SetRecord_PortraitMeshGroupModifier(	apUndoGroupData.ACTION.Retarget_ImportSinglePoseToAnim, 
+																Editor, 
+																Editor._portrait, 
+																targetMeshGroup, 
+																targetTimeline._linkedModifier, 
+																//null, 
+																false,
+																apEditorUtil.UNDO_STRUCT.StructChanged);
 
 			bool isAnyTimelinelayerCreated = false;
 
@@ -18231,7 +18960,12 @@ namespace AnyPortrait
 			if (isRecord)
 			{
 				//Undo - 연속 입력 가능
-				apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Modifier_SetBoneWeight, Editor, Editor.Select.Modifier, null, true);
+				apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Modifier_SetBoneWeight, 
+													Editor, 
+													Editor.Select.Modifier, 
+													//null, 
+													true,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 			bool isAutoNormalize = Editor.Select._rigEdit_isAutoNormalize;
@@ -18341,7 +19075,12 @@ namespace AnyPortrait
 				return;
 			}
 			//Undo
-			apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Modifier_SetBoneWeight, Editor, Editor.Select.Modifier, null, false);
+			apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Modifier_SetBoneWeight, 
+												Editor, 
+												Editor.Select.Modifier, 
+												//null, 
+												false,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 			apModifiedVertexRig vertRig = null;
 			for (int iVertRig = 0; iVertRig < vertRigs.Count; iVertRig++)
@@ -18392,7 +19131,12 @@ namespace AnyPortrait
 			}
 
 			//Undo
-			apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Modifier_SetBoneWeight, Editor, Editor.Select.Modifier, false, false);
+			apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Modifier_SetBoneWeight, 
+												Editor, 
+												Editor.Select.Modifier, 
+												//false, 
+												false,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 			apModifiedVertexRig vertRig = null;
 			bool isAnyRigDataRemoved = false;
@@ -18471,7 +19215,12 @@ namespace AnyPortrait
 			bool isAnyRigDataRemoved = false;
 
 			//Undo
-			apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Modifier_SetBoneWeight, Editor, Editor.Select.Modifier, null, false);
+			apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Modifier_SetBoneWeight, 
+												Editor, 
+												Editor.Select.Modifier, 
+												//null, 
+												false,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 			apBone curSelectedBone = Editor.Select.Bone;
 
@@ -19120,7 +19869,12 @@ namespace AnyPortrait
 			
 
 			//Undo
-			apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Modifier_SetBoneWeight, Editor, Editor.Select.Modifier, null, false);
+			apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Modifier_SetBoneWeight, 
+												Editor, 
+												Editor.Select.Modifier, 
+												//null, 
+												false,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 			apModifiedVertexRig vertRig = null;
 
@@ -19476,7 +20230,12 @@ namespace AnyPortrait
 		public void RemoveVertRigData(List<apSelection.ModRenderVert> selectedVerts, apBone targetBone)
 		{
 			//Undo
-			apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Modifier_RemoveBoneWeight, Editor, Editor.Select.Modifier, null, false);
+			apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Modifier_RemoveBoneWeight, 
+												Editor, 
+												Editor.Select.Modifier, 
+												//null, 
+												false,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 			bool isAutoNormalize = Editor.Select._rigEdit_isAutoNormalize;
 
@@ -19549,7 +20308,12 @@ namespace AnyPortrait
 			}
 
 			//Undo - 연속 입력 가능
-			apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Modifier_SetPhysicsWeight, Editor, Editor.Select.Modifier, null, true);
+			apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Modifier_SetPhysicsWeight, 
+												Editor, 
+												Editor.Select.Modifier, 
+												//null, 
+												true,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 
 			for (int i = 0; i < vertWeights.Count; i++)
@@ -19645,7 +20409,12 @@ namespace AnyPortrait
 			}
 
 			//Undo - 연속 입력 가능
-			apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Modifier_SetPhysicsWeight, Editor, Editor.Select.Modifier, null, true);
+			apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Modifier_SetPhysicsWeight, 
+												Editor, 
+												Editor.Select.Modifier, 
+												//null, 
+												true,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 
 			Dictionary<apModifiedVertexWeight, float> avgWeights = new Dictionary<apModifiedVertexWeight, float>();
@@ -19912,7 +20681,12 @@ namespace AnyPortrait
 				return;
 			}
 
-			apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Modifier_SetPhysicsProperty, Editor, Editor.Select.Modifier, null, true);
+			apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Modifier_SetPhysicsProperty, 
+												Editor, 
+												Editor.Select.Modifier, 
+												//null, 
+												true,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 			apModifiedVertexWeight vertWeight = null;
 			for (int i = 0; i < vertWeights.Count; i++)
@@ -19995,7 +20769,7 @@ namespace AnyPortrait
 		}
 
 
-		//----------------a----------------------------------
+		//---------------------------------------------------
 		// 4. 메시 작업
 		//--------------------------------------------------
 		public void StartMeshEdgeWork()
@@ -20020,7 +20794,12 @@ namespace AnyPortrait
 			if (Editor.Select.Mesh.IsEdgeWorking() && Editor.Select.Mesh.IsAnyWorkedEdge())
 			{
 				//Undo
-				apEditorUtil.SetRecord_Mesh(apUndoGroupData.ACTION.MeshEdit_MakeEdges, Editor, Editor.Select.Mesh, null, false);
+				apEditorUtil.SetRecord_Mesh(	apUndoGroupData.ACTION.MeshEdit_MakeEdges, 
+												Editor, 
+												Editor.Select.Mesh, 
+												//null, 
+												false,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 				//bool isResult = EditorUtility.DisplayDialog("Confirm Edges", "Edge working is not completed.\nDo you want to complete it?", "Make Edges", "Remove");
 				bool isResult = EditorUtility.DisplayDialog(_editor.GetText(TEXT.MeshEditChanged_Title),
@@ -20144,7 +20923,12 @@ namespace AnyPortrait
 				return null;
 			}
 
-			apEditorUtil.SetRecord_Mesh(apUndoGroupData.ACTION.MeshEdit_EditPolygons, Editor, Editor.Select.Mesh, null, false);
+			apEditorUtil.SetRecord_Mesh(	apUndoGroupData.ACTION.MeshEdit_EditPolygons, 
+											Editor, 
+											Editor.Select.Mesh, 
+											//null, 
+											false,
+											apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 			Editor.Select.Mesh._polygons.Remove(Editor.VertController.Polygon);
 			Editor.Select.Mesh.RefreshPolygonsToIndexBuffer();
@@ -20180,7 +20964,13 @@ namespace AnyPortrait
 			if (isRecordAndRefresh)
 			{
 				//Undo
-				apEditorUtil.SetRecord_MeshGroup(apUndoGroupData.ACTION.MeshGroup_AttachMesh, Editor, targetMeshGroup, addedMesh, false, true);
+				apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_AttachMesh, 
+													Editor, 
+													targetMeshGroup, 
+													//addedMesh, 
+													false, 
+													true,
+													apEditorUtil.UNDO_STRUCT.StructChanged);
 			}
 
 			int nSameMesh = targetMeshGroup._childMeshTransforms.FindAll(delegate (apTransform_Mesh a)
@@ -20315,7 +21105,12 @@ namespace AnyPortrait
 			if (isRecordAndRefresh)
 			{
 				//Undo
-				apEditorUtil.SetRecord_MeshGroup(apUndoGroupData.ACTION.MeshGroup_AttachMeshGroup, Editor, targetMeshGroup, addedMeshGroup, false, true);
+				apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_AttachMeshGroup, 
+													Editor, 
+													targetMeshGroup, 
+													//addedMeshGroup, 
+													false, true,
+													apEditorUtil.UNDO_STRUCT.StructChanged);
 			}
 
 
@@ -20441,7 +21236,12 @@ namespace AnyPortrait
 
 			if (isRecordAndRefresh)
 			{
-				apEditorUtil.SetRecord_MeshGroup(apUndoGroupData.ACTION.MeshGroup_ClippingChanged, Editor, meshGroup, null, false, true);
+				apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_ClippingChanged, 
+													Editor, 
+													meshGroup, 
+													//null, 
+													false, true,
+													apEditorUtil.UNDO_STRUCT.StructChanged);
 			}
 
 
@@ -20479,7 +21279,12 @@ namespace AnyPortrait
 				}
 			}
 
-			apEditorUtil.SetRecord_MeshGroup(apUndoGroupData.ACTION.MeshGroup_ClippingChanged, Editor, meshGroup, null, false, true);
+			apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_ClippingChanged, 
+												Editor, 
+												meshGroup, 
+												//null, 
+												false, true,
+												apEditorUtil.UNDO_STRUCT.StructChanged);
 
 			meshTransform._isClipping_Child = false;
 			meshTransform._clipIndexFromParent = -1;
@@ -21314,6 +22119,17 @@ namespace AnyPortrait
 					newModifier = newGameObj.AddComponent<apModifier_AnimatedFFD>();
 					break;
 
+				//추가 21.7.20 : Color Only Modifier 추가
+				case apModifierBase.MODIFIER_TYPE.ColorOnly:
+					newGameObj = new GameObject("Modifier - ColorOnly");
+					newModifier = newGameObj.AddComponent<apModifier_ColorOnly>();
+					break;
+
+				case apModifierBase.MODIFIER_TYPE.AnimatedColorOnly:
+					newGameObj = new GameObject("Modifier - AnimatedColorOnly");
+					newModifier = newGameObj.AddComponent<apModifier_AnimatedColorOnly>();
+					break;
+
 				default:
 					Debug.LogError("TODO : 정의되지 않은 타입 [" + _type + "]");
 					break;
@@ -21462,6 +22278,17 @@ namespace AnyPortrait
 					newModifier = newGameObj.AddComponent<apModifier_AnimatedFFD>();
 					break;
 
+					//추가 21.7.20
+				case apModifierBase.MODIFIER_TYPE.ColorOnly:
+					newGameObj = new GameObject("Modifier - ColorOnly");
+					newModifier = newGameObj.AddComponent<apModifier_ColorOnly>();
+					break;
+
+				case apModifierBase.MODIFIER_TYPE.AnimatedColorOnly:
+					newGameObj = new GameObject("Modifier - AnimatedColorOnly");
+					newModifier = newGameObj.AddComponent<apModifier_AnimatedColorOnly>();
+					break;
+
 				default:
 					Debug.LogError("TODO : 정의되지 않은 타입 [" + _type + "]");
 					break;
@@ -21521,7 +22348,9 @@ namespace AnyPortrait
 			apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Modifier_AddModMeshToParamSet, 
 											Editor, 
 											Editor.Select.Modifier, 
-											Editor.Select.MeshTF_Main != null ? (object)Editor.Select.MeshTF_Main : (object)Editor.Select.MeshGroupTF_Main, false);
+											//Editor.Select.MeshTF_Main != null ? (object)Editor.Select.MeshTF_Main : (object)Editor.Select.MeshGroupTF_Main, 
+											false,
+											apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 			//apModifiedMesh addedModMesh = null;
 			List<apModifierParamSet> modParamSetList = Editor.Select.SubEditedParamSetGroup._paramSetList;
@@ -21621,7 +22450,9 @@ namespace AnyPortrait
 			apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Modifier_AddModMeshToParamSet, 
 											Editor, 
 											Editor.Select.Modifier, 
-											Editor.Select.Bone, false);
+											//Editor.Select.Bone, 
+											false,
+											apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 			apBone bone = Editor.Select.Bone;
 
@@ -21682,7 +22513,9 @@ namespace AnyPortrait
 			apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Modifier_AddModMeshToParamSet, 
 											Editor, 
 											Editor.Select.Modifier, 
-											null, false);
+											//null,
+											false,
+											apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 
 			apModifierParamSetGroup targetParamSetGroup = Editor.Select.SubEditedParamSetGroup;
@@ -21869,7 +22702,10 @@ namespace AnyPortrait
 			apEditorUtil.SetRecord_MeshGroupAndModifier(apUndoGroupData.ACTION.Modifier_LinkControlParam, 
 														Editor, 
 														Editor.Select.Modifier._meshGroup, 
-														Editor.Select.Modifier, controlParam, false);
+														Editor.Select.Modifier, 
+														//controlParam, 
+														false,
+														apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 
 			apModifierParamSetGroup paramSetGroup = Editor.Select.Modifier._paramSetGroup_controller.Find(delegate (apModifierParamSetGroup a)
@@ -22142,7 +22978,13 @@ namespace AnyPortrait
 			}
 
 			//Undo
-			apEditorUtil.SetRecord_MeshGroupAndModifier(apUndoGroupData.ACTION.Modifier_AddStaticParamSetGroup, Editor, Editor.Select.Modifier._meshGroup, Editor.Select.Modifier, null, false);
+			apEditorUtil.SetRecord_MeshGroupAndModifier(	apUndoGroupData.ACTION.Modifier_AddStaticParamSetGroup, 
+															Editor, 
+															Editor.Select.Modifier._meshGroup, 
+															Editor.Select.Modifier, 
+															//null, 
+															false,
+															apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 
 			if (Editor.Select.Modifier._paramSetGroup_controller.Count > 0)
@@ -22707,7 +23549,12 @@ namespace AnyPortrait
 
 
 			//Undo를 기록하자
-			apEditorUtil.SetRecord_MeshGroupAllModifiers(apUndoGroupData.ACTION.Modifier_LayerChanged, Editor, Editor.Select.MeshGroup, null, false);
+			apEditorUtil.SetRecord_MeshGroupAllModifiers(	apUndoGroupData.ACTION.Modifier_LayerChanged, 
+															Editor, 
+															Editor.Select.MeshGroup, 
+															//null, 
+															false,
+															apEditorUtil.UNDO_STRUCT.StructChanged);
 
 
 			modStack.RefreshAndSort(false);
@@ -24621,6 +25468,9 @@ namespace AnyPortrait
 				}
 
 
+				//변경 21.5.27 : 여기로 이동
+				//Parent Transform에 등록하자
+				optTransform.SetChildMesh(optMesh);
 
 				//이전 버전의 BakeMesh
 				optMesh.BakeMesh(posList.ToArray(),
@@ -24687,195 +25537,195 @@ namespace AnyPortrait
 					//Editor._portrait._optClippedMeshes.Add(optMesh);
 				}
 
-
-				//Parent Transform에 등록하자
-				optTransform.SetChildMesh(optMesh);
+				//이전
+				////Parent Transform에 등록하자
+				//optTransform.SetChildMesh(optMesh);
 
 				targetOptPortrait._optMeshes.Add(optMesh);
 			}
 		}
 
 
-		private Shader GetOptMeshShader(apPortrait.SHADER_TYPE shaderType, bool isClipping, bool isGammaColorSpace, bool isLightweightRenderPipeline)
-		{
-			string folderPath = null;
-			string fileName = null;
-			if (isGammaColorSpace)
-			{
-				if (!isLightweightRenderPipeline)
-				{
-					//Gamma + Default
-					folderPath = apShaderGenerator.ShaderPath;
+		//private Shader GetOptMeshShader(apPortrait.SHADER_TYPE shaderType, bool isClipping, bool isGammaColorSpace, bool isLightweightRenderPipeline)
+		//{
+		//	string folderPath = null;
+		//	string fileName = null;
+		//	if (isGammaColorSpace)
+		//	{
+		//		if (!isLightweightRenderPipeline)
+		//		{
+		//			//Gamma + Default
+		//			folderPath = apShaderGenerator.ShaderPath;
 
-					switch (shaderType)
-					{
-						case apPortrait.SHADER_TYPE.AlphaBlend: fileName = (isClipping ? "apShader_ClippedWithMask" : "apShader_Transparent"); break;
-						case apPortrait.SHADER_TYPE.Additive: fileName = (isClipping ? "apShader_ClippedWithMask_Additive" : "apShader_Transparent_Additive"); break;
-						case apPortrait.SHADER_TYPE.Multiplicative: fileName = (isClipping ? "apShader_ClippedWithMask_Multiplicative" : "apShader_Transparent_Multiplicative"); break;
-						case apPortrait.SHADER_TYPE.SoftAdditive: fileName = (isClipping ? "apShader_ClippedWithMask_SoftAdditive" : "apShader_Transparent_SoftAdditive"); break;
-					}
-				}
-				else
-				{
-					//Gamma + LWRP
-					folderPath = apShaderGenerator.ShaderPath_LWRP;
+		//			switch (shaderType)
+		//			{
+		//				case apPortrait.SHADER_TYPE.AlphaBlend: fileName = (isClipping ? "apShader_ClippedWithMask" : "apShader_Transparent"); break;
+		//				case apPortrait.SHADER_TYPE.Additive: fileName = (isClipping ? "apShader_ClippedWithMask_Additive" : "apShader_Transparent_Additive"); break;
+		//				case apPortrait.SHADER_TYPE.Multiplicative: fileName = (isClipping ? "apShader_ClippedWithMask_Multiplicative" : "apShader_Transparent_Multiplicative"); break;
+		//				case apPortrait.SHADER_TYPE.SoftAdditive: fileName = (isClipping ? "apShader_ClippedWithMask_SoftAdditive" : "apShader_Transparent_SoftAdditive"); break;
+		//			}
+		//		}
+		//		else
+		//		{
+		//			//Gamma + LWRP
+		//			folderPath = apShaderGenerator.ShaderPath_LWRP;
 
-					switch (shaderType)
-					{
-						case apPortrait.SHADER_TYPE.AlphaBlend: fileName = (isClipping ? "apShader_LWRP_ClippedWithMask" : "apShader_LWRP_Transparent"); break;
-						case apPortrait.SHADER_TYPE.Additive: fileName = (isClipping ? "apShader_LWRP_ClippedWithMask_Additive" : "apShader_LWRP_Transparent_Additive"); break;
-						case apPortrait.SHADER_TYPE.Multiplicative: fileName = (isClipping ? "apShader_LWRP_ClippedWithMask_Multiplicative" : "apShader_LWRP_Transparent_Multiplicative"); break;
-						case apPortrait.SHADER_TYPE.SoftAdditive: fileName = (isClipping ? "apShader_LWRP_ClippedWithMask_SoftAdditive" : "apShader_LWRP_Transparent_SoftAdditive"); break;
-					}
-				}
-			}
-			else
-			{
-				if (!isLightweightRenderPipeline)
-				{
-					//Linear + Default
-					folderPath = apShaderGenerator.ShaderPath_Linear;
+		//			switch (shaderType)
+		//			{
+		//				case apPortrait.SHADER_TYPE.AlphaBlend: fileName = (isClipping ? "apShader_LWRP_ClippedWithMask" : "apShader_LWRP_Transparent"); break;
+		//				case apPortrait.SHADER_TYPE.Additive: fileName = (isClipping ? "apShader_LWRP_ClippedWithMask_Additive" : "apShader_LWRP_Transparent_Additive"); break;
+		//				case apPortrait.SHADER_TYPE.Multiplicative: fileName = (isClipping ? "apShader_LWRP_ClippedWithMask_Multiplicative" : "apShader_LWRP_Transparent_Multiplicative"); break;
+		//				case apPortrait.SHADER_TYPE.SoftAdditive: fileName = (isClipping ? "apShader_LWRP_ClippedWithMask_SoftAdditive" : "apShader_LWRP_Transparent_SoftAdditive"); break;
+		//			}
+		//		}
+		//	}
+		//	else
+		//	{
+		//		if (!isLightweightRenderPipeline)
+		//		{
+		//			//Linear + Default
+		//			folderPath = apShaderGenerator.ShaderPath_Linear;
 
-					switch (shaderType)
-					{
-						case apPortrait.SHADER_TYPE.AlphaBlend: fileName = (isClipping ? "apShader_L_ClippedWithMask" : "apShader_L_Transparent"); break;
-						case apPortrait.SHADER_TYPE.Additive: fileName = (isClipping ? "apShader_L_ClippedWithMask_Additive" : "apShader_L_Transparent_Additive"); break;
-						case apPortrait.SHADER_TYPE.Multiplicative: fileName = (isClipping ? "apShader_L_ClippedWithMask_Multiplicative" : "apShader_L_Transparent_Multiplicative"); break;
-						case apPortrait.SHADER_TYPE.SoftAdditive: fileName = (isClipping ? "apShader_L_ClippedWithMask_SoftAdditive" : "apShader_L_Transparent_SoftAdditive"); break;
-					}
-				}
-				else
-				{
-					//Linear + LWRP
-					folderPath = apShaderGenerator.ShaderPath_Linear_LWRP;
+		//			switch (shaderType)
+		//			{
+		//				case apPortrait.SHADER_TYPE.AlphaBlend: fileName = (isClipping ? "apShader_L_ClippedWithMask" : "apShader_L_Transparent"); break;
+		//				case apPortrait.SHADER_TYPE.Additive: fileName = (isClipping ? "apShader_L_ClippedWithMask_Additive" : "apShader_L_Transparent_Additive"); break;
+		//				case apPortrait.SHADER_TYPE.Multiplicative: fileName = (isClipping ? "apShader_L_ClippedWithMask_Multiplicative" : "apShader_L_Transparent_Multiplicative"); break;
+		//				case apPortrait.SHADER_TYPE.SoftAdditive: fileName = (isClipping ? "apShader_L_ClippedWithMask_SoftAdditive" : "apShader_L_Transparent_SoftAdditive"); break;
+		//			}
+		//		}
+		//		else
+		//		{
+		//			//Linear + LWRP
+		//			folderPath = apShaderGenerator.ShaderPath_Linear_LWRP;
 
-					switch (shaderType)
-					{
-						case apPortrait.SHADER_TYPE.AlphaBlend: fileName = (isClipping ? "apShader_LWRP_L_ClippedWithMask" : "apShader_LWRP_L_Transparent"); break;
-						case apPortrait.SHADER_TYPE.Additive: fileName = (isClipping ? "apShader_LWRP_L_ClippedWithMask_Additive" : "apShader_LWRP_L_Transparent_Additive"); break;
-						case apPortrait.SHADER_TYPE.Multiplicative: fileName = (isClipping ? "apShader_LWRP_L_ClippedWithMask_Multiplicative" : "apShader_LWRP_L_Transparent_Multiplicative"); break;
-						case apPortrait.SHADER_TYPE.SoftAdditive: fileName = (isClipping ? "apShader_LWRP_L_ClippedWithMask_SoftAdditive" : "apShader_LWRP_L_Transparent_SoftAdditive"); break;
-					}
-				}
-			}
+		//			switch (shaderType)
+		//			{
+		//				case apPortrait.SHADER_TYPE.AlphaBlend: fileName = (isClipping ? "apShader_LWRP_L_ClippedWithMask" : "apShader_LWRP_L_Transparent"); break;
+		//				case apPortrait.SHADER_TYPE.Additive: fileName = (isClipping ? "apShader_LWRP_L_ClippedWithMask_Additive" : "apShader_LWRP_L_Transparent_Additive"); break;
+		//				case apPortrait.SHADER_TYPE.Multiplicative: fileName = (isClipping ? "apShader_LWRP_L_ClippedWithMask_Multiplicative" : "apShader_LWRP_L_Transparent_Multiplicative"); break;
+		//				case apPortrait.SHADER_TYPE.SoftAdditive: fileName = (isClipping ? "apShader_LWRP_L_ClippedWithMask_SoftAdditive" : "apShader_LWRP_L_Transparent_SoftAdditive"); break;
+		//			}
+		//		}
+		//	}
 
-			return AssetDatabase.LoadAssetAtPath<Shader>(folderPath + "/" + fileName + ".shader");
+		//	return AssetDatabase.LoadAssetAtPath<Shader>(folderPath + "/" + fileName + ".shader");
 
 
-			#region [미사용 코드] :Material에서 Shader를 추출하는 구식 방법
-			//Material targetMat = null;
-			//string materialAssetName = "";
-			//switch (shaderType)
-			//{
-			//	case apPortrait.SHADER_TYPE.AlphaBlend:
-			//		if (isGammaColorSpace)
-			//		{
-			//			if (!isClipping)	{ materialAssetName = "apMat_Opt_Normal"; }
-			//			else				{ materialAssetName = "apMat_Opt_Clipped"; }
-			//		}
-			//		else
-			//		{
-			//			if (!isClipping)	{ materialAssetName = "apMat_L_Opt_Normal"; }
-			//			else				{ materialAssetName = "apMat_L_Opt_Clipped"; }
-			//		}
-			//		break;
+		//	#region [미사용 코드] :Material에서 Shader를 추출하는 구식 방법
+		//	//Material targetMat = null;
+		//	//string materialAssetName = "";
+		//	//switch (shaderType)
+		//	//{
+		//	//	case apPortrait.SHADER_TYPE.AlphaBlend:
+		//	//		if (isGammaColorSpace)
+		//	//		{
+		//	//			if (!isClipping)	{ materialAssetName = "apMat_Opt_Normal"; }
+		//	//			else				{ materialAssetName = "apMat_Opt_Clipped"; }
+		//	//		}
+		//	//		else
+		//	//		{
+		//	//			if (!isClipping)	{ materialAssetName = "apMat_L_Opt_Normal"; }
+		//	//			else				{ materialAssetName = "apMat_L_Opt_Clipped"; }
+		//	//		}
+		//	//		break;
 
-			//	case apPortrait.SHADER_TYPE.Additive:
-			//		if (isGammaColorSpace)
-			//		{
-			//			if (!isClipping)	{ materialAssetName = "apMat_Opt_Normal Additive"; }
-			//			else				{ materialAssetName = "apMat_Opt_Clipped Additive"; }
-			//		}
-			//		else
-			//		{
-			//			if (!isClipping)	{ materialAssetName = "apMat_L_Opt_Normal Additive"; }
-			//			else				{ materialAssetName = "apMat_L_Opt_Clipped Additive"; }
-			//		}
+		//	//	case apPortrait.SHADER_TYPE.Additive:
+		//	//		if (isGammaColorSpace)
+		//	//		{
+		//	//			if (!isClipping)	{ materialAssetName = "apMat_Opt_Normal Additive"; }
+		//	//			else				{ materialAssetName = "apMat_Opt_Clipped Additive"; }
+		//	//		}
+		//	//		else
+		//	//		{
+		//	//			if (!isClipping)	{ materialAssetName = "apMat_L_Opt_Normal Additive"; }
+		//	//			else				{ materialAssetName = "apMat_L_Opt_Clipped Additive"; }
+		//	//		}
 
-			//		break;
+		//	//		break;
 
-			//	case apPortrait.SHADER_TYPE.SoftAdditive:
-			//		if(isGammaColorSpace)
-			//		{
-			//			if (!isClipping)	{ materialAssetName = "apMat_Opt_Normal SoftAdditive"; }
-			//			else				{ materialAssetName = "apMat_Opt_Clipped SoftAdditive"; }
-			//		}
-			//		else
-			//		{
-			//			if (!isClipping)	{ materialAssetName = "apMat_L_Opt_Normal SoftAdditive"; }
-			//			else				{ materialAssetName = "apMat_L_Opt_Clipped SoftAdditive"; }
-			//		}
+		//	//	case apPortrait.SHADER_TYPE.SoftAdditive:
+		//	//		if(isGammaColorSpace)
+		//	//		{
+		//	//			if (!isClipping)	{ materialAssetName = "apMat_Opt_Normal SoftAdditive"; }
+		//	//			else				{ materialAssetName = "apMat_Opt_Clipped SoftAdditive"; }
+		//	//		}
+		//	//		else
+		//	//		{
+		//	//			if (!isClipping)	{ materialAssetName = "apMat_L_Opt_Normal SoftAdditive"; }
+		//	//			else				{ materialAssetName = "apMat_L_Opt_Clipped SoftAdditive"; }
+		//	//		}
 
-			//		break;
+		//	//		break;
 
-			//	case apPortrait.SHADER_TYPE.Multiplicative:
-			//		if(isGammaColorSpace)
-			//		{
-			//			if (!isClipping)	{ materialAssetName = "apMat_Opt_Normal Multiplicative"; }
-			//			else				{ materialAssetName = "apMat_Opt_Clipped Multiplicative"; }
-			//		}
-			//		else
-			//		{
-			//			if (!isClipping)	{ materialAssetName = "apMat_L_Opt_Normal Multiplicative"; }
-			//			else				{ materialAssetName = "apMat_L_Opt_Clipped Multiplicative"; }
-			//		}
+		//	//	case apPortrait.SHADER_TYPE.Multiplicative:
+		//	//		if(isGammaColorSpace)
+		//	//		{
+		//	//			if (!isClipping)	{ materialAssetName = "apMat_Opt_Normal Multiplicative"; }
+		//	//			else				{ materialAssetName = "apMat_Opt_Clipped Multiplicative"; }
+		//	//		}
+		//	//		else
+		//	//		{
+		//	//			if (!isClipping)	{ materialAssetName = "apMat_L_Opt_Normal Multiplicative"; }
+		//	//			else				{ materialAssetName = "apMat_L_Opt_Clipped Multiplicative"; }
+		//	//		}
 
-			//		break;
-			//}
-			//if (string.IsNullOrEmpty(materialAssetName))
-			//{
-			//	return null;
-			//}
-			////경로 변경 : "Assets/Editor/AnyPortraitTool/" => apEditorUtil.ResourcePath_Material
-			//if (isGammaColorSpace)
-			//{
-			//	targetMat = AssetDatabase.LoadAssetAtPath<Material>(apEditorUtil.ResourcePath_Material + materialAssetName + ".mat");
-			//}
-			//else
-			//{
-			//	//Linear Color Space인 경우 저장된 위치가 다르다
-			//	targetMat = AssetDatabase.LoadAssetAtPath<Material>(apEditorUtil.ResourcePath_Material + "Linear/" + materialAssetName + ".mat");
-			//}
-			//if (targetMat == null)
-			//{
-			//	Debug.LogError("Error : Invalid Shader [" + materialAssetName + "]");
-			//	return null;
-			//}
+		//	//		break;
+		//	//}
+		//	//if (string.IsNullOrEmpty(materialAssetName))
+		//	//{
+		//	//	return null;
+		//	//}
+		//	////경로 변경 : "Assets/Editor/AnyPortraitTool/" => apEditorUtil.ResourcePath_Material
+		//	//if (isGammaColorSpace)
+		//	//{
+		//	//	targetMat = AssetDatabase.LoadAssetAtPath<Material>(apEditorUtil.ResourcePath_Material + materialAssetName + ".mat");
+		//	//}
+		//	//else
+		//	//{
+		//	//	//Linear Color Space인 경우 저장된 위치가 다르다
+		//	//	targetMat = AssetDatabase.LoadAssetAtPath<Material>(apEditorUtil.ResourcePath_Material + "Linear/" + materialAssetName + ".mat");
+		//	//}
+		//	//if (targetMat == null)
+		//	//{
+		//	//	Debug.LogError("Error : Invalid Shader [" + materialAssetName + "]");
+		//	//	return null;
+		//	//}
 
-			//return targetMat.shader; 
-			#endregion
-		}
+		//	//return targetMat.shader; 
+		//	#endregion
+		//}
 
-		private Shader GetOptAlphaMaskShader(bool isLightweightRenderPipeline)
-		{
-			string assetPath = null;
-			if (!isLightweightRenderPipeline)
-			{
-				//Default
-				assetPath = apShaderGenerator.ShaderPath + "/" + "apShader_AlphaMask.shader";
-			}
-			else
-			{
-				//LWRP
-				assetPath = apShaderGenerator.ShaderPath_LWRP + "/" + "apShader_LWRP_AlphaMask.shader";
-			}
+		//private Shader GetOptAlphaMaskShader(bool isLightweightRenderPipeline)
+		//{
+		//	string assetPath = null;
+		//	if (!isLightweightRenderPipeline)
+		//	{
+		//		//Default
+		//		assetPath = apShaderGenerator.ShaderPath + "/" + "apShader_AlphaMask.shader";
+		//	}
+		//	else
+		//	{
+		//		//LWRP
+		//		assetPath = apShaderGenerator.ShaderPath_LWRP + "/" + "apShader_LWRP_AlphaMask.shader";
+		//	}
 
-			return AssetDatabase.LoadAssetAtPath<Shader>(assetPath);
+		//	return AssetDatabase.LoadAssetAtPath<Shader>(assetPath);
 
-			#region [미사용 코드]
-			//Material targetMat = null;
-			//string materialAssetName = "apMat_Opt_AlphaMask";
-			////경로 변경 : "Assets/Editor/AnyPortraitTool/" => apEditorUtil.ResourcePath_Material
-			//targetMat = AssetDatabase.LoadAssetAtPath<Material>(apEditorUtil.ResourcePath_Material + materialAssetName + ".mat");
-			//if (targetMat == null)
-			//{
-			//	Debug.LogError("Error : Invalid Shader [" + materialAssetName + "]");
-			//	return null;
-			//}
+		//	#region [미사용 코드]
+		//	//Material targetMat = null;
+		//	//string materialAssetName = "apMat_Opt_AlphaMask";
+		//	////경로 변경 : "Assets/Editor/AnyPortraitTool/" => apEditorUtil.ResourcePath_Material
+		//	//targetMat = AssetDatabase.LoadAssetAtPath<Material>(apEditorUtil.ResourcePath_Material + materialAssetName + ".mat");
+		//	//if (targetMat == null)
+		//	//{
+		//	//	Debug.LogError("Error : Invalid Shader [" + materialAssetName + "]");
+		//	//	return null;
+		//	//}
 
-			//return targetMat.shader; 
-			#endregion
-		}
+		//	//return targetMat.shader; 
+		//	#endregion
+		//}
 
 		private void MakeOptBone(apMeshGroup srcMeshGroup,
 									apOptTransform targetOptTransform,
@@ -25233,7 +26083,23 @@ namespace AnyPortrait
 		//절대 경로인지 확인하여 상대 경로로 전환한다.
 		private void CheckAnimationsBasePathForV116(apPortrait targetPortrait)
 		{
-			string basePath = targetPortrait._mecanimAnimClipResourcePath;
+			string basePath = apUtil.ConvertEscapeToPlainText(targetPortrait._mecanimAnimClipResourcePath);//변경 21.7.3 (Escape (%20)과 같은 문자)
+
+			bool isUndoRecorded = false;
+			if(!string.Equals(basePath, targetPortrait._mecanimAnimClipResourcePath))
+			{
+				Debug.Log("Escape 문자 발견 [" + targetPortrait._mecanimAnimClipResourcePath + "]");
+
+				isUndoRecorded = true;
+				apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Portrait_BakeOptionChanged, 
+																			_editor, 
+																			targetPortrait, 
+																			//targetPortrait, 
+																			false,
+																			apEditorUtil.UNDO_STRUCT.ValueOnly);
+
+				targetPortrait._mecanimAnimClipResourcePath = basePath;//Escape 문자 삭제
+			}
 
 			if (!string.IsNullOrEmpty(basePath))
 			{
@@ -25244,7 +26110,16 @@ namespace AnyPortrait
 					case apEditorUtil.PATH_INFO_TYPE.Absolute_InAssetFolder:
 						{
 							//Asset 안의 절대 경로 >> 메시지 없이 바로 상대 경로로 바꾼다.
-							apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Portrait_BakeOptionChanged, _editor, targetPortrait, targetPortrait, false);
+							if (!isUndoRecorded)//위에서 Undo Record가 없었다면
+							{
+								apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Portrait_BakeOptionChanged,
+																	_editor,
+																	targetPortrait,
+																	//targetPortrait, 
+																	false,
+																	apEditorUtil.UNDO_STRUCT.ValueOnly);
+							}
+
 							targetPortrait._mecanimAnimClipResourcePath = apEditorUtil.AbsolutePath2RelativePath(basePath);
 						}
 						break;
@@ -25269,6 +26144,9 @@ namespace AnyPortrait
 
 								if (!string.IsNullOrEmpty(nextPath))
 								{
+									//이스케이프 삭제
+									nextPath = apUtil.ConvertEscapeToPlainText(nextPath);
+
 									if (apEditorUtil.IsInAssetsFolder(nextPath))
 									{
 										//유효한 폴더인 경우
@@ -25282,7 +26160,15 @@ namespace AnyPortrait
 
 										}
 
-										apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Portrait_BakeOptionChanged, _editor, targetPortrait, targetPortrait, false);
+										if (!isUndoRecorded)//위에서 Undo Record가 없었다면
+										{
+											apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Portrait_BakeOptionChanged,
+																				_editor,
+																				targetPortrait,
+																				//targetPortrait, 
+																				false,
+																				apEditorUtil.UNDO_STRUCT.ValueOnly);
+										}
 
 										targetPortrait._mecanimAnimClipResourcePath = nextPath;
 									}
@@ -25305,7 +26191,16 @@ namespace AnyPortrait
 						{
 							string nextPath = apEditorUtil.DecodeURLEmptyWord(basePath);
 
-							apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Portrait_BakeOptionChanged, _editor, targetPortrait, targetPortrait, false);
+							if (!isUndoRecorded)//위에서 Undo Record가 없었다면
+							{
+								apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Portrait_BakeOptionChanged,
+																	_editor,
+																	targetPortrait,
+																	//targetPortrait, 
+																	false,
+																	apEditorUtil.UNDO_STRUCT.ValueOnly);
+							}
+
 							targetPortrait._mecanimAnimClipResourcePath = nextPath;
 						}
 
@@ -25335,6 +26230,9 @@ namespace AnyPortrait
 			}
 
 			basePath = basePath.Replace("\\", "/");
+
+			//추가 21.7.3 : 경로 문제 수정
+			basePath = apUtil.ConvertEscapeToPlainText(basePath);
 
 
 			System.IO.DirectoryInfo di = new System.IO.DirectoryInfo(basePath);
@@ -25382,7 +26280,7 @@ namespace AnyPortrait
 			}
 
 			//string relativePath = "Assets/" + uri_dataPath.MakeRelativeUri(uri_basePath).ToString();
-			string relativePath = uri_dataPath.MakeRelativeUri(uri_basePath).ToString();
+			string relativePath = apUtil.ConvertEscapeToPlainText(uri_dataPath.MakeRelativeUri(uri_basePath).ToString());//변경 21.7.11 : 이스케이프 문자 삭제
 
 			if (!relativePath.StartsWith("Assets/"))
 			{
@@ -27457,7 +28355,12 @@ namespace AnyPortrait
 
 				if (animKeyframe != null)
 				{
-					apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Anim_KeyframeValueChanged, Editor, Editor._portrait, animKeyframe, true);
+					apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Anim_KeyframeValueChanged, 
+														Editor, 
+														Editor._portrait, 
+														//animKeyframe, 
+														true,
+														apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 					switch (controlParam._valueType)
 					{
@@ -27516,8 +28419,9 @@ namespace AnyPortrait
 									Editor,
 									Editor.Select.MeshGroup,
 									Editor.Select.Modifier,
-									recordedKey,
-									false);
+									//recordedKey,
+									false,
+									apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 			if (Editor.Select.Modifier != null && Editor.Select.SubEditedParamSetGroup != null)
 			{
@@ -27943,7 +28847,12 @@ namespace AnyPortrait
 			{
 				return null;
 			}
-			apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.MaterialSetAdded, _editor, _editor._portrait, _editor._portrait, false);
+			apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.MaterialSetAdded, 
+												_editor, 
+												_editor._portrait, 
+												//_editor._portrait, 
+												false,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 			apPortrait portrait = _editor._portrait;
 			if(portrait._materialSets == null)
@@ -28053,7 +28962,12 @@ namespace AnyPortrait
 				return false;
 			}
 
-			apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.MaterialSetChanged, _editor, _editor._portrait, _editor._portrait, false);
+			apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.MaterialSetChanged, 
+												_editor, 
+												_editor._portrait, 
+												//_editor._portrait, 
+												false,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 			apMaterialSet preset = matSet._linkedPresetMaterial;
 
@@ -28241,7 +29155,12 @@ namespace AnyPortrait
 			}
 			else
 			{
-				apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.MaterialSetRemoved, _editor, _editor._portrait, _editor._portrait, false);
+				apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.MaterialSetRemoved, 
+													_editor, 
+													_editor._portrait, 
+													//_editor._portrait, 
+													false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 				_editor._portrait._materialSets.Remove(matSet);
 			}

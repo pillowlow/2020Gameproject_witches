@@ -1913,14 +1913,6 @@ namespace AnyPortrait
 			_vertWorld2BoneModWorldMatrix = _worldMatrix.MtrxToSpace;
 			_vertWorld2BoneModWorldMatrix *= _worldMatrix_NonModified.MtrxToLowerSpace;
 
-			//if(_name.Contains("Main Helper"))
-			//{
-			//	Debug.LogError("VertWorld 2 BoneModWorld :\n" + _vertWorld2BoneModWorldMatrix.ToString());
-			//	Debug.Log("WorldMatrix :\n" + _worldMatrix.MtrxToSpace.ToString());
-			//	Debug.Log("Inverse No-Mod WorldMatrix :\n" + _worldMatrix_NonModified.MtrxToLowerSpace.ToString());
-			//}
-			
-
 
 			
 

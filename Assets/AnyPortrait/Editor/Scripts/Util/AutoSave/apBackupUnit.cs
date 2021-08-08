@@ -1171,12 +1171,12 @@ namespace AnyPortrait
 									else if (parseType.Equals(typeof(float)))
 									{
 										//추가 20.9.13 : 실수에 .대신 ,이 들어가는 버그가 있다.
-										_value = float.Parse(strValue.Replace(',', '.'));
+										_value = apUtil.ParseFloat(strValue.Replace(',', '.'));
 									}
 									else if (parseType.Equals(typeof(double)))
 									{
 										//추가 20.9.13 : 실수에 .대신 ,이 들어가는 버그가 있다.
-										_value = double.Parse(strValue.Replace(',', '.'));
+										_value = apUtil.ParseDouble(strValue.Replace(',', '.'));
 									}
 									else if (parseType.Equals(typeof(byte)))	{ _value = byte.Parse(strValue); }
 									else if (parseType.Equals(typeof(char)))	{ _value = char.Parse(strValue); }
@@ -1225,8 +1225,8 @@ namespace AnyPortrait
 										}
 
 										//추가 20.9.13 : 실수형이 .대신 ,으로 저장되는 버그가 있다. Replace할 것
-										_value = new Vector2(	float.Parse(strValues[0].Replace(',', '.')),
-																float.Parse(strValues[1].Replace(',', '.'))
+										_value = new Vector2(	apUtil.ParseFloat(strValues[0].Replace(',', '.')),
+																apUtil.ParseFloat(strValues[1].Replace(',', '.'))
 																);
 									}
 									else
@@ -1258,15 +1258,15 @@ namespace AnyPortrait
 										if (isFloatCommaBug)
 										{
 											//콤마 버그
-											_value = new Vector2(float.Parse(strValues[0] + "." + strValues[1]),
-																	float.Parse(strValues[2] + "." + strValues[3])
+											_value = new Vector2(	apUtil.ParseFloat(strValues[0] + "." + strValues[1]),
+																	apUtil.ParseFloat(strValues[2] + "." + strValues[3])
 																	);
 										}
 										else
 										{
 											//일반적인 경우
-											_value = new Vector2(float.Parse(strValues[0]),
-																	float.Parse(strValues[1])
+											_value = new Vector2(	apUtil.ParseFloat(strValues[0]),
+																	apUtil.ParseFloat(strValues[1])
 																	);
 										}
 									}
@@ -1303,9 +1303,9 @@ namespace AnyPortrait
 										}
 
 										//추가 20.9.13 : 실수형이 .대신 ,으로 저장되는 버그가 있다. Replace할 것
-										_value = new Vector3(	float.Parse(strValues[0].Replace(',', '.')),
-																float.Parse(strValues[1].Replace(',', '.')),
-																float.Parse(strValues[2].Replace(',', '.'))
+										_value = new Vector3(	apUtil.ParseFloat(strValues[0].Replace(',', '.')),
+																apUtil.ParseFloat(strValues[1].Replace(',', '.')),
+																apUtil.ParseFloat(strValues[2].Replace(',', '.'))
 																);
 
 									}
@@ -1341,17 +1341,17 @@ namespace AnyPortrait
 										if (isFloatCommaBug)
 										{
 											//콤마 버그
-											_value = new Vector3(float.Parse(strValues[0] + "." + strValues[1]),
-																	float.Parse(strValues[2] + "." + strValues[3]),
-																	float.Parse(strValues[4] + "." + strValues[5])
+											_value = new Vector3(	apUtil.ParseFloat(strValues[0] + "." + strValues[1]),
+																	apUtil.ParseFloat(strValues[2] + "." + strValues[3]),
+																	apUtil.ParseFloat(strValues[4] + "." + strValues[5])
 																	);
 										}
 										else
 										{
 											//일반적인 경우
-											_value = new Vector3(float.Parse(strValues[0]),
-																	float.Parse(strValues[1]),
-																	float.Parse(strValues[2])
+											_value = new Vector3(	apUtil.ParseFloat(strValues[0]),
+																	apUtil.ParseFloat(strValues[1]),
+																	apUtil.ParseFloat(strValues[2])
 																	);
 										}
 									}
@@ -1384,10 +1384,10 @@ namespace AnyPortrait
 										}
 
 										//추가 20.9.13 : 실수형이 .대신 ,으로 저장되는 버그가 있다.
-										_value = new Vector4(	float.Parse(strValues[0].Replace(',', '.')),
-																float.Parse(strValues[1].Replace(',', '.')),
-																float.Parse(strValues[2].Replace(',', '.')),
-																float.Parse(strValues[3].Replace(',', '.'))
+										_value = new Vector4(	apUtil.ParseFloat(strValues[0].Replace(',', '.')),
+																apUtil.ParseFloat(strValues[1].Replace(',', '.')),
+																apUtil.ParseFloat(strValues[2].Replace(',', '.')),
+																apUtil.ParseFloat(strValues[3].Replace(',', '.'))
 																);
 									}
 									else
@@ -1424,19 +1424,19 @@ namespace AnyPortrait
 										if (isFloatCommaBug)
 										{
 											//콤마 버그
-											_value = new Vector4(float.Parse(strValues[0] + "." + strValues[1]),
-																	float.Parse(strValues[2] + "." + strValues[3]),
-																	float.Parse(strValues[4] + "." + strValues[5]),
-																	float.Parse(strValues[6] + "." + strValues[7])
+											_value = new Vector4(	apUtil.ParseFloat(strValues[0] + "." + strValues[1]),
+																	apUtil.ParseFloat(strValues[2] + "." + strValues[3]),
+																	apUtil.ParseFloat(strValues[4] + "." + strValues[5]),
+																	apUtil.ParseFloat(strValues[6] + "." + strValues[7])
 																	);
 										}
 										else
 										{
 											//일반적인 경우
-											_value = new Vector4(float.Parse(strValues[0]),
-																	float.Parse(strValues[1]),
-																	float.Parse(strValues[2]),
-																	float.Parse(strValues[3])
+											_value = new Vector4(	apUtil.ParseFloat(strValues[0]),
+																	apUtil.ParseFloat(strValues[1]),
+																	apUtil.ParseFloat(strValues[2]),
+																	apUtil.ParseFloat(strValues[3])
 																	);
 										}
 									}
@@ -1469,10 +1469,10 @@ namespace AnyPortrait
 										}
 
 										//추가 20.9.13 : 실수형이 .대신 ,으로 저장되는 버그가 있다.
-										_value = new Color(	float.Parse(strValues[0].Replace(',', '.')),
-															float.Parse(strValues[1].Replace(',', '.')),
-															float.Parse(strValues[2].Replace(',', '.')),
-															float.Parse(strValues[3].Replace(',', '.'))
+										_value = new Color(	apUtil.ParseFloat(strValues[0].Replace(',', '.')),
+															apUtil.ParseFloat(strValues[1].Replace(',', '.')),
+															apUtil.ParseFloat(strValues[2].Replace(',', '.')),
+															apUtil.ParseFloat(strValues[3].Replace(',', '.'))
 															);
 									}
 									else
@@ -1509,19 +1509,19 @@ namespace AnyPortrait
 										if (isFloatCommaBug)
 										{
 											//콤마 버그
-											_value = new Color(float.Parse(strValues[0] + "." + strValues[1]),
-																	float.Parse(strValues[2] + "." + strValues[3]),
-																	float.Parse(strValues[4] + "." + strValues[5]),
-																	float.Parse(strValues[6] + "." + strValues[7])
+											_value = new Color(		apUtil.ParseFloat(strValues[0] + "." + strValues[1]),
+																	apUtil.ParseFloat(strValues[2] + "." + strValues[3]),
+																	apUtil.ParseFloat(strValues[4] + "." + strValues[5]),
+																	apUtil.ParseFloat(strValues[6] + "." + strValues[7])
 																	);
 										}
 										else
 										{
 											//일반적인 경우
-											_value = new Color(float.Parse(strValues[0]),
-																float.Parse(strValues[1]),
-																float.Parse(strValues[2]),
-																float.Parse(strValues[3])
+											_value = new Color(	apUtil.ParseFloat(strValues[0]),
+																apUtil.ParseFloat(strValues[1]),
+																apUtil.ParseFloat(strValues[2]),
+																apUtil.ParseFloat(strValues[3])
 																);
 										}
 									}
@@ -1556,25 +1556,25 @@ namespace AnyPortrait
 
 										//추가 20.9.13 : 실수형이 .대신 ,으로 저장되는 버그가 있다.
 										Matrix4x4 mat4 = new Matrix4x4();
-										mat4.m00 = float.Parse(strValues[0].Replace(',', '.'));
-										mat4.m10 = float.Parse(strValues[1].Replace(',', '.'));
-										mat4.m20 = float.Parse(strValues[2].Replace(',', '.'));
-										mat4.m30 = float.Parse(strValues[3].Replace(',', '.'));
+										mat4.m00 = apUtil.ParseFloat(strValues[0].Replace(',', '.'));
+										mat4.m10 = apUtil.ParseFloat(strValues[1].Replace(',', '.'));
+										mat4.m20 = apUtil.ParseFloat(strValues[2].Replace(',', '.'));
+										mat4.m30 = apUtil.ParseFloat(strValues[3].Replace(',', '.'));
 
-										mat4.m01 = float.Parse(strValues[4].Replace(',', '.'));
-										mat4.m11 = float.Parse(strValues[5].Replace(',', '.'));
-										mat4.m21 = float.Parse(strValues[6].Replace(',', '.'));
-										mat4.m31 = float.Parse(strValues[7].Replace(',', '.'));
+										mat4.m01 = apUtil.ParseFloat(strValues[4].Replace(',', '.'));
+										mat4.m11 = apUtil.ParseFloat(strValues[5].Replace(',', '.'));
+										mat4.m21 = apUtil.ParseFloat(strValues[6].Replace(',', '.'));
+										mat4.m31 = apUtil.ParseFloat(strValues[7].Replace(',', '.'));
 
-										mat4.m02 = float.Parse(strValues[8].Replace(',', '.'));
-										mat4.m12 = float.Parse(strValues[9].Replace(',', '.'));
-										mat4.m22 = float.Parse(strValues[10].Replace(',', '.'));
-										mat4.m32 = float.Parse(strValues[11].Replace(',', '.'));
+										mat4.m02 = apUtil.ParseFloat(strValues[8].Replace(',', '.'));
+										mat4.m12 = apUtil.ParseFloat(strValues[9].Replace(',', '.'));
+										mat4.m22 = apUtil.ParseFloat(strValues[10].Replace(',', '.'));
+										mat4.m32 = apUtil.ParseFloat(strValues[11].Replace(',', '.'));
 
-										mat4.m03 = float.Parse(strValues[12].Replace(',', '.'));
-										mat4.m13 = float.Parse(strValues[13].Replace(',', '.'));
-										mat4.m23 = float.Parse(strValues[14].Replace(',', '.'));
-										mat4.m33 = float.Parse(strValues[15].Replace(',', '.'));
+										mat4.m03 = apUtil.ParseFloat(strValues[12].Replace(',', '.'));
+										mat4.m13 = apUtil.ParseFloat(strValues[13].Replace(',', '.'));
+										mat4.m23 = apUtil.ParseFloat(strValues[14].Replace(',', '.'));
+										mat4.m33 = apUtil.ParseFloat(strValues[15].Replace(',', '.'));
 
 										_value = mat4;
 									}
@@ -1613,48 +1613,48 @@ namespace AnyPortrait
 										if (isFloatCommaBug)
 										{
 											//콤마 버그
-											mat4.m00 = float.Parse(strValues[0] + "." + strValues[1]);
-											mat4.m10 = float.Parse(strValues[2] + "." + strValues[3]);
-											mat4.m20 = float.Parse(strValues[4] + "." + strValues[5]);
-											mat4.m30 = float.Parse(strValues[6] + "." + strValues[7]);
+											mat4.m00 = apUtil.ParseFloat(strValues[0] + "." + strValues[1]);
+											mat4.m10 = apUtil.ParseFloat(strValues[2] + "." + strValues[3]);
+											mat4.m20 = apUtil.ParseFloat(strValues[4] + "." + strValues[5]);
+											mat4.m30 = apUtil.ParseFloat(strValues[6] + "." + strValues[7]);
 
-											mat4.m01 = float.Parse(strValues[8] + "." + strValues[9]);
-											mat4.m11 = float.Parse(strValues[10] + "." + strValues[11]);
-											mat4.m21 = float.Parse(strValues[12] + "." + strValues[13]);
-											mat4.m31 = float.Parse(strValues[14] + "." + strValues[15]);
+											mat4.m01 = apUtil.ParseFloat(strValues[8] + "." + strValues[9]);
+											mat4.m11 = apUtil.ParseFloat(strValues[10] + "." + strValues[11]);
+											mat4.m21 = apUtil.ParseFloat(strValues[12] + "." + strValues[13]);
+											mat4.m31 = apUtil.ParseFloat(strValues[14] + "." + strValues[15]);
 
-											mat4.m02 = float.Parse(strValues[16] + "." + strValues[17]);
-											mat4.m12 = float.Parse(strValues[18] + "." + strValues[19]);
-											mat4.m22 = float.Parse(strValues[20] + "." + strValues[21]);
-											mat4.m32 = float.Parse(strValues[22] + "." + strValues[23]);
+											mat4.m02 = apUtil.ParseFloat(strValues[16] + "." + strValues[17]);
+											mat4.m12 = apUtil.ParseFloat(strValues[18] + "." + strValues[19]);
+											mat4.m22 = apUtil.ParseFloat(strValues[20] + "." + strValues[21]);
+											mat4.m32 = apUtil.ParseFloat(strValues[22] + "." + strValues[23]);
 
-											mat4.m03 = float.Parse(strValues[24] + "." + strValues[25]);
-											mat4.m13 = float.Parse(strValues[26] + "." + strValues[27]);
-											mat4.m23 = float.Parse(strValues[28] + "." + strValues[29]);
-											mat4.m33 = float.Parse(strValues[30] + "." + strValues[31]);
+											mat4.m03 = apUtil.ParseFloat(strValues[24] + "." + strValues[25]);
+											mat4.m13 = apUtil.ParseFloat(strValues[26] + "." + strValues[27]);
+											mat4.m23 = apUtil.ParseFloat(strValues[28] + "." + strValues[29]);
+											mat4.m33 = apUtil.ParseFloat(strValues[30] + "." + strValues[31]);
 										}
 										else
 										{
 											//일반적인 경우
-											mat4.m00 = float.Parse(strValues[0]);
-											mat4.m10 = float.Parse(strValues[1]);
-											mat4.m20 = float.Parse(strValues[2]);
-											mat4.m30 = float.Parse(strValues[3]);
+											mat4.m00 = apUtil.ParseFloat(strValues[0]);
+											mat4.m10 = apUtil.ParseFloat(strValues[1]);
+											mat4.m20 = apUtil.ParseFloat(strValues[2]);
+											mat4.m30 = apUtil.ParseFloat(strValues[3]);
 
-											mat4.m01 = float.Parse(strValues[4]);
-											mat4.m11 = float.Parse(strValues[5]);
-											mat4.m21 = float.Parse(strValues[6]);
-											mat4.m31 = float.Parse(strValues[7]);
+											mat4.m01 = apUtil.ParseFloat(strValues[4]);
+											mat4.m11 = apUtil.ParseFloat(strValues[5]);
+											mat4.m21 = apUtil.ParseFloat(strValues[6]);
+											mat4.m31 = apUtil.ParseFloat(strValues[7]);
 
-											mat4.m02 = float.Parse(strValues[8]);
-											mat4.m12 = float.Parse(strValues[9]);
-											mat4.m22 = float.Parse(strValues[10]);
-											mat4.m32 = float.Parse(strValues[11]);
+											mat4.m02 = apUtil.ParseFloat(strValues[8]);
+											mat4.m12 = apUtil.ParseFloat(strValues[9]);
+											mat4.m22 = apUtil.ParseFloat(strValues[10]);
+											mat4.m32 = apUtil.ParseFloat(strValues[11]);
 
-											mat4.m03 = float.Parse(strValues[12]);
-											mat4.m13 = float.Parse(strValues[13]);
-											mat4.m23 = float.Parse(strValues[14]);
-											mat4.m33 = float.Parse(strValues[15]);
+											mat4.m03 = apUtil.ParseFloat(strValues[12]);
+											mat4.m13 = apUtil.ParseFloat(strValues[13]);
+											mat4.m23 = apUtil.ParseFloat(strValues[14]);
+											mat4.m33 = apUtil.ParseFloat(strValues[15]);
 										}
 										_value = mat4;
 									}
@@ -1691,17 +1691,17 @@ namespace AnyPortrait
 										//추가 20.9.13 : 실수형이 .대신 ,으로 저장되는 버그가 있다.
 										apMatrix3x3 mat3 = new apMatrix3x3();
 										//일반적인 경우										
-										mat3._m00 = float.Parse(strValues[0].Replace(',', '.'));
-										mat3._m10 = float.Parse(strValues[1].Replace(',', '.'));
-										mat3._m20 = float.Parse(strValues[2].Replace(',', '.'));
+										mat3._m00 = apUtil.ParseFloat(strValues[0].Replace(',', '.'));
+										mat3._m10 = apUtil.ParseFloat(strValues[1].Replace(',', '.'));
+										mat3._m20 = apUtil.ParseFloat(strValues[2].Replace(',', '.'));
 
-										mat3._m01 = float.Parse(strValues[3].Replace(',', '.'));
-										mat3._m11 = float.Parse(strValues[4].Replace(',', '.'));
-										mat3._m21 = float.Parse(strValues[5].Replace(',', '.'));
+										mat3._m01 = apUtil.ParseFloat(strValues[3].Replace(',', '.'));
+										mat3._m11 = apUtil.ParseFloat(strValues[4].Replace(',', '.'));
+										mat3._m21 = apUtil.ParseFloat(strValues[5].Replace(',', '.'));
 
-										mat3._m02 = float.Parse(strValues[6].Replace(',', '.'));
-										mat3._m12 = float.Parse(strValues[7].Replace(',', '.'));
-										mat3._m22 = float.Parse(strValues[8].Replace(',', '.'));
+										mat3._m02 = apUtil.ParseFloat(strValues[6].Replace(',', '.'));
+										mat3._m12 = apUtil.ParseFloat(strValues[7].Replace(',', '.'));
+										mat3._m22 = apUtil.ParseFloat(strValues[8].Replace(',', '.'));
 
 										_value = mat3;
 										
@@ -1741,32 +1741,32 @@ namespace AnyPortrait
 										if (isFloatCommaBug)
 										{
 											//콤마 버그
-											mat3._m00 = float.Parse(strValues[0] + "." + strValues[1]);
-											mat3._m10 = float.Parse(strValues[2] + "." + strValues[3]);
-											mat3._m20 = float.Parse(strValues[4] + "." + strValues[5]);
+											mat3._m00 = apUtil.ParseFloat(strValues[0] + "." + strValues[1]);
+											mat3._m10 = apUtil.ParseFloat(strValues[2] + "." + strValues[3]);
+											mat3._m20 = apUtil.ParseFloat(strValues[4] + "." + strValues[5]);
 
-											mat3._m01 = float.Parse(strValues[6] + "." + strValues[7]);
-											mat3._m11 = float.Parse(strValues[8] + "." + strValues[9]);
-											mat3._m21 = float.Parse(strValues[10] + "." + strValues[11]);
+											mat3._m01 = apUtil.ParseFloat(strValues[6] + "." + strValues[7]);
+											mat3._m11 = apUtil.ParseFloat(strValues[8] + "." + strValues[9]);
+											mat3._m21 = apUtil.ParseFloat(strValues[10] + "." + strValues[11]);
 
-											mat3._m02 = float.Parse(strValues[12] + "." + strValues[13]);
-											mat3._m12 = float.Parse(strValues[14] + "." + strValues[15]);
-											mat3._m22 = float.Parse(strValues[16] + "." + strValues[17]);
+											mat3._m02 = apUtil.ParseFloat(strValues[12] + "." + strValues[13]);
+											mat3._m12 = apUtil.ParseFloat(strValues[14] + "." + strValues[15]);
+											mat3._m22 = apUtil.ParseFloat(strValues[16] + "." + strValues[17]);
 										}
 										else
 										{
 											//일반적인 경우										
-											mat3._m00 = float.Parse(strValues[0]);
-											mat3._m10 = float.Parse(strValues[1]);
-											mat3._m20 = float.Parse(strValues[2]);
+											mat3._m00 = apUtil.ParseFloat(strValues[0]);
+											mat3._m10 = apUtil.ParseFloat(strValues[1]);
+											mat3._m20 = apUtil.ParseFloat(strValues[2]);
 
-											mat3._m01 = float.Parse(strValues[3]);
-											mat3._m11 = float.Parse(strValues[4]);
-											mat3._m21 = float.Parse(strValues[5]);
+											mat3._m01 = apUtil.ParseFloat(strValues[3]);
+											mat3._m11 = apUtil.ParseFloat(strValues[4]);
+											mat3._m21 = apUtil.ParseFloat(strValues[5]);
 
-											mat3._m02 = float.Parse(strValues[6]);
-											mat3._m12 = float.Parse(strValues[7]);
-											mat3._m22 = float.Parse(strValues[8]);
+											mat3._m02 = apUtil.ParseFloat(strValues[6]);
+											mat3._m12 = apUtil.ParseFloat(strValues[7]);
+											mat3._m22 = apUtil.ParseFloat(strValues[8]);
 										}
 										_value = mat3;
 									}
@@ -1806,18 +1806,18 @@ namespace AnyPortrait
 
 										_monoInstanceID = int.Parse(strValues[0]);
 										_monoName = strValues[1].ToString().Replace(STR_REPLACE_SLASH, STR_SLASH);
-										_monoPosition = new Vector3(	float.Parse(strValues[2].Replace(',', '.')),
-																		float.Parse(strValues[3].Replace(',', '.')),
-																		float.Parse(strValues[4].Replace(',', '.')));
+										_monoPosition = new Vector3(	apUtil.ParseFloat(strValues[2].Replace(',', '.')),
+																		apUtil.ParseFloat(strValues[3].Replace(',', '.')),
+																		apUtil.ParseFloat(strValues[4].Replace(',', '.')));
 
-										_monoQuat = new Quaternion(	float.Parse(strValues[5].Replace(',', '.')),
-																	float.Parse(strValues[6].Replace(',', '.')),
-																	float.Parse(strValues[7].Replace(',', '.')),
-																	float.Parse(strValues[8].Replace(',', '.')));
+										_monoQuat = new Quaternion(	apUtil.ParseFloat(strValues[5].Replace(',', '.')),
+																	apUtil.ParseFloat(strValues[6].Replace(',', '.')),
+																	apUtil.ParseFloat(strValues[7].Replace(',', '.')),
+																	apUtil.ParseFloat(strValues[8].Replace(',', '.')));
 
-										_monoScale = new Vector3(	float.Parse(strValues[9].Replace(',', '.')),
-																	float.Parse(strValues[10].Replace(',', '.')),
-																	float.Parse(strValues[11].Replace(',', '.')));
+										_monoScale = new Vector3(	apUtil.ParseFloat(strValues[9].Replace(',', '.')),
+																	apUtil.ParseFloat(strValues[10].Replace(',', '.')),
+																	apUtil.ParseFloat(strValues[11].Replace(',', '.')));
 										_monoAssetPath = "";
 									}
 									else
@@ -1835,18 +1835,18 @@ namespace AnyPortrait
 
 										_monoInstanceID = int.Parse(strValues[0]);
 										_monoName = strValues[1].ToString();
-										_monoPosition = new Vector3(float.Parse(strValues[2]),
-																		float.Parse(strValues[3]),
-																		float.Parse(strValues[4]));
+										_monoPosition = new Vector3(	apUtil.ParseFloat(strValues[2]),
+																		apUtil.ParseFloat(strValues[3]),
+																		apUtil.ParseFloat(strValues[4]));
 
-										_monoQuat = new Quaternion(float.Parse(strValues[5]),
-																	float.Parse(strValues[6]),
-																	float.Parse(strValues[7]),
-																	float.Parse(strValues[8]));
+										_monoQuat = new Quaternion(	apUtil.ParseFloat(strValues[5]),
+																	apUtil.ParseFloat(strValues[6]),
+																	apUtil.ParseFloat(strValues[7]),
+																	apUtil.ParseFloat(strValues[8]));
 
-										_monoScale = new Vector3(float.Parse(strValues[9]),
-																	float.Parse(strValues[10]),
-																	float.Parse(strValues[11]));
+										_monoScale = new Vector3(	apUtil.ParseFloat(strValues[9]),
+																	apUtil.ParseFloat(strValues[10]),
+																	apUtil.ParseFloat(strValues[11]));
 										_monoAssetPath = "";
 									}
 									
@@ -1888,18 +1888,18 @@ namespace AnyPortrait
 
 										_monoInstanceID = int.Parse(strValues[0]);
 										_monoName = strValues[1].ToString().Replace(STR_REPLACE_SLASH, STR_SLASH);
-										_monoPosition = new Vector3(	float.Parse(strValues[2].Replace(',', '.')),
-																		float.Parse(strValues[3].Replace(',', '.')),
-																		float.Parse(strValues[4].Replace(',', '.')));
+										_monoPosition = new Vector3(	apUtil.ParseFloat(strValues[2].Replace(',', '.')),
+																		apUtil.ParseFloat(strValues[3].Replace(',', '.')),
+																		apUtil.ParseFloat(strValues[4].Replace(',', '.')));
 
-										_monoQuat = new Quaternion(float.Parse(strValues[5].Replace(',', '.')),
-																	float.Parse(strValues[6].Replace(',', '.')),
-																	float.Parse(strValues[7].Replace(',', '.')),
-																	float.Parse(strValues[8].Replace(',', '.')));
+										_monoQuat = new Quaternion(	apUtil.ParseFloat(strValues[5].Replace(',', '.')),
+																	apUtil.ParseFloat(strValues[6].Replace(',', '.')),
+																	apUtil.ParseFloat(strValues[7].Replace(',', '.')),
+																	apUtil.ParseFloat(strValues[8].Replace(',', '.')));
 
-										_monoScale = new Vector3(float.Parse(strValues[9].Replace(',', '.')),
-																	float.Parse(strValues[10].Replace(',', '.')),
-																	float.Parse(strValues[11].Replace(',', '.')));
+										_monoScale = new Vector3(	apUtil.ParseFloat(strValues[9].Replace(',', '.')),
+																	apUtil.ParseFloat(strValues[10].Replace(',', '.')),
+																	apUtil.ParseFloat(strValues[11].Replace(',', '.')));
 										_monoAssetPath = "";
 									}
 									else
@@ -1917,18 +1917,18 @@ namespace AnyPortrait
 
 										_monoInstanceID = int.Parse(strValues[0]);
 										_monoName = strValues[1].ToString();
-										_monoPosition = new Vector3(float.Parse(strValues[2]),
-																		float.Parse(strValues[3]),
-																		float.Parse(strValues[4]));
+										_monoPosition = new Vector3(	apUtil.ParseFloat(strValues[2]),
+																		apUtil.ParseFloat(strValues[3]),
+																		apUtil.ParseFloat(strValues[4]));
 
-										_monoQuat = new Quaternion(float.Parse(strValues[5]),
-																	float.Parse(strValues[6]),
-																	float.Parse(strValues[7]),
-																	float.Parse(strValues[8]));
+										_monoQuat = new Quaternion(	apUtil.ParseFloat(strValues[5]),
+																	apUtil.ParseFloat(strValues[6]),
+																	apUtil.ParseFloat(strValues[7]),
+																	apUtil.ParseFloat(strValues[8]));
 
-										_monoScale = new Vector3(float.Parse(strValues[9]),
-																	float.Parse(strValues[10]),
-																	float.Parse(strValues[11]));
+										_monoScale = new Vector3(	apUtil.ParseFloat(strValues[9]),
+																	apUtil.ParseFloat(strValues[10]),
+																	apUtil.ParseFloat(strValues[11]));
 										_monoAssetPath = "";
 									}
 									

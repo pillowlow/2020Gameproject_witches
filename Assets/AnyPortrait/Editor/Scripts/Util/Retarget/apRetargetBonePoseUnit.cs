@@ -140,25 +140,25 @@ namespace AnyPortrait
 				_localMatrix.SetIdentity();
 				_worldMatrix.SetIdentity();
 
-				_defaultMatrix._pos.x = float.Parse(strParse[2]);
-				_defaultMatrix._pos.y = float.Parse(strParse[3]);
-				_defaultMatrix._angleDeg = float.Parse(strParse[4]);
-				_defaultMatrix._scale.x = float.Parse(strParse[5]);
-				_defaultMatrix._scale.y = float.Parse(strParse[6]);
+				_defaultMatrix._pos.x = apUtil.ParseFloat(strParse[2]);
+				_defaultMatrix._pos.y = apUtil.ParseFloat(strParse[3]);
+				_defaultMatrix._angleDeg = apUtil.ParseFloat(strParse[4]);
+				_defaultMatrix._scale.x = apUtil.ParseFloat(strParse[5]);
+				_defaultMatrix._scale.y = apUtil.ParseFloat(strParse[6]);
 				_defaultMatrix.MakeMatrix();
 
-				_localMatrix._pos.x = float.Parse(strParse[7]);
-				_localMatrix._pos.y = float.Parse(strParse[8]);
-				_localMatrix._angleDeg = float.Parse(strParse[9]);
-				_localMatrix._scale.x = float.Parse(strParse[10]);
-				_localMatrix._scale.y = float.Parse(strParse[11]);
+				_localMatrix._pos.x = apUtil.ParseFloat(strParse[7]);
+				_localMatrix._pos.y = apUtil.ParseFloat(strParse[8]);
+				_localMatrix._angleDeg = apUtil.ParseFloat(strParse[9]);
+				_localMatrix._scale.x = apUtil.ParseFloat(strParse[10]);
+				_localMatrix._scale.y = apUtil.ParseFloat(strParse[11]);
 				_localMatrix.MakeMatrix();
 
-				_worldMatrix._pos.x = float.Parse(strParse[12]);
-				_worldMatrix._pos.y = float.Parse(strParse[13]);
-				_worldMatrix._angleDeg = float.Parse(strParse[14]);
-				_worldMatrix._scale.x = float.Parse(strParse[15]);
-				_worldMatrix._scale.y = float.Parse(strParse[16]);
+				_worldMatrix._pos.x = apUtil.ParseFloat(strParse[12]);
+				_worldMatrix._pos.y = apUtil.ParseFloat(strParse[13]);
+				_worldMatrix._angleDeg = apUtil.ParseFloat(strParse[14]);
+				_worldMatrix._scale.x = apUtil.ParseFloat(strParse[15]);
+				_worldMatrix._scale.y = apUtil.ParseFloat(strParse[16]);
 				_worldMatrix.MakeMatrix();
 				
 			}

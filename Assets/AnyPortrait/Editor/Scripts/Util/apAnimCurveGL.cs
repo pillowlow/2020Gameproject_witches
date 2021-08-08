@@ -145,6 +145,9 @@ namespace AnyPortrait
 
 			_isMouseEvent = false;
 			_isMouseEventUsed = false;
+
+			//변경 21.5.19
+			_matBatch.SetClippingSizeToAllMaterial(_glScreenClippingSize);
 		}
 
 		public static void SetMouseValue(bool isLeftBtnPressed,
@@ -265,6 +268,12 @@ namespace AnyPortrait
 
 		// GUI
 		//------------------------------------------------------------
+		//렌더링중인 Pass를 종료한다.
+		public static void EndPass()
+		{
+			_matBatch.EndPass();
+		}
+
 		// Draw Line
 		//-------------------------------------------------------------------------------------------------------
 		public static void DrawLine(Vector2 pos1, Vector2 pos2, Color color, bool isNeedResetMat)
@@ -281,18 +290,21 @@ namespace AnyPortrait
 
 			if (isNeedResetMat)
 			{
-				_matBatch.SetPass_Color();
-				_matBatch.SetClippingSize(_glScreenClippingSize);
-				GL.Begin(GL.LINES);
+				//변경 21.5.19
+				_matBatch.BeginPass_Color(GL.LINES);
+				//_matBatch.SetClippingSize(_glScreenClippingSize);
+				//GL.Begin(GL.LINES);
 			}
 
 			GL.Color(color);
 			GL.Vertex(new Vector3(pos1.x, pos1.y, 0.0f));
 			GL.Vertex(new Vector3(pos2.x, pos2.y, 0.0f));
 
+			//삭제 21.5.19
 			if (isNeedResetMat)
 			{
-				GL.End();
+				//GL.End();//<전환 완료>
+				_matBatch.EndPass();
 			}
 		}
 
@@ -330,10 +342,11 @@ namespace AnyPortrait
 
 			if (isNeedResetMat)
 			{
-				_matBatch.SetPass_Color();
-				_matBatch.SetClippingSize(_glScreenClippingSize);
+				//변경 21.5.19
+				_matBatch.BeginPass_Color(GL.TRIANGLES);
+				//_matBatch.SetClippingSize(_glScreenClippingSize);
 
-				GL.Begin(GL.TRIANGLES);
+				//GL.Begin(GL.TRIANGLES);
 			}
 			GL.Color(color);
 			GL.Vertex(pos_0); // 0
@@ -344,9 +357,11 @@ namespace AnyPortrait
 			GL.Vertex(pos_3); // 3
 			GL.Vertex(pos_0); // 0
 
+			//삭제
 			if (isNeedResetMat)
 			{
-				GL.End();
+				//GL.End();//<전환 완료>
+				_matBatch.EndPass();
 			}
 		}
 
@@ -404,10 +419,11 @@ namespace AnyPortrait
 			// | 3   2
 			if (isNeedResetMat)
 			{
-				_matBatch.SetPass_Texture_Normal(color2X, image, apPortrait.SHADER_TYPE.AlphaBlend);
-				_matBatch.SetClippingSize(_glScreenClippingSize);
+				//변경 21.5.19
+				_matBatch.BeginPass_Texture_Normal(GL.TRIANGLES, color2X, image, apPortrait.SHADER_TYPE.AlphaBlend);
+				//_matBatch.SetClippingSize(_glScreenClippingSize);
 
-				GL.Begin(GL.TRIANGLES);
+				//GL.Begin(GL.TRIANGLES);
 			}
 
 			GL.TexCoord(uv_0);
@@ -424,9 +440,11 @@ namespace AnyPortrait
 			GL.TexCoord(uv_0);
 			GL.Vertex(new Vector3(pos_0.x, pos_0.y, 0)); // 0
 
+			//삭제 21.5.19
 			if (isNeedResetMat)
 			{
-				GL.End();
+				//GL.End();//<전환 완료>
+				_matBatch.EndPass();
 			}
 
 			//GL.Flush();
@@ -481,12 +499,11 @@ namespace AnyPortrait
 
 			if (isNeedResetMat)
 			{
-				//_mat_Color.SetPass(0);
-				//_mat_Color.SetVector("_ScreenSize", _glScreenClippingSize);
-				_matBatch.SetPass_Color();
-				_matBatch.SetClippingSize(_glScreenClippingSize);
+				//변경 21.5.19
+				_matBatch.BeginPass_Color(GL.TRIANGLES);
+				//_matBatch.SetClippingSize(_glScreenClippingSize);
 
-				GL.Begin(GL.TRIANGLES);
+				//GL.Begin(GL.TRIANGLES);
 			}
 
 			GL.Color(color);
@@ -522,9 +539,11 @@ namespace AnyPortrait
 			GL.Vertex(pos_4); // 4
 			GL.Vertex(pos_3); // 3
 
+			//삭제 21.5.19
 			if (isNeedResetMat)
 			{
-				GL.End();
+				//GL.End();//<전환 완료>
+				_matBatch.EndPass();
 			}
 		}
 
@@ -577,12 +596,10 @@ namespace AnyPortrait
 
 			if (isNeedResetMat)
 			{
-				//_mat_Color.SetPass(0);
-				//_mat_Color.SetVector("_ScreenSize", _glScreenClippingSize);
-				_matBatch.SetPass_Color();
-				_matBatch.SetClippingSize(_glScreenClippingSize);
-
-				GL.Begin(GL.TRIANGLES);
+				//변경 21.5.19
+				_matBatch.BeginPass_Color(GL.TRIANGLES);
+				//_matBatch.SetClippingSize(_glScreenClippingSize);
+				//GL.Begin(GL.TRIANGLES);
 			}
 
 			GL.Color(colorA);
@@ -633,9 +650,11 @@ namespace AnyPortrait
 			GL.Vertex(pos_4); // 4
 			GL.Vertex(pos_3); // 3
 
+			//삭제 21.5.19
 			if (isNeedResetMat)
 			{
-				GL.End();
+				//GL.End();//<전환 완료>
+				_matBatch.EndPass();
 			}
 		}
 
@@ -766,15 +785,16 @@ namespace AnyPortrait
 			return isCurveChanged;
 		}
 
+		private const string STR_NUM_100 = "100";
+		private const string STR_NUM_50 = "50";
+		private const string STR_NUM_0 = "0";
+
 		private static void DrawGrid(int leftAxisSize, int bottomAxisSize, int margin, int gridWidth, int gridHeight)
 		{
-			//DrawBox(new Vector2(_layoutWidth / 2, margin), 10, 10, Color.red, true);
-			//DrawBox(new Vector2(_layoutWidth / 2, _layoutHeight * 0.5f), 10, 10, Color.green, true);
-			//DrawBox(new Vector2(_layoutWidth / 2, _layoutHeight - margin), 10, 10, Color.blue, true);
-
-			_matBatch.SetPass_Color();
-			_matBatch.SetClippingSize(_glScreenClippingSize);
-			GL.Begin(GL.LINES);
+			//변경 21.5.19
+			_matBatch.BeginPass_Color(GL.LINES);
+			//_matBatch.SetClippingSize(_glScreenClippingSize);
+			//GL.Begin(GL.LINES);
 
 			//세로줄 한번, 가로줄 한번
 			for (int i = 0; i <= 4; i++)
@@ -789,19 +809,21 @@ namespace AnyPortrait
 				DrawLine(new Vector2(leftAxisSize + margin, posY), new Vector2(leftAxisSize + margin + gridWidth, posY), _color_Grid, false);
 			}
 
-			GL.End();
+			//삭제 21.5.19
+			//GL.End();//<전환 완료>
+			_matBatch.EndPass();
 
-			DrawNumberRightAlign("100", new Vector2(leftAxisSize, margin), _color_Text);
-			DrawNumberRightAlign("50", new Vector2(leftAxisSize, gridHeight * 0.5f), _color_Text);
-			DrawNumberRightAlign("0", new Vector2(leftAxisSize, gridHeight - margin), _color_Text);
+			DrawNumberRightAlign(STR_NUM_100, new Vector2(leftAxisSize, margin), _color_Text);
+			DrawNumberRightAlign(STR_NUM_50, new Vector2(leftAxisSize, gridHeight * 0.5f), _color_Text);
+			DrawNumberRightAlign(STR_NUM_0, new Vector2(leftAxisSize, gridHeight - margin), _color_Text);
 		}
 
 		private static void DrawSmoothLine(apAnimCurve curveA, apAnimCurve curveB, Color graphColorA, Color graphColorB, Vector2 posA, Vector2 posB)
 		{
-			_matBatch.SetPass_Color();
-			_matBatch.SetClippingSize(_glScreenClippingSize);
-
-			GL.Begin(GL.TRIANGLES);
+			//변경 21.5.19
+			_matBatch.BeginPass_Color(GL.TRIANGLES);
+			//_matBatch.SetClippingSize(_glScreenClippingSize);
+			//GL.Begin(GL.TRIANGLES);
 
 			Vector2 pos_Prev = Vector2.zero;
 			Vector2 pos_Cur = Vector2.zero;
@@ -832,8 +854,9 @@ namespace AnyPortrait
 				pos_Prev = pos_Cur;
 			}
 
-
-			GL.End();
+			//삭제 21.5.19
+			//GL.End();//<전환 완료>
+			_matBatch.EndPass();
 		}
 
 		private static apAnimCurve _selectedCurveKey = null;

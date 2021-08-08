@@ -64,13 +64,21 @@ namespace AnyPortrait
 			if (s_window != null)
 			{
 				try
-				{
+				{	
 					s_window._isLockOnEnable = true;
 					s_window.Close();
 					s_window = null;
 				}
-				catch (Exception) { }
+				catch (Exception)
+				{
+					//Debug.LogError("S_Window Exception : " + ex);
+				}
 			}
+
+			//C++ 플러그인 설치 처리부터
+			apPluginUtil.I.CheckAndInstallCPPDLLPackage();
+
+
 			EditorWindow curWindow = EditorWindow.GetWindow(typeof(apEditor), false, "AnyPortrait");
 			apEditor curTool = curWindow as apEditor;
 
@@ -84,9 +92,15 @@ namespace AnyPortrait
 			}
 
 
+			//Debug.LogError("Show Window : " + (curTool != null) + " / " + (curTool != s_window) + " / s_window is null : " + (s_window == null));
 			if (curTool != null && curTool != s_window)
 			//if(curTool != null)
 			{
+				//첫 실행 이후엔 다시 에디터를 껐다 켜도 이 구문은 실행되지 않는다.
+				//에디터를 꺼도 curTool와 s_window가 동일하기 때문 > OnDisable에서 Init이 호출되고, OnEnable에서 s_window에 할당이 되버렸다..
+
+
+
 				Debug.ClearDeveloperConsole();
 				s_window = curTool;
 				//s_window.position = new Rect(0, 0, 200, 200);
@@ -228,6 +242,9 @@ namespace AnyPortrait
 		//애니메이션과 동기화하여 로토스코핑을 제공하는 경우 : 마지막으로 동기화된 AnimClip 프레임과 동기화 여부 (동기화 이후에는 마음대로 이미지를 변경할 수 있다)
 		private int _iSyncRotoscopingAnimClipFrame = -1;
 		private bool _isSyncRotoscopingToAnimClipFrame = false;
+
+		//추가 21.6.4 : 가이드라인
+		public bool _isEnableGuideLine = false;
 
 
 
@@ -591,6 +608,15 @@ namespace AnyPortrait
 		//private Texture2D _imgLowCPUStatus = null;
 
 
+		//추가 21.5.13 : C++ 플러그인을 활용할 수 있다.
+		//DLL 유효성 검사 결과를 저장한다. (패키지 설치 등을 해야할 수 있다.)
+		public apPluginUtil.VALIDATE_RESULT _cppPluginValidateResult = apPluginUtil.VALIDATE_RESULT.Unknown;
+		public bool _cppPluginOption_UsePlugin = false;//플러그인을 사용한다. (단 유효성 검사를 통과해야한다.) 기본값 false : 설치해야하는게 문제가 된다.
+		public bool IsUseCPPDLL { get { return _cppPluginOption_UsePlugin && _cppPluginValidateResult == apPluginUtil.VALIDATE_RESULT.Valid; } }
+		//public bool IsUseCPPDLL { get { return false; } }
+
+
+
 		//추가 3.29 : Ambient 자동 보정 옵션
 		public bool _isAmbientCorrectionOption = true;
 
@@ -703,11 +729,7 @@ namespace AnyPortrait
 		//public int _meshAutoGenOption_numControlPoint_CircleRing = 4;//최소 4개
 		//public bool _meshAutoGenOption_IsLockAxis = false;
 
-		//추가 21.1.4 : 메시 자동 생성 V2 옵션
-		//public int _meshAutoGenV2Option_Outline_Density = 2;//이 값이 커질수록 많이 분할된다. 기본값 2, 1~4의 값을 가진다.
-		//public float _meshAutoGenV2Option_OutlineVertMerge_Radius = 60.0f;//분할된 이후 연속된 버텍스가 이 범위 내에서는 다시 병합된다. (기본 60)
-		//public float _meshAutoGenV2Option_OutlineVertMerge_Angle = 10.0f;//분할된 이후 연속된 버텍스가 이 각도 이내로 연결된 경우 다시 병합된다. (기본 10)		
-		//public float _meshAutoGenV2Option_Out2Inline_Radius = 20.0f;//이 범위 이내의 버텍스들이 합쳐져서 하나의 InLine 버텍스를 생성
+		//추가 21.1.4 : 메시 자동 생성 V2 옵션		
 		public int _meshAutoGenV2Option_Inner_Density = 2;//이 값이 커질수록 내부의 점이 많이 생성된다. 기본값 2, 1~10의 값을 가진다.
 		public int _meshAutoGenV2Option_OuterMargin = 10;//외부로의 여백
 		public int _meshAutoGenV2Option_InnerMargin = 5;//내부로의 여백
@@ -809,69 +831,13 @@ namespace AnyPortrait
 
 		//Left, Right, Middle Mouse
 		//-------------------------------------------------------------------------------
-		//수정 : apMouse로 분리 되었던 것을 apMouseSet으로 변경한다.
-		//public int _curMouseBtn = -1;
-		//public int MOUSE_BTN_LEFT { get { return 0; } }
-		//public int MOUSE_BTN_RIGHT { get { return 1; } }
-		//public int MOUSE_BTN_MIDDLE { get { return 2; } }
-		//public int MOUSE_BTN_LEFT_NOT_BOUND { get { return 3; } }
-		//public apMouse[] _mouseBtn = new apMouse[] { new apMouse(), new apMouse(), new apMouse(), new apMouse() };
+		//수정 : apMouse로 분리 되었던 것을 apMouseSet으로 변경한다.		
 		private apMouseSet _mouseSet = new apMouseSet();
 		public apMouseSet Mouse { get { return _mouseSet; } }
 		//------------------------------------------------------------------------------
 
 		public Rect _mainGUIRect = new Rect();
 
-
-		//Mesh Edit
-		//public enum BRUSH_TYPE
-		//{
-		//	SetValue = 0, AddSubtract = 1,
-		//}
-		//public float[] _brushPreset_Size = new float[]
-		//{
-		//	1, 2, 3, 4, 5, 6, 7, 8, 9,
-		//	10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95,
-		//	100, 110, 120, 130, 140, 150, 160, 170, 180, 190,
-		//	200, 220, 240, 260, 280,
-		//	300, 320, 340, 360, 380,
-		//	400, 450, 500,
-		//	//550, 600, 650, 700, 750, 800, 850, 900, 950,
-		//	//1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000
-		//};
-		//public float BRUSH_MIN_SIZE { get { return _brushPreset_Size[0]; } }
-		//public float BRUSH_MAX_SIZE { get { return _brushPreset_Size[_brushPreset_Size.Length - 1]; } }
-
-		#region [미사용 코드]
-		//public float BRUSH_MIN_HARDNESS { get { return _brushPreset_Hardness[0]; } }
-		//public float BRUSH_MAX_HARDNESS { get { return _brushPreset_Hardness[_brushPreset_Hardness.Length - 1]; } }
-		//public float[] _brushPreset_Hardness = new float[]
-		//{
-		//	0.0f, 10.0f, 20.0f, 30.0f, 40.0f, 50.0f, 60.0f, 70.0f, 80.0f, 90.0f, 100.0f
-		//};
-
-		//public float[] _brushPreset_Alpha = new float[]
-		//{
-		//	0.0f, 10.0f, 20.0f, 30.0f, 40.0f, 50.0f, 60.0f, 70.0f, 80.0f, 90.0f, 100.0f
-		//};
-		//public float BRUSH_MIN_ALPHA { get { return _brushPreset_Alpha[0]; } }
-		//public float BRUSH_MAX_ALPHA { get { return _brushPreset_Alpha[_brushPreset_Alpha.Length - 1]; } } 
-		#endregion
-
-		//public BRUSH_TYPE _brushType_VolumeEdit = BRUSH_TYPE.SetValue;
-		//public float _brushValue_VolumeEdit = 50.0f;
-		//public float _brushSize_VolumeEdit = 20.0f;
-		//public float _brushHardness_VolumeEdit = 50.0f;
-		//public float _brushAlpha_VolumeEdit = 50.0f;
-		//public float _paintValue_VolumeEdit = 50.0f;
-
-
-		//public BRUSH_TYPE _brushType_Physic = BRUSH_TYPE.SetValue;
-		//public float _brushValue_Physic = 50.0f;
-		//public float _brushSize_Physic = 20.0f;
-		//public float _brushHardness_Physic = 50.0f;
-		//public float _brushAlpha_Physic = 50.0f;
-		//public float _paintValue_Physic = 50.0f;
 
 
 		//Window 호출
@@ -946,7 +912,7 @@ namespace AnyPortrait
 		//} 
 		#endregion
 
-		public float DeltaTime_Update { get { return apTimer.I.DeltaTime_Update; } }
+		//public float DeltaTime_Update { get { return apTimer.I.DeltaTime_Update; } }//삭제 21.7.17 : 사용되지 않는다.
 		public float DeltaTime_UpdateAllFrame { get { return apTimer.I.DeltaTime_UpdateAllFrame; } }
 		public float DeltaTime_Repaint { get { return apTimer.I.DeltaTime_Repaint; } }
 
@@ -1360,7 +1326,7 @@ namespace AnyPortrait
 
 		/// <summary>객체가 추가되거나 삭제된 경우 이 함수를 호출해야한다. 이후 Refresh될 때 다시 Link해야할 필요가 있기 때문</summary>
 		/// <param name="isStructChanged">만약 생성/추가가 없어도 그에 준하는 변경 사항이 있었다면 true로 넣자. 거의 대부분은 false</param>
-		public void OnAnyObjectAddedOrRemoved(bool isStructChanged = false)
+		public void OnAnyObjectAddedOrRemoved(bool isStructChanged = false, bool isCalledInUndoRedoCallback = false)
 		{
 
 			if (_portrait == null)
@@ -1506,8 +1472,15 @@ namespace AnyPortrait
 			{
 				_isRecordedStructChanged = true;//<<Undo를 하면 무조건 전체 Refresh를 해야한다.
 			}
+
+			if (!isCalledInUndoRedoCallback)
+			{
+				//추가 21.6.26 : apUndoHistory (GameObject)에 값을 저장한다.
+				apEditorUtil.OnAnyObjectAddedOrRemoved();
+			}
 		}
 
+		//TODO : 이거 개선해야 한다.
 		private List<int> _recordList_TextureData = new List<int>();
 		private List<int> _recordList_Mesh = new List<int>();
 		//private List<int> _recordList_MeshGroup = new List<int>();//기존
@@ -1598,9 +1571,9 @@ namespace AnyPortrait
 		private apGUILOFactory _guiLOFactory = null;
 		private apGUILOFactory GUILOFactory { get { return _guiLOFactory; } }
 		//--------------------------------------------------------------
-		// 추가 20.4.1 : 에디터 기본 경로
-		private apPathSetting _pathSetting = null;
-		public apPathSetting PathSetting { get { return _pathSetting; } }
+		// 추가 20.4.1 : 에디터 기본 경로 > 변경 21.5.30 : 싱글톤으로 변경했다.
+		//private apPathSetting _pathSetting = null;
+		//public apPathSetting PathSetting { get { return _pathSetting; } }
 
 
 		//--------------------------------------------------------------
@@ -1664,6 +1637,9 @@ namespace AnyPortrait
 			{
 				Rotoscoping.DestroyAllImages();
 			}
+
+			//가이드라인 (21.6.4)
+			_isEnableGuideLine = false;
 		}
 
 
@@ -1672,7 +1648,7 @@ namespace AnyPortrait
 		{
 			if (_isLockOnEnable)
 			{
-				//Debug.Log("apEditor : OnEnable >> Locked");
+				Debug.Log("apEditor : OnEnable >> Locked");
 				return;
 			}
 			//Debug.Log("apEditor : OnEnable");
@@ -1699,6 +1675,7 @@ namespace AnyPortrait
 
 			}
 			s_window = this;
+			
 
 			autoRepaintOnSceneChange = true;
 
@@ -1742,7 +1719,8 @@ namespace AnyPortrait
 			Rotoscoping.DestroyAllImages();
 			Rotoscoping.Load();//추가 21.2.27
 
-
+			//가이드라인 (21.6.4)
+			_isEnableGuideLine = false;
 		}
 
 
@@ -1752,185 +1730,278 @@ namespace AnyPortrait
 
 		private void OnUndoRedoPerformed()
 		{
-			apEditorUtil.OnUndoRedoPerformed();
-
-			
-			if (_portrait != null)
+			if (_portrait == null)
 			{
-				//실제로 오브젝트가 복원되었거나 추가된게 사라지는 내역이 있는가
-				apSelection.RestoredResult restoreResult = Select.SetAutoSelectWhenUndoPerformed(_portrait,
-											_recordList_TextureData,
-											_recordList_Mesh,
-											//_recordList_MeshGroup,
-											_recordList_AnimClip,
-											_recordList_ControlParam,
-											_recordList_Modifier,
-											_recordList_AnimTimeline,
-											_recordList_AnimTimelineLayer,
-											//_recordList_Transform,
-											_recordList_Bone,
-											_recordList_MeshGroupAndTransform,
-											_recordList_AnimClip2TargetMeshGroup,
-											_isRecordedStructChanged);
+				return;
+			}
+			apUndoHistory.UNDO_RESULT undoResult = apEditorUtil.OnUndoRedoPerformed();
 
 
-				
-				//if(restoreResult._isAnyRestored)
-				//{
-				//	Debug.LogWarning("Undo에서 오브젝트가 추가되거나 삭제된 것을 되돌린다.");
-				//}
+			//실제로 오브젝트가 복원되었거나 추가된게 사라지는 내역이 있는가
+			apSelection.RestoredResult restoreResult = Select.SetAutoSelectWhenUndoPerformed(_portrait,
+										_recordList_TextureData,
+										_recordList_Mesh,
+										//_recordList_MeshGroup,
+										_recordList_AnimClip,
+										_recordList_ControlParam,
+										_recordList_Modifier,
+										_recordList_AnimTimeline,
+										_recordList_AnimTimelineLayer,
+										//_recordList_Transform,
+										_recordList_Bone,
+										_recordList_MeshGroupAndTransform,
+										_recordList_AnimClip2TargetMeshGroup,
+										_isRecordedStructChanged);
 
-				//4.1 추가
-				//Undo 이후에 텍스쳐가 리셋되는 문제가 있다.
-				for (int iTexture = 0; iTexture < _portrait._textureData.Count; iTexture++)
+			//Debug.Log("Undo Result : " + undoResult);
+			if (!restoreResult._isAnyRestored && undoResult == apUndoHistory.UNDO_RESULT.StructChanged)
+			{
+				//Debug.LogError("실행 취소 >> RestoredResult에서 감지하지 못한 구조 변화");
+				restoreResult._isAnyRestored = true;
+				restoreResult._isRestoreToAdded = true;
+				restoreResult._isRestoreToRemoved = true;
+			}
+
+
+			bool isResetHierarchyAll = false;
+			if (restoreResult._isAnyRestored)
+			{
+				//Debug.LogWarning("Undo에서 오브젝트가 추가되거나 삭제된 것을 되돌린다.");
+				isResetHierarchyAll = true;
+			}
+
+			//4.1 추가
+			//Undo 이후에 텍스쳐가 리셋되는 문제가 있다.
+			for (int iTexture = 0; iTexture < _portrait._textureData.Count; iTexture++)
+			{
+				apTextureData textureData = _portrait._textureData[iTexture];
+				if (textureData == null)
 				{
-					apTextureData textureData = _portrait._textureData[iTexture];
-					if (textureData == null)
+					continue;
+				}
+				if (textureData._image == null)
+				{
+					//Debug.Log("Image가 없는 경우 발견 : " + textureData._name + " / [" + textureData._assetFullPath + "]");
+					if (!string.IsNullOrEmpty(textureData._assetFullPath))
 					{
-						continue;
-					}
-					if (textureData._image == null)
-					{
-						//Debug.Log("Image가 없는 경우 발견 : " + textureData._name + " / [" + textureData._assetFullPath + "]");
-						if (!string.IsNullOrEmpty(textureData._assetFullPath))
+						//Debug.Log("저장된 경로 : " + textureData._assetFullPath);
+						Texture2D restoreImage = AssetDatabase.LoadAssetAtPath<Texture2D>(textureData._assetFullPath);
+						if (restoreImage != null)
 						{
-							//Debug.Log("저장된 경로 : " + textureData._assetFullPath);
-							Texture2D restoreImage = AssetDatabase.LoadAssetAtPath<Texture2D>(textureData._assetFullPath);
-							if (restoreImage != null)
-							{
-								//Debug.Log("이미지 복원 완료");
-								textureData._image = restoreImage;
-							}
+							//Debug.Log("이미지 복원 완료");
+							textureData._image = restoreImage;
 						}
 					}
 				}
+			}
 
 
-				//Mesh의 TextureData를 다시 확인해봐야한다.
-				for (int iMesh = 0; iMesh < _portrait._meshes.Count; iMesh++)
+			//Mesh의 TextureData를 다시 확인해봐야한다.
+			for (int iMesh = 0; iMesh < _portrait._meshes.Count; iMesh++)
+			{
+				apMesh mesh = _portrait._meshes[iMesh];
+				if (!mesh.IsTextureDataLinked)
 				{
-					apMesh mesh = _portrait._meshes[iMesh];
-					if (!mesh.IsTextureDataLinked)
-					{
-						//Link가 풀렸다면..
-						mesh.SetTextureData(_portrait.GetTexture(mesh.LinkedTextureDataID));
-					}
+					//Link가 풀렸다면..
+					mesh.SetTextureData(_portrait.GetTexture(mesh.LinkedTextureDataID));
 				}
+			}
 
-				
+
+
+
+			//이전
+			//_portrait.LinkAndRefreshInEditor(restoreResult._isAnyRestored, null, null);
+
+			//변경 20.4.3
+			if (Select.SelectionType == apSelection.SELECTION_TYPE.Animation &&
+				Select.AnimClip != null)
+			{
+				//추가 20.7.3 : MRV 복구 함수 (Anim/Mod)
+				Select.StoreSelectedModRenderVerts_ForUndo();
+
+				//추가 20.7.15 : 작업 가시성 저장
+				if (Select.AnimClip._targetMeshGroup != null)
+				{
+					VisiblityController.Save_AllRenderUnits(Select.AnimClip._targetMeshGroup);
+					VisiblityController.Save_AllBones(Select.AnimClip._targetMeshGroup);
+				}
 
 
 				//이전
-				//_portrait.LinkAndRefreshInEditor(restoreResult._isAnyRestored, null, null);
+				//_portrait.LinkAndRefreshInEditor(restoreResult._isAnyRestored, apUtil.LinkRefresh.Set_AnimClip(Select.AnimClip));
 
-				//변경 20.4.3
-				if(Select.SelectionType == apSelection.SELECTION_TYPE.Animation &&
-					Select.AnimClip != null)
-				{	
-					//추가 20.7.3 : MRV 복구 함수 (Anim/Mod)
-					Select.StoreSelectedModRenderVerts_ForUndo();
+				//<여기가 문제>
 
-					//추가 20.7.15 : 작업 가시성 저장
-					if(Select.AnimClip._targetMeshGroup != null)
-					{	
-						VisiblityController.Save_AllRenderUnits(Select.AnimClip._targetMeshGroup);
-						VisiblityController.Save_AllBones(Select.AnimClip._targetMeshGroup);
-					}
-					
-					
-					//이전
-					//_portrait.LinkAndRefreshInEditor(restoreResult._isAnyRestored, apUtil.LinkRefresh.Set_AnimClip(Select.AnimClip));
-					
-					//<여기가 문제>
+				//변경 20.7.2 : 조금 더 확실하게 복구
+				_portrait.LinkAndRefreshInEditor(true, apUtil.LinkRefresh.Set_AnimClip(Select.AnimClip));
+			}
+			else if (Select.SelectionType == apSelection.SELECTION_TYPE.MeshGroup &&
+					Select.MeshGroup != null)
+			{
+				//추가 20.7.3 : MRV 복구 함수 (Anim/Mod)
+				Select.StoreSelectedModRenderVerts_ForUndo();
 
-					//변경 20.7.2 : 조금 더 확실하게 복구
-					_portrait.LinkAndRefreshInEditor(true, apUtil.LinkRefresh.Set_AnimClip(Select.AnimClip));					
-				}
-				else if(Select.SelectionType == apSelection.SELECTION_TYPE.MeshGroup &&
-						Select.MeshGroup != null)
-				{	
-					//추가 20.7.3 : MRV 복구 함수 (Anim/Mod)
-					Select.StoreSelectedModRenderVerts_ForUndo();
+				//추가 20.7.15 : 작업 가시성 저장
+				VisiblityController.Save_AllRenderUnits(Select.MeshGroup);
+				VisiblityController.Save_AllBones(Select.MeshGroup);
 
-					//추가 20.7.15 : 작업 가시성 저장
-					VisiblityController.Save_AllRenderUnits(Select.MeshGroup);
-					VisiblityController.Save_AllBones(Select.MeshGroup);
+				//추가 21.7.1 : Depth를 렌더 유닛에 적용
+				Select.MeshGroup.TFDepthToRenderUnitsOnUndo();
 
-					//_portrait.LinkAndRefreshInEditor(restoreResult._isAnyRestored, apUtil.LinkRefresh.Set_MeshGroup_ExceptAnimModifiers(Select.MeshGroup));
-					//변경 20.7.3 : 조금 더 확실하게 복구
-					_portrait.LinkAndRefreshInEditor(true, apUtil.LinkRefresh.Set_MeshGroup_ExceptAnimModifiers(Select.MeshGroup));
+				//_portrait.LinkAndRefreshInEditor(restoreResult._isAnyRestored, apUtil.LinkRefresh.Set_MeshGroup_ExceptAnimModifiers(Select.MeshGroup));
+				//변경 20.7.3 : 조금 더 확실하게 복구
+				_portrait.LinkAndRefreshInEditor(true, apUtil.LinkRefresh.Set_MeshGroup_ExceptAnimModifiers(Select.MeshGroup));
 
-					if(Select.Modifier != null)
+				if (Select.Modifier != null)
+				{
+					//모디파이어 편집 중이라면
+					//Undo시 추가적인 처리가 필요할 수 있다.
+					apModifierBase.MODIFIER_TYPE curModifierType = Select.Modifier.ModifierType;
+
+					switch (curModifierType)
 					{
-						//모디파이어 편집 중이라면
-						//Undo시 추가적인 처리가 필요할 수 있다.
-						apModifierBase.MODIFIER_TYPE curModifierType = Select.Modifier.ModifierType;
-
-						switch (curModifierType)
-						{
-							case apModifierBase.MODIFIER_TYPE.Rigging:
-								Select.SetBoneRiggingTest();//추가 20.7.3 : 이걸로 리깅시 포즈 테스트가 작동 안되는 버그가 해결된다.
-								break;
-						}
+						case apModifierBase.MODIFIER_TYPE.Rigging:
+							Select.SetBoneRiggingTest();//추가 20.7.3 : 이걸로 리깅시 포즈 테스트가 작동 안되는 버그가 해결된다.
+							break;
 					}
 				}
-				else
+			}
+			else
+			{
+				_portrait.LinkAndRefreshInEditor(restoreResult._isAnyRestored, apUtil.LinkRefresh.Set_AllObjects(null));
+			}
+
+
+
+
+			if (Select.SelectionType == apSelection.SELECTION_TYPE.Mesh)
+			{
+				if (Select.Mesh != null)
 				{
-					_portrait.LinkAndRefreshInEditor(restoreResult._isAnyRestored, apUtil.LinkRefresh.Set_AllObjects(null));
+					Select.Mesh.OnUndoPerformed();//20.7.6 : 메시 제작 버그 해결용
+					Select.Mesh.MakeOffsetPosMatrix();
+					Select.Mesh.RefreshPolygonsToIndexBuffer();
 				}
-
-
-				
-
-				if (Select.SelectionType == apSelection.SELECTION_TYPE.Mesh)
+			}
+			else if (Select.SelectionType == apSelection.SELECTION_TYPE.MeshGroup)
+			{
+				if (Select.MeshGroup != null)
 				{
-					if (Select.Mesh != null)
+					//Debug.LogError(">>> LinkRefresh : " + Select.MeshGroup._name);
+
+					apMeshGroup meshGroup = Select.MeshGroup;
+					apUtil.LinkRefresh.Set_MeshGroup_ExceptAnimModifiers(meshGroup);
+					//apUtil.LinkRefresh.Set_AllObjects(null);//테스트
+
+					if (restoreResult._isAnyRestored || _meshGroupEditMode == MESHGROUP_EDIT_MODE.Setting)
 					{
-						Select.Mesh.OnUndoPerformed();//20.7.6 : 메시 제작 버그 해결용
-						Select.Mesh.MakeOffsetPosMatrix();
-						Select.Mesh.RefreshPolygonsToIndexBuffer();
+						//추가 : Setting 탭에서는 무조건 Sort를 하자
+						//meshGroup.SortRenderUnits(true);//삭제 20.4.4
+						//Debug.Log("Undo > Sort MeshGroup");
+						meshGroup.SetDirtyToReset();
+
+						Hierarchy.SetNeedReset();
 					}
-				}
-				else if (Select.SelectionType == apSelection.SELECTION_TYPE.MeshGroup)
-				{
-					if (Select.MeshGroup != null)
+
+
+					//TODO : 이 코드는 임시 방편이며
+					//(자식 메시 그룹의 Morph 수정 > Undo시 RenderVert가 선택되지 않는 문제)
+					//실제로는 RenderUnit이 재활용될 수 있게 만들어야 한다.
+					//제한적으로 자식 메시 그룹에 한해서 이 코드를 실행시키자
+					//meshGroup.SetDirtyToReset();//문제 생기면 이거 주석 해제 20.4.7
+
+					//단 이 방식은 일시적인 해결 방안이다.
+					if (meshGroup._parentMeshGroup != null)
 					{
-						apMeshGroup meshGroup = Select.MeshGroup;
-						apUtil.LinkRefresh.Set_MeshGroup_ExceptAnimModifiers(meshGroup);
+						meshGroup.SetDirtyToReset();//문제 생기면 이거 주석 해제 20.4.7
+					}
 
-						if (restoreResult._isAnyRestored || _meshGroupEditMode == MESHGROUP_EDIT_MODE.Setting)
+					meshGroup.RefreshForce(true, 0.0f, apUtil.LinkRefresh);
+
+
+					//추가 : 계층적으로 MeshGroup/Modifier가 연결된 경우 이게 코드들이 추가되어야 함
+					if (meshGroup._rootRenderUnit != null)
+					{
+						meshGroup._rootRenderUnit.ReadyToUpdate();//RenderVert 정리를 위해서 ReadyToUpdate를 한번 호출해야한다.
+					}
+					//meshGroup.LinkModMeshRenderUnits();//삭제 20.4.4 : RefreshForce > ResetRenderUnits에 해당 함수가 호출된다.
+					meshGroup.RefreshModifierLink(apUtil.LinkRefresh);
+
+					//>> BoneSet으로 변경
+					apMeshGroup.BoneListSet boneSet = null;
+					if (meshGroup._boneListSets.Count > 0)
+					{
+						meshGroup.UpdateBonesWorldMatrix();//<<전체 갱신 5.17
+
+						for (int iSet = 0; iSet < meshGroup._boneListSets.Count; iSet++)
 						{
-							//추가 : Setting 탭에서는 무조건 Sort를 하자
-							//meshGroup.SortRenderUnits(true);//삭제 20.4.4
-							meshGroup.SetDirtyToReset();
-
-							Hierarchy.SetNeedReset();
+							boneSet = meshGroup._boneListSets[iSet];
+							for (int iRoot = 0; iRoot < boneSet._bones_Root.Count; iRoot++)
+							{
+								boneSet._bones_Root[iRoot].GUIUpdate(true);
+							}
 						}
 
-
-						//TODO : 이 코드는 임시 방편이며
-						//(자식 메시 그룹의 Morph 수정 > Undo시 RenderVert가 선택되지 않는 문제)
-						//실제로는 RenderUnit이 재활용될 수 있게 만들어야 한다.
-						//제한적으로 자식 메시 그룹에 한해서 이 코드를 실행시키자
-						//meshGroup.SetDirtyToReset();//문제 생기면 이거 주석 해제 20.4.7
-
-						//단 이 방식은 일시적인 해결 방안이다.
-						if (meshGroup._parentMeshGroup != null)
-						{
-							meshGroup.SetDirtyToReset();//문제 생기면 이거 주석 해제 20.4.7
-						}
-
+						meshGroup.LinkBoneListToChildMeshGroupsAndRenderUnits();
 						meshGroup.RefreshForce(true, 0.0f, apUtil.LinkRefresh);
-						
+					}
+
+					//추가 21.1.32 : Rule 가시성 동기화 초기화
+					Controller.ResetVisibilityPresetSync();
+				}
+				//추가 20.7.2 : 혹시 동기화가 풀릴 수 있으니 확인
+				Select.AutoSelectModMeshOrModBone();
+			}
+			else if (Select.SelectionType == apSelection.SELECTION_TYPE.Animation)
+			{
+				if (Select.AnimClip != null)
+				{
+					//Debug.LogError("실행취소 중간 B1 >>> ");
+					//DebugAnimModMeshValues();
+
+					apAnimClip animClip = Select.AnimClip;
+					animClip.RefreshTimelines(null, null);//변경 19.5.21 : 전체 Refresh일 경우 null입력
+					animClip.UpdateMeshGroup_Editor(true, 0.0f, true, true);
+
+					apUtil.LinkRefresh.Set_AnimClip(animClip);//갱신 최적화 20.4.4
+
+					if (animClip._targetMeshGroup != null)
+					{
+						apMeshGroup meshGroup = animClip._targetMeshGroup;
+						//if(restoreResult._isAnyRestored)
+						//{
+						//	//Debug.LogError("Undo : AnyRestored");
+						//	apUtil.LinkRefresh.Set_AllObjects(null);
+						//}
+						//else
+						//{
+						//	Debug.LogWarning("Undo : 유지");
+						//}
+
+						if (restoreResult._isAnyRestored)
+						{
+							//meshGroup.SortRenderUnits(true);//삭제 20.4.4
+							//Debug.Log("Undo > Sort MeshGroup");
+							meshGroup.SetDirtyToReset();
+						}
+
+						//Debug.LogError("실행취소 중간 B2 >>> ");
+						//DebugAnimModMeshValues();
+
+						//meshGroup.SetDirtyToReset();//문제 생기면 이거 주석 해제 20.4.7
+						meshGroup.RefreshForce(true, 0.0f, apUtil.LinkRefresh);
+
+
+						//Debug.LogError("실행취소 중간 B3 >>> ");
+						//DebugAnimModMeshValues();
 
 						//추가 : 계층적으로 MeshGroup/Modifier가 연결된 경우 이게 코드들이 추가되어야 함
-						if (meshGroup._rootRenderUnit != null)
-						{
-							meshGroup._rootRenderUnit.ReadyToUpdate();//RenderVert 정리를 위해서 ReadyToUpdate를 한번 호출해야한다.
-						}
 						//meshGroup.LinkModMeshRenderUnits();//삭제 20.4.4 : RefreshForce > ResetRenderUnits에 해당 함수가 호출된다.
 						meshGroup.RefreshModifierLink(apUtil.LinkRefresh);
-						
+
+
+
 						//>> BoneSet으로 변경
 						apMeshGroup.BoneListSet boneSet = null;
 						if (meshGroup._boneListSets.Count > 0)
@@ -1950,155 +2021,97 @@ namespace AnyPortrait
 							meshGroup.RefreshForce(true, 0.0f, apUtil.LinkRefresh);
 						}
 
-						//추가 21.1.32 : Rule 가시성 동기화 초기화
-						Controller.ResetVisibilityPresetSync();
-					}
-					//추가 20.7.2 : 혹시 동기화가 풀릴 수 있으니 확인
-					Select.AutoSelectModMeshOrModBone();
-				}
-				else if (Select.SelectionType == apSelection.SELECTION_TYPE.Animation)
-				{
-					if (Select.AnimClip != null)
-					{
-						//Debug.LogError("실행취소 중간 B1 >>> ");
-						//DebugAnimModMeshValues();
-
-						apAnimClip animClip = Select.AnimClip;
-						animClip.RefreshTimelines(null, null);//변경 19.5.21 : 전체 Refresh일 경우 null입력
-						animClip.UpdateMeshGroup_Editor(true, 0.0f, true, true);
-
-						apUtil.LinkRefresh.Set_AnimClip(animClip);//갱신 최적화 20.4.4
-
-						if (animClip._targetMeshGroup != null)
-						{
-							apMeshGroup meshGroup = animClip._targetMeshGroup;
-							//if(restoreResult._isAnyRestored)
-							//{
-							//	//Debug.LogError("Undo : AnyRestored");
-							//	apUtil.LinkRefresh.Set_AllObjects(null);
-							//}
-							//else
-							//{
-							//	Debug.LogWarning("Undo : 유지");
-							//}
-
-							if (restoreResult._isAnyRestored)
-							{
-								//meshGroup.SortRenderUnits(true);//삭제 20.4.4
-								meshGroup.SetDirtyToReset();
-							}
-
-							//Debug.LogError("실행취소 중간 B2 >>> ");
-							//DebugAnimModMeshValues();
-
-							//meshGroup.SetDirtyToReset();//문제 생기면 이거 주석 해제 20.4.7
-							meshGroup.RefreshForce(true, 0.0f, apUtil.LinkRefresh);
-							
-
-							//Debug.LogError("실행취소 중간 B3 >>> ");
-							//DebugAnimModMeshValues();
-
-							//추가 : 계층적으로 MeshGroup/Modifier가 연결된 경우 이게 코드들이 추가되어야 함
-							//meshGroup.LinkModMeshRenderUnits();//삭제 20.4.4 : RefreshForce > ResetRenderUnits에 해당 함수가 호출된다.
-							meshGroup.RefreshModifierLink(apUtil.LinkRefresh);
-
-
-							
-							//>> BoneSet으로 변경
-							apMeshGroup.BoneListSet boneSet = null;
-							if (meshGroup._boneListSets.Count > 0)
-							{
-								meshGroup.UpdateBonesWorldMatrix();//<<전체 갱신 5.17
-
-								for (int iSet = 0; iSet < meshGroup._boneListSets.Count; iSet++)
-								{
-									boneSet = meshGroup._boneListSets[iSet];
-									for (int iRoot = 0; iRoot < boneSet._bones_Root.Count; iRoot++)
-									{
-										boneSet._bones_Root[iRoot].GUIUpdate(true);
-									}
-								}
-
-								meshGroup.LinkBoneListToChildMeshGroupsAndRenderUnits();
-								meshGroup.RefreshForce(true, 0.0f, apUtil.LinkRefresh);
-							}
-
-						}
-
-						//추가 21.1.32 : Rule 가시성 동기화 초기화
-						Controller.ResetVisibilityPresetSync();
-
-						//추가 3.31 : 공통 커브 갱신
-						Select.AutoRefreshCommonCurve();
 					}
 
-					//추가 20.7.2
-					Select.AutoSelectAnimWorkKeyframe();
+					//추가 21.1.32 : Rule 가시성 동기화 초기화
+					Controller.ResetVisibilityPresetSync();
 
-					
+					//추가 3.31 : 공통 커브 갱신
+					Select.AutoRefreshCommonCurve();
 				}
 
+				//추가 20.7.2
+				Select.AutoSelectAnimWorkKeyframe();
 
-				//만약 FFD 모드 중이었다면 FFD 중단
-				if (Gizmos.IsFFDMode)
-				{
-					Gizmos.RevertTransformObjects(null);
-				}
 
-				if (restoreResult._isAnyRestored)
-				{
-					Hierarchy.SetNeedReset();
-					//+ ID 리셋해야함
-					_portrait.RefreshAllUniqueIDs();
-				}
-
-				RefreshControllerAndHierarchy(false);
-				if (Select.SelectionType == apSelection.SELECTION_TYPE.Animation)
-				{
-					//RefreshTimelineLayers(restoreResult._isAnyRestored);//<<이걸 True로 할 때가 있는데;
-
-					RefreshTimelineLayers(
-						(restoreResult._isAnyRestored ?
-						REFRESH_TIMELINE_REQUEST.All :
-						REFRESH_TIMELINE_REQUEST.Timelines | REFRESH_TIMELINE_REQUEST.LinkKeyframeAndModifier), null, null);
-
-					//RefreshTimelineLayers(REFRESH_TIMELINE_REQUEST.All, null, null);
-					//추가 20.7.2 : Undo 연속 2회시 Gizmo가 먹통이 되는 버그를 해결하기 위해 추가
-					//단, SoftSelection은 유지하도록 만들자.
-					bool isPrevSoftSelection = Gizmos.IsSoftSelectionMode;
-
-					Select.RefreshAnimEditing(true);
-
-					if(isPrevSoftSelection)
-					{
-						Gizmos.StartSoftSelection();
-					}
-				}
-
-				//자동으로 페이지 전환
-				if (restoreResult._isAnyRestored)
-				{
-					Select.SetAutoSelectOrUnselectFromRestore(restoreResult, _portrait);
-					RefreshControllerAndHierarchy(true);
-				}
-
-				OnAnyObjectAddedOrRemoved();
 			}
 
-			if(Select.SelectionType == apSelection.SELECTION_TYPE.MeshGroup ||
+
+			//만약 FFD 모드 중이었다면 FFD 중단
+			if (Gizmos.IsFFDMode)
+			{
+				Gizmos.RevertTransformObjects(null);
+			}
+
+			if (restoreResult._isAnyRestored)
+			{
+				Hierarchy.SetNeedReset();
+				//+ ID 리셋해야함
+				_portrait.RefreshAllUniqueIDs();
+			}
+
+
+
+			//Debug.Log("Undo > Hierarchy Refresh");
+			if (isResetHierarchyAll)
+			{
+				//Debug.Log("Hierarchy 아예 리셋");
+				ResetHierarchyAll();
+			}
+			else
+			{
+				RefreshControllerAndHierarchy(false);
+			}
+
+			if (Select.SelectionType == apSelection.SELECTION_TYPE.Animation)
+			{
+				//RefreshTimelineLayers(restoreResult._isAnyRestored);//<<이걸 True로 할 때가 있는데;
+
+				RefreshTimelineLayers(
+					(restoreResult._isAnyRestored ?
+					REFRESH_TIMELINE_REQUEST.All :
+					REFRESH_TIMELINE_REQUEST.Timelines | REFRESH_TIMELINE_REQUEST.LinkKeyframeAndModifier), null, null);
+
+				//RefreshTimelineLayers(REFRESH_TIMELINE_REQUEST.All, null, null);
+				//추가 20.7.2 : Undo 연속 2회시 Gizmo가 먹통이 되는 버그를 해결하기 위해 추가
+				//단, SoftSelection은 유지하도록 만들자.
+				bool isPrevSoftSelection = Gizmos.IsSoftSelectionMode;
+
+				Select.RefreshAnimEditing(true);
+
+				if (isPrevSoftSelection)
+				{
+					Gizmos.StartSoftSelection();
+				}
+			}
+
+			//자동으로 페이지 전환
+			if (restoreResult._isAnyRestored)
+			{
+				Select.SetAutoSelectOrUnselectFromRestore(restoreResult, _portrait);
+				RefreshControllerAndHierarchy(true);
+			}
+
+			//여기서 Undo이후 현재 오브젝트 상태 기록
+			OnAnyObjectAddedOrRemoved(false, true);
+
+
+
+			//MRV 복구
+			if (Select.SelectionType == apSelection.SELECTION_TYPE.MeshGroup ||
 				Select.SelectionType == apSelection.SELECTION_TYPE.Animation)
 			{
 				//추가 20.7.3 : MRV 복구 함수 (Anim/Mod)
 				Select.RecoverSelectedModRenderVerts_ForUndo();
 
 				//추가 20.7.15 : 작업 가시성 복구
-				if(Select.SelectionType == apSelection.SELECTION_TYPE.Animation
+				if (Select.SelectionType == apSelection.SELECTION_TYPE.Animation
 					&& Select.AnimClip != null
 					&& Select.AnimClip._targetMeshGroup != null)
-				{	
+				{
 					VisiblityController.LoadAll(Select.AnimClip._targetMeshGroup);
 				}
-				else if(Select.SelectionType == apSelection.SELECTION_TYPE.MeshGroup
+				else if (Select.SelectionType == apSelection.SELECTION_TYPE.MeshGroup
 					&& Select.MeshGroup != null)
 				{
 					VisiblityController.LoadAll(Select.MeshGroup);
@@ -2230,27 +2243,67 @@ namespace AnyPortrait
 
 		//-------------------------------------------------------------------------------------------------
 		private void Init(bool isShowEditor)
-		{
+		{	
+
 			//_tab = TAB.ProjectSetting;
 			_portrait = null;
 			_portraitsInScene.Clear();
-			_selection = new apSelection(this);
-			_controller = new apEditorController();
-			_controller.SetEditor(this);
+			if(_selection == null)
+			{
+				_selection = new apSelection(this);
+			}
+			
+			if(_controller == null)
+			{
+				_controller = new apEditorController();
+				_controller.SetEditor(this);
+			}
+			
 
-			_hierarchy = new apEditorHierarchy(this);
-			_hierarchy_MeshGroup = new apEditorMeshGroupHierarchy(this);
-			_hierarchy_AnimClip = new apEditorAnimClipTargetHierarchy(this);
-			_imageSet = new apImageSet();
+			if(_hierarchy == null)
+			{
+				_hierarchy = new apEditorHierarchy(this);
+			}
+			if(_hierarchy_MeshGroup == null)
+			{
+				_hierarchy_MeshGroup = new apEditorMeshGroupHierarchy(this);
+			}
+			if(_hierarchy_AnimClip == null)
+			{
+				_hierarchy_AnimClip = new apEditorAnimClipTargetHierarchy(this);
+			}
+			if(_imageSet == null)
+			{
+				_imageSet = new apImageSet();
+			}
+
 
 
 			//추가 20.3.17 : 기본 경로를 파일로부터 연다
-			_pathSetting = new apPathSetting();
-			_pathSetting.Load();
-			apEditorUtil.SetPackagePath(_pathSetting.CurrentPath);
+			//이전
+			//if (_pathSetting == null)
+			//{
+			//	_pathSetting = new apPathSetting();
+			//	_pathSetting.Load();
+			//	apEditorUtil.SetPackagePath(_pathSetting.CurrentPath);
+			//}
+
+			//변경 21.5.30 : 싱글톤으로 변경
+			if(!apPathSetting.I.IsFirstLoaded)
+			{
+				apPathSetting.I.Load();
+				apEditorUtil.SetPackagePath(apPathSetting.I.CurrentPath);
+			}
+			
 
 
-			_materialLibrary = new apMaterialLibrary(_pathSetting.CurrentPath);//추가 20.4.21 : 재질 라이브러리도 경로 변경
+			
+
+			if(_materialLibrary == null)
+			{
+				_materialLibrary = new apMaterialLibrary(apPathSetting.I.CurrentPath);//추가 20.4.21 : 재질 라이브러리도 경로 변경
+			}
+			
 
 
 
@@ -2260,9 +2313,16 @@ namespace AnyPortrait
 			_mat_Texture_Normal = null;
 			_mat_Texture_VertAdd = null;
 
-			_gizmos = new apGizmos(this);
-			_gizmoController = new apGizmoController();
-			_gizmoController.SetEditor(this);
+			if(_gizmos == null)
+			{
+				_gizmos = new apGizmos(this);
+			}
+			if(_gizmoController == null)
+			{
+				_gizmoController = new apGizmoController();
+				_gizmoController.SetEditor(this);
+			}
+			
 
 			wantsMouseMove = true;
 
@@ -2329,17 +2389,29 @@ namespace AnyPortrait
 			_isHierarchyOrderEditEnabled = false;//<<추가 : SortMode 해제
 
 			//추가 19.11.21
-			_guiStyleWrapper = new apGUIStyleWrapper();
+			if(_guiStyleWrapper == null)
+			{
+				_guiStyleWrapper = new apGUIStyleWrapper();
+			}
+			
 
 			//추가 19.12.2
-			_stringFactory = new apStringFactory();
+			if(_stringFactory == null)
+			{
+				_stringFactory = new apStringFactory();
+			}
+			
 
 			if (_guiStringWrapper_32 == null) { _guiStringWrapper_32 = new apStringWrapper(32); }
 			if (_guiStringWrapper_64 == null) { _guiStringWrapper_64 = new apStringWrapper(64); }
 			if (_guiStringWrapper_128 == null) { _guiStringWrapper_128 = new apStringWrapper(128); }
 			if (_guiStringWrapper_256 == null) { _guiStringWrapper_256 = new apStringWrapper(256); }
 
-			_guiLOFactory = new apGUILOFactory();
+			if(_guiLOFactory == null)
+			{
+				_guiLOFactory = new apGUILOFactory();
+			}
+			
 
 
 			
@@ -2364,6 +2436,17 @@ namespace AnyPortrait
 			}
 
 			EditorUtility.ClearProgressBar();
+
+
+			//추가 21.5.13 : CPP 로드 테스트 : 사용하는 경우에 한해서
+			if(_cppPluginOption_UsePlugin)
+			{
+				_cppPluginValidateResult = apPluginUtil.I.ValidateDLL();
+			}
+			
+			//추가 21.6.26 : Undo History 초기화
+			apUndoHistory.MakeNewGameObject();
+
 
 			//비동기 로딩 초기화
 			ClearLoadingPortraitAsync();
@@ -2404,7 +2487,7 @@ namespace AnyPortrait
 
 
 			//Update 타입의 타이머를 작동한다.
-			if (UpdateFrameCount(FRAME_TIMER_TYPE.Update))
+			if (UpdateFrameCount(FRAME_TIMER_TYPE.Update))//중요! : 여기서 리턴값에 의해서 업데이트 빈도를 조절한다. (실제 FPS는 아니다.)
 			{
 				//동기화가 되었다.
 				//Update에 의한 Repaint가 유효하다.
@@ -2505,21 +2588,6 @@ namespace AnyPortrait
 
 
 
-		//void LateUpdate()
-		//{
-
-
-
-		//	if (EditorApplication.isPlaying)
-		//	{
-		//		return;
-		//	}
-
-		//	//Debug.Log("a");
-		//	//Repaint();
-		//}
-
-
 		private bool CheckEditorResources()
 		{
 			if (_gizmos == null)
@@ -2536,15 +2604,23 @@ namespace AnyPortrait
 			if (_guiStringWrapper_128 == null) { _guiStringWrapper_128 = new apStringWrapper(128); }
 			if (_guiStringWrapper_256 == null) { _guiStringWrapper_256 = new apStringWrapper(256); }
 
-			if(_pathSetting == null)
-			{
-				_pathSetting = new apPathSetting();
-			}
+			//이전
+			//if(_pathSetting == null)
+			//{
+			//	_pathSetting = new apPathSetting();
+			//}
 
-			if (!_pathSetting.IsFirstLoaded)
+			//if (!_pathSetting.IsFirstLoaded)
+			//{
+			//	_pathSetting.Load();
+			//	apEditorUtil.SetPackagePath(_pathSetting.CurrentPath);
+			//}
+
+			//변경 21.5.30 : 싱글톤으로 변경
+			if(!apPathSetting.I.IsFirstLoaded)
 			{
-				_pathSetting.Load();
-				apEditorUtil.SetPackagePath(_pathSetting.CurrentPath);
+				apPathSetting.I.Load();
+				apEditorUtil.SetPackagePath(apPathSetting.I.CurrentPath);
 			}
 			
 
@@ -2606,8 +2682,8 @@ namespace AnyPortrait
 			{
 				//에러가 발생했다.
 				//일단 로드를 한번 해보고.
-				_pathSetting.Load();
-				apEditorUtil.SetPackagePath(_pathSetting.CurrentPath);
+				apPathSetting.I.Load();
+				apEditorUtil.SetPackagePath(apPathSetting.I.CurrentPath);
 
 				EditorUtility.DisplayDialog("Failed to load", "Failed to load editor resources.\nPlease reinstall the AnyPortrait package or run the [Change Installation Path] function to set the path.", "Okay");
 
@@ -2934,10 +3010,16 @@ namespace AnyPortrait
 
 				_localization.SetTextAsset(_language, textAsset_Dialog, textAsset_UI);
 
-				if (_hierarchy != null) { _hierarchy.ResetAllUnits(); }
-				if (_hierarchy_MeshGroup != null) { _hierarchy_MeshGroup.RefreshUnits(); }
-				if (_hierarchy_AnimClip != null) { _hierarchy_AnimClip.RefreshUnits(); }
+				try
+				{
+					if (_hierarchy != null) { _hierarchy.ResetAllUnits(); }
+					if (_hierarchy_MeshGroup != null) { _hierarchy_MeshGroup.RefreshUnits(); }
+					if (_hierarchy_AnimClip != null) { _hierarchy_AnimClip.RefreshUnits(); }
+				}
+				catch(Exception)
+				{
 
+				}
 				//추가 19.11.22 : 한번 생성되면 언어가 고정되는 GUIContent들을 전부 리셋해야한다.
 				ResetGUIContents();
 				if (_selection != null)
@@ -2964,7 +3046,7 @@ namespace AnyPortrait
 			//추가 19.6.1
 			if (_materialLibrary == null)
 			{
-				_materialLibrary = new apMaterialLibrary(_pathSetting.CurrentPath);
+				_materialLibrary = new apMaterialLibrary(apPathSetting.I.CurrentPath);
 			}
 			if (!_materialLibrary.IsLoaded)
 			{
@@ -3067,6 +3149,13 @@ namespace AnyPortrait
 			//GUIStyle 로드 직후에 Reset 가능
 			_hierarchy.ResetAllUnits();
 
+
+			if(_cppPluginOption_UsePlugin 
+				&& _cppPluginValidateResult == apPluginUtil.VALIDATE_RESULT.Unknown)
+			{
+				//추가 21.5.13 : CPP 로드 테스트
+				_cppPluginValidateResult = apPluginUtil.I.ValidateDLL();
+			}
 
 			return true;
 		}
@@ -3257,6 +3346,13 @@ namespace AnyPortrait
 				else
 				{
 					_isGUIEvent = true;
+				}
+
+				//추가 21.6.30
+				if(Event.current.rawType == EventType.MouseUp)
+				{
+					//마우스 Up 이벤트라면 Undo 기록을 초기화한다. (Continuous 못하게)
+					apEditorUtil.ResetUndoContinuous();
 				}
 
 
@@ -3765,6 +3861,7 @@ namespace AnyPortrait
 					_gizmos.CheckUpdate(0.0f);
 				}
 
+				
 				EditorGUILayout.EndVertical();
 				//EditorGUILayout.EndScrollView();
 
@@ -5735,6 +5832,9 @@ namespace AnyPortrait
 				AddHotKeyEvent(OnHotKey_ToggleRotoscoping, apHotKeyMapping.KEY_TYPE.ToggleRotoscoping, null);
 				AddHotKeyEvent(OnHotKey_RotoscopingSwitchingImage, apHotKeyMapping.KEY_TYPE.RotoscopingPrev, false);
 				AddHotKeyEvent(OnHotKey_RotoscopingSwitchingImage, apHotKeyMapping.KEY_TYPE.RotoscopingNext, true);
+
+				//추가 21.6.4 : 가이드라인 단축키
+				AddHotKeyEvent(OnHotKey_ToggleGuidelines, apHotKeyMapping.KEY_TYPE.ToggleGuidelines, null);
 			}
 
 
@@ -6156,6 +6256,12 @@ namespace AnyPortrait
 
 
 
+		private apHotKey.HotKeyResult OnHotKey_ToggleGuidelines(object paramObject)
+		{
+			_isEnableGuideLine = !_isEnableGuideLine;
+			return apHotKey.HotKeyResult.MakeResult(_isEnableGuideLine ? apStringFactory.I.ON : apStringFactory.I.OFF);
+			
+		}
 
 
 
@@ -6502,6 +6608,21 @@ namespace AnyPortrait
 						SaveEditorPref();
 					}
 					break;
+
+				case apGUIMenu.MENU_ITEM__GUIVIEW.ToggleGuidelines:
+					{
+						//추가 21.6.4 : 가이드라인 보여주기
+						_isEnableGuideLine = !_isEnableGuideLine;
+					}
+					break;
+
+				case apGUIMenu.MENU_ITEM__GUIVIEW.GuideLinesSettings:
+					{
+						//추가 21.6.4 : 가이드라인 설정 보여주기
+						apDialog_GuideLines.ShowDialog(this);
+					}
+					break;
+
 			}
 		}
 
@@ -7114,6 +7235,9 @@ namespace AnyPortrait
 						string strPath = EditorUtility.OpenFilePanel("Load Backup File", apEditorUtil.GetLastOpenSaveFileDirectoryPath(apEditorUtil.SAVED_LAST_FILE_PATH.BackupFile), "bck");//추가 21.3.6 : 실행 환경에 따른 문제 개선 포맷인 bck+corrected 가 추가되었다. 
 						if (!string.IsNullOrEmpty(strPath))
 						{
+							//추가 21.7.3 : 이스케이프 문자 삭제
+							strPath = apUtil.ConvertEscapeToPlainText(strPath);
+
 							//Debug.Log("Load Backup File [" + strPath + "]");
 
 							_isMakePortraitRequestFromBackupFile = true;
@@ -7565,8 +7689,6 @@ namespace AnyPortrait
 
 
 
-
-
 			switch (_selection.SelectionType)
 			{
 				case apSelection.SELECTION_TYPE.None:
@@ -7601,11 +7723,15 @@ namespace AnyPortrait
 											Select.RootUnitAnimClip._targetMeshGroup.SetBoneIKEnabled(isUpdate_BoneIKMatrix, isUpdate_BoneIKRigging);
 										}
 
+										//TODO
+										//Update_Editor에 DLL 옵션을 넣어서 빠른 실행이 가능하도록 만들자
+
 										Select.RootUnitAnimClip.Update_Editor(
 															deltaTime,
 															true,
 															isUpdate_BoneIKMatrix,
-															isUpdate_BoneIKRigging);
+															isUpdate_BoneIKRigging,
+															IsUseCPPDLL);
 										//Profiler.EndSample();
 
 
@@ -7623,7 +7749,17 @@ namespace AnyPortrait
 								else
 								{
 									//AnimClip이 없다면 자체 실행
-									Select.RootUnit.Update(deltaTime, isUpdate_BoneIKMatrix, isUpdate_BoneIKRigging);
+									if(IsUseCPPDLL)
+									{
+										//C++ DLL 을 이용하는 버전 (21.5.13)
+										Select.RootUnit.Update_DLL(deltaTime, isUpdate_BoneIKMatrix, isUpdate_BoneIKRigging);
+									}
+									else
+									{
+										//일반 버전
+										Select.RootUnit.Update(deltaTime, isUpdate_BoneIKMatrix, isUpdate_BoneIKRigging);
+									}
+									
 								}
 
 							}
@@ -7743,7 +7879,16 @@ namespace AnyPortrait
 										//1. Render Unit을 돌면서 렌더링을 한다.
 										Select.MeshGroup.SetBoneIKEnabled(isUpdate_BoneIKMatrix, isUpdate_BoneIKRigging);
 
-										Select.MeshGroup.UpdateRenderUnits(deltaTime, true);
+										if(IsUseCPPDLL)
+										{
+											//추가 21.5.14 : C++ DLL로 업데이트를 한다.
+											Select.MeshGroup.UpdateRenderUnits_DLL(deltaTime, true);
+										}
+										else
+										{
+											Select.MeshGroup.UpdateRenderUnits(deltaTime, true);
+										}
+										
 
 										Select.MeshGroup.SetBoneIKEnabled(false, false);
 
@@ -7783,7 +7928,8 @@ namespace AnyPortrait
 										Select.AnimClip.Update_Editor(deltaTime,
 											Select.ExAnimEditingMode != apSelection.EX_EDIT.None,
 											isUpdate_BoneIKMatrix,
-											isUpdate_BoneIKRigging);
+											isUpdate_BoneIKRigging,
+											IsUseCPPDLL);
 
 										//프레임이 바뀌면 AutoScroll 옵션을 적용한다.
 										if (curFrame != Select.AnimClip.CurFrame)
@@ -7821,6 +7967,8 @@ namespace AnyPortrait
 			{
 				return;
 			}
+
+			
 
 			//만약 렌더링 클리핑을 갱신할 필요가 있다면 처리할 것
 			if (_isRefreshClippingGL)
@@ -7863,40 +8011,7 @@ namespace AnyPortrait
 							if (Select.RootUnit._childMeshGroup != null)
 							{
 								apMeshGroup rootMeshGroup = Select.RootUnit._childMeshGroup;
-								#region [미사용 코드] 함수로 대체한다.
-								//for (int iUnit = 0; iUnit < rootMeshGroup._renderUnits_All.Count; iUnit++)
-								//{
-								//	apRenderUnit renderUnit = rootMeshGroup._renderUnits_All[iUnit];
-								//	if (renderUnit._unitType == apRenderUnit.UNIT_TYPE.Mesh)
-								//	{
-								//		if (renderUnit._meshTransform != null)
-								//		{
-								//			if(!renderUnit._meshTransform._isVisible_Default)
-								//			{
-								//				continue;
-								//			}
-
-								//			if (renderUnit._meshTransform._isClipping_Parent)
-								//			{
-								//				//Clipping이면 Child (최대3)까지 마스크 상태로 출력한다.
-								//				apGL.DrawRenderUnit_ClippingParent(	renderUnit, 
-								//													renderUnit._meshTransform._clipChildMeshTransforms, 
-								//													renderUnit._meshTransform._clipChildRenderUnits,
-								//													VertController, 
-								//													Select);
-								//			}
-								//			else if (renderUnit._meshTransform._isClipping_Child)
-								//			{
-								//				//렌더링은 생략한다.
-								//			}
-								//			else
-								//			{
-								//				apGL.DrawRenderUnit(renderUnit, apGL.RENDER_TYPE.Default, VertController, Select);
-								//			}
-								//		}
-								//	}
-								//} 
-								#endregion
+								
 
 								RenderMeshGroup(rootMeshGroup,
 													apGL.RENDER_TYPE.Default,
@@ -7908,7 +8023,6 @@ namespace AnyPortrait
 								//Debug.Log("<<<<<<<<<<<<<<<<<<<<<<<<<<");
 							}
 						}
-
 					}
 					break;
 
@@ -8202,6 +8316,13 @@ namespace AnyPortrait
 												selectRenderType |= apGL.RENDER_TYPE.AllEdges;
 												break;
 
+											//추가 21.7.20
+											case apModifierBase.MODIFIER_TYPE.ColorOnly:
+											case apModifierBase.MODIFIER_TYPE.AnimatedColorOnly:
+												selectRenderType |= apGL.RENDER_TYPE.Vertex;
+												selectRenderType |= apGL.RENDER_TYPE.AllEdges;
+												selectRenderType |= apGL.RENDER_TYPE.TransformBorderLine;
+												break;
 
 
 											case apModifierBase.MODIFIER_TYPE.Base:
@@ -8316,7 +8437,7 @@ namespace AnyPortrait
 										//bool isBonePreivew = GetModLockOption_BonePreview();//변경 21.2.13
 
 										//if (isBonePreivew)
-										if(_modLockOption_BoneResultPreview)
+										if (_modLockOption_BoneResultPreview)
 										{
 											//Bone Preview를 하자
 											RenderExEditBonePreview_Modifier(Select.MeshGroup, GetModLockOption_BonePreviewColor());
@@ -8347,22 +8468,22 @@ namespace AnyPortrait
 								DrawModifierListUI(0, height / 2, Select.MeshGroup, Select.Modifier, null, null, Select.ExEditingMode);
 							}
 						}
-					}
 
-					if (Select.ExEditingMode != apSelection.EX_EDIT.None)
-					{
-						//Profiler.BeginSample("MeshGroup Borderline");
+						if (Select.ExEditingMode != apSelection.EX_EDIT.None)
+						{
+							//Profiler.BeginSample("MeshGroup Borderline");
 
-						//Editing이라면
-						//화면 위/아래에 붉은 라인들 그려주자
-						apGL.DrawEditingBorderline();
+							//Editing이라면
+							//화면 위/아래에 붉은 라인들 그려주자
+							apGL.DrawEditingBorderline();
 
-						//Profiler.EndSample();
-					}
+							//Profiler.EndSample();
+						}
 
-					if (Gizmos.IsBrushMode)
-					{
-						Controller.GUI_PrintBrushCursor(Gizmos);
+						if (Gizmos.IsBrushMode)
+						{
+							Controller.GUI_PrintBrushCursor(Gizmos);
+						}
 					}
 					break;
 
@@ -8508,7 +8629,11 @@ namespace AnyPortrait
 										//Bone Preview를 하자
 										RenderExEditBonePreview_Animation(Select.AnimClip, Select.AnimClip._targetMeshGroup, GetModLockOption_BonePreviewColor());
 
-										Select.AnimClip.Update_Editor(0.0f, true, isUpdate_BoneIKMatrix, isUpdate_BoneIKRigging);
+										Select.AnimClip.Update_Editor(	0.0f, 
+																		true, 
+																		isUpdate_BoneIKMatrix, 
+																		isUpdate_BoneIKRigging, 
+																		IsUseCPPDLL);
 									}
 								}
 							}
@@ -8537,6 +8662,24 @@ namespace AnyPortrait
 					}
 					break;
 			}
+
+
+			apGL.EndPass();
+
+
+			//추가 21.6.5 : 가이드라인 그리기
+			if(_isEnableGuideLine)
+			{
+				switch (_selection.SelectionType)
+				{
+					case apSelection.SELECTION_TYPE.Overall:
+					case apSelection.SELECTION_TYPE.MeshGroup:
+					case apSelection.SELECTION_TYPE.Animation:						
+						DrawGuidelines();
+						break;
+				}
+			}
+
 
 			if (_isShowCaptureFrame && _portrait != null && Select.SelectionType == apSelection.SELECTION_TYPE.Overall)
 			{
@@ -8588,7 +8731,10 @@ namespace AnyPortrait
 				apGL.DrawLineGL(thumbFramePos_RT, thumbFramePos_RB, thumbFrameColor, false);
 				apGL.DrawLineGL(thumbFramePos_RB, thumbFramePos_LB, thumbFrameColor, false);
 				apGL.DrawLineGL(thumbFramePos_LB, thumbFramePos_LT, thumbFrameColor, false);
-				apGL.EndBatch();
+				
+				//삭제 21.5.18
+				//apGL.EndBatch();
+				apGL.EndPass();
 			}
 
 			//이후에 나올 아이콘의 크기들
@@ -8605,105 +8751,6 @@ namespace AnyPortrait
 			//int iconPosX = GUI_STAT_MARGIN + (GUI_STAT_ICON_SIZE / 2);//5 + 14
 			
 			bool isAnyStatIcons = false;
-
-			#region [미사용 코드] 아이콘들 표시하지 않기로. apGUIStatBox에서 일괄 처리하기로 했다.
-			////추가 3.1 : Low CPU모드일때 아이콘 표시
-			//if (_lowCPUStatus == LOW_CPU_STATUS.LowCPU_Low || _lowCPUStatus == LOW_CPU_STATUS.LowCPU_Mid)
-			//{
-			//	if (_imgLowCPUStatus == null)
-			//	{
-			//		_imgLowCPUStatus = ImageSet.Get(apImageSet.PRESET.LowCPU);
-			//	}
-
-			//	apGL.DrawTextureGL(_imgLowCPUStatus, new Vector2(iconPosX, iconPosY), scaledIconSize, scaledIconSize, Color.gray, 0.0f);
-			//	iconPosX += GUI_STAT_ICON_SIZE;
-			//	isAnyStatIcons = true;
-			//}
-
-			////Mesh
-			//if (_meshGUIRenderMode != MESH_RENDER_MODE.Render)
-			//{
-			//	if (_imgViewStat_MeshHidden == null)
-			//	{
-			//		_imgViewStat_MeshHidden = ImageSet.Get(apImageSet.PRESET.GUI_ViewStat_MeshHidden);
-			//	}
-			//	apGL.DrawTextureGL(_imgViewStat_MeshHidden, new Vector2(iconPosX, iconPosY), scaledIconSize, scaledIconSize, Color.gray, 0.0f);
-			//	iconPosX += GUI_STAT_ICON_SIZE;
-			//	isAnyStatIcons = true;
-			//}
-			////Bone - Hidden/Outline
-			//if (_boneGUIRenderMode == BONE_RENDER_MODE.None)
-			//{
-			//	if (_imgViewStat_BoneHidden == null)
-			//	{
-			//		_imgViewStat_BoneHidden = ImageSet.Get(apImageSet.PRESET.GUI_ViewStat_BoneHidden);
-			//	}
-			//	apGL.DrawTextureGL(_imgViewStat_BoneHidden, new Vector2(iconPosX, iconPosY), scaledIconSize, scaledIconSize, Color.gray, 0.0f);
-			//	iconPosX += GUI_STAT_ICON_SIZE;
-			//	isAnyStatIcons = true;
-			//}
-			//else if (_boneGUIRenderMode == BONE_RENDER_MODE.RenderOutline)
-			//{
-			//	if (_imgViewStat_BoneOutline == null)
-			//	{
-			//		_imgViewStat_BoneOutline = ImageSet.Get(apImageSet.PRESET.GUI_ViewStat_BoneOutline);
-			//	}
-			//	apGL.DrawTextureGL(_imgViewStat_BoneOutline, new Vector2(iconPosX, iconPosY), scaledIconSize, scaledIconSize, Color.gray, 0.0f);
-			//	iconPosX += GUI_STAT_ICON_SIZE;
-			//	isAnyStatIcons = true;
-			//}
-
-			////물리 효과 - Disabled
-			//if (_portrait != null && !_portrait._isPhysicsPlay_Editor)
-			//{
-			//	if (_imgViewStat_DisablePhysics == null)
-			//	{
-			//		_imgViewStat_DisablePhysics = ImageSet.Get(apImageSet.PRESET.GUI_ViewStat_DisablePhysics);
-			//	}
-			//	apGL.DrawTextureGL(_imgViewStat_DisablePhysics, new Vector2(iconPosX, iconPosY), scaledIconSize, scaledIconSize, Color.gray, 0.0f);
-			//	iconPosX += GUI_STAT_ICON_SIZE;
-			//	isAnyStatIcons = true;
-			//}
-
-			////OnionSkin
-			//if (Onion.IsVisible
-			//	&& (Select.SelectionType == apSelection.SELECTION_TYPE.Animation ||
-			//		Select.SelectionType == apSelection.SELECTION_TYPE.MeshGroup))
-			//{	
-			//	if(_imgViewStat_OnionSkin == null)
-			//	{
-			//		_imgViewStat_OnionSkin = ImageSet.Get(apImageSet.PRESET.GUI_ViewStat_OnionSkin);
-			//	}
-			//	apGL.DrawTextureGL(_imgViewStat_OnionSkin, new Vector2(iconPosX, iconPosY), scaledIconSize, scaledIconSize, Color.gray, 0.0f);
-			//	iconPosX += GUI_STAT_ICON_SIZE;
-			//	isAnyStatIcons = true;
-			//}
-
-			////TODO : 상태 추가시 아이콘 추가
-			//if(_isAdaptVisibilityPreset)
-			//{
-			//	//프리셋 Visibility 추가
-			//	if(_imgViewStat_PresetVisible == null)
-			//	{
-			//		_imgViewStat_PresetVisible = ImageSet.Get(apImageSet.PRESET.GUI_ViewStat_PresetVisible);
-			//	}
-			//	apGL.DrawTextureGL(_imgViewStat_PresetVisible, new Vector2(iconPosX, iconPosY), scaledIconSize, scaledIconSize, Color.gray, 0.0f);
-			//	iconPosX += GUI_STAT_ICON_SIZE;
-			//	isAnyStatIcons = true;
-			//}
-
-			//if(true)
-			//{
-			//	//로토스코핑
-			//	if(_imgViewStat_Rotoscoping == null)
-			//	{
-			//		_imgViewStat_Rotoscoping = ImageSet.Get(apImageSet.PRESET.GUI_ViewStat_Rotoscoping);
-			//	}
-			//	apGL.DrawTextureGL(_imgViewStat_Rotoscoping, new Vector2(iconPosX, iconPosY), scaledIconSize, scaledIconSize, Color.gray, 0.0f);
-			//	iconPosX += GUI_STAT_ICON_SIZE;
-			//	isAnyStatIcons = true;
-			//} 
-			#endregion
 
 
 			//--------------------------------------------------
@@ -8730,6 +8777,7 @@ namespace AnyPortrait
 				_fpsString.AppendPreset(0, false);
 				//_fpsString.Append(FPS, true);
 				_fpsString.Append(_fpsCounter.AvgFPS, true);
+
 
 				apGL.DrawTextGL(_fpsString.ToString(), new Vector2(GUI_STAT_MARGIN, guiLabelY), 150, Color.yellow);
 
@@ -8790,7 +8838,11 @@ namespace AnyPortrait
 				apGL.DrawTextGL(Backup.Label, new Vector2(GUI_STAT_MARGIN + GUI_STAT_ICON_SIZE + 10, yPos - 6), 400, labelColor);
 			}
 
-			
+			//중요! 21.5.18
+			apGL.EndPass();
+
+
+
 
 			//이전에 선택 잠금만 표시하던 영역
 			//if (Select.IsSelectionLockGUI)
@@ -8802,19 +8854,24 @@ namespace AnyPortrait
 			if(_guiStatBox != null)
 			{
 				_guiStatBox.UpdateAndRender(new Vector2(width - 20, 30), Mouse.Pos);
+				apGL.EndPass();
 			}
+
+			
 
 			if(_guiHowToUse != null)
 			{
 				_guiHowToUse.DrawTips(new Vector2(width, height / 2));
+				apGL.EndPass();
 			}
 
+			
 
 
-
+			//통계 정보를 출력한다.
 			if (_guiOption_isStatisticsVisible)
 			{
-				//통계 정보를 출력한다.
+				
 				//통계 정보는 아래서 출력한다.
 				//어떤 메뉴인가에 따라 다르다
 				Select.CalculateStatistics();
@@ -8905,6 +8962,13 @@ namespace AnyPortrait
 				SetRepaint();
 			}
 
+
+			//중요! 21.5.18
+			apGL.EndPass();
+
+
+
+			
 			////물리 설정이 변경되었다면 복구
 			//if (_portrait != null)
 			//{
@@ -9217,6 +9281,9 @@ namespace AnyPortrait
 							}
 						}
 					}
+
+					//렌더유닛 렌더링 후 Pass 1차 종료
+					apGL.EndPass();
 				}
 			}
 
@@ -9243,6 +9310,11 @@ namespace AnyPortrait
 					}
 				}
 
+
+				if(_boneGUIOption_RenderType == BONE_DISPLAY_METHOD.Version2)
+				{
+					apGL.BeginBatch_DrawBones_V2();//본 렌더링 V2 방식은 Batch가 가능하다. (추가 21.5.19)
+				}
 				
 
 
@@ -9300,10 +9372,13 @@ namespace AnyPortrait
 									DrawBoneRecursive_V2(boneSet._bones_Root[iRoot], isDrawBoneOutline, isBoneIKUsing, isUseBoneToneColor, isSubBoneSelectable, isRiggingWorks, linkedBonesVisibility);
 								}
 
-								apGL.EndBatch();
+								//삭제 21.5.19
+								//apGL.EndBatch();
 							}
 							
 						}
+
+						
 					}
 
 
@@ -9318,6 +9393,9 @@ namespace AnyPortrait
 								//Root 렌더링을 한다.
 								DrawBoneRecursive_V1(meshGroup._boneList_Root[iRoot], isDrawBoneOutline, isBoneIKUsing, isUseBoneToneColor, true);
 							}
+
+							//렌더링 종료
+							apGL.EndPass();
 						}
 						else
 						{
@@ -9330,39 +9408,21 @@ namespace AnyPortrait
 								DrawBoneRecursive_V2(meshGroup._boneList_Root[iRoot], isDrawBoneOutline, isBoneIKUsing, isUseBoneToneColor, true, isRiggingWorks, linkedBonesVisibility);
 							}
 
-							apGL.EndBatch();
 						}
 						
 					}
 				}
 				else if ((int)(boneRenderTarget & BONE_RENDER_TARGET.SelectedOnly) != 0)
 				{
-					//>> 아니면 선택한 Bone만 렌더링 한다.
-					//이전 : Select.Bone을 이용한다.
-					//if (Select.Bone != null)
-					//{
-					//	Select.Bone.GUIUpdate(false, isBoneIKUsing);
-					//	if (Select.Bone.IsGUIVisible)
-					//	{
-					//		if(_boneGUIOption_RenderType == BONE_DISPLAY_METHOD.Version1)
-					//		{
-					//			//Version1로 그리기
-					//			apGL.DrawBone_V1(Select.Bone, isDrawBoneOutline, isBoneIKUsing, isUseBoneToneColor, true);
-					//		}
-					//		else
-					//		{
-					//			//Version2로 그리기
-					//			apGL.DrawBone_V2(Select.Bone, isDrawBoneOutline, isBoneIKUsing, isUseBoneToneColor, true, true, false);
-					//		}
-
-					//	}
-					//}
-
 					//변경 20.5.28 : 파라미터로 받은 Main/Sub 본을 렌더링한다.
 					//Sub부터 렌더링
 					if(selectedBone_Sub != null && selectedBone_Sub.Count > 0)
 					{
 						apBone curSubBone = null;
+						
+						
+
+
 						for (int iSubBone = 0; iSubBone < selectedBone_Sub.Count; iSubBone++)
 						{
 							curSubBone = selectedBone_Sub[iSubBone];
@@ -9381,10 +9441,12 @@ namespace AnyPortrait
 								else
 								{
 									//Version2로 그리기
-									apGL.DrawBone_V2(curSubBone, isDrawBoneOutline, isBoneIKUsing, isUseBoneToneColor, true, true, false);
+									//apGL.DrawBone_V2(curSubBone, isDrawBoneOutline, isBoneIKUsing, isUseBoneToneColor, true, true, false);
+									apGL.DrawBone_V2(curSubBone, isDrawBoneOutline, isBoneIKUsing, isUseBoneToneColor, true, false, false);//Batch를 위해 true > false
 								}
 							}
 						}
+
 					}
 
 					//Main 본도 그리자
@@ -9407,52 +9469,16 @@ namespace AnyPortrait
 								apGL.DrawBone_V2(selectedBone, isDrawBoneOutline, isBoneIKUsing, isUseBoneToneColor, true, true, false);
 							}
 
+							
 						}
 					}
 				}
 
+				//렌더링 종료
+				apGL.EndPass();
+
 				if ((int)(boneRenderTarget & BONE_RENDER_TARGET.SelectedOutline) != 0)
 				{
-					//이전 : Select.Bone을 이용했다.
-					//if (Select.Bone != null)
-					//{
-					//	//선택 아웃라인을 위에 그릴때
-					//	if (Select.BoneEditMode == apSelection.BONE_EDIT_MODE.Link)
-					//	{
-					//		if (Controller.BoneEditRollOverBone != null)
-					//		{
-					//			if (_boneGUIOption_RenderType == BONE_DISPLAY_METHOD.Version1)
-					//			{
-					//				//Version1로 그리기
-					//				apGL.DrawSelectedBone_V1(Controller.BoneEditRollOverBone, false, isBoneIKUsing);
-					//			}
-					//			else
-					//			{
-					//				//Version2로 그리기
-					//				apGL.DrawSelectedBone_V2(Controller.BoneEditRollOverBone, false, isBoneIKUsing);
-					//			}
-								
-					//		}
-					//	}
-
-					//	if (_boneGUIOption_RenderType == BONE_DISPLAY_METHOD.Version1)
-					//	{
-					//		//Version1로 그리기
-					//		apGL.DrawSelectedBone_V1(Select.Bone, true, isBoneIKUsing);
-					//	}
-					//	else
-					//	{
-					//		//Version2로 그리기
-					//		apGL.DrawSelectedBone_V2(Select.Bone, true, isBoneIKUsing);
-					//	}
-						
-					//	if (!isDrawBoneOutline)
-					//	{
-					//		//IK 설정 등과 관련된 값을 추가로 렌더링
-					//		apGL.DrawSelectedBonePost(Select.Bone, isBoneIKUsing);
-					//	}
-					//}
-
 					//변경 20.5.28 : 파라미터로 받은 Main/Sub 본을 렌더링한다.
 					//Sub부터 렌더링
 					if(selectedBone_Sub != null && selectedBone_Sub.Count > 0)
@@ -9508,6 +9534,9 @@ namespace AnyPortrait
 							apGL.DrawSelectedBone_V2(Select.Bone, apGL.BONE_SELECTED_OUTLINE_COLOR.MainSelected, isBoneIKUsing);
 						}
 						
+						//렌더링 종료
+						apGL.EndPass();
+
 						if (!isDrawBoneOutline)
 						{
 							//IK 설정 등과 관련된 값을 추가로 렌더링
@@ -9515,6 +9544,9 @@ namespace AnyPortrait
 						}
 					}
 				}
+
+				//렌더링 종료
+				apGL.EndPass();
 
 			}
 
@@ -9549,6 +9581,9 @@ namespace AnyPortrait
 				}
 			}
 			//Profiler.EndSample();
+
+			//렌더링 종료
+			apGL.EndPass();
 		}
 
 
@@ -9618,7 +9653,9 @@ namespace AnyPortrait
 						{
 							DrawBoneOutlineRecursive_V2(boneSet._bones_Root[iRoot], boneLineColor, isBoneIKUsing);
 						}
-						apGL.EndBatch();
+						
+						//삭제 21.5.19
+						//apGL.EndBatch();
 					}
 					
 				}
@@ -9646,7 +9683,9 @@ namespace AnyPortrait
 						//Root 렌더링을 한다.
 						DrawBoneOutlineRecursive_V2(meshGroup._boneList_Root[iRoot], boneLineColor, isBoneIKUsing);
 					}
-					apGL.EndBatch();
+					
+					//삭제 21.5.19
+					//apGL.EndBatch();
 				}
 			}
 		}
@@ -9834,7 +9873,7 @@ namespace AnyPortrait
 			{
 
 				//animClip.Update_Editor(0.0f, true, isBoneIKMatrix, isBoneIKRigging);
-				animClip.Update_Editor(0.0f, true, true, true);
+				animClip.Update_Editor(0.0f, true, true, true, IsUseCPPDLL);
 			}
 			else
 			{
@@ -9885,7 +9924,7 @@ namespace AnyPortrait
 			{
 				if (animClip != null)
 				{
-					animClip.Update_Editor(0.0f, true, isBoneIKMatrix, isBoneIKRigging);
+					animClip.Update_Editor(0.0f, true, isBoneIKMatrix, isBoneIKRigging, IsUseCPPDLL);
 				}
 				else
 				{
@@ -10086,7 +10125,7 @@ namespace AnyPortrait
 
 			if (animClip != null)
 			{
-				animClip.Update_Editor(0.0f, true, isBoneIKMatrix, isBoneIKRigging);
+				animClip.Update_Editor(0.0f, true, isBoneIKMatrix, isBoneIKRigging, IsUseCPPDLL);
 			}
 
 			//<BONE_EDIT>
@@ -10205,6 +10244,7 @@ namespace AnyPortrait
 			Color rotoColor = new Color(0.5f, 0.5f, 0.5f, (float)Rotoscoping._opacity / 255.0f);
 
 			apGL.DrawTextureGL(rotoImage, posGL, scaledImageWidth, scaledImageHeight, rotoColor, 0.0f);
+			apGL.EndPass();
 		}
 
 
@@ -10279,7 +10319,7 @@ namespace AnyPortrait
 			Select.SetEnableMeshGroupExEditingFlagsForce();
 
 			////meshGroup.RefreshForce();//<ExCalculate를 Ignore한다.
-			animClip.Update_Editor(0.0f, true, true, false);
+			animClip.Update_Editor(0.0f, true, true, false, IsUseCPPDLL);
 			RenderBoneOutlineOnly(meshGroup, boneOutlineColor, true);
 
 			Select.SetAnimExclusiveEditing_Tmp(prevExEditMode, false);
@@ -10288,7 +10328,7 @@ namespace AnyPortrait
 			//Select.RefreshMeshGroupExEditingFlags(meshGroup, curModifier, null, animClip, true);//이거 호출할 필요가 있나?
 			
 
-			animClip.Update_Editor(0.0f, true, false, false);
+			animClip.Update_Editor(0.0f, true, false, false, IsUseCPPDLL);
 
 			//<BONE_EDIT>
 			//for (int i = 0; i < animClip._targetMeshGroup._boneList_Root.Count; i++)
@@ -10309,6 +10349,7 @@ namespace AnyPortrait
 
 
 		}
+				
 
 
 
@@ -10460,6 +10501,99 @@ namespace AnyPortrait
 
 				curPosY -= textHeight;
 			}
+		}
+
+
+		/// <summary>
+		/// 추가 21.6.4 : 가이드라인을 렌더링하자
+		/// </summary>
+		private void DrawGuidelines()
+		{	
+			if(_portrait == null
+				|| _portrait.GuideLines == null)
+			{
+				return;
+			}
+			if(_portrait.GuideLines.NumLines == 0)
+			{
+				return;
+			}
+
+			int nLines = _portrait.GuideLines.NumLines;
+			List<apGuideLines.LineInfo> lines = _portrait.GuideLines.Lines;
+			apGuideLines.LineInfo curLine = null;
+
+			//GL 기준으로 가장자리 위치를 체크하자
+			float GLPos_Left = -50;
+			float GLPos_Right = apGL._windowWidth + 50;
+			float GLPos_Top = -50;
+			float GLPos_Bottom = apGL._windowHeight + 50;
+
+			Vector2 pos1 = Vector2.zero;
+			Vector2 pos2 = Vector2.zero;
+
+			//두꺼운 선부터 보여주자
+			apGL.BeginBatch_ColoredPolygon();
+			for (int i = 0; i < nLines; i++)
+			{
+				curLine = lines[i];
+
+				if(!curLine._isEnabled
+					|| curLine._thickness == apGuideLines.LINE_THICKNESS.Thin)
+				{
+					continue;
+				}
+				if(curLine._direction == apGuideLines.LINE_DIRECTION.Horizontal)
+				{
+					//수평선
+					pos1.x = GLPos_Left;
+					pos2.x = GLPos_Right;
+					pos1.y = apGL.World2GL(new Vector2(0.0f, curLine._position)).y;
+					pos2.y = pos1.y;
+				}
+				else
+				{
+					//수직선
+					pos1.y = GLPos_Top;
+					pos2.y = GLPos_Bottom;
+					pos1.x = apGL.World2GL(new Vector2(curLine._position, 0.0f)).x;
+					pos2.x = pos1.x;
+				}
+				apGL.DrawBoldLineGL(pos1, pos2, 3.0f, curLine._color, false);
+			}
+			apGL.EndPass();
+
+			//가는 선을 보여주자
+			apGL.BeginBatch_ColoredLine();
+			for (int i = 0; i < nLines; i++)
+			{
+				curLine = lines[i];
+
+				if(!curLine._isEnabled
+					|| curLine._thickness == apGuideLines.LINE_THICKNESS.Thick)
+				{
+					continue;
+				}
+				if(curLine._direction == apGuideLines.LINE_DIRECTION.Horizontal)
+				{
+					//수평선
+					pos1.x = GLPos_Left;
+					pos2.x = GLPos_Right;
+					pos1.y = apGL.World2GL(new Vector2(0.0f, curLine._position)).y;
+					pos2.y = pos1.y;
+				}
+				else
+				{
+					//수직선
+					pos1.y = GLPos_Top;
+					pos2.y = GLPos_Bottom;
+					pos1.x = apGL.World2GL(new Vector2(curLine._position, 0.0f)).x;
+					pos2.x = pos1.x;
+				}
+				apGL.DrawLineGL(pos1, pos2, curLine._color, false);
+			}
+			apGL.EndPass();
+
 		}
 
 
@@ -10780,15 +10914,31 @@ namespace AnyPortrait
 
 						if (targetRenderUnit != null)
 						{
-							apEditorUtil.SetRecord_MeshGroup(apUndoGroupData.ACTION.MeshGroup_DepthChanged, this, curMeshGroup, targetRenderUnit, false, true);
+							apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_DepthChanged, 
+																this, 
+																curMeshGroup, 
+																//targetRenderUnit, 
+																false, 
+																true,
+																apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 							//curMeshGroup.ChangeRenderUnitDetph(targetRenderUnit, targetRenderUnit._depth + 1);//이전
 							curMeshGroup.ChangeRenderUnitDepth(targetRenderUnit, targetRenderUnit.GetDepth() + 1);
+
+							OnAnyObjectAddedOrRemoved(true);
 							RefreshControllerAndHierarchy(false);
 						}
 					}
 					else
 					{
+						apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_DepthChanged, 
+															this, 
+															curMeshGroup, 
+															//selectedBone, 
+															false, 
+															true,
+															apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 						curMeshGroup.ChangeBoneDepth(selectedBone, selectedBone._depth + 1);
 						RefreshControllerAndHierarchy(false);
 					}
@@ -10805,15 +10955,32 @@ namespace AnyPortrait
 
 						if (targetRenderUnit != null)
 						{
-							apEditorUtil.SetRecord_MeshGroup(apUndoGroupData.ACTION.MeshGroup_DepthChanged, this, curMeshGroup, targetRenderUnit, false, true);
+							apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_DepthChanged, 
+																this, 
+																curMeshGroup, 
+																//targetRenderUnit, 
+																false, 
+																true,
+																apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 							//curMeshGroup.ChangeRenderUnitDetph(targetRenderUnit, targetRenderUnit._depth - 1);//이전
 							curMeshGroup.ChangeRenderUnitDepth(targetRenderUnit, targetRenderUnit.GetDepth() - 1);
+
+							OnAnyObjectAddedOrRemoved(true);
+
 							RefreshControllerAndHierarchy(false);
 						}
 					}
 					else
 					{
+						apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_DepthChanged, 
+															this, 
+															curMeshGroup, 
+															//selectedBone, 
+															false, 
+															true,
+															apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 						curMeshGroup.ChangeBoneDepth(selectedBone, selectedBone._depth - 1);
 						RefreshControllerAndHierarchy(false);
 					}
@@ -11083,7 +11250,12 @@ namespace AnyPortrait
 			apTransform_MeshGroup finalAdded_MeshGroupTF = null;
 
 			//Undo
-			apEditorUtil.SetRecord_MeshGroup(apUndoGroupData.ACTION.MeshGroup_AttachMesh, this, savedMeshGroup, savedMeshGroup, false, false);
+			apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_AttachMesh, 
+												this, 
+												savedMeshGroup, 
+												//savedMeshGroup, 
+												false, false,
+												apEditorUtil.UNDO_STRUCT.StructChanged);
 
 			//추가 19.8.20 : 경고 메시지를 위한 객체
 			apEditorController.AttachMeshGroupError attachMeshGroupError = new apEditorController.AttachMeshGroupError();
@@ -11516,7 +11688,11 @@ namespace AnyPortrait
 					{
 						_fpsCounter = new apFPSCounter();
 					}
-					_fpsCounter.SetData(apTimer.I.FPS);
+					//이전
+					//_fpsCounter.SetData(apTimer.I.FPS);
+					
+					//변경 21.7.17 : 일반 FPS 대신 Repaint 시간을 받자 (기존도 FPS는 Repaint 타입으로 계산되었다.
+					_fpsCounter.SetData(apTimer.I.DeltaTime_Repaint);
 
 					return false;
 
@@ -11678,6 +11854,19 @@ namespace AnyPortrait
 
 										case apModifierBase.MODIFIER_TYPE.TF:
 										case apModifierBase.MODIFIER_TYPE.AnimatedTF:
+											if(isEditMode)
+											{
+												_lowCPUStatus = LOW_CPU_STATUS.LowCPU_Mid;
+											}
+											else
+											{
+												_lowCPUStatus = LOW_CPU_STATUS.LowCPU_Low;
+											}
+											break;
+
+											//추가 21.7.20 : 색상 모디파이어
+										case apModifierBase.MODIFIER_TYPE.ColorOnly:
+										case apModifierBase.MODIFIER_TYPE.AnimatedColorOnly:
 											if(isEditMode)
 											{
 												_lowCPUStatus = LOW_CPU_STATUS.LowCPU_Mid;
@@ -12417,6 +12606,8 @@ namespace AnyPortrait
 
 			SavePref_Bool("AnyPortrait_ShowHowToEdit", _guiOption_isShowHowToEdit, true);
 
+			SavePref_Bool("AnyPortrait_UseCPPPlugin", _cppPluginOption_UsePlugin, false);
+
 			apGL.SetToneOption(_colorOption_OnionToneColor, _onionOption_OutlineThickness, _onionOption_IsOutlineRender, _onionOption_PosOffsetX, _onionOption_PosOffsetY, _colorOption_OnionBoneColor);
 			apGL.SetRiggingOption(	RigGUIOption_SizeRatioX100, 
 									RigGUIOption_SizeRatioX100_Selected, 
@@ -12506,9 +12697,6 @@ namespace AnyPortrait
 			_captureSprite_ScreenPos.y = EditorPrefs.GetFloat("AnyPortrait_Capture_SpriteScreenPosY", 0.0f);
 			_captureSprite_ScreenZoom = EditorPrefs.GetInt("AnyPortrait_Capture_SpriteScreenZoomIndex", ZOOM_INDEX_DEFAULT);
 			
-			
-
-
 			
 
 			_boneGUIRenderMode = (BONE_RENDER_MODE)EditorPrefs.GetInt("AnyPortrait_BoneRenderMode", (int)BONE_RENDER_MODE.Render);
@@ -12650,6 +12838,8 @@ namespace AnyPortrait
 			_option_IsTurnOffAnimAutoKey = EditorPrefs.GetBool("AnyPortrait_IsTurnOffAnimAutoKey", true);
 
 			_guiOption_isShowHowToEdit = EditorPrefs.GetBool("AnyPortrait_ShowHowToEdit", true);
+
+			_cppPluginOption_UsePlugin = EditorPrefs.GetBool("AnyPortrait_UseCPPPlugin", false);
 		}
 
 		private void SaveColorPref(string label, Color color, Color defaultValue)
@@ -12805,6 +12995,7 @@ namespace AnyPortrait
 
 		public static bool DefaultGUIOption_ShowFPS { get { return true; } }
 		public static bool DefaultGUIOption_ShowStatistics { get { return false; } }
+		public static bool DefaultEditorOption_UsePlugin { get { return false; } }
 
 		public static bool DefaultBackupOption_IsAutoSave { get { return true; } }//자동 백업을 지원하는가
 		public const string DefaultBackupOption_BaseFolderName = "AnyPortraitBackup"; //백업 폴더
@@ -13674,6 +13865,8 @@ namespace AnyPortrait
 						//Optimized Portrait는 편집이 불가능하다
 						return;
 					}
+
+					
 
 					bool isLoadEditResources = CheckEditorResources();
 

@@ -1045,6 +1045,36 @@ namespace AnyPortrait
 		}
 
 
+
+
+		//추가 21.6.10 : 메카님과 유사하지만 "다른 애니메이션 클립과 동기화되어서 동작하는 경우"
+		public void Sync_Update(apAnimPlayUnit syncPlayUnit, apAnimClip syncAnimClip)
+		{
+			if(_linkedAnimClip == null) { return; }
+
+			//대부분의 값은 동기화 대상과 동일하다
+			_unitWeight = syncPlayUnit._unitWeight;
+			_totalRequestWeights = syncPlayUnit._totalRequestWeights;
+
+			_blendMethod = syncPlayUnit._blendMethod;
+			_playOrder = syncPlayUnit._playOrder;
+			_layer = syncPlayUnit._layer;
+			
+			_playStatus = syncPlayUnit._playStatus;//재생 상태 동기화
+
+			_isMecanimResetable = false;
+
+			
+			
+			_linkedAnimClip.UpdateSync_Opt(syncAnimClip);
+			
+			_mecanimTimePrev = _mecanimTime;
+		}
+
+
+
+
+
 		// Get / Set
 		//-----------------------------------------------
 		// 재생이 끝나고 삭제를 해야하는가

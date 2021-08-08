@@ -768,6 +768,22 @@ namespace AnyPortrait
 			}
 		}
 
+		public bool Is1AxisFlipped()
+		{
+			if (_scaleMethod == apPortrait.ROOT_BONE_SCALE_METHOD.Default)
+			{
+				//< 일반 모드 >
+				return _mtx_Def.Is1AxisFlipped();
+			}
+			else
+			{
+				//< Skew 모드 >
+				return _mtx_Skew.Is1AxisFlipped();
+			}
+
+			
+		}
+
 		// Static Functions : Make Parent World Matrix
 		//-------------------------------------------------
 		/// <summary>

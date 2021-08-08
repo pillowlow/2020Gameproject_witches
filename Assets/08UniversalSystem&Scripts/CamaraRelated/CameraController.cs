@@ -145,11 +145,14 @@ public class CameraController : MonoBehaviour
         Vector2 nextPosition = new Vector2(transform.position.x + dir.x, transform.position.y + dir.y);
         float VerticalRadius = zoom;
         float HorizontalRadius = zoom * Screen.width / Screen.height;
+        
+        //New edge
         float right = nextPosition.x + HorizontalRadius;
         float left = nextPosition.x - HorizontalRadius;
         float up = nextPosition.y + VerticalRadius;
         float down = nextPosition.y - VerticalRadius;
 
+        //Original edge
         float ori_right = transform.position.x + HorizontalRadius;
         float ori_left = transform.position.x - HorizontalRadius;
         float ori_up = transform.position.y + VerticalRadius;
@@ -168,58 +171,38 @@ public class CameraController : MonoBehaviour
                 float r_up = i.UpperLeft.transform.position.y;
                 float r_down = i.BottomRight.transform.position.y;
 
-                bool local_yFree = true;
-                bool local_xFree = true;
-
-                bool r_in_middle = false;
-                bool u_in_middle = false;
-
-                if (yFree && (((ori_right > r_left && ori_right < r_right) || ((ori_left > r_left && ori_left < r_right) || (ori_left < r_left && ori_right > r_right)))
-                    && ((u_in_middle = (up > r_down && up < r_up)) || (down > r_down && down < r_up) || (up > r_up && down < r_down))))
+                //AABB test
+                if ((right >= r_left && r_right >= left) && (up >= r_down && r_up >= down))
                 {
-                    yFree = local_yFree = false;
-                    newY = (up > r_up) ? r_up + VerticalRadius : r_down - VerticalRadius;
-                }
-
-                if (xFree && (((r_in_middle=(right > r_left && right < r_right)) || ((left > r_left && left < r_right) || (left < r_left && right > r_right)))
-                && ((ori_up > r_down && ori_up < r_up) || (ori_down > r_down && ori_down < r_up) || (ori_up > r_up && ori_down < r_down))))
-                {
-                    xFree = local_xFree = false;
-                    newX = (left < r_left) ? r_left - HorizontalRadius : r_right + HorizontalRadius;
-                }
-
-                if (!(local_xFree || local_yFree))
-                {
+                    bool r_in_middle = (right > r_left && right < r_right);
+                    bool u_in_middle = (up > r_down && up < r_up);
                     float x_min = r_in_middle ? (right - r_left) : (r_right - left);
                     float y_min = u_in_middle ? (up - r_down) : (r_up - down);
-                    if(x_min > y_min)
+
+                    //Find which axis to move based on the direction of the overlapped rectangle
+                    if (x_min > y_min)
                     {
-                        if(u_in_middle)
+                        //If moving along y-axis leads to overlap, then clamp it to the boundary
+                        if (yFree && (((ori_right > r_left && ori_right < r_right) || ((ori_left > r_left && ori_left < r_right) || (ori_left < r_left && ori_right > r_right)))
+                        && (u_in_middle || (down > r_down && down < r_up) || (up > r_up && down < r_down))))
                         {
-                            newY -= y_min / 100;
+                            yFree = false;
+                            newY = (up > r_up) ? r_up + VerticalRadius : r_down - VerticalRadius;
                         }
-                        else
-                        {
-                            newY += y_min / 100;
-                        }
-                        newX = transform.position.x;
                     }
                     else
                     {
-                        if(r_in_middle)
+                        //If moving along x-axis leads to overlap, then clamp it to the boundary
+                        if (xFree && ((r_in_middle || ((left > r_left && left < r_right) || (left < r_left && right > r_right)))
+                    && ((ori_up > r_down && ori_up < r_up) || (ori_down > r_down && ori_down < r_up) || (ori_up > r_up && ori_down < r_down))))
                         {
-                            newX -= x_min / 100;
+                            xFree = false;
+                            newX = (left < r_left) ? r_left - HorizontalRadius : r_right + HorizontalRadius;
                         }
-                        else
-                        {
-                            newX += x_min / 100;
-                        }
-                        newY = transform.position.y;
                     }
-                    break;
                 }
-
-                if (!(xFree || yFree))
+                //If x-axis and y-axis both hit the boundary, then exit the loop prematurely
+                if (!(xFree || yFree))//same as !xFree && !yFree
                 {
                     break;
                 }

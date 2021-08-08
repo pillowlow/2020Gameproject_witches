@@ -100,6 +100,8 @@ namespace AnyPortrait
 
 		private static GUIStyle _textStyle = GUIStyle.none;
 
+
+		
 		//마우스 이벤트
 		private enum TIMELINE_EVENT
 		{
@@ -453,6 +455,11 @@ namespace AnyPortrait
 			_isMouseEvent = false;
 			_isMouseEventUsed = false;
 			_isRefreshScrollDown = false;
+
+			//추가 21.5.19 : 여기서 미리 클리핑 영역을 지정하자.
+			_matBatch_Header.SetClippingSizeToAllMaterial(_glScreenClippingSize_Header);
+			_matBatch_Main.SetClippingSizeToAllMaterial(_glScreenClippingSize_Main);
+			_matBatch_Total.SetClippingSizeToAllMaterial(_glScreenClippingSize_Total);
 		}
 
 
@@ -787,6 +794,16 @@ namespace AnyPortrait
 			return null;
 		}
 
+
+		//추가 21.5.19 : 렌더링 Pass를 모두 종료. 꼭 호출해야한다.
+		public static void EndPass()
+		{
+			//모든 재질의 렌더링 진행중인 Pass를 종료한다.
+			_matBatch_Total.EndPass();
+			_matBatch_Main.EndPass();
+			_matBatch_Header.EndPass();
+		}
+
 		// Begin / End Batch
 		//--------------------------------------------------------------------------------------------------
 		public static void BeginBatch_GUITexture(Texture2D texture, CLIP_TYPE clipType)
@@ -795,23 +812,24 @@ namespace AnyPortrait
 			if (matBatch == null) { return; }
 			if (matBatch.IsNotReady()) { return; }
 
-			matBatch.SetPass_GUITexture(texture);
-			switch (clipType)
-			{
-				case CLIP_TYPE.Header:
-					matBatch.SetClippingSize(_glScreenClippingSize_Header);
-					break;
+			//변경 21.5.19
+			matBatch.BeginPass_GUITexture(GL.TRIANGLES, texture);
+			//switch (clipType)
+			//{
+			//	case CLIP_TYPE.Header:
+			//		matBatch.SetClippingSize(_glScreenClippingSize_Header);
+			//		break;
 
-				case CLIP_TYPE.Main:
-					matBatch.SetClippingSize(_glScreenClippingSize_Main);
-					break;
+			//	case CLIP_TYPE.Main:
+			//		matBatch.SetClippingSize(_glScreenClippingSize_Main);
+			//		break;
 
-				case CLIP_TYPE.Total:
-					matBatch.SetClippingSize(_glScreenClippingSize_Total);
-					break;
-			}
+			//	case CLIP_TYPE.Total:
+			//		matBatch.SetClippingSize(_glScreenClippingSize_Total);
+			//		break;
+			//}
 
-			GL.Begin(GL.TRIANGLES);
+			//GL.Begin(GL.TRIANGLES);
 		}
 
 		public static void BeginBatch_Color(CLIP_TYPE clipType)
@@ -820,30 +838,33 @@ namespace AnyPortrait
 			if (matBatch == null) { return; }
 			if (matBatch.IsNotReady()) { return; }
 
-			matBatch.SetPass_Color();
-			switch (clipType)
-			{
-				case CLIP_TYPE.Header:
-					matBatch.SetClippingSize(_glScreenClippingSize_Header);
-					break;
+			//변경 21.5.19
+			matBatch.BeginPass_Color(GL.TRIANGLES);
 
-				case CLIP_TYPE.Main:
-					matBatch.SetClippingSize(_glScreenClippingSize_Main);
-					break;
+			//switch (clipType)
+			//{
+			//	case CLIP_TYPE.Header:
+			//		matBatch.SetClippingSize(_glScreenClippingSize_Header);
+			//		break;
 
-				case CLIP_TYPE.Total:
-					matBatch.SetClippingSize(_glScreenClippingSize_Total);
-					break;
-			}
+			//	case CLIP_TYPE.Main:
+			//		matBatch.SetClippingSize(_glScreenClippingSize_Main);
+			//		break;
+
+			//	case CLIP_TYPE.Total:
+			//		matBatch.SetClippingSize(_glScreenClippingSize_Total);
+			//		break;
+			//}
 
 
-			GL.Begin(GL.TRIANGLES);
+			//GL.Begin(GL.TRIANGLES);
 		}
 
-		public static void EndBatch()
-		{
-			GL.End();
-		}
+		//삭제 21.5.19 : 이 함수는 이후에 한꺼번에 처리
+		//public static void EndBatch()
+		//{
+		//	GL.End();
+		//}
 
 		// Draw Line
 		//-------------------------------------------------------------------------------------------------------
@@ -862,24 +883,25 @@ namespace AnyPortrait
 
 			if (isNeedResetMat)
 			{
-				matBatch.SetPass_Color();
-				switch (clipType)
-				{
-					case CLIP_TYPE.Header:
-						matBatch.SetClippingSize(_glScreenClippingSize_Header);
-						break;
+				//변경 21.5.19
+				matBatch.BeginPass_Color(GL.LINES);
 
-					case CLIP_TYPE.Main:
-						matBatch.SetClippingSize(_glScreenClippingSize_Main);
-						break;
+				//switch (clipType)
+				//{
+				//	case CLIP_TYPE.Header:
+				//		matBatch.SetClippingSize(_glScreenClippingSize_Header);
+				//		break;
 
-					case CLIP_TYPE.Total:
-						matBatch.SetClippingSize(_glScreenClippingSize_Total);
-						break;
-				}
+				//	case CLIP_TYPE.Main:
+				//		matBatch.SetClippingSize(_glScreenClippingSize_Main);
+				//		break;
 
+				//	case CLIP_TYPE.Total:
+				//		matBatch.SetClippingSize(_glScreenClippingSize_Total);
+				//		break;
+				//}
 
-				GL.Begin(GL.LINES);
+				//GL.Begin(GL.LINES);
 
 
 			}
@@ -888,9 +910,11 @@ namespace AnyPortrait
 			GL.Vertex(new Vector3(pos1.x, pos1.y, 0.0f));
 			GL.Vertex(new Vector3(pos2.x, pos2.y, 0.0f));
 
+			//삭제 21.5.19
 			if (isNeedResetMat)
 			{
-				GL.End();
+				//GL.End();//<전환 완료>
+				matBatch.EndPass();
 			}
 		}
 
@@ -899,10 +923,8 @@ namespace AnyPortrait
 		public static void DrawBox(Vector2 pos, float width, float height, Color color, bool isNeedResetMat, CLIP_TYPE clipType)
 		{
 			apGL.MaterialBatch matBatch = GetMatBatch(clipType);
-			if (matBatch == null)
-			{ return; }
-			if (matBatch.IsNotReady())
-			{ return; }
+			if (matBatch == null)		{ return; }
+			if (matBatch.IsNotReady())	{ return; }
 
 			float halfWidth = width * 0.5f;
 			float halfHeight = height * 0.5f;
@@ -925,23 +947,25 @@ namespace AnyPortrait
 
 			if (isNeedResetMat)
 			{
-				matBatch.SetPass_Color();
-				switch (clipType)
-				{
-					case CLIP_TYPE.Header:
-						matBatch.SetClippingSize(_glScreenClippingSize_Header);
-						break;
+				//변경 21.5.19
+				matBatch.BeginPass_Color(GL.TRIANGLES);
+				
+				//switch (clipType)
+				//{
+				//	case CLIP_TYPE.Header:
+				//		matBatch.SetClippingSize(_glScreenClippingSize_Header);
+				//		break;
 
-					case CLIP_TYPE.Main:
-						matBatch.SetClippingSize(_glScreenClippingSize_Main);
-						break;
+				//	case CLIP_TYPE.Main:
+				//		matBatch.SetClippingSize(_glScreenClippingSize_Main);
+				//		break;
 
-					case CLIP_TYPE.Total:
-						matBatch.SetClippingSize(_glScreenClippingSize_Total);
-						break;
-				}
+				//	case CLIP_TYPE.Total:
+				//		matBatch.SetClippingSize(_glScreenClippingSize_Total);
+				//		break;
+				//}
 
-				GL.Begin(GL.TRIANGLES);
+				//GL.Begin(GL.TRIANGLES);
 			}
 			GL.Color(color);
 			GL.Vertex(pos_0); // 0
@@ -952,9 +976,11 @@ namespace AnyPortrait
 			GL.Vertex(pos_3); // 3
 			GL.Vertex(pos_0); // 0
 
+			//삭제 21.5.19
 			if (isNeedResetMat)
 			{
-				GL.End();
+				//GL.End();//<전환 완료>
+				matBatch.EndPass();
 			}
 		}
 
@@ -1010,23 +1036,25 @@ namespace AnyPortrait
 			// | 3   2
 			if (isNeedResetMat)
 			{
-				matBatch.SetPass_GUITexture(image);
-				switch (clipType)
-				{
-					case CLIP_TYPE.Header:
-						matBatch.SetClippingSize(_glScreenClippingSize_Header);
-						break;
+				//변경 21.5.19
+				matBatch.BeginPass_GUITexture(GL.TRIANGLES, image);
+				
+				//switch (clipType)
+				//{
+				//	case CLIP_TYPE.Header:
+				//		matBatch.SetClippingSize(_glScreenClippingSize_Header);
+				//		break;
 
-					case CLIP_TYPE.Main:
-						matBatch.SetClippingSize(_glScreenClippingSize_Main);
-						break;
+				//	case CLIP_TYPE.Main:
+				//		matBatch.SetClippingSize(_glScreenClippingSize_Main);
+				//		break;
 
-					case CLIP_TYPE.Total:
-						matBatch.SetClippingSize(_glScreenClippingSize_Total);
-						break;
-				}
+				//	case CLIP_TYPE.Total:
+				//		matBatch.SetClippingSize(_glScreenClippingSize_Total);
+				//		break;
+				//}
 
-				GL.Begin(GL.TRIANGLES);
+				//GL.Begin(GL.TRIANGLES);
 			}
 			GL.Color(color2X);	
 			GL.TexCoord(uv_0);	GL.Vertex(new Vector3(pos_0.x, pos_0.y, 0)); // 0
@@ -1037,9 +1065,11 @@ namespace AnyPortrait
 			GL.TexCoord(uv_3);	GL.Vertex(new Vector3(pos_3.x, pos_3.y, 0)); // 3
 			GL.TexCoord(uv_0);	GL.Vertex(new Vector3(pos_0.x, pos_0.y, 0)); // 0
 
+			//삭제 21.5.19
 			if (isNeedResetMat)
 			{
-				GL.End();
+				//GL.End();//<전환 완료>
+				matBatch.EndPass();
 			}
 
 			//GL.Flush();
@@ -1096,26 +1126,25 @@ namespace AnyPortrait
 
 			if (isNeedResetMat)
 			{
-				//_mat_Color.SetPass(0);
-				//_mat_Color.SetVector("_ScreenSize", _glScreenClippingSize);
-				matBatch.SetPass_Color();
-				switch (clipType)
-				{
-					case CLIP_TYPE.Header:
-						matBatch.SetClippingSize(_glScreenClippingSize_Header);
-						break;
+				//변경 21.5.19
+				matBatch.BeginPass_Color(GL.TRIANGLES);
+				
+				//switch (clipType)
+				//{
+				//	case CLIP_TYPE.Header:
+				//		matBatch.SetClippingSize(_glScreenClippingSize_Header);
+				//		break;
 
-					case CLIP_TYPE.Main:
-						matBatch.SetClippingSize(_glScreenClippingSize_Main);
-						break;
+				//	case CLIP_TYPE.Main:
+				//		matBatch.SetClippingSize(_glScreenClippingSize_Main);
+				//		break;
 
-					case CLIP_TYPE.Total:
-						matBatch.SetClippingSize(_glScreenClippingSize_Total);
-						break;
-				}
+				//	case CLIP_TYPE.Total:
+				//		matBatch.SetClippingSize(_glScreenClippingSize_Total);
+				//		break;
+				//}
 
-
-				GL.Begin(GL.TRIANGLES);
+				//GL.Begin(GL.TRIANGLES);
 			}
 
 			GL.Color(color);
@@ -1151,9 +1180,11 @@ namespace AnyPortrait
 			GL.Vertex(pos_4); // 4
 			GL.Vertex(pos_3); // 3
 
+			//삭제 21.5.19
 			if (isNeedResetMat)
 			{
-				GL.End();
+				//GL.End();//<전환 완료>
+				EndPass();
 			}
 		}
 
@@ -1172,31 +1203,32 @@ namespace AnyPortrait
 			float min_Y = Mathf.Max(startPos.y, endPos.y);
 			float max_Y = Mathf.Min(startPos.y, endPos.y);
 
-			matBatch.SetPass_Color();
-			switch (clipType)
-			{
-				case CLIP_TYPE.Header:
-					matBatch.SetClippingSize(_glScreenClippingSize_Header);
-					break;
+			//변경 21.5.19
+			matBatch.BeginPass_Color(GL.TRIANGLES);
+			//switch (clipType)
+			//{
+			//	case CLIP_TYPE.Header:
+			//		matBatch.SetClippingSize(_glScreenClippingSize_Header);
+			//		break;
 
-				case CLIP_TYPE.Main:
-					matBatch.SetClippingSize(_glScreenClippingSize_Main);
-					break;
+			//	case CLIP_TYPE.Main:
+			//		matBatch.SetClippingSize(_glScreenClippingSize_Main);
+			//		break;
 
-				case CLIP_TYPE.Total:
-					matBatch.SetClippingSize(_glScreenClippingSize_Total);
-					break;
-			}
-
-
-			GL.Begin(GL.TRIANGLES);
+			//	case CLIP_TYPE.Total:
+			//		matBatch.SetClippingSize(_glScreenClippingSize_Total);
+			//		break;
+			//}
+			//GL.Begin(GL.TRIANGLES);
 
 			DrawBoldLine(new Vector2(min_X, min_Y), new Vector2(max_X, min_Y), lineThickness, color, false, clipType);
 			DrawBoldLine(new Vector2(max_X, min_Y), new Vector2(max_X, max_Y), lineThickness, color, false, clipType);
 			DrawBoldLine(new Vector2(max_X, max_Y), new Vector2(min_X, max_Y), lineThickness, color, false, clipType);
 			DrawBoldLine(new Vector2(min_X, max_Y), new Vector2(min_X, min_Y), lineThickness, color, false, clipType);
 
-			GL.End();
+			//삭제 21.5.19
+			//GL.End();//<전환 완료>
+			matBatch.EndPass();
 		}
 
 		//----------------------------------------------------------------------------------------
@@ -1348,9 +1380,10 @@ namespace AnyPortrait
 			int curNumber = startNumber;
 			//Batch를 하자
 
-			_matBatch_Total.SetPass_Color();
-			_matBatch_Total.SetClippingSize(_glScreenClippingSize_Total);
-			GL.Begin(GL.LINES);
+			//변경 21.5.19
+			_matBatch_Total.BeginPass_Color(GL.LINES);
+			//_matBatch_Total.SetClippingSize(_glScreenClippingSize_Total);
+			//GL.Begin(GL.LINES);
 
 
 			Vector3 linePos1 = Vector3.zero, linePos2 = Vector3.zero;
@@ -1395,8 +1428,9 @@ namespace AnyPortrait
 				}
 			}
 
-			GL.End();
-
+			//삭제 21.5.19
+			//GL.End();//<전환 완료>
+			_matBatch_Total.EndPass();
 
 			//Number도 출력하자
 			curPos = startPos;
@@ -1800,7 +1834,7 @@ namespace AnyPortrait
 				}
 			}
 
-			EndBatch();//Batch 끝
+			//EndBatch();//Batch 끝 > 삭제 21.5.19 : Batch는 나중에 한꺼번에 종료할 것
 
 
 			bool isMoveOrCopy = (_moveCommonKeyframeList.Count != 0);
@@ -1814,6 +1848,8 @@ namespace AnyPortrait
 					DrawMoveCopySummary(moveCopyFrame._startFrameIndex, moveCopyFrame._nextFrameIndex, posY, size, (_selectType != SELECT_TYPE.Add));
 				}
 			}
+
+			EndPass();
 		}
 
 
@@ -1852,6 +1888,8 @@ namespace AnyPortrait
 				DrawBoldLine(srcPos, keyPos, 3, _keyColor_Copy_Line, true, CLIP_TYPE.Header);
 				DrawTexture(_img_KeySummaryMove, keyPos, size, size, _keyColor_Copy, true, CLIP_TYPE.Header);
 			}
+
+			
 		}
 
 
@@ -1909,7 +1947,9 @@ namespace AnyPortrait
 				}
 			}
 
-			EndBatch();
+			//삭제 21.5.19
+			//EndBatch();
+			EndPass();
 		}
 
 
@@ -1950,7 +1990,9 @@ namespace AnyPortrait
 				
 			}
 
-			EndBatch();
+			//삭제 21.5.19
+			//EndBatch();
+			EndPass();
 		}
 
 
@@ -2172,7 +2214,9 @@ namespace AnyPortrait
 								posY, ((curKeyFrame == lastFrame) && isDummyLastFrame));
 				}
 
-				EndBatch();//Batch 끝
+				//삭제 21.5.19
+				//EndBatch();//Batch 끝
+				EndPass();
 			}
 
 
@@ -2250,7 +2294,9 @@ namespace AnyPortrait
 									false, CLIP_TYPE.Main);
 				}
 
-				EndBatch();
+				//삭제 21.5.19
+				//EndBatch();
+				EndPass();
 			}
 
 			if(_renderRequest_KeyframeDummy._nRequest > 0)
@@ -2271,7 +2317,9 @@ namespace AnyPortrait
 									false, CLIP_TYPE.Main);
 				}
 
-				EndBatch();
+				//삭제 21.5.19
+				//EndBatch();
+				EndPass();
 			}
 
 			if(_renderRequest_KeyframeLoopLeft._nRequest > 0)
@@ -2292,7 +2340,9 @@ namespace AnyPortrait
 									false, CLIP_TYPE.Main);
 				}
 
-				EndBatch();
+				//삭제 21.5.19
+				//EndBatch();
+				EndPass();
 			}
 
 			if(_renderRequest_KeyframeLoopRight._nRequest > 0)
@@ -2313,7 +2363,9 @@ namespace AnyPortrait
 									false, CLIP_TYPE.Main);
 				}
 
-				EndBatch();
+				//삭제 21.5.19
+				//EndBatch();
+				EndPass();
 			}
 
 			if(_renderRequest_Cursor._nRequest > 0)
@@ -2334,7 +2386,9 @@ namespace AnyPortrait
 									false, CLIP_TYPE.Main);
 				}
 
-				EndBatch();
+				//삭제 21.5.19
+				//EndBatch();
+				EndPass();
 			}
 
 
@@ -2376,7 +2430,9 @@ namespace AnyPortrait
 									false, CLIP_TYPE.Main);
 				}
 
-				EndBatch();
+				//삭제 21.5.19
+				//EndBatch();
+				EndPass();
 			}
 
 			if(_renderRequest_KeyframeMove._nRequest > 0)
@@ -2397,10 +2453,13 @@ namespace AnyPortrait
 									false, CLIP_TYPE.Main);
 				}
 
-				EndBatch();
+				//삭제 21.5.19
+				//EndBatch();
+				EndPass();
 			}
 
-			//GL.End();
+			//GL.End();//<전환 완료>
+			EndPass();
 		}
 
 
@@ -3436,7 +3495,12 @@ namespace AnyPortrait
 					//1) 이동
 					//Undo 등록
 					//Keyframe의 위치만 바꾼 것이므로
-					apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Anim_MoveKeyframe, _selection.Editor, _selection.Editor._portrait, null, false);
+					apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Anim_MoveKeyframe, 
+														_selection.Editor, 
+														_selection.Editor._portrait, 
+														//null, 
+														false,
+														apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 					//Debug.LogError(">>> Keryframe Move <<<");
 					//선택한 프레임중 "현재 재생 프레임"과 같은게 있다면
@@ -3507,7 +3571,9 @@ namespace AnyPortrait
 											_selection.Editor,
 											_selection.Editor._portrait, 
 											_selection.AnimClip._targetMeshGroup, 
-											null, false);
+											//null, 
+											false,
+											apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 
 					//선택한 프레임중 "현재 재생 프레임"과 같은게 있다면
@@ -3623,7 +3689,10 @@ namespace AnyPortrait
 					apEditorUtil.SetRecord_PortraitMeshGroupAndAllModifiers(apUndoGroupData.ACTION.Anim_MoveKeyframe, 
 																_selection.Editor,
 																_selection.Editor._portrait, 
-																_selection.AnimClip._targetMeshGroup, null, false);
+																_selection.AnimClip._targetMeshGroup, 
+																//null, 
+																false,
+																apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 					//선택한 프레임중 "현재 재생 프레임"과 같은게 있다면
 					//"현재 재생 프레임"을 이동해야한다.
@@ -3699,7 +3768,10 @@ namespace AnyPortrait
 					apEditorUtil.SetRecord_PortraitMeshGroupAndAllModifiers(apUndoGroupData.ACTION.Anim_CopyKeyframe, 
 						_selection.Editor,
 						_selection.Editor._portrait, 
-						_selection.AnimClip._targetMeshGroup, null, false);
+						_selection.AnimClip._targetMeshGroup, 
+						//null, 
+						false,
+						apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 
 					//선택한 프레임중 "현재 재생 프레임"과 같은게 있다면

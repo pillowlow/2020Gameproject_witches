@@ -78,6 +78,8 @@ namespace AnyPortrait
 			RotoscopingNext,//로토스코핑 다음 페이지
 			RotoscopingPrev,//로토스코핑 이전 페이지
 
+			ToggleGuidelines,//추가 21.6.4 : 가이드라인 보이기
+
 
 			SwitchLeftTab,//왼쪽 탭 전환 (`)
 			
@@ -565,7 +567,7 @@ namespace AnyPortrait
 
 				"- _", "= +",
 				"[ {", "] }", "\\ |",
-				"; :", "' \"", "` ~",
+				";", "' \"", "` ~",
 				", <", ". >", "/ ?",
 					
 				"Numpad 0", "Numpad 1", "Numpad 2", "Numpad 3", "Numpad 4",
@@ -651,6 +653,8 @@ namespace AnyPortrait
 			AddHotKey("TOGGLE_ROTOSCOPING",		KEY_TYPE.ToggleRotoscoping,				SPACE.Modifier_Anim_Editing,	EST_KEYCODE.O,		SPECIAL_KEY.Alt,	true, "Toggle Rotoscoping", "Shows an image of the external in the background of the workspace.", "Toggle Rotoscoping");//로토스코핑 가시성 단축키
 			AddHotKey("ROTO_NEXT",				KEY_TYPE.RotoscopingNext,				SPACE.Modifier_Anim_Editing,	EST_KEYCODE.Alpha0,	SPECIAL_KEY.None,	true, "Next image of Rotoscoping", "Switch to the next image of Rotoscoping", "Next Image");//로토스코핑 다음 페이지
 			AddHotKey("ROTO_PREV",				KEY_TYPE.RotoscopingPrev,				SPACE.Modifier_Anim_Editing,	EST_KEYCODE.Alpha9,	SPECIAL_KEY.None,	true, "Prev image of Rotoscoping", "Switch to the previous image of Rotoscoping", "Prev Image");//로토스코핑 이전 페이지
+
+			AddHotKey("TOGGLE_GUIDELINES",	KEY_TYPE.ToggleGuidelines,				SPACE.Modifier_Anim_Editing,	EST_KEYCODE.Semicolon,	SPECIAL_KEY.None,	true, "Show Guidelines", "Show or hide Guidelines", "Toggle Guidelines");//가이드라인 보이기
 
 
 			AddHotKey("SWITCH_LEFT_TAB",	KEY_TYPE.SwitchLeftTab,	SPACE.Common,	EST_KEYCODE.BackQuote,	SPECIAL_KEY.None,	true, "Switch Left Tab", "Switch between the Hierarchy and Controller tabs on the left.", "Switch Left Tab");

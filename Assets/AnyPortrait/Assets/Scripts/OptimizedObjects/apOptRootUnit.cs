@@ -201,12 +201,12 @@ namespace AnyPortrait
 
 			//추가 : Flipped 체크
 			CheckFlippedTransform();
-			
+
 
 
 			//---------------------------------------------------------
 //#if UNITY_EDITOR
-//			Profiler.BeginSample("Root Unit - Ready To Update Bones");
+//			UnityEngine.Profiling.Profiler.BeginSample("Root Unit - Ready To Update Bones");
 //#endif
 
 			//추가 12.6
@@ -217,34 +217,37 @@ namespace AnyPortrait
 			_rootOptTransform.ReadyToUpdateBones();
 
 //#if UNITY_EDITOR
-//			Profiler.EndSample();
+//			UnityEngine.Profiling.Profiler.EndSample();
 //#endif
 			//---------------------------------------------------------
 
 //#if UNITY_EDITOR
-//			Profiler.BeginSample("Root Unit - Update Modifier");
+//			UnityEngine.Profiling.Profiler.BeginSample("Root Unit - Update Modifier");
 //#endif
+
 			//1. Modifer부터 업데이트 (Pre)
 			_rootOptTransform.UpdateModifier_Pre(tDelta);
 
 //#if UNITY_EDITOR
-//			Profiler.EndSample();
+//			UnityEngine.Profiling.Profiler.EndSample();
 //#endif
 
 			//---------------------------------------------------------
 
 //#if UNITY_EDITOR
-//			Profiler.BeginSample("Root Unit - Calculate Pre");
+//			UnityEngine.Profiling.Profiler.BeginSample("Root Unit - Calculate Pre");
 //#endif
+
+
 			//2. 실제로 업데이트
 			_rootOptTransform.ReadyToUpdate();
 			_rootOptTransform.UpdateCalculate_Pre();//Post 작성할 것
 
 //#if UNITY_EDITOR
-//			Profiler.EndSample();
+//			UnityEngine.Profiling.Profiler.EndSample();
 //#endif
 
-			
+
 			//추가 12.6
 			//Extra-Depth Changed 이벤트 있을 경우 처리 - Pre에서 다 계산되었을 것이다.
 			_sortedRenderBuffer.UpdateDepthChangedEventAndBuffers();
@@ -252,7 +255,7 @@ namespace AnyPortrait
 			//---------------------------------------------------------
 
 //#if UNITY_EDITOR
-//			Profiler.BeginSample("Root Unit - Update Bones World Matrix");
+//			UnityEngine.Profiling.Profiler.BeginSample("Root Unit - Update Bones World Matrix");
 //#endif
 
 			//Bone World Matrix Update
@@ -262,34 +265,43 @@ namespace AnyPortrait
 													);
 
 //#if UNITY_EDITOR
-//			Profiler.EndSample();
+//			UnityEngine.Profiling.Profiler.EndSample();
 //#endif
 
 			//------------------------------------------------------------
 
 //#if UNITY_EDITOR
-//			Profiler.BeginSample("Root Unit - Calculate Post (Modifier)");
+//			UnityEngine.Profiling.Profiler.BeginSample("Root Unit - Calculate Post (Modifier)");
 //#endif
 
 			//Modifier 업데이트 (Post)
 			_rootOptTransform.UpdateModifier_Post(tDelta);
 
 //#if UNITY_EDITOR
-//			Profiler.EndSample();
+//			UnityEngine.Profiling.Profiler.EndSample();
 //#endif
 
 //#if UNITY_EDITOR
-//			Profiler.BeginSample("Root Unit - Calculate Post (Update)");
+//			UnityEngine.Profiling.Profiler.BeginSample("Root Unit - Calculate Post (Update)");
 //#endif
+
 			_rootOptTransform.UpdateCalculate_Post();//Post Calculate
+
+//#if UNITY_EDITOR
+//			UnityEngine.Profiling.Profiler.EndSample();
+//#endif
+
+//#if UNITY_EDITOR
+//			UnityEngine.Profiling.Profiler.BeginSample("Root Unit - Update Meshes");
+//#endif
 			_rootOptTransform.UpdateMeshes();//추가 20.4.2 : UpdateCalculate_Post() 함수의 일부 코드가 뒤로 빠졌다.
 
 //#if UNITY_EDITOR
-//			Profiler.EndSample();
+//			UnityEngine.Profiling.Profiler.EndSample();
 //#endif
 
-			
-			
+
+
 		}
 
 

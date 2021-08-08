@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System;
 
 using AnyPortrait;
+using System.Runtime.InteropServices;
 
 namespace AnyPortrait
 {
@@ -437,6 +438,162 @@ namespace AnyPortrait
 
 			//_invMatrix_TFResult_WorldWithoutMod.SetMatrix(_matrix_TF_ParentWorldWithoutMod);
 			//_invMatrix_TFResult_WorldWithoutMod.RInverse(_matrix_TF_ToParent);
+		}
+
+
+
+
+
+
+		
+#if UNITY_EDITOR_WIN
+		[DllImport("AnyPortrait_Editor_Win64")]
+#else
+		[DllImport("AnyPortrait_Editor_MAC")]
+#endif
+		private static extern void MatrixWrap_MakeMatrix(	ref Vector2 pos, float angleDeg, ref Vector2 scale, bool isInverseCalculate,
+															ref apMatrix3x3 dstMtrxToSpace, ref apMatrix3x3 dstOnlyRotation,
+															ref apMatrix3x3 dstMtrxToLowerSpace, ref apMatrix3x3 dstOnlyRotationInv,
+															ref bool dstIsInverseCalculated_Space, ref bool dstIsInverseCalculated_OnlyRotation);
+		
+		#if UNITY_EDITOR_WIN
+		[DllImport("AnyPortrait_Editor_Win64")]
+#else
+		[DllImport("AnyPortrait_Editor_MAC")]
+#endif
+		private static extern void MatrixWrap_Set_OnBefore_RMul1(ref Vector2 dst_pos, ref float dst_angleDeg, ref Vector2 dst_scale,
+																ref bool dst_isInitScalePositive_X, ref bool dst_isInitScalePositive_Y, ref bool dst_isAngleFlipped,
+																ref apMatrix3x3 dst_mtrxToSpace, ref apMatrix3x3 dst_onlyRotation,
+																ref bool dst_isInverseCalculated_Space, ref bool dst_isInverseCalculated_OnlyRotation,
+																ref Vector2 srcSet_pos, float srcSet_angleDeg, ref Vector2 srcSet_scale,
+																ref Vector2 srcRMul_pos, float srcRMul_angleDeg, ref Vector2 srcRMul_scale, ref apMatrix3x3 srcRMul_onlyRotation);
+
+		#if UNITY_EDITOR_WIN
+		[DllImport("AnyPortrait_Editor_Win64")]
+#else
+		[DllImport("AnyPortrait_Editor_MAC")]
+#endif
+		private static extern void MatrixWrap_Set_OnBefore_RMul2(ref Vector2 dst_pos, ref float dst_angleDeg, ref Vector2 dst_scale,
+																ref bool dst_isInitScalePositive_X, ref bool dst_isInitScalePositive_Y, ref bool dst_isAngleFlipped,
+																ref apMatrix3x3 dst_mtrxToSpace, ref apMatrix3x3 dst_onlyRotation,
+																ref bool dst_isInverseCalculated_Space, ref bool dst_isInverseCalculated_OnlyRotation,
+																ref Vector2 srcSet_pos, float srcSet_angleDeg, ref Vector2 srcSet_scale,
+																ref Vector2 srcRMul1_pos, float srcRMul1_angleDeg, ref Vector2 srcRMul1_scale, ref apMatrix3x3 srcRMul1_onlyRotation,
+																ref Vector2 srcRMul2_pos, float srcRMul2_angleDeg, ref Vector2 srcRMul2_scale, ref apMatrix3x3 srcRMul2_onlyRotation
+																);
+
+
+		/// <summary>
+		/// MakeTransformMatrix의 C++ DLL 버전
+		/// </summary>
+		public void MakeTransformMatrix_DLL()
+		{
+			//기존
+			//_matrix_TF_LocalModified.MakeMatrix();
+			//_matrix_TF_ParentWorldWithoutMod.MakeMatrix();
+			//_matrix_TF_ParentWorld.MakeMatrix();
+
+			//< C++ DLL >
+			MatrixWrap_MakeMatrix(ref _matrix_TF_LocalModified._pos, _matrix_TF_LocalModified._angleDeg, ref _matrix_TF_LocalModified._scale, false,
+									ref _matrix_TF_LocalModified._mtrxToSpace, ref _matrix_TF_LocalModified._mtrxOnlyRotation,
+									ref _matrix_TF_LocalModified._mtrxToLowerSpace, ref _matrix_TF_LocalModified._mtrxOnlyRotationInv,
+									ref _matrix_TF_LocalModified._isInverseCalculated_Space, ref _matrix_TF_LocalModified._isInverseCalculated_OnlyRotation);
+
+			MatrixWrap_MakeMatrix(ref _matrix_TF_ParentWorldWithoutMod._pos, _matrix_TF_ParentWorldWithoutMod._angleDeg, ref _matrix_TF_ParentWorldWithoutMod._scale, false,
+									ref _matrix_TF_ParentWorldWithoutMod._mtrxToSpace, ref _matrix_TF_ParentWorldWithoutMod._mtrxOnlyRotation,
+									ref _matrix_TF_ParentWorldWithoutMod._mtrxToLowerSpace, ref _matrix_TF_ParentWorldWithoutMod._mtrxOnlyRotationInv,
+									ref _matrix_TF_ParentWorldWithoutMod._isInverseCalculated_Space, ref _matrix_TF_ParentWorldWithoutMod._isInverseCalculated_OnlyRotation);
+
+			MatrixWrap_MakeMatrix(ref _matrix_TF_ParentWorld._pos, _matrix_TF_ParentWorld._angleDeg, ref _matrix_TF_ParentWorld._scale, false,
+									ref _matrix_TF_ParentWorld._mtrxToSpace, ref _matrix_TF_ParentWorld._mtrxOnlyRotation,
+									ref _matrix_TF_ParentWorld._mtrxToLowerSpace, ref _matrix_TF_ParentWorld._mtrxOnlyRotationInv,
+									ref _matrix_TF_ParentWorld._isInverseCalculated_Space, ref _matrix_TF_ParentWorld._isInverseCalculated_OnlyRotation);
+
+
+
+			//기존
+			//_matrix_TFResult_World.SetMatrix(_matrix_TF_ToParent, false);//첫 계산이므로 Set을 해야한다. (20.10.28)
+			//_matrix_TFResult_World.OnBeforeRMultiply();
+			//_matrix_TFResult_World.RMultiply(_matrix_TF_LocalModified, false);			
+			//if(_isIgnoreParentModWorldMatrixByRigging)
+			//{
+			//	//리깅이 적용된 경우
+			//	_matrix_TFResult_World.RMultiply(_matrix_TF_ParentWorldWithoutMod, false);
+			//}
+			//else
+			//{
+			//	//기본
+			//	_matrix_TFResult_World.RMultiply(_matrix_TF_ParentWorld, false);
+			//}
+			//_matrix_TFResult_World.MakeMatrix();
+
+
+			//< C++ DLL >
+			if(_isIgnoreParentModWorldMatrixByRigging)
+			{
+				//리깅이 적용된 경우
+				MatrixWrap_Set_OnBefore_RMul2(ref _matrix_TFResult_World._pos, ref _matrix_TFResult_World._angleDeg, ref _matrix_TFResult_World._scale,
+																ref _matrix_TFResult_World._isInitScalePositive_X, ref _matrix_TFResult_World._isInitScalePositive_Y, ref _matrix_TFResult_World._isAngleFlipped,
+																ref _matrix_TFResult_World._mtrxToSpace, ref _matrix_TFResult_World._mtrxOnlyRotation,
+																ref _matrix_TFResult_World._isInverseCalculated_Space, ref _matrix_TFResult_World._isInverseCalculated_OnlyRotation,
+																ref _matrix_TF_ToParent._pos, _matrix_TF_ToParent._angleDeg, ref _matrix_TF_ToParent._scale,
+																ref _matrix_TF_LocalModified._pos, _matrix_TF_LocalModified._angleDeg, ref _matrix_TF_LocalModified._scale, ref _matrix_TF_LocalModified._mtrxOnlyRotation,
+																ref _matrix_TF_ParentWorldWithoutMod._pos, _matrix_TF_ParentWorldWithoutMod._angleDeg, ref _matrix_TF_ParentWorldWithoutMod._scale, ref _matrix_TF_ParentWorldWithoutMod._mtrxOnlyRotation
+																);
+			}
+			else
+			{
+				//기본
+				MatrixWrap_Set_OnBefore_RMul2(ref _matrix_TFResult_World._pos, ref _matrix_TFResult_World._angleDeg, ref _matrix_TFResult_World._scale,
+																ref _matrix_TFResult_World._isInitScalePositive_X, ref _matrix_TFResult_World._isInitScalePositive_Y, ref _matrix_TFResult_World._isAngleFlipped,
+																ref _matrix_TFResult_World._mtrxToSpace, ref _matrix_TFResult_World._mtrxOnlyRotation,
+																ref _matrix_TFResult_World._isInverseCalculated_Space, ref _matrix_TFResult_World._isInverseCalculated_OnlyRotation,
+																ref _matrix_TF_ToParent._pos, _matrix_TF_ToParent._angleDeg, ref _matrix_TF_ToParent._scale,
+																ref _matrix_TF_LocalModified._pos, _matrix_TF_LocalModified._angleDeg, ref _matrix_TF_LocalModified._scale, ref _matrix_TF_LocalModified._mtrxOnlyRotation,
+																ref _matrix_TF_ParentWorld._pos, _matrix_TF_ParentWorld._angleDeg, ref _matrix_TF_ParentWorld._scale, ref _matrix_TF_ParentWorld._mtrxOnlyRotation
+																);
+			}
+
+
+			//기존
+			//_matrix_TFResult_WorldWithoutMod.SetMatrix(_matrix_TF_ToParent, false);//첫 계산이므로 Set을 해야한다. (20.10.28)
+			//_matrix_TFResult_WorldWithoutMod.OnBeforeRMultiply();
+			//if(_isIgnoreParentModWorldMatrixByRigging)
+			//{	
+			//	//리깅이 적용된 경우
+			//	_matrix_TFResult_WorldWithoutMod.RMultiply(_matrix_TF_ParentWorldWithoutMod, false);
+			//}
+			//else
+			//{
+			//	//기본				
+			//	_matrix_TFResult_WorldWithoutMod.RMultiply(_matrix_TF_ParentWorld, false);
+			//}
+			//_matrix_TFResult_WorldWithoutMod.MakeMatrix();
+
+			//< C++ DLL >
+			if(_isIgnoreParentModWorldMatrixByRigging)
+			{
+				//리깅이 적용된 경우
+				MatrixWrap_Set_OnBefore_RMul1(ref _matrix_TFResult_WorldWithoutMod._pos, ref _matrix_TFResult_WorldWithoutMod._angleDeg, ref _matrix_TFResult_WorldWithoutMod._scale,
+																ref _matrix_TFResult_WorldWithoutMod._isInitScalePositive_X, ref _matrix_TFResult_WorldWithoutMod._isInitScalePositive_Y, ref _matrix_TFResult_WorldWithoutMod._isAngleFlipped,
+																ref _matrix_TFResult_WorldWithoutMod._mtrxToSpace, ref _matrix_TFResult_WorldWithoutMod._mtrxOnlyRotation,
+																ref _matrix_TFResult_WorldWithoutMod._isInverseCalculated_Space, ref _matrix_TFResult_WorldWithoutMod._isInverseCalculated_OnlyRotation,
+																ref _matrix_TF_ToParent._pos, _matrix_TF_ToParent._angleDeg, ref _matrix_TF_ToParent._scale,
+																ref _matrix_TF_ParentWorldWithoutMod._pos, _matrix_TF_ParentWorldWithoutMod._angleDeg, ref _matrix_TF_ParentWorldWithoutMod._scale, ref _matrix_TF_ParentWorldWithoutMod._mtrxOnlyRotation
+																);
+			}
+			else
+			{
+				//기본
+				MatrixWrap_Set_OnBefore_RMul1(ref _matrix_TFResult_WorldWithoutMod._pos, ref _matrix_TFResult_WorldWithoutMod._angleDeg, ref _matrix_TFResult_WorldWithoutMod._scale,
+																ref _matrix_TFResult_WorldWithoutMod._isInitScalePositive_X, ref _matrix_TFResult_WorldWithoutMod._isInitScalePositive_Y, ref _matrix_TFResult_WorldWithoutMod._isAngleFlipped,
+																ref _matrix_TFResult_WorldWithoutMod._mtrxToSpace, ref _matrix_TFResult_WorldWithoutMod._mtrxOnlyRotation,
+																ref _matrix_TFResult_WorldWithoutMod._isInverseCalculated_Space, ref _matrix_TFResult_WorldWithoutMod._isInverseCalculated_OnlyRotation,
+																ref _matrix_TF_ToParent._pos, _matrix_TF_ToParent._angleDeg, ref _matrix_TF_ToParent._scale,
+																ref _matrix_TF_ParentWorld._pos, _matrix_TF_ParentWorld._angleDeg, ref _matrix_TF_ParentWorld._scale, ref _matrix_TF_ParentWorld._mtrxOnlyRotation
+																);
+			}
+
 		}
 
 

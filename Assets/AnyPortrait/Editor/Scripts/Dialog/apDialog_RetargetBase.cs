@@ -202,6 +202,9 @@ namespace AnyPortrait
 																		"", "apb");
 					if (!string.IsNullOrEmpty(saveFilePath))
 					{
+						//추가 21.7.3 : 이스케이프 문자 삭제
+						saveFilePath = apUtil.ConvertEscapeToPlainText(saveFilePath);
+
 						//Save를 하자
 						bool isResult = apRetarget.SaveBaseStruct(_targetMeshGroup, saveFilePath);
 
@@ -263,6 +266,9 @@ namespace AnyPortrait
 																		apEditorUtil.GetLastOpenSaveFileDirectoryPath(apEditorUtil.SAVED_LAST_FILE_PATH.BoneAnimExport), "apb");
 					if (!string.IsNullOrEmpty(loadFilePath))
 					{
+						//추가 21.7.3 : 이스케이프 문자 삭제
+						loadFilePath = apUtil.ConvertEscapeToPlainText(loadFilePath);
+
 						bool loadResult = _retargetData.LoadBaseStruct(loadFilePath);
 						if (loadResult)
 						{

@@ -195,10 +195,10 @@ namespace AnyPortrait
 				_transformID = int.Parse(strParse[3]);
 				_boneID = int.Parse(strParse[4]);
 
-				_guiColor.r = float.Parse(strParse[5]);
-				_guiColor.g = float.Parse(strParse[6]);
-				_guiColor.b = float.Parse(strParse[7]);
-				_guiColor.a = float.Parse(strParse[8]);
+				_guiColor.r = apUtil.ParseFloat(strParse[5]);
+				_guiColor.g = apUtil.ParseFloat(strParse[6]);
+				_guiColor.b = apUtil.ParseFloat(strParse[7]);
+				_guiColor.a = apUtil.ParseFloat(strParse[8]);
 
 				_controlParamID = int.Parse(strParse[9]);
 				_controlValueType = (apControlParam.TYPE)int.Parse(strParse[10]); 

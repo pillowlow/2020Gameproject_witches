@@ -20,6 +20,7 @@ using System;
 
 
 using AnyPortrait;
+using System.Runtime.InteropServices;
 
 namespace AnyPortrait
 {
@@ -191,6 +192,28 @@ namespace AnyPortrait
 		}
 
 
+		public apMatrix3x3 WorldMatrixInverse
+		{
+			get
+			{
+				if (_unitType == UNIT_TYPE.Mesh)
+				{
+					return _meshTransform._matrix_TFResult_World.MtrxToLowerSpace;
+				}
+				else
+				{
+					if (_meshGroupTransform == null)
+					{ return apMatrix3x3.identity; }
+					else
+					{
+						//return _meshGroupTransform._matrix_TF_Cal_Parent * _meshGroupTransform._matrix_TF_Cal_Local;
+						return _meshGroupTransform._matrix_TFResult_World.MtrxToLowerSpace;
+					}
+				}
+			}
+		}
+
+
 
 		public apMatrix WorldMatrixWrap
 		{
@@ -340,23 +363,7 @@ namespace AnyPortrait
 			//역으로 Link를 하자
 			_meshGroupTransform._linkedRenderUnit = this;
 
-
-			//이전 코드 : 변수 이름만 바뀌었다.
-			//_depth = 0;
-			//if (_meshTransform != null)
-			//{
-			//	_depth += _meshTransform._depth;
-			//}
-			//if (parentRenderUnit != null)
-			//{
-			//	_depth += parentRenderUnit._depth;
-			//}
-			//if (meshGroupTransform != null)
-			//{
-			//	//루트가 아니라면 Mesh Group Transform도 있다.
-			//	_depth += _meshGroupTransform._depth;
-			//}
-
+			
 			_depthForSort = 0;
 			if (_meshTransform != null)
 			{
@@ -380,22 +387,7 @@ namespace AnyPortrait
 		}
 
 		public void RefreshDepth()
-		{
-			//_depth = 0;
-			//if (_meshTransform != null)
-			//{
-			//	_depth += _meshTransform._depth;
-			//}
-			//if (_parentRenderUnit != null)
-			//{
-			//	_depth += _parentRenderUnit._depth;
-			//}
-			//if (_meshGroupTransform != null)
-			//{
-			//	//루트가 아니라면 Mesh Group Transform도 있다.
-			//	_depth += _meshGroupTransform._depth;
-			//}
-
+		{	
 			_depthForSort = 0;
 			if (_meshTransform != null)
 			{
@@ -423,16 +415,6 @@ namespace AnyPortrait
 
 			_meshTransform._linkedRenderUnit = this;
 
-			//_depth = 0;
-			//if (parentRenderUnit != null)
-			//{
-			//	_depth += parentRenderUnit._depth;
-			//}
-			//if (_meshGroupTransform != null)
-			//{
-			//	_depth += _meshGroupTransform._depth;
-			//}
-			//_depth += meshTransform._depth;
 
 			_depthForSort = 0;
 			if (parentRenderUnit != null)
@@ -976,6 +958,8 @@ namespace AnyPortrait
 
 					//단계별로 처리하자
 
+					//TODO : 이부분 개선
+
 					//1) Pivot 위치 적용
 					rVert.SetMatrix_1_Static_Vert2Mesh(_meshTransform._mesh.Matrix_VertToLocal);
 
@@ -990,7 +974,7 @@ namespace AnyPortrait
 						rVert.SetMatrix_2_Calculate_VertLocal(_calculatedStack.GetVertexLocalPos(i));
 					}
 
-					rVert.SetMatrix_3_Transform_Mesh(WorldMatrix);
+					rVert.SetMatrix_3_Transform_Mesh(WorldMatrix, WorldMatrixInverse);
 
 					if (isVertexWorld)
 					{
@@ -1011,6 +995,421 @@ namespace AnyPortrait
 
 					//childRenderUnit.UpdateToRenderVert(tDelta, isUpdateAlways, isMatrixCalculateForce, funcForceUpdate);
 					childRenderUnit.UpdateToRenderVert(tDelta, isUpdateAlways);
+				}
+			}
+		}
+
+
+
+
+		//-------------------------------------------------------
+		// C++ DLL 버전
+		//-------------------------------------------------------
+
+#if UNITY_EDITOR_WIN
+		[DllImport("AnyPortrait_Editor_Win64")]
+#else
+		[DllImport("AnyPortrait_Editor_MAC")]
+#endif
+		private static extern void RenderVertex_SetVertexLocal(	ref apMatrix3x3 dst_matrix_Cal_VertLocal,
+																ref Vector2 src_deltaLocalPos);
+
+#if UNITY_EDITOR_WIN
+		[DllImport("AnyPortrait_Editor_Win64")]
+#else
+		[DllImport("AnyPortrait_Editor_MAC")]
+#endif
+		private static extern void RenderVertex_SetRigging(	ref Vector2 dst_pos_Rigging,
+															ref float dst_weight_Rigging,
+															ref apMatrix3x3 dst_matrix_Rigging,
+															ref Vector2 src_posRiggingResult,
+															ref apMatrix3x3 src_matrix_Rigging,
+															float src_weight_Rigging);
+
+#if UNITY_EDITOR_WIN
+		[DllImport("AnyPortrait_Editor_Win64")]
+#else
+		[DllImport("AnyPortrait_Editor_MAC")]
+#endif
+		private static extern void RenderVertex_SetVertexWorld(	ref apMatrix3x3 dst_matrix_Cal_VertWorld,
+																ref Vector2 src_deltaWorldPos);
+
+#if UNITY_EDITOR_WIN
+		[DllImport("AnyPortrait_Editor_Win64")]
+#else
+		[DllImport("AnyPortrait_Editor_MAC")]
+#endif
+		private static extern void RenderVertex_Calculate( ref apMatrix3x3 dst_matrix_ToWorld,
+													ref Vector2 dst_pos_World,
+													ref Vector2 dst_pos_LocalOnMesh,
+													ref apMatrix3x3 dst_matrix_Static_Vert2Mesh,
+													ref apMatrix3x3 dst_matrix_Rigging,
+													ref apMatrix3x3 dst_matrix_Cal_VertLocal,
+													ref apMatrix3x3 dst_matrix_MeshTransform,
+													ref apMatrix3x3 dst_matrix_MeshTransformInv,
+													ref apMatrix3x3 dst_matrix_Cal_VertWorld,
+
+													ref apMatrix3x3 src_matrix_Static_Vert2Mesh,
+													ref apMatrix3x3 src_matrix_MeshTransform,
+													ref apMatrix3x3 src_matrix_MeshTransformInv,
+
+													ref Vector2 src_VertexPos);
+
+
+
+
+		/// <summary>
+		/// Update_Pre의 DLL 버전
+		/// </summary>
+		public void Update_Pre_DLL(float tDelta)
+		{
+
+			if (_calculatedStack != null)
+			{
+				//<C++ DLL>
+				//_calculatedStack.Calculate_Pre(tDelta);
+				_calculatedStack.Calculate_Pre_DLL(tDelta);//<C++ DLL 버전>
+			}
+
+			apRenderUnit childRenderUnit = null;
+
+			//_curMatrixToWorld를 처리한다.
+			//1-1 Group Node일때
+			if (_unitType == UNIT_TYPE.GroupNode)
+			{
+				if (_meshGroupTransform != null)
+				{
+					if (_calculatedStack.MeshWorldMatrixWrap != null)
+					{
+						_meshGroupTransform.SetModifiedTransform(_calculatedStack.MeshWorldMatrixWrap);
+					}
+					
+					//Parent의 계산된 Matrix를 중첩해주자
+					if (_parentRenderUnit != null)
+					{
+						if (_parentRenderUnit.WorldMatrixWrap != null)
+						{
+							_meshGroupTransform.AddWorldMatrix_Parent(_parentRenderUnit.WorldMatrixWrap);
+						}
+					}
+
+					//<TODO : C++ DLL>
+					//_meshGroupTransform.MakeTransformMatrix();
+					_meshGroupTransform.MakeTransformMatrix_DLL();//<C++ DLL>
+				}				
+			}
+			//1-2 Mesh Node 일때
+			else//if (_unitType == UNIT_TYPE.Mesh)
+			{
+				//--------------------------------------------------
+				if (_calculatedStack.MeshWorldMatrixWrap != null)
+				{
+					_meshTransform.SetModifiedTransform(_calculatedStack.MeshWorldMatrixWrap);
+				}
+
+
+				//추가 20.8.10
+				//리깅이 추가된 렌더 유닛의 MeshTF는 매트릭스 계산시 다른 계산을 해야한다.
+				//부모의 "Modifer가 적용 안된 WorldMatrix"이 계산에 사용된다.
+				//Opt에서는 Bake에 넣어서 상시 활용되도록 한다.
+				if(_calculatedStack.IsRigging)
+				{
+					_meshTransform.SetRiggingApplied();
+				}
+				//--------------------------------------------------
+
+				//기존
+				//Parent의 계산된 Matrix를 중첩해주자
+				if (_parentRenderUnit != null)
+				{
+					if (_parentRenderUnit.WorldMatrixWrap != null)
+					{
+						_meshTransform.AddWorldMatrix_Parent(_parentRenderUnit.WorldMatrixWrap, _parentRenderUnit.WorldMatrixWrapWithoutModified);
+					}
+				}
+
+				//<TODO : C++ DLL>
+				//_meshTransform.MakeTransformMatrix();
+				_meshTransform.MakeTransformMatrix_DLL();//<C++ DLL>
+			}
+
+
+			//색상도 만들어주자
+			if (_calculatedStack.IsAnyColorCalculated)
+			{
+				_meshColor2X = _calculatedStack.MeshColor;
+				_isVisible = _calculatedStack.IsMeshVisible;
+
+			}
+			else
+			{
+				//만약 계산된게 없다면 Default 값을 사용한다.
+				if (_unitType == UNIT_TYPE.GroupNode)
+				{
+					if (_meshGroupTransform != null)
+					{
+						_meshColor2X = _meshGroupTransform._meshColor2X_Default;
+						_isVisible = _meshGroupTransform._isVisible_Default;
+					}
+					else
+					{
+						_meshColor2X = _calculatedStack.MeshColor;
+						_isVisible = _calculatedStack.IsMeshVisible;
+					}
+				}
+				else
+				{
+					if (_meshTransform != null)
+					{
+						_meshColor2X = _meshTransform._meshColor2X_Default;
+						_isVisible = _meshTransform._isVisible_Default;
+					}
+					else
+					{
+						_meshColor2X = _calculatedStack.MeshColor;
+						_isVisible = _calculatedStack.IsMeshVisible;
+					}
+				}
+			}
+
+			//추가 11.30 : Extra Option
+			if (_calculatedStack.IsExtraDepthChanged)
+			{
+				_isExtraDepthChanged = true;
+				_extraDeltaDepth = _calculatedStack.ExtraDeltaDepth;
+
+				//Debug.Log("Depth Event Occurred : " + Name);
+				if(_func_ExtraDepthChanged != null)
+				{
+					_func_ExtraDepthChanged(this, _extraDeltaDepth);
+				}
+			}
+			if (_calculatedStack.IsExtraTextureChanged)
+			{
+				_isExtraTextureChanged = true;
+				_extraTextureData = _calculatedStack.ExtraTextureData;
+			}
+
+			//추가 19.11.4 : Alpha값으로 일단 먼저 isVisible을 설정하자
+			if (_meshColor2X.a < VISIBLE_ALPHA)
+			{
+				_isVisible = false;
+				_meshColor2X.a = 0.0f;
+			}
+
+			//에디터 전용
+			//작업용 임시 Visible을 적용하자
+			_isVisibleCalculated = _isVisible;
+
+
+			//변경 21.1.28 : Modifier > Rule > Tmp (실제론 우선순위가 Tmp이므로, 거꾸로 조건을 체크해야한다.)
+			if (_isVisibleCalculated)
+			{
+				//Hide로 강제할지 체크
+				if(_workVisible_Tmp == WORK_VISIBLE_TYPE.ToHide
+					|| (_workVisible_Tmp == WORK_VISIBLE_TYPE.None && _workVisible_Rule == WORK_VISIBLE_TYPE.ToHide))
+				{
+					//Tmp가 Hide이거나
+					//Rule이 Hide이고, Tmp에서 처리하지 않을 때 강제로 Hide로 만든다.
+					_isVisible = false;
+					_meshColor2X.a = 0.0f;
+				}
+				
+			}
+			else if (!_isVisibleCalculated)
+			{
+				//Show로 강제할지 체크
+				if(_workVisible_Tmp == WORK_VISIBLE_TYPE.ToShow
+					|| (_workVisible_Tmp == WORK_VISIBLE_TYPE.None && _workVisible_Rule == WORK_VISIBLE_TYPE.ToShow))
+				{
+					//Tmp가 Show이거나
+					//Rule이 Show이고, Tmp에서 처리하지 않을 때 강제로 Hide로 만든다.
+					_isVisible = true;//<<강제로 Show로 만든다.
+					_meshColor2X.a = 1.0f;//강제로 Alpha도 1로 만든다.
+				}
+			}
+
+
+			//아직 Parent RenderUnit의 값을 
+			_isVisible_WithoutParent = _isVisible;
+
+			if (!_isVisible)
+			{
+				_meshColor2X.a = 0.0f;
+			}
+
+			if (_parentRenderUnit != null)
+			{
+				//2X 방식의 Add
+				_meshColor2X.r = Mathf.Clamp01(((float)(_meshColor2X.r) - 0.5f) + ((float)(_parentRenderUnit._meshColor2X.r) - 0.5f) + 0.5f);
+				_meshColor2X.g = Mathf.Clamp01(((float)(_meshColor2X.g) - 0.5f) + ((float)(_parentRenderUnit._meshColor2X.g) - 0.5f) + 0.5f);
+				_meshColor2X.b = Mathf.Clamp01(((float)(_meshColor2X.b) - 0.5f) + ((float)(_parentRenderUnit._meshColor2X.b) - 0.5f) + 0.5f);
+				_meshColor2X.a *= _parentRenderUnit._meshColor2X.a;
+			}
+
+			//Alpha가 너무 작다면 => 아예 렌더링을 하지 않도록 제어 / 또는 Visible이 아닐때
+			if (_meshColor2X.a < VISIBLE_ALPHA
+				//|| !_calculatedStack.IsMeshVisible
+				)
+			{
+				_isVisible = false;
+				_meshColor2X.a = 0.0f;
+			}
+
+			
+			for (int i = 0; i < _childRenderUnits.Count; i++)
+			{
+				childRenderUnit = _childRenderUnits[i];
+
+				//childRenderUnit.Update_Pre(tDelta);
+				childRenderUnit.Update_Pre_DLL(tDelta);//<C++ DLL>
+			}
+		}
+
+
+		/// <summary>
+		/// Update_Post의 C++ DLL 버전
+		/// </summary>
+		public void Update_Post_DLL(float tDelta)
+		{
+
+			if (_calculatedStack != null)
+			{
+				//<C++ DLL>
+				//_calculatedStack.Calculate_Post(tDelta);
+				_calculatedStack.Calculate_Post_DLL(tDelta);//C++ DLL
+			}
+
+			apRenderUnit childRenderUnit = null;
+
+
+			for (int i = 0; i < _childRenderUnits.Count; i++)
+			{
+				childRenderUnit = _childRenderUnits[i];
+
+				//childRenderUnit.Update_Post(tDelta, isMatrixCalculateForce, funcForceUpdate);
+				childRenderUnit.Update_Post_DLL(tDelta);
+			}
+		}
+
+
+
+
+
+
+		/// <summary>
+		/// UpdateToRenderVert의 C++ DLL 버전
+		/// </summary>
+		/// <param name="tDelta"></param>
+		/// <param name="isUpdateAlways"></param>
+		public void UpdateToRenderVert_DLL(float tDelta, bool isUpdateAlways)
+		{
+			//강제로 업데이트해야하는지 결정한다.
+
+			//Profiler.BeginSample("1. Func Check");
+			//if(!isMatrixCalculateForce && funcForceUpdate != null)
+			//{
+			//	isMatrixCalculateForce = funcForceUpdate(this);
+			//}
+			//Profiler.EndSample();
+
+			//Child까지 계산한 이후 Vertex를 계산해줘야 한다.
+			if (_unitType == UNIT_TYPE.Mesh && (isUpdateAlways || _isVisible))
+			{
+				bool isRigging = _calculatedStack.IsRigging;
+				bool isVertexLocal = _calculatedStack.IsVertexLocal;
+				bool isVertexWorld = _calculatedStack.IsVertexWorld;
+
+				apRenderVertex rVert = null;
+
+
+				apMatrix3x3 meshWorldMatrix = WorldMatrix;
+				apMatrix3x3 meshWorldMatrixInv = WorldMatrixInverse;
+
+				
+				for (int i = 0; i < _renderVerts.Count; i++)
+				{
+					
+					rVert = _renderVerts[i];
+
+					rVert.ReadyToCalculate();
+
+					////단계별로 처리하자
+
+					////1) Pivot 위치 적용
+					//rVert.SetMatrix_1_Static_Vert2Mesh(_meshTransform._mesh.Matrix_VertToLocal);
+
+					//if (isRigging)
+					//{
+					//	rVert.SetRigging_0_LocalPosWeight(_calculatedStack.GetVertexRigging(i), _calculatedStack.GetRiggingWeight(), _calculatedStack.GetMatrixRigging(i));
+					//}
+
+					//if (isVertexLocal)
+					//{
+					//	//Calculate - Vertex Local Morph (Vec2)
+					//	rVert.SetMatrix_2_Calculate_VertLocal(_calculatedStack.GetVertexLocalPos(i));
+					//}
+
+					//rVert.SetMatrix_3_Transform_Mesh(WorldMatrix, WorldMatrixInverse);
+
+					//if (isVertexWorld)
+					//{
+					//	//Calculate - Vertex World Morph (Vec2)
+					//	rVert.SetMatrix_4_Calculate_VertWorld(_calculatedStack.GetVertexWorldPos(i));
+					//}
+
+					////rVert.Calculate(tDelta);
+					//rVert.Calculate_DLL(tDelta);//<<이게 DLL로 바뀌었다.
+
+					if(isRigging)
+					{
+						RenderVertex_SetRigging(	ref rVert._pos_Rigging,
+															ref rVert._weight_Rigging,
+															ref rVert._matrix_Rigging,
+															ref _calculatedStack._result_Rigging[i],
+															ref _calculatedStack._result_RiggingMatrices[i],
+															_calculatedStack._result_RiggingWeight);
+					}
+
+					if(isVertexLocal)
+					{
+						RenderVertex_SetVertexLocal(	ref rVert._matrix_Cal_VertLocal,
+														ref _calculatedStack._result_VertLocal[i]);
+					}
+
+					if(isVertexWorld)
+					{
+						RenderVertex_SetVertexWorld(	ref rVert._matrix_Cal_VertWorld,
+														ref _calculatedStack._result_VertWorld[i]);
+					}
+
+					RenderVertex_Calculate(ref rVert._matrix_ToWorld,
+												ref rVert._pos_World,
+												ref rVert._pos_LocalOnMesh,
+												ref rVert._matrix_Static_Vert2Mesh,
+												ref rVert._matrix_Rigging,
+												ref rVert._matrix_Cal_VertLocal,
+												ref rVert._matrix_MeshTransform,
+												ref rVert._matrix_MeshTransform_Inv,
+												ref rVert._matrix_Cal_VertWorld,
+												ref _meshTransform._mesh._matrix_VertToLocal,
+												ref meshWorldMatrix,
+												ref meshWorldMatrixInv,
+												ref rVert._vertex._pos);
+
+					//위에서 Matrix 계산이 끝났으므로, 아래 함수에서는 _isCalculated만 true로 바꾼다.
+					rVert.Calculate_DLL(tDelta);//<<이게 DLL로 바뀌었다.
+				}
+			}
+
+			if (_childRenderUnits.Count > 0)
+			{
+				apRenderUnit childRenderUnit = null;
+				for (int i = 0; i < _childRenderUnits.Count; i++)
+				{
+					childRenderUnit = _childRenderUnits[i];
+
+					childRenderUnit.UpdateToRenderVert_DLL(tDelta, isUpdateAlways);
 				}
 			}
 		}
@@ -1088,38 +1487,26 @@ namespace AnyPortrait
 				if (_meshTransform != null)
 				{
 					_meshTransform._depth = depth;
+					//Debug.LogWarning("RenderUnit > MeshTF : " + _meshTransform._nickName + " / " + depth);
 				}
+				//else
+				//{
+				//	Debug.LogError("에러 : MeshTF를 찾을 수 없다.");
+				//}
 			}
 			else
 			{
 				if (_meshGroupTransform != null)
 				{
 					_meshGroupTransform._depth = depth;
+					//Debug.Log("RenderUnit > MeshGroupTF : " + _meshGroupTransform._nickName + " / " + depth);
 				}
+				//else
+				//{
+				//	Debug.LogError("에러 : MeshGroupTF를 찾을 수 없다.");
+				//}
 			}
-			//if(_childRenderUnits != null && _childRenderUnits.Count > 0)
-			//{
-			//	//int curDepth = depth + 1;
-			//	int curDepth = 0;//Child는 Offset 형식으로 저장된다.
-
-			//	_childRenderUnits.Sort(delegate (apRenderUnit a, apRenderUnit b)
-			//	{
-			//		return a._depth - b._depth;
-			//	});
-
-			//	for (int i = 0; i < _childRenderUnits.Count; i++)
-			//	{
-			//		curDepth++;
-			//		apRenderUnit childRenderUnit = _childRenderUnits[i];
-			//		curDepth = childRenderUnit.SetDepth(curDepth);
-			//	}
-
-			//	return curDepth + depth;
-			//}
-			//else
-			//{
-			//	return depth;
-			//}
+			
 			return depth;
 		}
 

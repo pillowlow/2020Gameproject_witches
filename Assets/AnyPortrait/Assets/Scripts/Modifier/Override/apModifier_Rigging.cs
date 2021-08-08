@@ -74,15 +74,15 @@ namespace AnyPortrait
 		{
 			base.Calculate(tDelta);
 
-			//Profiler.BeginSample("Mod - Rigging");
-
 			CalculatePattern_Rigging(tDelta);
+		}
 
 
-			//Profiler.EndSample();
+		public override void Calculate_DLL(float tDelta)
+		{
+			base.Calculate_DLL(tDelta);
 
-
-
+			CalculatePattern_Rigging_DLL(tDelta);
 		}
 
 		// Get / Set

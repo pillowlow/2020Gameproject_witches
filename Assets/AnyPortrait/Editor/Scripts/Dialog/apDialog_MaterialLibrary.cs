@@ -403,7 +403,7 @@ namespace AnyPortrait
 				if(GUILayout.Button(_editor.GetText(TEXT.UnpackPreset), GUILayout.Width(leftWidth - 10), GUILayout.Height(20)))//"Unpack Preset"
 				{
 					string packagePath = "";
-					string basePath = _editor.PathSetting.CurrentPath;
+					string basePath = apPathSetting.I.CurrentPath;
 
 					//기존 : 고정 경로
 					//변경 20.4.21 : 가변 경로 가능. 기본 경로는 "Assets/AnyPortrait/"
@@ -818,7 +818,13 @@ namespace AnyPortrait
 				if (!_isPreset)
 				{
 					//Portrait 데이터 : Undo + 이름바꾸기
-					apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.MaterialSetChanged, _editor, _portrait, _portrait, false);
+					apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.MaterialSetChanged, 
+														_editor, 
+														_portrait, 
+														//_portrait, 
+														false,
+														apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 					_selectedMaterialSet._name = nextName;
 				}
 				else if(!_selectedMaterialSet._isReserved)
@@ -848,7 +854,13 @@ namespace AnyPortrait
 			{
 				if (!_isPreset)
 				{
-					apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.MaterialSetChanged, _editor, _portrait, _portrait, false);
+					apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.MaterialSetChanged, 
+														_editor, 
+														_portrait, 
+														//_portrait, 
+														false,
+														apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 					//Portrait 데이터 : 아이콘 바꾸기
 					_selectedMaterialSet._icon = nextIcon;
 				}
@@ -879,7 +891,13 @@ namespace AnyPortrait
 			{
 				if (!_isPreset)
 				{
-					apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.MaterialSetChanged, _editor, _portrait, _portrait, false);
+					apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.MaterialSetChanged, 
+														_editor, 
+														_portrait, 
+														//_portrait, 
+														false,
+														apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 					//Portrait 데이터 : 아이콘 바꾸기
 					_selectedMaterialSet._isNeedToSetBlackColoredAmbient = isNextBlackColoredAmbient;
 				}
@@ -904,7 +922,13 @@ namespace AnyPortrait
 				//"Default Material ON", "Default Material OFF"
 				if(apEditorUtil.ToggledButton_2Side(_editor.GetText(TEXT.DefaultMaterialON), _editor.GetText(TEXT.DefaultMaterialOFF), _selectedMaterialSet._isDefault, true, width_BasicOption - 10, 24))
 				{
-					apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.MaterialSetChanged, _editor, _portrait, _portrait, false);
+					apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.MaterialSetChanged, 
+														_editor, 
+														_portrait, 
+														//_portrait, 
+														false,
+														apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 					_selectedMaterialSet._isDefault = !_selectedMaterialSet._isDefault;
 
 					apMaterialSet otherMatSet = null;
@@ -1018,7 +1042,12 @@ namespace AnyPortrait
 				if (!_isPreset)
 				{
 					//Portrait 데이터일 때 - Undo 등록
-					apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.MaterialSetChanged, _editor, _portrait, _portrait, false);
+					apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.MaterialSetChanged, 
+														_editor, 
+														_portrait, 
+														//_portrait, 
+														false,
+														apEditorUtil.UNDO_STRUCT.ValueOnly);
 					isShaderChangable = true;
 				}
 				else if(!_selectedMaterialSet._isReserved)
@@ -1192,7 +1221,13 @@ namespace AnyPortrait
 					bool nextEnabledOption = EditorGUILayout.Toggle(propSet._isOptionEnabled, GUILayout.Width(30), GUILayout.Height(height_1Line_Comp));
 					if(nextEnabledOption != propSet._isOptionEnabled)
 					{
-						apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.MaterialSetChanged, _editor, _portrait, _portrait, false);
+						apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.MaterialSetChanged, 
+														_editor, 
+														_portrait, 
+														//_portrait, 
+														false,
+														apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 						propSet._isOptionEnabled = nextEnabledOption;
 						apEditorUtil.ReleaseGUIFocus();
 					}
@@ -1207,7 +1242,13 @@ namespace AnyPortrait
 					if(!_isPreset)
 					{
 						//Portrait 데이터
-						apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.MaterialSetChanged, _editor, _portrait, _portrait, false);
+						apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.MaterialSetChanged, 
+														_editor, 
+														_portrait, 
+														//_portrait, 
+														false,
+														apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 						propSet._name = nextPropName;
 					}
 					else if(!_selectedMaterialSet._isReserved)
@@ -1250,7 +1291,13 @@ namespace AnyPortrait
 						if (isChange)
 						{
 							//Portrait 데이터
-							apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.MaterialSetChanged, _editor, _portrait, _portrait, false);
+							apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.MaterialSetChanged, 
+																_editor, 
+																_portrait, 
+																//_portrait, 
+																false,
+																apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 							propSet._propType = nextPropType;
 
 							//Type이 바뀌었다면 링크 한번더.
@@ -1315,7 +1362,13 @@ namespace AnyPortrait
 									{
 										if (!_isPreset)
 										{
-											apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.MaterialSetChanged, _editor, _portrait, _portrait, false);
+											apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.MaterialSetChanged, 
+																				_editor, 
+																				_portrait, 
+																				//_portrait, 
+																				false,
+																				apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 											propSet._value_Float = nextFloat;
 											apEditorUtil.ReleaseGUIFocus();
 										}
@@ -1336,7 +1389,13 @@ namespace AnyPortrait
 									{
 										if (!_isPreset)
 										{
-											apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.MaterialSetChanged, _editor, _portrait, _portrait, false);
+											apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.MaterialSetChanged, 
+																				_editor, 
+																				_portrait, 
+																				//_portrait, 
+																				false,
+																				apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 											propSet._value_Int = nextInt;
 											apEditorUtil.ReleaseGUIFocus();
 										}
@@ -1366,7 +1425,13 @@ namespace AnyPortrait
 									{
 										if (!_isPreset)
 										{
-											apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.MaterialSetChanged, _editor, _portrait, _portrait, false);
+											apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.MaterialSetChanged, 
+																				_editor, 
+																				_portrait, 
+																				//_portrait, 
+																				false,
+																				apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 											propSet._value_Vector.x = vecX;
 											propSet._value_Vector.y = vecY;
 											propSet._value_Vector.z = vecZ;
@@ -1398,7 +1463,13 @@ namespace AnyPortrait
 									{
 										if (!_isPreset)
 										{
-											apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.MaterialSetChanged, _editor, _portrait, _portrait, false);
+											apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.MaterialSetChanged, 
+																				_editor, 
+																				_portrait, 
+																				//_portrait, 
+																				false,
+																				apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 											propSet._isCommonTexture = !propSet._isCommonTexture;
 
 											//Common Texture 타입이 바뀌었다면 링크 한번더.
@@ -1632,7 +1703,13 @@ namespace AnyPortrait
 			if (removePropSet != null && _selectedMaterialSet._propertySets.Contains(removePropSet) && !removePropSet._isReserved)
 			{
 				//Shader Property 삭제하자
-				apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.MaterialSetChanged, _editor, _portrait, _portrait, false);
+				apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.MaterialSetChanged, 
+													_editor, 
+													_portrait, 
+													//_portrait, 
+													false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 
 				_selectedMaterialSet._propertySets.Remove(removePropSet);
 				removePropSet = null;
@@ -1646,7 +1723,12 @@ namespace AnyPortrait
 				//" Add Property"
 				if (GUILayout.Button(new GUIContent(" " + _editor.GetText(TEXT.AddProperty), _editor.ImageSet.Get(apImageSet.PRESET.Hierarchy_AddTransform)), GUILayout.Width(width), GUILayout.Height(25)))
 				{
-					apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.MaterialSetChanged, _editor, _portrait, _portrait, false);
+					apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.MaterialSetChanged, 
+														_editor, 
+														_portrait, 
+														//_portrait, 
+														false,
+														apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 					apMaterialSet.PropertySet newProp = new apMaterialSet.PropertySet();
 					newProp._name = "(New Property)";
@@ -1879,7 +1961,12 @@ namespace AnyPortrait
 																	_editor.GetText(TEXT.Cancel));
 						if (result)
 						{
-							apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.MaterialSetChanged, _editor, _portrait, _portrait, false);
+							apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.MaterialSetChanged, 
+																_editor, 
+																_portrait, 
+																//_portrait, 
+																false,
+																apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 							//값 복사
 							//겹치는 PropertySet 중에서 "Texture per Image"인 Texture 속성이 있는 경우

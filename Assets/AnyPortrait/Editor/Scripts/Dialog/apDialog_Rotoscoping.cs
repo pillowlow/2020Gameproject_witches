@@ -472,6 +472,9 @@ namespace AnyPortrait
 									string newPath = EditorUtility.OpenFilePanel("Change Image File", dirPath, "png");
 									if (!string.IsNullOrEmpty(newPath))
 									{
+										//추가 21.7.3 : 이스케이프 문자 삭제
+										newPath = apUtil.ConvertEscapeToPlainText(newPath);
+
 										curImageFileData._filePath = newPath;
 										isAnyChanged = true;
 									}
@@ -552,6 +555,9 @@ namespace AnyPortrait
 					string path = EditorUtility.OpenFilePanel("Load Image File", apEditorUtil.GetLastOpenSaveFileDirectoryPath(apEditorUtil.SAVED_LAST_FILE_PATH.Rotoscoping), "png");
 					if (!string.IsNullOrEmpty(path))
 					{
+						//추가 21.7.3 : 이스케이프 문자 삭제
+						path = apUtil.ConvertEscapeToPlainText(path);
+
 						_selectedImageSet.AddImageFile(path);
 						isAnyChanged = true;
 

@@ -582,7 +582,8 @@ namespace AnyPortrait
 								continue;
 							}
 
-							if (renderUnit._meshTransform._isVisible_Default && renderUnit._meshColor2X.a > 0.1f)//Alpha 옵션 추가
+							//if (renderUnit._meshTransform._isVisible_Default && renderUnit._meshColor2X.a > 0.1f)//이전
+							if (renderUnit._isVisible && renderUnit._meshColor2X.a > 0.1f)//변경 21.7.20
 							{
 								//Debug.LogError("TODO : Mouse Picking 바꿀것");
 								bool isPick = apEditorUtil.IsMouseInRenderUnitMesh(
@@ -799,8 +800,9 @@ namespace AnyPortrait
 				apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Modifier_Gizmo_MoveVertex, 
 												Editor, 
 												Editor.Select.Modifier, 
-												null, 
-												false);
+												//null, 
+												false,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 			if (Editor.Select.ModRenderVerts_All.Count == 1)
@@ -920,7 +922,9 @@ namespace AnyPortrait
 			{
 				apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Modifier_Gizmo_RotateVertex, 
 													Editor, Editor.Select.Modifier, 
-													null, false);
+													//null,
+													false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 			//선택된 RenderVert의 Mod 값을 바꾸자
@@ -998,7 +1002,9 @@ namespace AnyPortrait
 			{
 				apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Modifier_Gizmo_ScaleVertex, 
 													Editor, Editor.Select.Modifier, 
-													null, false);
+													//null,
+													false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 
@@ -1239,7 +1245,9 @@ namespace AnyPortrait
 			{
 				apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Modifier_Gizmo_MoveVertex, 
 													Editor, Editor.Select.Modifier, 
-													null, false);
+													//null,
+													false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 
@@ -1392,7 +1400,9 @@ namespace AnyPortrait
 			{
 				apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Modifier_Gizmo_RotateVertex, 
 													Editor, Editor.Select.Modifier, 
-													null, false);
+													//null,
+													false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 			//선택된 RenderVert의 Mod 값을 바꾸자
@@ -1488,7 +1498,9 @@ namespace AnyPortrait
 				apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Modifier_Gizmo_ScaleVertex, 
 													Editor, 
 													Editor.Select.Modifier, 
-													null, false);
+													//null,
+													false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 
@@ -1578,7 +1590,9 @@ namespace AnyPortrait
 			apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Modifier_Gizmo_MoveVertex, 
 												Editor, 
 												Editor.Select.Modifier, 
-												null, false);
+												//null,
+												false,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 
 			//Depth는 신경쓰지 말자
@@ -1691,9 +1705,9 @@ namespace AnyPortrait
 			//Undo
 			apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Modifier_Gizmo_Color,
 											Editor, Editor.Select.Modifier,
-											//Editor.Select.ModMesh_Main, 
-											Editor.Select.ModMesh_Gizmo_Main,//<< [GizmoMain]
-											false);//변경 20.6.18
+											//Editor.Select.ModMesh_Gizmo_Main,//<< [GizmoMain]
+											false,
+											apEditorUtil.UNDO_STRUCT.ValueOnly);//변경 20.6.18
 
 			//1. ModMesh 수정
 			if (nModMeshes > 0)
@@ -1910,7 +1924,9 @@ namespace AnyPortrait
 			{
 				apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Modifier_Gizmo_FFDVertex,
 													Editor, Editor.Select.Modifier,
-													null, false);
+													//null,
+													false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 
@@ -2016,97 +2032,6 @@ namespace AnyPortrait
 			float minDist = 0.0f;
 			float dist = 0.0f;
 			apSelection.ModRenderVert minRV = null;
-
-			#region [미사용 코드] 단일 선택에 대해서만 동작하는 코드
-			////if (Editor.Select.ExKey_ModMesh._transform_Mesh != null && Editor.Select.ExKey_ModMesh._vertices != null)
-			//if (Editor.Select.ModMesh_Main._transform_Mesh != null && Editor.Select.ModMesh_Main._vertices != null)//변경 20.6.18 
-			//{
-			//	//선택된 RenderUnit을 고르자
-			//	//이전
-			//	//apRenderUnit targetRenderUnit = Editor.Select.MeshGroup.GetRenderUnit(Editor.Select.ExKey_ModMesh._transform_Mesh);
-
-			//	//변경 20.6.18
-			//	//다음 중 하나를 고르자
-			//	//apRenderUnit targetRenderUnit = Editor.Select.MeshGroup.GetRenderUnit(Editor.Select.ModMesh_Main._transform_Mesh);//<1>
-			//	apRenderUnit targetRenderUnit = Editor.Select.RenderUnitOfMod_Main;//<2>
-
-			//	if (targetRenderUnit != null)
-			//	{
-			//		for (int iVert = 0; iVert < targetRenderUnit._renderVerts.Count; iVert++)
-			//		{
-			//			apRenderVertex renderVert = targetRenderUnit._renderVerts[iVert];
-
-			//			//선택된 RenderVert는 제외한다.
-			//			if (Editor.Select.ModRenderVertListOfMod.Exists(delegate (apSelection.ModRenderVert a)
-			//			 {
-			//				 return a._renderVert == renderVert;
-			//			 }))
-			//			{
-			//				continue;
-			//			}
-
-
-			//			//가장 가까운 RenderVert를 찾는다.
-			//			minDist = 0.0f;
-			//			dist = 0.0f;
-			//			minRV = null;
-
-			//			for (int iSelectedRV = 0; iSelectedRV < Editor.Select.ModRenderVertListOfMod.Count; iSelectedRV++)
-			//			{
-			//				apSelection.ModRenderVert selectedModRV = Editor.Select.ModRenderVertListOfMod[iSelectedRV];
-			//				//현재 World위치로 선택해보자.
-
-			//				dist = Vector2.Distance(selectedModRV._renderVert._pos_World, renderVert._pos_World);
-			//				if (dist < minDist || minRV == null)
-			//				{
-			//					minRV = selectedModRV;
-			//					minDist = dist;
-			//				}
-			//			}
-
-			//			if (minRV != null && minDist <= radius)
-			//			{
-			//				//apModifiedVertex modVert = Editor.Select.ExKey_ModMesh._vertices.Find(delegate (apModifiedVertex a)
-			//				apModifiedVertex modVert = Editor.Select.ModMesh_Main._vertices.Find(delegate (apModifiedVertex a)
-			//				{
-			//					return renderVert._vertex._uniqueID == a._vertexUniqueID;
-			//				});
-
-			//				if (modVert != null)
-			//				{
-
-			//					//radius에 들어가는 Vert 발견.
-			//					//Weight는 CurveRatio에 맞게 (minDist가 0에 가까울수록 Weight는 1이 된다.)
-			//					float itp_Linear = minDist / radius;
-			//					float itp_Curve = 0.0f;
-			//					if (isConvex)
-			//					{
-			//						//Weight가 더 1에 가까워진다. => minDist가 0이 되는 곳에 Control Point를 넣자
-			//						itp_Curve = (1.0f * (itp_Linear * itp_Linear))
-			//							+ (2.0f * 0.0f * itp_Linear * (1.0f - itp_Linear))
-			//							+ (0.0f * (1.0f - itp_Linear) * (1.0f - itp_Linear));
-			//					}
-			//					else
-			//					{
-			//						//Weight가 더 0에 가까워진다. => minDist가 radius가 되는 곳에 Control Point를 넣자
-			//						itp_Curve = (1.0f * (itp_Linear * itp_Linear))
-			//							+ (2.0f * 1.0f * itp_Linear * (1.0f - itp_Linear))
-			//							+ (0.0f * (1.0f - itp_Linear) * (1.0f - itp_Linear));
-			//					}
-			//					float itp = itp_Linear * (1.0f - curveRatio) + itp_Curve * curveRatio;
-			//					float weight = 0.0f * itp + 1.0f * (1.0f - itp);
-
-			//					apSelection.ModRenderVert newModRenderVert = new apSelection.ModRenderVert(modVert, renderVert);
-			//					//Weight를 추가로 넣어주고 리스트에 넣자
-			//					newModRenderVert._vertWeightByTool = weight;
-
-			//					Editor.Select.ModRenderVertListOfMod_Weighted.Add(newModRenderVert);
-			//				}
-			//			}
-			//		}
-			//	}
-			//} 
-			#endregion
 
 
 			//전체 MRV를 돌면서 "선택되지 않은 MRV"를 찾자
@@ -2242,7 +2167,9 @@ namespace AnyPortrait
 				apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Modifier_Gizmo_BlurVertex, 
 												Editor, 
 												Editor.Select.Modifier, 
-												null, false);
+												//null,
+												false,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 			//선택된 Vert에 한해서만 처리하자

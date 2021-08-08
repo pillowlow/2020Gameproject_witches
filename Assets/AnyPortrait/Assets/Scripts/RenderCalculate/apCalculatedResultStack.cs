@@ -18,6 +18,7 @@ using System;
 
 
 using AnyPortrait;
+using System.Runtime.InteropServices;
 
 namespace AnyPortrait
 {
@@ -1602,7 +1603,7 @@ namespace AnyPortrait
 						for (int i = 0; i < posVerts.Length; i++)
 						{
 							_result_Rigging[i] = BlendPosition_ITP(_result_Rigging[i], posVerts[i], curWeight_Transform);
-							_result_RiggingMatrices[i].SetMatrixWithWeight(vertMatrice[i], curWeight_Transform);//<<추가
+							_result_RiggingMatrices[i].SetMatrixWithWeight(ref vertMatrice[i], curWeight_Transform);//<<추가
 
 							//if(i == 0)
 							//{
@@ -1624,7 +1625,7 @@ namespace AnyPortrait
 						for (int i = 0; i < posVerts.Length; i++)
 						{
 							_result_Rigging[i] = BlendPosition_Add(_result_Rigging[i], posVerts[i], curWeight_Transform);
-							_result_RiggingMatrices[i].AddMatrixWithWeight(vertMatrice[i], curWeight_Transform);//<<추가
+							_result_RiggingMatrices[i].AddMatrixWithWeight(ref vertMatrice[i], curWeight_Transform);//<<추가
 						}
 
 						//>>>> Calculated Log - Rigging
@@ -1824,6 +1825,7 @@ namespace AnyPortrait
 		}
 
 
+
 		// 이전 : apMatrix 를 이용하는 Blend 함수
 		//private void BlendMatrix_ITP(apMatrix prevResult, apMatrix nextResult, float nextWeight)
 		//{
@@ -1864,6 +1866,724 @@ namespace AnyPortrait
 			prevResult._scale.x = (prevResult._scale.x * (1.0f - nextWeight)) + (prevResult._scale.x * nextResult._calculatedScale.x * nextWeight);
 			prevResult._scale.y = (prevResult._scale.y * (1.0f - nextWeight)) + (prevResult._scale.y * nextResult._calculatedScale.y * nextWeight);
 		}
+
+
+
+
+
+		//-----------------------------------------------------
+		// C++ DLL 버전
+		//-----------------------------------------------------
+
+
+#if UNITY_EDITOR_WIN
+		[DllImport("AnyPortrait_Editor_Win64")]
+#else
+		[DllImport("AnyPortrait_Editor_MAC")]
+#endif
+		private static extern void Modifier_SetWeightedPosList(	ref Vector2[] dstVectorArr, 
+																ref Vector2[] srcVectorArr, 
+																int arrLength, 
+																float weight);
+
+
+#if UNITY_EDITOR_WIN
+		[DllImport("AnyPortrait_Editor_Win64")]
+#else
+		[DllImport("AnyPortrait_Editor_MAC")]
+#endif
+		private static extern void Modifier_AddWeightedPosList(	ref Vector2[] dstVectorArr, 
+																ref Vector2[] srcVectorArr, 
+																int arrLength, 
+																float weight);
+
+#if UNITY_EDITOR_WIN
+		[DllImport("AnyPortrait_Editor_Win64")]
+#else
+		[DllImport("AnyPortrait_Editor_MAC")]
+#endif
+		private static extern void Modifier_InterpolateWeightedPosList(	ref Vector2[] dstVectorArr, 
+																		ref Vector2[] srcVectorArr, 
+																		int arrLength, 
+																		float weight);
+
+#if UNITY_EDITOR_WIN
+		[DllImport("AnyPortrait_Editor_Win64")]
+#else
+		[DllImport("AnyPortrait_Editor_MAC")]
+#endif
+		private static extern void Modifier_AddWeightedRiggedPosList(	ref Vector2[] dstVectorArr, 
+																		ref Vector2[] srcVectorArr, 
+																		ref apMatrix3x3[] dstMatrixArr, 
+																		ref apMatrix3x3[] srcMatrixArr, int arrLength, float weight);
+
+#if UNITY_EDITOR_WIN
+		[DllImport("AnyPortrait_Editor_Win64")]
+#else
+		[DllImport("AnyPortrait_Editor_MAC")]
+#endif
+		private static extern void Modifier_InterpolateWeightedRiggedPosList(	ref Vector2[] dstVectorArr, 
+																				ref Vector2[] srcVectorArr, 
+																				ref apMatrix3x3[] dstMatrixArr, 
+																				ref apMatrix3x3[] srcMatrixArr, int arrLength, float weight);
+
+		/// <summary>
+		/// Calculate_Pre의 DLL 버전
+		/// </summary>
+		public void Calculate_Pre_DLL(float tDelta)
+		{	
+			float prevWeight = 0.0f;
+			float curWeight_Transform = 0.0f;
+			float curWeight_Color = 0.0f;
+			apCalculatedResultParam resultParam = null;
+
+			//추가) 처음 실행되는 CalParam은 Additive로 작동하지 않도록 한다.
+			int iCalculatedParam = 0;
+
+			//--------------------------------------------------------------------
+			// 1. Local Morph
+			if (_isAnyVertLocal)
+			{
+				prevWeight = 0.0f;
+				curWeight_Transform = 0.0f;
+				resultParam = null;
+				Vector2[] posVerts = null;
+
+				iCalculatedParam = 0;
+
+				for (int iParam = 0; iParam < _resultParams_VertLocal.Count; iParam++)
+				{
+					resultParam = _resultParams_VertLocal[iParam];
+
+					curWeight_Transform = resultParam.ModifierWeight_Transform;
+
+					if (!resultParam.IsModifierAvailable || curWeight_Transform <= 0.001f)
+					{
+						continue;
+					}
+
+					//코드 개선 21.2.15
+					if (resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_Force)
+					{
+						//이 모디파이어는 실행하지 않는다.
+						continue;
+					}
+
+					bool isRunnable = false;
+					switch (_parentRenderUnit._exCalculateMode)
+					{
+						case apRenderUnit.EX_CALCULATE.Enabled_Run:
+							//무조건 실행
+							isRunnable = true;
+							break;
+						case apRenderUnit.EX_CALCULATE.Enabled_Edit:
+							//편집 중인 것만 실행하려면
+							if (resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Run
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Edit
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Background)
+							{
+								isRunnable = true;
+							}
+							break;
+						case apRenderUnit.EX_CALCULATE.Disabled_ExRun:
+							//편집되지 않지만, 그외의 것이 실행되려면 (또는 무시하고 실행하는 것만)
+							if (resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Run
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_NotEdit
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Background
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_ExceptColor)
+							{
+								//Debug.Log("선택되지 않은건데 실행 중 : RenderUnit : " + _parentRenderUnit.Name + " > Modifier : " + resultParam._linkedModifier.DisplayName);
+								isRunnable = true;
+							}
+							break;
+					}
+
+					if(!isRunnable)
+					{
+						continue;
+					}
+
+
+
+					posVerts = resultParam._result_Positions;
+					if (posVerts.Length != _result_VertLocal.Length)
+					{
+						//결과가 잘못 들어왔다 갱신 필요
+						Debug.LogError("Wrong Vert Local Result (Cal : " + posVerts.Length + " / Verts : " + _result_VertLocal.Length + ")");
+						continue;
+					}
+
+					// Blend 방식에 맞게 Pos를 만들자
+					if (resultParam.ModifierBlendMethod == apModifierBase.BLEND_METHOD.Interpolation || iCalculatedParam == 0)
+					{
+						//기존 코드
+						//for (int i = 0; i < posVerts.Length; i++)
+						//{
+						//	_result_VertLocal[i] = BlendPosition_ITP(_result_VertLocal[i], posVerts[i], curWeight_Transform);
+						//}
+
+						//< C++ DLL >
+						Modifier_InterpolateWeightedPosList(ref _result_VertLocal, ref posVerts, posVerts.Length, curWeight_Transform);
+
+						prevWeight += curWeight_Transform;
+					}
+					else
+					{
+						//기존 코드
+						//for (int i = 0; i < posVerts.Length; i++)
+						//{
+						//	_result_VertLocal[i] = BlendPosition_Add(_result_VertLocal[i], posVerts[i], curWeight_Transform);
+						//}
+
+						//< C++ DLL >
+						Modifier_AddWeightedPosList(ref _result_VertLocal, ref posVerts, posVerts.Length, curWeight_Transform);
+					}
+
+					iCalculatedParam++;
+
+				}
+			}
+
+			//--------------------------------------------------------------------
+
+			// 2. Mesh / MeshGroup Transformation
+			if (_isAnyTransformation)
+			{
+				prevWeight = 0.0f;
+				curWeight_Transform = 0.0f;
+				resultParam = null;
+
+				iCalculatedParam = 0;
+
+				for (int iParam = 0; iParam < _resultParams_Transform.Count; iParam++)
+				{
+					resultParam = _resultParams_Transform[iParam];
+					curWeight_Transform = resultParam.ModifierWeight_Transform;
+
+					if (!resultParam.IsModifierAvailable || curWeight_Transform <= 0.001f)
+					{
+						continue;
+					}
+
+
+					//코드 개선 21.2.15
+					if (resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_Force)
+					{
+						//이 모디파이어는 실행하지 않는다.
+						continue;
+					}
+					bool isRunnable = false;
+					switch (_parentRenderUnit._exCalculateMode)
+					{
+						case apRenderUnit.EX_CALCULATE.Enabled_Run:
+							//무조건 실행
+							isRunnable = true;
+							break;
+						case apRenderUnit.EX_CALCULATE.Enabled_Edit:
+							//편집 중인 것만 실행하려면
+							if (resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Run
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Edit
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Background)
+							{
+								isRunnable = true;
+							}
+							break;
+						case apRenderUnit.EX_CALCULATE.Disabled_ExRun:
+							//편집되지 않지만, 그외의 것이 실행되려면 (또는 무시하고 실행하는 것만)
+							if (resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Run
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_NotEdit
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Background
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_ExceptColor)
+							{
+								isRunnable = true;
+							}
+							break;
+					}
+
+					if(!isRunnable)
+					{
+						continue;
+					}
+
+
+					// Blend 방식에 맞게 Matrix를 만들자 하자
+					if (resultParam.ModifierBlendMethod == apModifierBase.BLEND_METHOD.Interpolation || iCalculatedParam == 0)
+					{
+						BlendMatrix_ITP(_result_MeshTransform, resultParam._result_Matrix, curWeight_Transform);
+						prevWeight += curWeight_Transform;
+						
+					}
+					else
+					{
+						BlendMatrix_Add(_result_MeshTransform, resultParam._result_Matrix, curWeight_Transform);
+						
+					}
+
+					iCalculatedParam++;
+				}
+
+				_result_MeshTransform.MakeMatrix();
+			}
+
+			//--------------------------------------------------------------------
+
+			// 3. Mesh Color
+			if (_isAnyMeshColor)
+			{
+				prevWeight = 0.0f;
+				curWeight_Color = 0.0f;
+				resultParam = null;
+
+				iCalculatedParam = 0;
+
+				_result_IsVisible = false;
+				_result_CalculatedColor = false;
+
+				int nMeshColorCalculated = 0;
+
+				for (int iParam = 0; iParam < _resultParams_MeshColor.Count; iParam++)
+				{
+					resultParam = _resultParams_MeshColor[iParam];
+					curWeight_Color = resultParam.ModifierWeight_Color;
+
+					if (!resultParam.IsModifierAvailable
+						|| curWeight_Color <= 0.001f
+						|| !resultParam.IsColorValueEnabled
+						|| !resultParam._isColorCalculated//<<추가 : Color로 등록했지만 아예 계산이 안되었을 수도 있다.
+						)
+					{
+						continue;
+					}
+
+					//추가: 색상은 ExMode에서 별도로 취급
+					//코드 개선 21.2.15
+					if (resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_Force)
+					{
+						//이 모디파이어는 실행하지 않는다.
+						continue;
+					}
+					bool isRunnable = false;
+					switch (_parentRenderUnit._exCalculateMode)
+					{
+						case apRenderUnit.EX_CALCULATE.Enabled_Run:
+							//무조건 실행
+							isRunnable = true;
+							break;
+						case apRenderUnit.EX_CALCULATE.Enabled_Edit:
+							//편집 중인 것만 실행하려면
+							if (resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Run
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Edit
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Background
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_ExceptColor)//색상은 이것도 추가
+							{
+								isRunnable = true;
+							}
+							break;
+						case apRenderUnit.EX_CALCULATE.Disabled_ExRun:
+							//편집되지 않지만, 그외의 것이 실행되려면 (또는 무시하고 실행하는 것만)
+							if (resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Run
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_NotEdit
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Background
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_ExceptColor)
+							{
+								isRunnable = true;
+							}
+							break;
+					}
+
+					if(!isRunnable)
+					{
+						continue;
+					}
+
+
+					// Blend 방식에 맞게 Matrix를 만들자 하자
+					
+					//변경 21.4.6 : 색상의 경우 기본 BlendMethod를 사용해야한다. 별도로 알아서 잘 걸러져서 오기 때문
+					if (resultParam._linkedModifier._blendMethod == apModifierBase.BLEND_METHOD.Interpolation || iCalculatedParam == 0)
+					{
+						//_result_Color = BlendColor_ITP(_result_Color, resultParam._result_Color, prevWeight, curWeight);
+						_result_Color = apUtil.BlendColor_ITP(_result_Color, resultParam._result_Color, Mathf.Clamp01(curWeight_Color));
+						prevWeight += curWeight_Color;
+					}
+					else
+					{
+						_result_Color = apUtil.BlendColor_Add(_result_Color, resultParam._result_Color, curWeight_Color);
+					}
+
+					//Visible 여부도 결정
+					_result_IsVisible |= resultParam._result_IsVisible;
+					nMeshColorCalculated++;
+					_result_CalculatedColor = true;//<<"계산된 MeshColor" Result가 있음을 알린다.
+
+					iCalculatedParam++;
+				}
+
+				if (nMeshColorCalculated == 0)
+				{
+					//색상 처리값이 없다면 자동으로 True
+					_result_IsVisible = true;
+				}
+			}
+			else
+			{
+				//색상 처리값이 없다면 자동으로 True
+				_result_IsVisible = true;
+			}
+
+			//--------------------------------------------------------------------
+
+			//5. Bone을 업데이트 하자
+			//Bone은 값 저장만 할게 아니라 직접 업데이트를 해야한다.
+			if (_isAnyBoneTransform)
+			{
+				prevWeight = 0.0f;
+				curWeight_Transform = 0.0f;
+				resultParam = null;
+				
+
+				for (int iBonePair = 0; iBonePair < _resultParams_BoneTransform.Count; iBonePair++)
+				{
+					BoneAndModParamPair boneModPair = _resultParams_BoneTransform[iBonePair];
+					apBone targetBone = boneModPair._keyBone;
+					List<ModifierAndResultParamListPair> modParamPairs = boneModPair._modParamPairs;
+					if (targetBone == null || modParamPairs.Count == 0)
+					{
+						continue;
+					}
+
+					iCalculatedParam = 0;
+					_result_BoneTransform.SetIdentity();
+					
+
+					for (int iModParamPair = 0; iModParamPair < modParamPairs.Count; iModParamPair++)
+					{
+						ModifierAndResultParamListPair modParamPair = modParamPairs[iModParamPair];
+
+						for (int iParam = 0; iParam < modParamPair._resultParams.Count; iParam++)
+						{
+							resultParam = modParamPair._resultParams[iParam];
+							curWeight_Transform = resultParam.ModifierWeight_Transform;
+
+							if (!resultParam.IsModifierAvailable || curWeight_Transform <= 0.001f)
+							{ continue; }
+
+
+							//코드 개선 21.2.15
+							if (resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_Force)
+							{
+								continue;
+							}
+							bool isRunnable = false;
+							switch (targetBone._exCalculateMode)
+							{
+								case apBone.EX_CALCULATE.Enabled_Run:
+									//무조건 실행
+									isRunnable = true;
+									break;
+
+								case apBone.EX_CALCULATE.Enabled_Edit:
+									//편집 중인 것만 실행하려면
+									if (resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Run
+										|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Edit
+										|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Background
+										|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_ExceptColor)//색상은 이것도 추가
+									{
+										isRunnable = true;
+									}
+									break;
+
+								case apBone.EX_CALCULATE.Disabled_ExRun:
+									//편집되지 않지만, 그외의 것이 실행되려면 (또는 무시하고 실행하는 것만)
+									if (resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Run
+										|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_NotEdit
+										|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Background
+										|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_ExceptColor)
+									{
+										isRunnable = true;
+									}
+									break;
+							}
+
+							if (!isRunnable)
+							{
+								continue;
+							}
+
+
+							// Blend 방식에 맞게 Matrix를 만들자 하자
+							if (resultParam.ModifierBlendMethod == apModifierBase.BLEND_METHOD.Interpolation || iCalculatedParam == 0)
+							{
+								BlendMatrix_ITP(_result_BoneTransform, resultParam._result_Matrix, curWeight_Transform);
+
+								prevWeight += curWeight_Transform;
+							}
+							else
+							{
+								BlendMatrix_Add(_result_BoneTransform, resultParam._result_Matrix, curWeight_Transform);
+
+							}
+
+							iCalculatedParam++;
+						}
+					}
+
+					
+					
+					//참조된 본에 직접 값을 넣어주자
+					targetBone.UpdateModifiedValue(_result_BoneTransform._pos, _result_BoneTransform._angleDeg, _result_BoneTransform._scale);
+				}
+
+
+
+			}
+
+			//추가 11.30 : Extra Option
+			if(_isAnyExtra)
+			{
+				prevWeight = 0.0f;
+				curWeight_Transform = 0.0f;
+				resultParam = null;
+
+				_result_IsExtraDepthChanged = false;
+				_result_IsExtraTextureChanged = false;
+				_result_ExtraDeltaDepth = 0;
+				_result_ExtraTextureData = null;
+
+				for (int iParam = 0; iParam < _resultParams_Extra.Count; iParam++)
+				{
+					resultParam = _resultParams_Extra[iParam];
+
+					if(!resultParam.IsModifierAvailable)
+					{
+						continue;
+					}
+
+					//Extra Option은 무조건 나중에 나온 값으로 적용된다.
+					//Blend가 불가능하기 때문
+					if(resultParam._isExtra_DepthChanged)
+					{
+						//1. Depth에 변화가 있을 경우
+						_result_IsExtraDepthChanged = true;
+						_result_ExtraDeltaDepth = resultParam._extra_DeltaDepth;
+					}
+					if(resultParam._isExtra_TextureChanged)
+					{
+						//2. Texture에 변화가 있을 경우
+						_result_IsExtraTextureChanged = true;
+						_result_ExtraTextureData = resultParam._extra_TextureData;
+					}
+				}
+			}
+		}
+
+
+
+		/// <summary>
+		/// Calculate_Post의 DLL 버전
+		/// </summary>
+		public void Calculate_Post_DLL(float tDelta)
+		{
+			float prevWeight = 0.0f;
+			float curWeight_Transform = 0.0f;
+			//float curWeight_Color = 0.0f;
+			apCalculatedResultParam resultParam = null;
+
+			//추가) 처음 실행되는 CalParam은 Additive로 작동하지 않도록 한다.
+			int iCalculatedParam = 0;
+
+
+			//--------------------------------------------------------------------
+			// 0. Rigging
+			if (_isAnyRigging)
+			{
+				prevWeight = 0.0f;
+				curWeight_Transform = 0.0f;
+				resultParam = null;
+				Vector2[] posVerts = null;
+				apMatrix3x3[] vertMatrice = null;
+
+				iCalculatedParam = 0;
+
+				_result_RiggingWeight = 0.0f;
+
+				for (int iParam = 0; iParam < _resultParams_Rigging.Count; iParam++)
+				{
+					resultParam = _resultParams_Rigging[iParam];
+					curWeight_Transform = resultParam.ModifierWeight_Transform;
+
+					if (!resultParam.IsModifierAvailable || curWeight_Transform <= 0.001f)
+					{
+						continue;
+					}
+
+					//코드 개선 21.2.15 : 리깅도 안될때가 있다.
+					if (resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_Force)
+					{
+						//이 모디파이어는 실행하지 않는다.
+						continue;
+					}
+
+					posVerts = resultParam._result_Positions;
+					vertMatrice = resultParam._result_VertMatrices;
+
+					if(posVerts == null)
+					{
+						Debug.LogError("Pos Vert is NULL");
+					}
+					if (posVerts.Length != _result_Rigging.Length)
+					{
+						//결과가 잘못 들어왔다 갱신 필요
+						Debug.LogError("Wrong Vert Local Result (Cal : " + posVerts.Length + " / Verts : " + _result_Rigging.Length + ")");
+						continue;
+					}
+
+					_result_RiggingWeight += curWeight_Transform;
+
+					// Blend 방식에 맞게 Pos를 만들자
+					if (resultParam.ModifierBlendMethod == apModifierBase.BLEND_METHOD.Interpolation || iCalculatedParam == 0)
+					{
+						//기존
+						//for (int i = 0; i < posVerts.Length; i++)
+						//{
+						//	_result_Rigging[i] = BlendPosition_ITP(_result_Rigging[i], posVerts[i], curWeight_Transform);
+						//	_result_RiggingMatrices[i].SetMatrixWithWeight(vertMatrice[i], curWeight_Transform);//<<추가
+						//}
+
+						//< C++ DLL >
+						Modifier_InterpolateWeightedRiggedPosList(	ref _result_Rigging, 
+																	ref posVerts, 
+																	ref _result_RiggingMatrices, 
+																	ref vertMatrice, 
+																	posVerts.Length, curWeight_Transform);
+
+						prevWeight += curWeight_Transform;
+					}
+					else
+					{
+						//기존
+						//for (int i = 0; i < posVerts.Length; i++)
+						//{
+						//	_result_Rigging[i] = BlendPosition_Add(_result_Rigging[i], posVerts[i], curWeight_Transform);
+						//	_result_RiggingMatrices[i].AddMatrixWithWeight(vertMatrice[i], curWeight_Transform);//<<추가
+						//}
+
+						//< C++ DLL >
+						Modifier_AddWeightedRiggedPosList(	ref _result_Rigging, 
+															ref posVerts, 
+															ref _result_RiggingMatrices, 
+															ref vertMatrice, 
+															posVerts.Length, curWeight_Transform);
+					}
+					iCalculatedParam++;
+				}
+
+				if (_result_RiggingWeight > 1.0f)
+				{
+					_result_RiggingWeight = 1.0f;
+				}
+			}
+
+			//--------------------------------------------------------------------
+			// 4. World Morph
+			if (_isAnyVertWorld)
+			{
+				prevWeight = 0.0f;
+				curWeight_Transform = 0.0f;
+				resultParam = null;
+				Vector2[] posVerts = null;
+
+				iCalculatedParam = 0;
+
+				for (int iParam = 0; iParam < _resultParams_VertWorld.Count; iParam++)
+				{
+					resultParam = _resultParams_VertWorld[iParam];
+					curWeight_Transform = resultParam.ModifierWeight_Transform;
+
+					if (!resultParam.IsModifierAvailable || curWeight_Transform <= 0.001f)
+					{ continue; }
+
+					posVerts = resultParam._result_Positions;
+					if (posVerts.Length != _result_VertWorld.Length)
+					{
+						//결과가 잘못 들어왔다 갱신 필요
+						Debug.LogError("Wrong Vert World Result (Cal : " + posVerts.Length + " / Verts : " + _result_VertWorld.Length + ")");
+						continue;
+					}
+
+					//코드 개선 21.2.15
+					if (resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_Force)
+					{
+						//이 모디파이어는 실행하지 않는다.
+						continue;
+					}
+					bool isRunnable = false;
+					switch (_parentRenderUnit._exCalculateMode)
+					{
+						case apRenderUnit.EX_CALCULATE.Enabled_Run:
+							//무조건 실행
+							isRunnable = true;
+							break;
+						case apRenderUnit.EX_CALCULATE.Enabled_Edit:
+							//편집 중인 것만 실행하려면
+							if (resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Run
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Edit
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Background)
+							{
+								isRunnable = true;
+							}
+							break;
+						case apRenderUnit.EX_CALCULATE.Disabled_ExRun:
+							//편집되지 않지만, 그외의 것이 실행되려면 (또는 무시하고 실행하는 것만)
+							if (resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Run
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_NotEdit
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Enabled_Background
+								|| resultParam._linkedModifier._editorExclusiveActiveMod == apModifierBase.MOD_EDITOR_ACTIVE.Disabled_ExceptColor)
+							{
+								isRunnable = true;
+							}
+							break;
+					}
+
+					if(!isRunnable)
+					{
+						continue;
+					}
+
+
+
+					// Blend 방식에 맞게 Pos를 만들자
+					if (resultParam.ModifierBlendMethod == apModifierBase.BLEND_METHOD.Interpolation || iCalculatedParam == 0)
+					{
+						//기존
+						//for (int i = 0; i < posVerts.Length; i++)
+						//{
+						//	_result_VertWorld[i] = BlendPosition_ITP(_result_VertWorld[i], posVerts[i], curWeight_Transform);
+						//}
+
+						//< C++ DLL >
+						Modifier_InterpolateWeightedPosList(ref _result_VertWorld, ref posVerts, posVerts.Length, curWeight_Transform);
+
+						prevWeight += curWeight_Transform;
+					}
+					else
+					{
+						//기존
+						//for (int i = 0; i < posVerts.Length; i++)
+						//{
+						//	_result_VertWorld[i] = BlendPosition_Add(_result_VertWorld[i], posVerts[i], curWeight_Transform);
+						//}
+
+						//< C++ DLL >
+						Modifier_AddWeightedPosList(ref _result_VertWorld, ref posVerts, posVerts.Length, curWeight_Transform);
+					}
+
+					iCalculatedParam++;
+				}
+			}
+			//--------------------------------------------------------------------
+		}
+
 
 
 

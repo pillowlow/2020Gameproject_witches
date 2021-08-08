@@ -319,6 +319,9 @@ namespace AnyPortrait
 		private string _str_GUIID_BoneName = null;
 		private string _str_GUIID_AnimClipName = null;
 		private string _str_GUIID_ControlParamName = null;
+		private string _str_GUIID_NewPortrait = null;
+		private string _str_GUIID_Rename = null;
+		private string _str_GUIID_Search = null;
 
 		//본 보여주기 상태
 		private string _str_Show = null;
@@ -681,12 +684,15 @@ namespace AnyPortrait
 			_str_MoveVertices = "Move Vertices";
 
 			//GUI용 ID
-			_str_GUIID_MeshName = "GUI_MESH_NAME";
-			_str_GUIID_MeshGroupName = "GUI_MESHGROUP_NAME";
-			_str_GUIID_SubTransformName = "GUI_SUBTRANSFORM_NAME";
-			_str_GUIID_BoneName = "GUI_BONE_NAME";
-			_str_GUIID_AnimClipName = "GUI_ANIMCLIP_NAME";
-			_str_GUIID_ControlParamName = "GUI_CONTROLPARAM_NAME";
+			_str_GUIID_MeshName = "ANYPORTRAIT_GUI_MESH_NAME";
+			_str_GUIID_MeshGroupName = "ANYPORTRAIT_GUI_MESHGROUP_NAME";
+			_str_GUIID_SubTransformName = "ANYPORTRAIT_GUI_SUBTRANSFORM_NAME";
+			_str_GUIID_BoneName = "ANYPORTRAIT_GUI_BONE_NAME";
+			_str_GUIID_AnimClipName = "ANYPORTRAIT_GUI_ANIMCLIP_NAME";
+			_str_GUIID_ControlParamName = "ANYPORTRAIT_GUI_CONTROLPARAM_NAME";
+			_str_GUIID_NewPortrait = "ANYPORTRAIT_GUI_NEWPORTRAIT_NAME";
+			_str_GUIID_Rename = "ANYPORTRAIT_GUI_OBJECT_RENAME";
+			_str_GUIID_Search = "ANYPORTRAIT_GUI_SEARCH_WORD";
 
 			_str_Show = "Show";
 			_str_Outline = "Outline";
@@ -1213,6 +1219,9 @@ namespace AnyPortrait
 		public string GUI_ID__BoneName			{ get { return _str_GUIID_BoneName; } }
 		public string GUI_ID__AnimClipName		{ get { return _str_GUIID_AnimClipName; } }
 		public string GUI_ID__ControlParamName	{ get { return _str_GUIID_ControlParamName; } }
+		public string GUI_ID__NewPortraitName	{ get { return _str_GUIID_NewPortrait; } }
+		public string GUI_ID__Rename			{ get { return _str_GUIID_Rename; } }
+		public string GUI_ID__SearchWord		{ get { return _str_GUIID_Search; } }
 
 		//본 보여주기
 		public string Show { get { return _str_Show; } }

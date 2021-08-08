@@ -769,16 +769,16 @@ namespace AnyPortrait
 					else if(strKey == "PNAM") { if(newPropSet != null) { newPropSet._name = strValue; } }
 					else if(strKey == "PTYP") { if(newPropSet != null) { newPropSet._propType = (SHADER_PROP_TYPE)(int.Parse(strValue)); } }
 					else if(strKey == "PTRV") { if(newPropSet != null) { newPropSet._isReserved = strValue.Contains("true"); } }
-					else if(strKey == "PVFL") { if(newPropSet != null) { newPropSet._value_Float = float.Parse(strValue); } }
+					else if(strKey == "PVFL") { if(newPropSet != null) { newPropSet._value_Float = apUtil.ParseFloat(strValue); } }
 					else if(strKey == "PVIT") { if(newPropSet != null) { newPropSet._value_Int = int.Parse(strValue); } }
-					else if(strKey == "PVVX") { if(newPropSet != null) { newPropSet._value_Vector.x = float.Parse(strValue); } }
-					else if(strKey == "PVVY") { if(newPropSet != null) { newPropSet._value_Vector.y = float.Parse(strValue); } }
-					else if(strKey == "PVVZ") { if(newPropSet != null) { newPropSet._value_Vector.z = float.Parse(strValue); } }
-					else if(strKey == "PVVW") { if(newPropSet != null) { newPropSet._value_Vector.w = float.Parse(strValue); } }
-					else if(strKey == "PVCR") { if(newPropSet != null) { newPropSet._value_Color.r = float.Parse(strValue); } }
-					else if(strKey == "PVCG") { if(newPropSet != null) { newPropSet._value_Color.g = float.Parse(strValue); } }
-					else if(strKey == "PVCB") { if(newPropSet != null) { newPropSet._value_Color.b = float.Parse(strValue); } }
-					else if(strKey == "PVCA") { if(newPropSet != null) { newPropSet._value_Color.a = float.Parse(strValue); } }
+					else if(strKey == "PVVX") { if(newPropSet != null) { newPropSet._value_Vector.x = apUtil.ParseFloat(strValue); } }
+					else if(strKey == "PVVY") { if(newPropSet != null) { newPropSet._value_Vector.y = apUtil.ParseFloat(strValue); } }
+					else if(strKey == "PVVZ") { if(newPropSet != null) { newPropSet._value_Vector.z = apUtil.ParseFloat(strValue); } }
+					else if(strKey == "PVVW") { if(newPropSet != null) { newPropSet._value_Vector.w = apUtil.ParseFloat(strValue); } }
+					else if(strKey == "PVCR") { if(newPropSet != null) { newPropSet._value_Color.r = apUtil.ParseFloat(strValue); } }
+					else if(strKey == "PVCG") { if(newPropSet != null) { newPropSet._value_Color.g = apUtil.ParseFloat(strValue); } }
+					else if(strKey == "PVCB") { if(newPropSet != null) { newPropSet._value_Color.b = apUtil.ParseFloat(strValue); } }
+					else if(strKey == "PVCA") { if(newPropSet != null) { newPropSet._value_Color.a = apUtil.ParseFloat(strValue); } }
 					else if(strKey == "PCMT") { if(newPropSet != null) { newPropSet._isCommonTexture = strValue.Contains("true"); } }
 					else if(strKey == "PCTP") { if(newPropSet != null) { newPropSet._commonTexturePath = strValue; } }
 					else if(strKey == ">>>>")

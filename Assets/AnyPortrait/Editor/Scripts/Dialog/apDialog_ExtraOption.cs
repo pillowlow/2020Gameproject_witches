@@ -413,7 +413,12 @@ namespace AnyPortrait
 			//"Extra Property ON", "Extra Property OFF"
 			if (apEditorUtil.ToggledButton_2Side(_editor.GetText(TEXT.ExtraOpt_ExtraPropertyOn), _editor.GetText(TEXT.ExtraOpt_ExtraPropertyOff), _modMesh._isExtraValueEnabled, true, width, 25))
 			{
-				apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Modifier_SettingChanged, _editor, _modifier, _modMesh._extraValue, false);
+				apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Modifier_ExtraOptionChanged, 
+													_editor, 
+													_modifier, 
+													//_modMesh._extraValue, 
+													false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 				_modMesh._isExtraValueEnabled = !_modMesh._isExtraValueEnabled;
 				_meshGroup.RefreshModifierLink(apUtil.LinkRefresh.Set_MeshGroup_Modifier(_meshGroup, _modifier));//<<옵션의 형태가 바뀌면 Modifier의 Link를 다시 해야한다.
@@ -473,7 +478,12 @@ namespace AnyPortrait
 				if(cutOut != _modMesh._extraValue._weightCutout)
 				{
 					cutOut = Mathf.Clamp01(cutOut);
-					apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Modifier_SettingChanged, _editor, _modifier, _modMesh._extraValue, false);
+					apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Modifier_ExtraOptionChanged, 
+													_editor, 
+													_modifier, 
+													//_modMesh._extraValue, 
+													false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 					_modMesh._extraValue._weightCutout = cutOut;
 					apEditorUtil.ReleaseGUIFocus();
@@ -492,7 +502,12 @@ namespace AnyPortrait
 				{
 					animPrevCutOut = Mathf.Clamp01(animPrevCutOut);
 					animNextCutOut = Mathf.Clamp01(animNextCutOut);
-					apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Modifier_SettingChanged, _editor, _modifier, _modMesh._extraValue, false);
+					apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Modifier_ExtraOptionChanged, 
+													_editor, 
+													_modifier, 
+													//_modMesh._extraValue, 
+													false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 					_modMesh._extraValue._weightCutout_AnimPrev = animPrevCutOut;
 					_modMesh._extraValue._weightCutout_AnimNext = animNextCutOut;
@@ -534,7 +549,12 @@ namespace AnyPortrait
 				//"Depth Option ON", "Depth Option OFF"
 				if (apEditorUtil.ToggledButton_2Side(_editor.GetText(TEXT.ExtraOpt_DepthOptOn), _editor.GetText(TEXT.ExtraOpt_DepthOptOff), _modMesh._extraValue._isDepthChanged, _modMesh._isExtraValueEnabled, width, 25))
 				{
-					apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Modifier_SettingChanged, _editor, _modifier, _modMesh._extraValue, false);
+					apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Modifier_ExtraOptionChanged, 
+													_editor, 
+													_modifier, 
+													//_modMesh._extraValue, 
+													false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 					_modMesh._extraValue._isDepthChanged = !_modMesh._extraValue._isDepthChanged;
 					_meshGroup.RefreshModifierLink(apUtil.LinkRefresh.Set_MeshGroup_Modifier(_meshGroup, _modifier));//<<Modifier Link를 다시 해야한다.
@@ -580,7 +600,13 @@ namespace AnyPortrait
 				if(apEditorUtil.ToggledButton(img_AddWeight, false, isDepthAvailable, depthListWidth_Left, depthListHeight_LeftBtn))
 				{
 					//Depth 증가
-					apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Modifier_SettingChanged, _editor, _modifier, _modMesh._extraValue, false);
+					apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Modifier_ExtraOptionChanged, 
+													_editor, 
+													_modifier, 
+													//_modMesh._extraValue, 
+													false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 					_modMesh._extraValue._deltaDepth++;
 					_editor.SetRepaint();
 					apEditorUtil.ReleaseGUIFocus();
@@ -593,7 +619,13 @@ namespace AnyPortrait
 				{
 					if (isDepthAvailable)
 					{
-						apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Modifier_SettingChanged, _editor, _modifier, _modMesh._extraValue, false);
+						apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Modifier_ExtraOptionChanged, 
+													_editor, 
+													_modifier, 
+													//_modMesh._extraValue, 
+													false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 						_modMesh._extraValue._deltaDepth = deltaDepth;
 						_editor.SetRepaint();
 						apEditorUtil.ReleaseGUIFocus();
@@ -604,7 +636,13 @@ namespace AnyPortrait
 				if(apEditorUtil.ToggledButton(img_SubtractWeight, false, isDepthAvailable, depthListWidth_Left, depthListHeight_LeftBtn))
 				{
 					//Depth 감소
-					apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Modifier_SettingChanged, _editor, _modifier, _modMesh._extraValue, false);
+					apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Modifier_ExtraOptionChanged, 
+													_editor, 
+													_modifier, 
+													//_modMesh._extraValue, 
+													false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 					_modMesh._extraValue._deltaDepth--;
 					_editor.SetRepaint();
 					apEditorUtil.ReleaseGUIFocus();
@@ -772,7 +810,12 @@ namespace AnyPortrait
 				//"Image Option ON", "Image Option OFF"
 				if (apEditorUtil.ToggledButton_2Side(_editor.GetText(TEXT.ExtraOpt_ImageOptOn), _editor.GetText(TEXT.ExtraOpt_ImageOptOff), _modMesh._extraValue._isTextureChanged, _isImageChangable && _modMesh._isExtraValueEnabled, width, 25))
 				{
-					apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Modifier_SettingChanged, _editor, _modifier, _modMesh._extraValue, false);
+					apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Modifier_ExtraOptionChanged, 
+													_editor, 
+													_modifier, 
+													//_modMesh._extraValue, 
+													false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 					_modMesh._extraValue._isTextureChanged = !_modMesh._extraValue._isTextureChanged;
 					_meshGroup.RefreshModifierLink(apUtil.LinkRefresh.Set_MeshGroup_Modifier(_meshGroup, _modifier));//<<Modifier Link를 다시 해야한다.
@@ -841,7 +884,13 @@ namespace AnyPortrait
 				//"Reset Image"
 				if (GUILayout.Button(_editor.GetText(TEXT.ExtraOpt_ResetImage), GUILayout.Width(width), GUILayout.Height(20)))
 				{
-					apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Modifier_SettingChanged, _editor, _modifier, _modMesh._extraValue, false);
+					apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Modifier_ExtraOptionChanged, 
+													_editor, 
+													_modifier, 
+													//_modMesh._extraValue, 
+													false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 					_modMesh._extraValue._textureDataID = -1;
 					_modMesh._extraValue._linkedTextureData = null;
 					
@@ -909,7 +958,12 @@ namespace AnyPortrait
 
 			_loadKey_TextureSelect = null;
 
-			apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Modifier_SettingChanged, _editor, _modifier, _modMesh._extraValue, false);
+			apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Modifier_ExtraOptionChanged, 
+													_editor, 
+													_modifier, 
+													//_modMesh._extraValue, 
+													false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 			
 			//일단 초기화
 			_modMesh._extraValue._textureDataID = -1;

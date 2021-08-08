@@ -146,6 +146,7 @@ namespace AnyPortrait
 		[SerializeField]
 		public List<apModifiedVertex> _vertices = new List<apModifiedVertex>();
 
+		
 		// Mesh Transform / MeshGroup Transform 인 경우
 		[SerializeField]
 		public apMatrix _transformMatrix = new apMatrix();

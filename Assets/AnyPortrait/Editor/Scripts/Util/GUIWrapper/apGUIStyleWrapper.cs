@@ -52,6 +52,7 @@ namespace AnyPortrait
 		private GUIStyle _gs_Label = null;
 		private GUIStyle _gs_Label_MiddleCenter = null;
 		private GUIStyle _gs_Label_MiddleCenter_Margin0 = null;
+		private GUIStyle _gs_Label_LowerCenter_Margin0 = null;
 		private GUIStyle _gs_Label_GrayColor = null;
 		private GUIStyle _gs_Label_RedColor = null;
 		private GUIStyle _gs_Label_MiddleLeft = null;
@@ -171,6 +172,11 @@ namespace AnyPortrait
 			_gs_Label_MiddleCenter_Margin0 = new GUIStyle(GUI.skin.label);
 			_gs_Label_MiddleCenter_Margin0.alignment = TextAnchor.MiddleCenter;
 			_gs_Label_MiddleCenter_Margin0.margin = new RectOffset(0, 0, 0, 0);
+
+			_gs_Label_LowerCenter_Margin0 = new GUIStyle(GUI.skin.label);
+			_gs_Label_LowerCenter_Margin0.alignment = TextAnchor.LowerCenter;
+			_gs_Label_LowerCenter_Margin0.margin = new RectOffset(0, 0, 0, 0);
+			_gs_Label_LowerCenter_Margin0.padding = new RectOffset(0, 0, 0, 0);
 
 			_gs_Label_GrayColor = new GUIStyle(GUI.skin.label);
 			_gs_Label_GrayColor.normal.textColor = Color.gray;
@@ -418,6 +424,7 @@ namespace AnyPortrait
 		public GUIStyle Label					{ get { return _gs_Label; } }
 		public GUIStyle Label_MiddleCenter		{ get { return _gs_Label_MiddleCenter; } }
 		public GUIStyle Label_MiddleCenter_Margin0 { get { return _gs_Label_MiddleCenter_Margin0; } }
+		public GUIStyle Label_LowerCenter_Margin0 { get { return _gs_Label_LowerCenter_Margin0; } }
 		public GUIStyle Label_GrayColor			{ get { return _gs_Label_GrayColor; } }
 		public GUIStyle Label_RedColor			{ get { return _gs_Label_RedColor; } }
 		public GUIStyle Label_MiddleLeft		{ get { return _gs_Label_MiddleLeft; } }

@@ -315,7 +315,13 @@ namespace AnyPortrait
 					if (isChanged)
 					{
 						//Target을 변경한다.
-						apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Portrait_SettingChanged, _editor, _targetPortrait, null, false);
+						apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Portrait_SettingChanged, 
+															_editor, 
+															_targetPortrait, 
+															//null, 
+															false,
+															apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 						_targetPortrait._bakeTargetOptPortrait = nextOptPortrait;
 					}
 
@@ -386,7 +392,13 @@ namespace AnyPortrait
 				int iNextColorSpace = EditorGUILayout.Popup(_editor.GetUIWord(UIWORD.ColorSpace), iPrevColorSpace, _colorSpaceNames);
 				if (iNextColorSpace != iPrevColorSpace)
 				{
-					apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Portrait_SettingChanged, _editor, _targetPortrait, null, false);
+					apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Portrait_SettingChanged, 
+														_editor, 
+														_targetPortrait, 
+														//null, 
+														false,
+														apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 					if (iNextColorSpace == 0)
 					{
 						//Gamma
@@ -418,7 +430,12 @@ namespace AnyPortrait
 				}
 				if (layerIndex < 0)
 				{
-					apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Portrait_SettingChanged, _editor, _targetPortrait, null, false);
+					apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Portrait_SettingChanged, 
+														_editor, 
+														_targetPortrait, 
+														//null, 
+														false,
+														apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 					//어라 레이어가 없는데용..
 					//초기화해야겠다.
@@ -432,7 +449,12 @@ namespace AnyPortrait
 				int nextIndex = EditorGUILayout.Popup(_editor.GetText(TEXT.SortingLayer), layerIndex, _sortingLayerNames);//"Sorting Layer"
 				if (nextIndex != layerIndex)
 				{
-					apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Portrait_SettingChanged, _editor, _targetPortrait, null, false);
+					apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Portrait_SettingChanged, 
+														_editor, 
+														_targetPortrait, 
+														//null, 
+														false,
+														apEditorUtil.UNDO_STRUCT.ValueOnly);
 					//레이어가 변경되었다.
 					if (nextIndex >= 0 && nextIndex < SortingLayer.layers.Length)
 					{
@@ -445,7 +467,13 @@ namespace AnyPortrait
 				apPortrait.SORTING_ORDER_OPTION nextSortingLayerOption = (apPortrait.SORTING_ORDER_OPTION)EditorGUILayout.EnumPopup(_editor.GetText(TEXT.SortingOrderOption), _editor._portrait._sortingOrderOption);
 				if (nextSortingLayerOption != _editor._portrait._sortingOrderOption)
 				{
-					apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Portrait_SettingChanged, _editor, _targetPortrait, null, false);
+					apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Portrait_SettingChanged, 
+														_editor, 
+														_targetPortrait, 
+														//null, 
+														false,
+														apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 					_editor._portrait._sortingOrderOption = nextSortingLayerOption;
 				}
 
@@ -455,7 +483,13 @@ namespace AnyPortrait
 					int nextOrder = EditorGUILayout.IntField(_editor.GetText(TEXT.SortingOrder), _editor._portrait._sortingOrder);//"Sorting Order"
 					if(nextOrder != _editor._portrait._sortingOrder)
 					{
-						apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Portrait_SettingChanged, _editor, _targetPortrait, null, false);
+						apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Portrait_SettingChanged, 
+															_editor, 
+															_targetPortrait, 
+															//null, 
+															false,
+															apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 						_editor._portrait._sortingOrder = nextOrder;
 					}
 				}
@@ -471,7 +505,13 @@ namespace AnyPortrait
 							nextOrderPerDepth = 1;
 						}
 
-						apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Portrait_SettingChanged, _editor, _targetPortrait, null, false);
+						apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Portrait_SettingChanged, 
+															_editor, 
+															_targetPortrait, 
+															//null, 
+															false,
+															apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 						_editor._portrait._sortingOrderPerDepth = nextOrderPerDepth;
 					}
 				}
@@ -498,6 +538,9 @@ namespace AnyPortrait
 					string nextPath = EditorUtility.SaveFolderPanel("Select to export animation clips", "", "");
 					if (!string.IsNullOrEmpty(nextPath))
 					{
+						//추가 21.7.3 : 경로 입력 변경 (Escape 문자 삭제 %20 같은거)
+						nextPath = apUtil.ConvertEscapeToPlainText(nextPath);
+
 						if (apEditorUtil.IsInAssetsFolder(nextPath))
 						{
 							//유효한 폴더인 경우
@@ -512,7 +555,12 @@ namespace AnyPortrait
 								//Debug.LogError(">> 상대 경로로 변경 : " + nextPath);
 							}
 
-							apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Portrait_BakeOptionChanged, _editor, _targetPortrait, _targetPortrait, false);
+							apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Portrait_BakeOptionChanged, 
+																_editor, 
+																_targetPortrait, 
+																//_targetPortrait, 
+																false,
+																apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 							_targetPortrait._mecanimAnimClipResourcePath = nextPath;
 						}
@@ -553,7 +601,13 @@ namespace AnyPortrait
 				bool nextImportant = EditorGUILayout.Toggle(_guiContent_Setting_IsImportant.Content, _targetPortrait._isImportant);
 				if(nextImportant != _targetPortrait._isImportant)
 				{
-					apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Portrait_SettingChanged, _editor, _targetPortrait, null, false);
+					apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Portrait_SettingChanged, 
+														_editor, 
+														_targetPortrait, 
+														//null, 
+														false,
+														apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 					_targetPortrait._isImportant = nextImportant;
 				}
 
@@ -561,7 +615,12 @@ namespace AnyPortrait
 				int nextFPS = EditorGUILayout.DelayedIntField(_guiContent_Setting_FPS.Content, _targetPortrait._FPS);
 				if (_targetPortrait._FPS != nextFPS)
 				{
-					apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Portrait_SettingChanged, _editor, _targetPortrait, null, false);
+					apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Portrait_SettingChanged, 
+														_editor, 
+														_targetPortrait, 
+														//null, 
+														false,
+														apEditorUtil.UNDO_STRUCT.ValueOnly);
 					if (nextFPS < 10)
 					{
 						nextFPS = 10;
@@ -576,7 +635,13 @@ namespace AnyPortrait
 				apPortrait.BILLBOARD_TYPE nextBillboardType = (apPortrait.BILLBOARD_TYPE)EditorGUILayout.Popup(_editor.GetText(TEXT.DLG_Billboard), (int)_targetPortrait._billboardType, _billboardTypeNames);
 				if(nextBillboardType != _targetPortrait._billboardType)
 				{
-					apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Portrait_SettingChanged, _editor, _targetPortrait, null, false);
+					apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Portrait_SettingChanged, 
+														_editor, 
+														_targetPortrait, 
+														//null, 
+														false,
+														apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 					_targetPortrait._billboardType = nextBillboardType;
 				}
 		
@@ -597,7 +662,13 @@ namespace AnyPortrait
 					bool nextForceSortModeToOrtho = EditorGUILayout.Toggle(_targetPortrait._isForceCamSortModeToOrthographic, GUILayout.Width(width_Value), GUILayout.Height(20));
 					if(nextForceSortModeToOrtho != _targetPortrait._isForceCamSortModeToOrthographic)
 					{
-						apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Portrait_SettingChanged, _editor, _targetPortrait, null, false);
+						apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Portrait_SettingChanged, 
+															_editor, 
+															_targetPortrait, 
+															//null, 
+															false,
+															apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 						_targetPortrait._isForceCamSortModeToOrthographic = nextForceSortModeToOrtho;
 					}
 
@@ -615,7 +686,13 @@ namespace AnyPortrait
 				if(nextChastShadows != _targetPortrait._meshShadowCastingMode
 					|| nextReceiveShaodw != _targetPortrait._meshReceiveShadow)
 				{
-					apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Portrait_SettingChanged, _editor, _targetPortrait, null, false);
+					apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Portrait_SettingChanged, 
+														_editor, 
+														_targetPortrait, 
+														//null, 
+														false,
+														apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 					_targetPortrait._meshShadowCastingMode = nextChastShadows;
 					_targetPortrait._meshReceiveShadow = nextReceiveShaodw;
 				}
@@ -635,7 +712,11 @@ namespace AnyPortrait
 				int iNextUseLWRP = EditorGUILayout.Popup(_editor.GetText(TEXT.RenderPipeline), iPrevUseLWRP, _renderPipelineNames);//"Render Pipeline"
 				if (iNextUseLWRP != iPrevUseLWRP)
 				{
-					apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Portrait_SettingChanged, _editor, _targetPortrait, null, false);
+					apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Portrait_SettingChanged, 
+														_editor, 
+														_targetPortrait, 
+														false, 
+														apEditorUtil.UNDO_STRUCT.ValueOnly);
 					if (iNextUseLWRP == 0)
 					{
 						//사용 안함
@@ -663,7 +744,13 @@ namespace AnyPortrait
 				int iNextVRSupported = EditorGUILayout.Popup(_editor.GetText(TEXT.VROption), (int)_targetPortrait._vrSupportMode, _vrSupportModeLabel);
 				if(iNextVRSupported != (int)_targetPortrait._vrSupportMode)
 				{
-					apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Portrait_SettingChanged, _editor, _targetPortrait, null, false);
+					apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Portrait_SettingChanged, 
+														_editor, 
+														_targetPortrait, 
+														//null, 
+														false,
+														apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 					_targetPortrait._vrSupportMode = (apPortrait.VR_SUPPORT_MODE)iNextVRSupported;
 				}
 
@@ -673,7 +760,13 @@ namespace AnyPortrait
 					int iNextVRRTSize = EditorGUILayout.Popup(_editor.GetUIWord(UIWORD.MaskTextureSize), (int)_targetPortrait._vrRenderTextureSize, _vrRTSizeLabel);
 					if(iNextVRRTSize != (int)_targetPortrait._vrRenderTextureSize)
 					{
-						apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Portrait_SettingChanged, _editor, _targetPortrait, null, false);
+						apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Portrait_SettingChanged, 
+															_editor, 
+															_targetPortrait, 
+															//null, 
+															false,
+															apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 						_targetPortrait._vrRenderTextureSize = (apPortrait.VR_RT_SIZE)iNextVRRTSize;
 					}
 
@@ -687,7 +780,13 @@ namespace AnyPortrait
 				int iNextFlippedMeshOption = EditorGUILayout.Popup(_editor.GetText(TEXT.Setting_FlippedMesh), (int)_targetPortrait._flippedMeshOption, _flippedMeshOptionLabel);
 				if(iNextFlippedMeshOption != (int)_targetPortrait._flippedMeshOption)
 				{
-					apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Portrait_SettingChanged, _editor, _targetPortrait, null, false);
+					apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Portrait_SettingChanged, 
+														_editor, 
+														_targetPortrait, 
+														//null, 
+														false,
+														apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 					_targetPortrait._flippedMeshOption = (apPortrait.FLIPPED_MESH_CHECK)iNextFlippedMeshOption;
 				}
 
@@ -698,7 +797,13 @@ namespace AnyPortrait
 				int iNextRootBoneScaleOption = EditorGUILayout.Popup(_editor.GetText(TEXT.Setting_ScaleOfRootBone), (int)_targetPortrait._rootBoneScaleMethod, _rootBoneScaleOptionLabel);
 				if(iNextRootBoneScaleOption != (int)_targetPortrait._rootBoneScaleMethod)
 				{
-					apEditorUtil.SetRecord_Portrait(apUndoGroupData.ACTION.Portrait_SettingChanged, _editor, _targetPortrait, null, false);
+					apEditorUtil.SetRecord_Portrait(	apUndoGroupData.ACTION.Portrait_SettingChanged, 
+														_editor, 
+														_targetPortrait, 
+														//null, 
+														false,
+														apEditorUtil.UNDO_STRUCT.ValueOnly);
+
 					_targetPortrait._rootBoneScaleMethod = (apPortrait.ROOT_BONE_SCALE_METHOD)iNextRootBoneScaleOption;
 
 					//모든 본에 대해서 ScaleOption을 적용해야한다.

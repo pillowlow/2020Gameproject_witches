@@ -126,8 +126,25 @@ namespace AnyPortrait
 				{
 					WeightPairData srcPair = _weightPairs[iSrcPair];
 					apModifiedVertexRig.WeightPair dstPair = new apModifiedVertexRig.WeightPair(srcPair._bone);
+
+					//이전 코드 > 자식 메시 그룹의 본을 대상으로 하는 경우 버그가 발생한다.
+					//버그 조건 : 부모 메시 그룹의 Rigging Modifier > 자식 메시 그룹의 본을 대상 >> Bake 에러
 					dstPair._meshGroup = keyMeshGroup;
 					dstPair._meshGroupID = keyMeshGroup._uniqueID;
+
+					//변경 21.7.19
+					//keyMeshGroup이 Bone을 가진 MeshGroup이 아닌 Parent나 Root 메시 그룹인 경우가 있다.
+					//이러면 Bake에서 에러가 발생한다.
+					//실제 Bone의 MeshGroup을 대상으로 해야한다.
+					//보정 코드를 추가한다.
+					if (srcPair._bone._meshGroup != null)
+					{
+						//이미 연결된 본의 메시 그룹이 있다면 KeyMeshGroup이 아닌 이걸 사용하자
+						dstPair._meshGroup = srcPair._bone._meshGroup;
+						dstPair._meshGroupID = srcPair._bone._meshGroup._uniqueID;
+					}
+
+
 					dstPair._weight = srcPair._weight;
 
 					targetModVertRig._weightPairs.Add(dstPair);

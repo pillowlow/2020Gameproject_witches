@@ -1,1308 +1,649 @@
-﻿(업데이트이미지 개수)
+﻿(업데이트 이미지 개수)
 3
 -----------------------------------------
 (영어)
-<size=16>AnyPortrait Update Log v1.3.0/v1.3.1</size>
-(Build April 19, 2021)
+<size=16>AnyPortrait Update Log v1.3.2/v1.3.3</size>
+(Build July 10, 2021/July 20, 2021)
 
 <size=13>Improvements</size>
 
-- <color=blue>Performance improvement</color>
-    Rigging modifier and animation processing performance improvements during game playing
-
-- <color=blue>Customize shortcut keys</color>
-    A menu that allows users to assign most of the shortcut keys in the editor has been added to the setting dialog box.
-    The content of the upper message that appears when you press the shortcut key is changed in more detail, and it is improved so that unnecessary cases are not displayed.
+- <color=blue>Improved Editor Performance</color>
+    Editor performance has been improved.
+    "Accelerated Mode" that additionally improves editor performance by installing a separate plug-in has been added. (Change in setting dialog)
     <color=red>(For more information, please visit our homepage)</color>
 
-- <color=blue>Added main shortcut</color>
-    Page Up, Page Down : Scroll the animation timeline UI up and down
-    Ctrl + <,> : Move to the previous or next keyframe
-    N : Turn the animation's “Auto-Key” function on or off
-    ~ : Switch between the Hierarchy tab and the Controller tab on the left side of the editor
-    Enter : Execute the Make Polygon function when making mesh
-    1-6 Number keys : Switch the mesh edit menu
-    F2 : The focus moves to the UI that modifies the name of the current object
-    I : Toggle Visibility Preset
-    1-5 Number keys : Switch Visibility Preset Rules
-    Alt + O : Toggle Rotoscoping
-    9 Number key : Previous Rotoscoping Image File
-    0 Number key : Next Rotoscoping Image File
-    D : Switch whether to make multiple modifiers to run in edit mode
-    Alt + D : Set the modifier's target not to be selected even if the selection lock is released in edit mode
-    Alt + G : Display objects that are not subject to modifiers in edit mode as gray color
-    Alt + B : Preview calculation result for bones in edit mode
-    Alt + C : Preview calculation result for color in edit mode
+- <color=blue>Improved Gameplay Performance</color>
+    Overall performance in gameplay has been improved.
+    The memory issue when updating modifiers has been improved.
 
-- <color=blue>View menu added</color> and <color=blue>Workspace UI improvements</color>
-    "View menu" has been added to replace the role of the existing view icons
-    Onion Skin, mesh, bone display option buttons have been deleted (These can be set to reappear in the Setting dialog)
-    Status icons indicating how objects can be displayed and edited in the workspace appear in the upper right corner.
+- <color=blue>Guideline</color>
+    "Guideline" function to output arbitrary straight line in the workspace has been added to "View menu".
     <color=red>(For more information, please visit our homepage)</color>
 
-- <color=blue>Visibility Preset</color>
-    A new "Visibility Preset" function has been added to the "View Menu" that allows the user to pre-define which bones and meshes to display in the workspace.
+- <color=blue>Hierarchy Right-click menu</color>
+    You can right-click in the Hierarchy to open a menu and use various functions.
+    "Search" function has been added to the right-click menu in Hierarchy.
     <color=red>(For more information, please visit our homepage)</color>
 
-- <color=blue>Modifier Lock renewal</color>
-    Modifier Lock is removed and is replaced with "Edit Mode Options" (added to View menu)
-    The option to make modifiers being edited in edit mode or objects not belonging to the timeline be applied by other modifiers is added
-    The option to select only objects registered in the modifier when the selection lock is released is added
-    The option to show objects that are not registered in the modifier as gray blurred images is added
+- <color=blue>Synchronized play function</color>
+    "Synchronize" script function has been added to synchronize animation or control parameters by connecting to another apPortrait.
     <color=red>(For more information, please visit our homepage)</color>
 
-- <color=blue>Automatic Mesh Generation improvement</color>
-    The previous automatic mesh generation function has been removed, and a completely new and improved automatic mesh generation function is provided
-    Mesh can be created directly from the mesh settings menu
-    Modifying the area for mesh generation is improved be easily edited with the mouse.
-    When selecting a mesh created from a PSD file, an option to automatically generate a mesh is added to this message when selecting the option that prompts you to remove vertices.
-    <color=red>(For more information, please visit our homepage)</color>
-
-- <color=blue>Rotoscoping</color>
-    The "Rotoscoping" feature, which shows external image files in the background of the workspace, is added to the View menu
-    <color=red>(For more information, please visit our homepage)</color>
-
-- <color=blue>Copy&Paste values ​​from multiple keys</color> and <color=blue>Copy function improvement</color>
-    The function to paste two or more keys in combination in the modifier by control parameter is added.
-    After coping values ​​in up to 4 slots, you can paste them in the form of sum values or average values.
-    It is improved so that copied values ​​can be pasted even if they are not the same object as long as the minimum conditions are satisfied (except for copy & paste in animation)
-    <color=red>(For more information, please visit our homepage)</color>
-
-- <color=blue>Script functions</color>
-    The script function to get the Sorting Order of target mesh is added
-    Physics functions are improved such as AddForce to be applied to "Jiggle Bones"
-    The script functions are added that returns the currently playing apOptRootUnit or index
-    <color=red>(For more information, please visit our homepage)</color>
-
-- The size of the top UI of the editor and the first UI on the right has been reduced
-- Control parameter UI has been reduced and improved to show more Control Parameter UI on the screen. (Edit shortcut button has been deleted)
-- When selecting keyframes by dragging in the animation timeline UI, it has been improved to automatically scroll vertically and horizontally.
-- When selecting a mesh from the menu, the screen is automatically scrolled to fit the area or pivot of the mesh.
-- "Add all control parameters to the timeline" function is added
-- The order of sub-mesh groups in the Bone tab of the Hierarchy UI of the mesh group has been improved to be sorted by the depth
-- It is improved so that objects are sorted in the same order as the hierarchy when adding objects to the timeline.
-- It is improved so that the timeline layers are sorted in the same order as in the hierarchy when the "button to sort timeline layers by depth" is pressed.
-- When using the "Depth To Order" method in the Bake dialog, an option to assign the sorting order at intervals other than 1 has been added.
-- If there is only one image, the image is automatically set when creating a mesh
-- When opening or saving an external file, the last path is recorded and is improved to be used as the default path the next time the dialog is opened.
-- The option to keep the "Auto-Key" function even after the edit mode exits has been added.
-- When renaming a mesh group, if it is registered as a child of another mesh group, the name of the connected object is synchronized so that it is changed together (the vice versa is not synchronized)
-- It is changed so that the failure message does not appear when creating an overlapped keyframe (v1.3.1)
+- When creating a new portrait in the editor, the text box is automatically focused.
+- Functions such as Duplicate and Migrate can be used simultaneously with multiple objects selected in the mesh group setting.
+- The edited values can be copied, pasted, or initialized while multiple objects are selected on the edit screen of the modifier linked to the control parameter.
+- Multiple layers can be selected using the Ctrl and Shift keys in the PSD file import dialog.
+- "RemoveForce" function and overloaded "RemoveTouch" function to disable only target physics force are added.
+- Editor timer and FPS counter improved (v1.3.3)
+- Added "Color Only" modifier (v1.3.3)
 
 
 
 <size=13>Fixed issues</size>
 
-- An issue is fixed that occurred in the internal functions of apOptTransform, GetMeshTransform, and GetMeshGroupTransform.
-- An issue is fixed that the Transparency Sort Mode was forcibly fixed to Orthographic even when the billboard option was turned off.
-- An issue is fixed that the interpolation of the animation timeline of the "control parameter" type was not properly processed while the game was running.
-- An issue is fixed that a "ghost input" that seemed to keep typing these keys for a while after releasing other shortcut keys after pressing Ctrl, Shift, Alt keys occurs
-- An issue is fixed that the control parameter was not selected correctly when clicking another control parameter UI immediately after moving the cursor out of the editor while being selected in certain versions of the Unity editor.
-- An issue is fixed that too many registry values ​​were created when the editor options were saved.
-- An issue is fixed that the backup file was incorrectly saved differently from the specification depending on the user's device environment. (Backup files from previous versions can be opened in this version, but on the contrary, backup files created in this version cannot be opened in previous versions. )
-- An issue is fixed that the preview was displayed abnormally because the "default position, rotation, and size of the mesh group" was not applied in the "Reimport PSD" function.
-- An issue is fixed that the Jiggle Bone setting was missing when exporting the bone structure to a file.
-- An issue is fixed that some buttons appeared to be clickable in the UI of animation clips with no mesh groups connected
-- "Physic" of the modifier name has been modified to "Physics"
-- An issue is fixed that layer opacity was not applied when importing a PSD file
-- An issue is fixed that Bake could not be executed when the Physics modifier was applied to the double-sided mesh.
-- An issue is fixed that when Bake was performed while the size of the GameObject of apPortrait or GameObjects above it was inverted, it would not render normally even if the scale was restored to its original value.
-- An issue is fixed that "Bones with no rigging weight applied to them appear gray" is not updated immediately after performing the "Pos-Paste" function.
-- An issue is fixed that the dialog was forcibly closed during the process of opening a PSD file due to a Unity Editor error in the latest macOS (however, the error log may continue to occur until updated in macOS or Unity)
-- An issue is fixed that editing the modifier of a child mesh group would become uneditable when undoing it
-- An issue is fixed that an afterimage of 1 frame remained when the root unit was switched by animation.
-- An issue is fixed that when playing animation with a script after calling Hide and Show, it was not normally converted to the more than second root unit 
-- An issue is fixed that the processing result was not applied to the control parameter in the first frame when playing animation with a script
-- An issue is fixed that some data of other animation clips could be initialized if you undo immediately after creating any data during animation work (v1.3.1)
-
+- An issue has been fixed that the Additive method does not work properly when changing the scale of an object in the modifier using two or more control parameters.
+- An issue has been fixed that that objects in a child mesh group do not appear in the Hierarchy UI when undoing immediately after copying or migrating objects.
+- An issue has been fixed that the edit state properly is not recovering intermittently if undo and redo are repeated.
+- An issue has been fixed the animation of objects with the Important option turned off behaved strangely when changing Unity's Time.timeScale.
+- An issue has been fixed undo is not possible after migration of objects in a mesh group.
+- An issue has been fixed undo is not working after modifying the depth of objects in a mesh group.
+- An issue has been fixed that escape characters are added to the path setting value, so the problem that the path is not recognized depending on the system environment.
+- An issue has been fixed that saving and opening files is not work normally caused by encoding not being UTF-8 depending on the system environment.
+- An issue has been fixed that the rotation gizmo behaves in the opposite way when the scale of the bone is inverted
+- An issue has been fixed that the physics modifier behaved as if it was running at low FPS depending on the execution environment
+- An issue has been fixed that the editor slowing down due to too much undo data being generated (v1.3.3)
+- An issue has been fixed that the Hierarchy UI did not update properly when selecting and editing a mesh group belonging to another mesh group (v1.3.3)
+- An issue has been fixed that the error occurred during executing Bake when assigning rigging weights using the "Pos-Paste" function to bones belonging to other mesh groups (v1.3.3)
+- An issue has been fixed that bones and meshes were not selected properly in the workspace (v1.3.3)
 
 
 
 
 -----------------------------------------
 (한국어)
-<size=16>AnyPortrait 업데이트 로그 v1.3.0/v1.3.1</size>
-(2021년 4월 19일 빌드)
+<size=16>AnyPortrait 업데이트 로그 v1.3.2/v1.3.3</size>
+(2021년 7월 10일/2021년 7월 20일 빌드)
 
 <size=13>개선된 사항</size>
 
-- <color=blue>성능 향상</color>
-    게임 실행 중의 Rigging 모디파이어와 애니메이션 처리 성능 향상
-
-- <color=blue>단축키 사용자 설정</color>
-    에디터 내의 대부분의 단축키를 사용자가 지정할 수 있는 메뉴가 설정 다이얼로그에 추가
-    단축키를 누른 경우 나타나는 상단 메시지의 내용이 더 상세하게 변경되며, 불필요한 경우는 나타나지 않도록 개선
+- <color=blue>에디터 성능 향상</color>
+    에디터 동작 성능 향상
+    별도의 플러그인을 설치하여 에디터 성능을 추가적으로 향상시키는 "가속 모드" 추가 (설정 다이얼로그에서 변경)
     <color=red>(자세한 설명은 홈페이지를 확인하세요)</color>
 
-- <color=blue>추가된 주요 단축키</color>
-    Page Up, Page Down : 애니메이션 타임라인 UI를 상하로 스크롤
-    Ctrl + <, > : 이전, 다음 키프레임으로 이동
-    N : 애니메이션의 "Auto-Key" 기능을 켜거나 끄기
-    ~ : 에디터 왼쪽의 Hierarchy 탭과 Controller 탭을 전환
-    Enter : 메시 제작시 Make Polygon 기능이 실행
-    숫자 1~6 키 : 메시 편집 메뉴를 전환
-    F2 : 현재 오브젝트의 이름을 수정하는 UI로 포커스가 이동   
-    I : 보기 프리셋 켜거나 끄기
-    숫자 1~5 키 : 보기 프리셋 규칙 전환
-    Alt + O : 로토스코핑 켜거나 끄기
-    숫자 9 키 : 이전 로토스코핑 이미지 파일
-    숫자 0 키 : 다음 로토스코핑 이미지 파일
-    D : 편집 모드시 여러개의 모디파이어 동작 여부 전환
-    Alt + D : 편집 모드시 선택 잠금을 해제해도 모디파이어의 대상이 선택되지 않도록 설정
-    Alt + G : 편집 모드시 모디파이어의 대상이 되지 않는 객체를 회색으로 출력
-    Alt + B : 편집 모드시, 본의 처리 결과 미리보기
-    Alt + C : 편집 모드시, 색상 처리 결과 미리보기
+- <color=blue>게임 플레이 성능 향상</color>
+    게임 플레이에서 전반적인 실행 성능 향상
+    모디파이어 업데이트시 발생하는 메모리 문제 개선
 
-
-
-- <color=blue>보기 메뉴 추가</color>와 <color=blue>작업 공간 UI 개선</color>
-    "보기 메뉴"가 추가되어 기존의 보기 아이콘의 역할을 대체
-    기존의 잔상(Onion Skin), 메시, 본의 출력 옵션 버튼들이 삭제됨 (설정 다이얼로그에서 다시 나타나게 설정 가능)
-    작업 공간에서 오브젝트들이 어떻게 출력되고 편집될 수 있는지를 나타내는 상태 아이콘들이 우측 상단에 등장    
+- <color=blue>가이드라인</color>
+    "보기 메뉴"에 작업 공간에 임의의 직선을 출력하는 "가이드라인" 기능 추가됨
     <color=red>(자세한 설명은 홈페이지를 확인하세요)</color>
 
-- <color=blue>보기 프리셋</color>
-    작업 공간에서 어떤 본과 메시들을 출력할지를 사용자가 직접 미리 지정할 수 있는 "보기 프리셋" 기능이 "보기 메뉴"에 새롭게 추가됨
+- <color=blue>Hierarchy 우클릭 메뉴</color>
+    Hierarchy에서 우클릭을 하여 메뉴를 열고 다양한 기능 사용 가능
+    Hierarchy에서의 우클릭 메뉴에서 "검색" 기능이 추가됨
     <color=red>(자세한 설명은 홈페이지를 확인하세요)</color>
 
-- <color=blue>모디파이어 잠금 리뉴얼</color>
-    모디파이어 잠금 옵션이 삭제되고, "편집 모드 옵션"으로 대체 (보기 메뉴에 추가됨)
-    편집 모드에서 편집 중인 모디파이어 또는 타임라인에 속하지 않은 객체들이 다른 모디파이어의 적용을 받게 만드는 옵션 추가
-    선택 잠금이 해제된 경우에 모디파이어에 등록된 객체들만 선택하는 옵션 추가
-    모디파이어에 등록되지 않은 객체들은 회색의 흐려진 이미지로 보여지는 옵션 추가
+- <color=blue>동기화된 재생 함수</color>
+    다른 apPortrait에 연결하여 애니메이션이나 컨트롤 파라미터를 동기화하여 같이 제어할 수 있는 "동기화 함수" 추가
     <color=red>(자세한 설명은 홈페이지를 확인하세요)</color>
 
-- <color=blue>자동 메시 생성 기능 리뉴얼</color>
-    기존의 자동 메시 생성 기능은 삭제되고, 완전히 새롭게 개선된 자동 메시 생성 기능이 제공
-    메시 설정 화면에서도 메시를 바로 생성 가능
-    메시를 생성하기 위한 영역(Area)를 간편하게 마우스로 편집할 수 있도록 개선
-    PSD 파일로부터 생성된 메시를 선택할 때 버텍스를 삭제할지 물어보는 메시지가 나타나는 옵션 선택시, 이 메시지에 자동으로 메시를 생성하는 선택지가 추가
-    <color=red>(자세한 설명은 홈페이지를 확인하세요)</color>
-
-- <color=blue>로토스코핑(Rotoscoping)</color>
-    작업 공간의 배경에 외부 이미지를 출력하는 "로토스코핑" 기능이 보기 메뉴에 추가
-    <color=red>(자세한 설명은 홈페이지를 확인하세요)</color>
-
-- <color=blue>다중 키에서의 값 복사하기 기능 추가</color> 및 <color=blue>복사 기능 개선</color>
-    컨트롤 파라미터에 의한 모디파이어에서 2개 이상의 키를 조합하여 붙여넣을 수 있는 기능이 추가
-    최대 4개의 슬롯에 값을 저장한 후, 이를 더한 값이나 평균 값의 형태로 붙여넣기 가능
-    최소의 조건만 만족하면 동일한 객체가 아니더라도 복사된 값을 붙여넣을 수 있도록 개선 (단, 애니메이션에서의 복사&붙여넣기는 예외)
-    <color=red>(자세한 설명은 홈페이지를 확인하세요)</color>
-
-- <color=blue>스크립트 함수 추가 및 개선</color>
-    특정 메시의 Sorting Order를 가져올 수 있는 함수 추가
-    AddForce와 같은 물리 함수가 "지글본"에도 적용되도록 개선
-    현재 재생 중인 apOptRootUnit이나 인덱스를 리턴하는 함수 추가
-    <color=red>(자세한 설명은 홈페이지를 확인하세요)</color>
-
-- 에디터의 상단 UI, 오른쪽 첫번째 UI의 크기가 축소
-- 컨트롤 파라미터 UI 축소되어 한 화면에 더 많은 컨트롤 파라미터 UI가 나타나도록 개선. (편집 바로가기 버튼이 삭제됨)
-- 애니메이션 타임라인 UI에서 드래그를 하여 키프레임을 선택할 때, 상하좌우로 자동으로 스크롤이 되도록 개선
-- 메뉴에서 메시를 선택할 때, 메시의 영역(Area) 또는 피벗(Pivot)에 맞게 자동으로 화면이 스크롤되도록 개선
-- "컨트롤 파라미터들을 일괄적으로 타임라인에 추가하기" 기능 추가
-- 메시 그룹의 Hierarchy UI의 Bone 탭의 하위 메시 그룹 순서가 Depth에 맞게 정렬
-- 일괄적으로 객체들을 타임라인에 추가할 때, Hierarchy의 순서와 동일하게 정렬
-- "타임라인 레이어를 Depth 기준으로 정렬하는 버튼"을 누르면, 타임라인 레이어가 Hierarchy에서의 순서와 동일하게 정렬
-- Bake 다이얼로그에서 Depth To Order 방식을 사용시, 1이 아닌 그 이상의 간격으로 Sorting Order를 할당할 수 있는 옵션 추가
-- 이미지가 한개인 경우, 메시를 생성하면 해당 이미지가 자동으로 설정됨
-- 외부의 파일을 열거나 저장할 때, 마지막 경로가 기록되어 다음에 해당 다이얼로그를 열 때 기본 경로로 사용됨
-- "Auto-Key" 기능이 편집 모드가 종료된 이후에도 유지되는 옵션 추가
-- 메시 그룹의 이름을 바꿀 때, 이것이 다른 메시 그룹의 자식으로 등록되었다면, 연결된 객체의 이름이 동기화되어 같이 변경되도록 개선 (그 반대로는 동기화되지 않음)
-- 중첩된 키프레임 생성시 실패 메시지가 나타나지 않도록 변경됨 (v1.3.1)
+- 에디터에서 새로운 포트레이트(Portrait) 생성시 텍스트 박스에 자동으로 포커스
+- 메시 그룹 설정에서 복수개의 객체들을 선택한 상태에서 Duplicate, Migrate 등의 기능을 동시에 사용할 수 있도록 개선
+- 컨트롤 파라미터와 연동된 모디파이어의 편집 화면에서 복수개의 객체들을 선택한 상태에서 편집된 값을 동시에 복사, 붙여넣기 하거나 초기화할 수 있도록 개선
+- PSD 파일 가져오기 다이얼로그에서 Ctrl, Shift 키를 이용하여 여러개의 레이어를 선택할 수 있도록 개선
+- 대상 물리 힘만 비활성화하는 RemoveForce 함수와 오버로드된  RemoveTouch 함수 추가
+- 에디터 타이머 및 FPS 카운터 로직 개선 (v1.3.3)
+- "Color Only" 모디파이어가 추가됨 (v1.3.3)
 
 
 
 <size=13>수정된 문제점</size>
 
-- apOptTransform의 내부 함수인 GetMeshTransform, GetMeshGroupTransform에서 발생하는 에러가 수정됨
-- 빌보드 옵션을 끈 상태에서도 Transparency Sort Mode가 강제로 Orthographic으로 고정되는 문제가 수정됨
-- 게임 실행 중에 "컨트롤 파라미터" 타입의 애니메이션 타임라인의 보간이 정상적으로 처리되지 않는 문제가 수정됨
-- Ctrl, Shift, Alt키를 누른 후 다른 단축키를 뗀 이후에도 잠시동안, 이 키들이 계속해서 입력된 것 같은 "고스트 현상"이 수정됨
-- Unity 에디터 특정 버전에서, 컨트롤 파라미터가 선택된 상태에서 에디터 외부로 커서가 나갔다 들어온 직후, 다른 컨트롤 파라미터 UI를 클릭할 때 제대로 선택되지 않는 문제가 수정됨
-- 에디터의 옵션이 저장될 때, 너무 많은 레지스트리 값이 생성되는 문제가 수정됨
-- 사용자의 기기 환경에 따라서 백업 파일이 스펙과 다르게 잘못 저장되는 문제가 수정됨 (이전 버전에서의 백업 파일을 이번 버전에서 열 수 있지만, 반대로 이번 버전에서 생성되는 백업 파일은 이전 버전에서 열 수 없음)
-- "PSD 다시 가져오기" 기능에서 "메시 그룹의 기본 위치, 회전, 크기"가 적용되지 않아서 미리보기가 이상하게 출력되는 문제가 수정됨
-- 본 구조를 파일로 내보낼 때, 지글본(Jiggle Bone) 설정이 누락되는 문제가 수정됨
-- 메시 그룹이 연결되지 않은 애니메이션 클립의 UI에서 일부 버튼이 누를 수 있는 것처럼 나타나는 문제가 수정됨
-- 모디파이어 이름 중 "Physic"을 "Physics"로 수정됨
-- PSD 파일을 가져올 때, 레이어의 불투명도가 적용되지 않는 문제가 수정됨
-- 양면 메시에 Physics 모디파이어가 적용된 경우 Bake를 할 수 없는 문제가 수정됨
-- apPortrait의 GameObject 또는 그 상위의 GameObject들의 크기가 반전된 상태에서 Bake를 하면, Scale을 원래대로 복원해도 정상적으로 렌더링되지 않는 문제가 수정됨
-- "리깅 가중치가 적용되지 않은 본들은 회색으로 보이기"가 "Pos-Paste" 기능을 수행한 직후에는 갱신되지 않는 문제가 수정됨
-- 최신 macOS에서 Unity Editor 에러로 인하여 PSD 파일을 여는 과정에서 다이얼로그가 강제로 종료되는 문제가 수정됨 (단, 해당 에러 로그는 macOS 또는 Unity에서 업데이트하기 전까지는 계속 발생 가능)
-- 자식 메시 그룹의 모디파이어를 수정할 때 실행 취소를 하면 편집이 불가한 상태가 되버리는 문제가 수정됨
-- 애니메이션으로 루트 유닛이 전환될 경우 1프레임 잔상이 남는 문제가 수정됨
-- Hide, Show를 호출한 이후 스크립트로 애니메이션을 재생할 때, 2번째 이후의 루트 유닛으로 정상적으로 전환되지 않는 문제가 수정됨
-- 스크립트로 애니메이션을 재생할 때, 첫 프레임에서 컨트롤 파라미터에 처리 결과가 적용되지 않는 문제가 수정됨
-- 애니메이션 작업 중 데이터 생성 직후 실행 취소를 하면 다른 애니메이션 클립의 일부 데이터가 초기화될 수 있는 문제가 수정됨 (v1.3.1)
+- 2개 이상의 컨트롤 파라미터등을 이용하여 모디파이어에서 객체의 Scale를 변경할 경우, Additive 방식이 정상적으로 동작하지 않는 문제가 수정됨
+- 자식 메시 그룹의 객체들을 복사, 이동한 직후 실행 취소를 하면 Hierarchy UI에서 나타나지 않는 문제가 수정됨
+- 실행 취소, 되돌리기를 복합적으로 반복하면 간헐적으로 편집 상태가 정상적으로 복구되지 못하는 문제가 수정됨
+- Unity의 Time.timeScale을 변경하면 Important 옵션이 꺼진 객체들의 애니메이션이 이상하게 동작하는 문제가 수정됨
+- 메시 그룹의 객체들의 Migration 이후 실행 취소가 되지 않는 문제가 수정됨
+- 메시 그룹에서 객체들의 순서(Depth)를 수정한 이후 실행 취소가 되지 않는 문제가 수정됨
+- 시스템 환경에 따라서 경로 설정값에 이스케이프 문자가 추가되어 경로를 인식하지 않는 문제가 수정됨
+- 시스템 환경에 따라서 인코딩이 UTF-8이 아니게 되어 파일 저장 및 열기시 발생하는 문제가 수정됨
+- 본의 Scale이 반전된 경우 회전 기즈모가 반대로 동작하는 문제가 수정됨
+- 실행 환경에 따라서 물리 모디파이어가 낮은 FPS에서 실행되는 것처럼 보이는 문제가 수정됨
+- 실행 취소 데이터가 너무 많이 생성되어 에디터가 느려지는 문제가 수정됨 (v1.3.3)
+- 다른 메시 그룹에 속한 메시 그룹을 선택하여 편집할 때 Hierarchy UI가 제대로 갱신되지 않는 문제가 수정됨 (v1.3.3)
+- 다른 메시 그룹에 속한 본을 대상으로 Pos-Paste 기능을 이용하여 리깅 가중치를 할당하면 Bake시 에러가 발생하는 문제가 수정됨 (v1.3.3)
+- 작업 공간에서 본과 메시가 제대로 선택되지 않는 문제가 수정됨 (v1.3.3)
 
 
 
 
 -----------------------------------------
 (프랑스어)
-<size=16>Fichier de mise à jour AnyPortrait v1.3.0/v1.3.1</size>
-(Construit le 19 avril 2021)
+<size=16>Fichier de mise à jour AnyPortrait v1.3.2/v1.3.3</size>
+(Construit le 10 juillet 2021/le 20 juillet 2021)
 
 <size=13>Améliorations</size>
 
-- <color=blue>Amélioration des performances</color>
-    Amélioration des performances du modificateur de rigging et du traitement de l'animation pendant le jeu
-
-- <color=blue>Personnaliser les touches de raccourci</color>
-    Un menu permettant aux utilisateurs d'attribuer la plupart des touches de raccourci dans l'éditeur a été ajouté à la boîte de dialogue de configuration.
-    Le contenu du message supérieur qui apparaît lorsque vous appuyez sur la touche de raccourci est modifié plus en détail et il est amélioré afin que les cas inutiles ne soient pas affichés.
-    <color=red>(Pour plus d'informations, veuillez visiter notre page d'accueil)</color>
-
-- <color=blue>Ajout du raccourci principal</color>
-    Page Up, Page Down : Faites défiler l'interface utilisateur de la chronologie de l'animation de haut en bas
-    Ctrl + <,> : Passer à l'image clé précédente ou suivante
-    N : Activez ou désactivez la fonction «Clé auto» de l'animation
-    ~ : Basculer entre l'onglet Hiérarchie et l'onglet Contrôleur sur le côté gauche de l'éditeur
-    Enter : Exécuter la fonction Créer un polygone lors de la création d'un maillage
-    1-6 Touches numériques : Changer le menu d'édition de maillage
-    F2 : Le focus se déplace vers l'interface utilisateur qui modifie le nom de l'objet actuel
-    I : Basculer le préréglage de visibilité
-    1-5 Touches numériques : Changer les règles de présélection de visibilité
-    Alt + O : Basculer la rotoscopie
-    9 Touche numérique : Fichier image de rotoscopie précédent
-    0 Touche numérique : Fichier d'image de rotoscopie suivant
-    D : Permet de choisir de faire exécuter plusieurs modificateurs en mode édition
-    Alt + D : Définir la cible du modificateur à ne pas sélectionner même si le verrouillage de sélection est libéré en mode édition
-    Alt + G : Affiche les objets qui ne sont pas soumis aux modificateurs en mode édition sous forme de couleur grise
-    Alt + B : Prévisualiser le résultat du calcul pour les os en mode édition
-    Alt + C : Prévisualiser le résultat du calcul pour la couleur en mode édition
-
-- <color=blue>Menu Affichage ajouté</color> et <color=blue>Améliorations de l'interface utilisateur de l'espace de travail</color>
-    Le "menu Affichage" a été ajouté pour remplacer le rôle des icônes de vue existantes
-    Les boutons d'option d'affichage Pelure d'oignon, maillage et os ont été supprimés (ils peuvent être définis pour réapparaître dans la boîte de dialogue Paramètres)
-    Les icônes d'état indiquant comment les objets peuvent être affichés et modifiés dans l'espace de travail apparaissent dans le coin supérieur droit.
+- <color=blue>Amélioration des performances de l'éditeur</color>
+    Les performances de l'éditeur ont été améliorées.
+    "Mode accéléré" qui améliore en outre les performances de l'éditeur en installant un plug-in séparé a été ajouté. (Changement dans la boîte de dialogue de réglage) 
     <color=red>(Pour plus d'informations, veuillez visiter notre page d'accueil)</color>
 
-- <color=blue>Préréglage de visibilité</color>
-    Une nouvelle fonction «Préréglage de visibilité» a été ajoutée au «Menu Affichage» qui permet à l'utilisateur de prédéfinir les os et les maillages à afficher dans l'espace de travail.
+- <color=blue>Performances de jeu améliorées</color>
+    Les performances globales du gameplay ont été améliorées.
+    Le problème de mémoire lors de la mise à jour des modificateurs a été amélioré.
+
+- <color=blue>Lignes directrices</color>
+    La fonction "Lignes directrices" pour sortir une ligne droite arbitraire dans l'espace de travail a été ajoutée au "Menu Affichage".
     <color=red>(Pour plus d'informations, veuillez visiter notre page d'accueil)</color>
 
-- <color=blue>Renouvellement du verrouillage des modificateurs</color>
-    Le verrouillage des modificateurs est supprimé et remplacé par "Options du Mode d'édition" (ajouté au menu Affichage)
-    L'option permettant de faire en sorte que les modificateurs en cours d'édition en mode édition ou que les objets n'appartenant pas à la chronologie soient appliqués par d'autres modificateurs est ajoutée
-    L'option permettant de sélectionner uniquement les objets enregistrés dans le modificateur lorsque le verrouillage de sélection est relâché est ajoutée
-    L'option permettant d'afficher les objets qui ne sont pas enregistrés dans le modificateur sous forme d'images floues grises est ajoutée
+- <color=blue>Menu contextuel de la hiérarchie</color>
+    Vous pouvez cliquer avec le bouton droit dans la hiérarchie pour ouvrir un menu et utiliser diverses fonctions.
+    La fonction "Rechercher" a été ajoutée au menu contextuel dans la hiérarchie.
     <color=red>(Pour plus d'informations, veuillez visiter notre page d'accueil)</color>
 
-- <color=blue>Amélioration de la génération automatique de maillage</color>
-    L'ancienne fonction de génération automatique de maillage a été supprimée et une fonction de génération automatique de maillage entièrement nouvelle et améliorée est fournie
-    Le maillage peut être créé directement à partir du menu des paramètres de maillage
-    La modification de la zone de génération de maillage est améliorée et peut être facilement modifiée avec la souris.
-    Lors de la sélection d'un maillage créé à partir d'un fichier PSD, une option pour générer automatiquement un maillage est ajoutée à ce message lors de la sélection de l'option qui vous invite à supprimer les sommets.
+- <color=blue>Fonction de lecture synchronisée</color>
+    La fonction de script "Synchronize" a été ajoutée pour synchroniser les paramètres d'animation ou de contrôle en se connectant à un autre apPortrait.
     <color=red>(Pour plus d'informations, veuillez visiter notre page d'accueil)</color>
 
-- <color=blue>Rotoscopie</color>
-    La fonction "Rotoscopie", qui affiche les fichiers image externes en arrière-plan de l'espace de travail, est ajoutée au menu Affichage
-    <color=red>(Pour plus d'informations, veuillez visiter notre page d'accueil)</color>
-
-- <color=blue>Copier et coller les valeurs de plusieurs touches</color> et <color=blue>Amélioration de la fonction de copie</color>
-    La fonction pour coller deux ou plusieurs touches en combinaison dans le modificateur par paramètre de contrôle est ajoutée.
-    Après avoir copié des valeurs dans jusqu'à 4 emplacements, vous pouvez les coller sous la forme de valeurs de somme ou de valeurs moyennes.
-    Il est amélioré pour que les valeurs copiées puissent être collées même si elles ne sont pas le même objet tant que les conditions minimales sont remplies (sauf pour copier-coller dans l'animation)
-    <color=red>(Pour plus d'informations, veuillez visiter notre page d'accueil)</color>
-
-- <color=blue>Fonctions de script</color>
-    La fonction de script pour obtenir l'ordre de tri du maillage cible est ajoutée
-    Les fonctions physiques sont améliorées telles que AddForce à appliquer à "Jiggle Bones"
-    Les fonctions de script sont ajoutées qui retournent l'apOptRootUnit ou l'index en cours de lecture
-    <color=red>(Pour plus d'informations, veuillez visiter notre page d'accueil)</color>
-
-- La taille de l'interface utilisateur supérieure de l'éditeur et de la première interface utilisateur à droite a été réduite
-- L'interface utilisateur des paramètres de contrôle a été réduite et améliorée pour afficher plus d'interface utilisateur des paramètres de contrôle à l'écran. (Le bouton Modifier le raccourci a été supprimé)
-- Lors de la sélection d'images clés en les faisant glisser dans l'interface utilisateur de la chronologie de l'animation, il a été amélioré pour faire défiler automatiquement verticalement et horizontalement.
-- Lors de la sélection d'un maillage dans le menu, l'écran défile automatiquement pour s'adapter à la zone ou au pivot du maillage.
-- La fonction "Ajouter tous les paramètres de contrôle à la chronologie" est ajoutée
-- L'ordre des groupes de sous-mailles dans l'onglet Os de l'interface Hiérarchie du groupe de mailles a été amélioré pour être trié en fonction de la profondeur
-- Il est amélioré afin que les objets soient triés dans le même ordre que la hiérarchie lors de l'ajout d'objets à la chronologie.
-- Il est amélioré pour que les calques de la chronologie soient triés dans le même ordre que dans la hiérarchie lorsque le "bouton pour trier les calques de la chronologie par profondeur" est enfoncé.
-- Lors de l'utilisation de la méthode "Depth To Order" dans la boîte de dialogue Bake, une option pour affecter l'ordre de tri à des intervalles autres que 1 a été ajoutée.
-- S'il n'y a qu'une seule image, l'image est automatiquement définie lors de la création d'un maillage
-- Lors de l'ouverture ou de l'enregistrement d'un fichier externe, le dernier chemin est enregistré et amélioré pour être utilisé comme chemin par défaut à la prochaine ouverture de la boîte de dialogue.
-- L'option de conserver la fonction "Auto-Key" même après la sortie du mode d'édition a été ajoutée.
-- Lors du changement de nom d'un groupe de mailles, s'il est enregistré comme enfant d'un autre groupe de mailles, le nom de l'objet connecté est synchronisé pour qu'il soit changé ensemble (l'inverse n'est pas synchronisé)
-- Il est modifié pour que le message d'échec n'apparaisse pas lors de la création d'une image clé superposée (v1.3.1)
+- Lors de la création d'un nouveau portrait dans l'éditeur, la zone de texte est automatiquement focalisée.
+- Des fonctions telles que Dupliquer et Migrer peuvent être utilisées simultanément avec plusieurs objets sélectionnés dans le paramètre de groupe de maillage.
+- Les valeurs éditées peuvent être copiées, collées ou initialisées tandis que plusieurs objets sont sélectionnés sur l'écran d'édition du modificateur lié au paramètre de contrôle.
+- Plusieurs couches peuvent être sélectionnées à l'aide des touches Ctrl et Maj dans la boîte de dialogue d'importation de fichier PSD.
+- La fonction "RemoveForce" et la fonction surchargée "RemoveTouch" pour désactiver uniquement la force physique cible sont ajoutées.
+- La minuterie de l'éditeur et le compteur FPS sont améliorés (v1.3.3)
+- Ajout du modificateur "Color Only" (v1.3.3)
 
 
 
 <size=13>Problème résolu</size>
 
-- Un problème est résolu qui se produisait dans les fonctions internes d'apOptTransform, GetMeshTransform et GetMeshGroupTransform.
-- Un problème est résolu: le mode de tri de transparence a été fixé de force sur orthographique même lorsque l'option de panneau d'affichage était désactivée.
-- Un problème est résolu: l'interpolation de la chronologie de l'animation du type "paramètre de contrôle" n'était pas correctement traitée pendant que le jeu était en cours d'exécution.
-- Un problème est résolu: une "entrée fantôme" qui semblait continuer à taper ces touches pendant un certain temps après avoir relâché d'autres touches de raccourci après avoir appuyé sur les touches Ctrl, Maj, Alt se produit
-- Un problème est résolu: le paramètre de contrôle n'a pas été sélectionné correctement lorsque vous cliquez sur une autre interface utilisateur de paramètre de contrôle immédiatement après avoir déplacé le curseur hors de l'éditeur lors de sa sélection dans certaines versions de l'éditeur Unity.
-- Un problème est résolu: trop de valeurs de registre ont été créées lors de l'enregistrement des options de l'éditeur.
-- Un problème est résolu: le fichier de sauvegarde a été incorrectement enregistré différemment de la spécification en fonction de l'environnement de l'appareil de l'utilisateur. (Les fichiers de sauvegarde des versions précédentes peuvent être ouverts dans cette version, mais au contraire, les fichiers de sauvegarde créés dans cette version ne peuvent pas être ouverts dans les versions précédentes.)
-- Un problème est résolu: l'aperçu était affiché de manière anormale car la "position par défaut, la rotation et la taille du groupe de mailles" n'était pas appliquée dans la fonction "Réimporter PSD".
-- Un problème est résolu: le paramètre Jiggle Bone était manquant lors de l'exportation de la structure osseuse vers un fichier.
-- Un problème est résolu: certains boutons semblaient cliquables dans l'interface utilisateur des clips d'animation sans aucun groupe de mailles connecté
-- "Physic" du nom du modificateur a été modifié en "Physics"
-- Un problème est résolu: l'opacité du calque n'était pas appliquée lors de l'importation d'un fichier PSD
-- Un problème est résolu: Bake ne pouvait pas être exécuté lorsque le modificateur Physique était appliqué au maillage double face.
-- Un problème est résolu: lorsque Bake était effectué alors que la taille du GameObject de apPortrait ou GameObjects au-dessus était inversée, il ne rendrait pas normalement même si l'échelle était restaurée à sa valeur d'origine.
-- Un problème est résolu: "Les os sans poids de gréement qui leur sont appliqués apparaissent en gris" n'est pas mis à jour immédiatement après l'exécution de la fonction "Pos-Paste".
-- Un problème est résolu: la boîte de dialogue a été fermée de force pendant le processus d'ouverture d'un fichier PSD en raison d'une erreur de l'éditeur Unity dans le dernier macOS (cependant, le journal des erreurs peut continuer à se produire jusqu'à sa mise à jour dans macOS ou Unity)
-- Un problème est résolu: la modification du modificateur d'un groupe de mailles enfant devenait inédite lors de son annulation
-- Un problème est résolu: une image rémanente d'une image restait lorsque l'unité racine était commutée par animation.
-- Un problème est résolu: lors de la lecture d'une animation avec un script après avoir appelé Hide and Show, il n'était normalement pas converti en plus d'une deuxième unité racine
-- Un problème est résolu: le résultat du traitement n'était pas appliqué au paramètre de contrôle dans la première image lors de la lecture d'une animation avec un script
-- Un problème est résolu: certaines données d'autres clips d'animation pouvaient être initialisées si vous annuliez immédiatement après la création de données pendant le travail d'animation (v1.3.1)
+- Un problème a été résolu : la méthode Additive ne fonctionne pas correctement lors de la modification de l'échelle d'un objet dans le modificateur à l'aide de deux ou plusieurs paramètres de contrôle.
+- Un problème a été résolu selon lequel les objets d'un groupe de maillage enfant n'apparaissent pas dans l'interface utilisateur de la hiérarchie lors de l'annulation immédiatement après la copie ou la migration d'objets.
+- Un problème a été résolu selon lequel l'état d'édition ne récupère pas correctement par intermittence si annuler et refaire sont répétés.
+- Un problème a été corrigé. L'animation des objets avec l'option Important désactivée se comportait étrangement lors du changement de Time.timeScale de Unity.
+- Un problème a été corrigé, l'annulation n'est pas possible après la migration d'objets dans un groupe de mailles.
+- Un problème a été corrigé, l'annulation ne fonctionne pas après avoir modifié la profondeur des objets dans un groupe de mailles.
+- Un problème a été résolu selon lequel des caractères d'échappement sont ajoutés à la valeur de paramètre de chemin, donc le problème que le chemin n'est pas reconnu en fonction de l'environnement système.
+- Un problème a été résolu selon lequel l'enregistrement et l'ouverture de fichiers ne fonctionnent pas normalement, car l'encodage n'est pas UTF-8 en fonction de l'environnement système.
+- Un problème a été résolu selon lequel le gizmo de rotation se comporte de manière opposée lorsque l'échelle de l'os est inversée
+- Un problème a été résolu selon lequel le modificateur de physique se comportait comme s'il fonctionnait à faible FPS en fonction de l'environnement d'exécution
+- Un problème a été résolu en raison du ralentissement de l'éditeur en raison d'un trop grand nombre de données d'annulation générées (v1.3.3)
+- Un problème a été résolu : l'interface utilisateur de la hiérarchie ne se mettait pas à jour correctement lors de la sélection et de la modification d'un groupe de mailles appartenant à un autre groupe de mailles (v1.3.3)
+- Un problème a été résolu : l'erreur se produisait lors de l'exécution de Bake lors de l'attribution de poids de gréement à l'aide de la fonction "Pos-Paste" aux os appartenant à d'autres groupes de maillage (v1.3.3)
+- Un problème a été résolu : les os et les maillages n'étaient pas sélectionnés correctement dans l'espace de travail (v1.3.3)
 
 
 
 
 -----------------------------------------
 (독일어)
-<size=16>AnyPortrait-Aktualisierungsprotokoll v1.3.0/v1.3.1</size>
-(Build 19. April 2021)
-
+<size=16>AnyPortrait-Aktualisierungsprotokoll v1.3.2/v1.3.3</size>
+(Build 10. Juli 2021/20. Juli 2021)
 
 <size=13>Verbesserungen</size>
 
-- <color=blue>Leistungsverbesserung</color>
-    Verbesserungen der Rigging-Modifikator- und Animationsverarbeitungsleistung während des Spielens
-
-- <color=blue>Passen Sie die Tastenkombinationen an</color> 
-    Dem Einstellungsdialogfeld wurde ein Menü hinzugefügt, mit dem Benutzer die meisten Tastenkombinationen im Editor zuweisen können.
-    Der Inhalt der oberen Meldung, die beim Drücken der Tastenkombination angezeigt wird, wird detaillierter geändert und verbessert, sodass keine unnötigen Fälle angezeigt werden.
+- <color=blue>Verbesserte Editorleistung</color>
+    Die Editorleistung wurde verbessert.
+    "Beschleunigter Modus", der die Editorleistung zusätzlich verbessert, indem ein separates Plug-In installiert wird. (Änderung im Einstellungsdialog)
     <color=red>(Weitere Informationen finden Sie auf unserer Homepage)</color>
 
-- <color=blue>Hauptverknüpfung</color> hinzugefügt
-    Page Up, Page Down : Scrollen Sie in der Benutzeroberfläche der Animationszeitleiste nach oben und unten
-    Ctrl + <,> : Zum vorherigen oder nächsten Keyframe wechseln
-    N : Schalten Sie die Funktion „Auto-Key“ der Animation ein oder aus
-    ~ : Wechseln Sie zwischen der Registerkarte Hierarchie und der Registerkarte Controller auf der linken Seite des Editors
-    Enter : Führen Sie beim Erstellen eines Netzes die Funktion "Polygon erstellen" aus
-    1-6 Zifferntasten : Wechseln Sie das Netzbearbeitungsmenü
-    F2 : Der Fokus wird auf die Benutzeroberfläche verschoben, die den Namen des aktuellen Objekts ändert
-    I : Sichtbarkeitsvoreinstellung umschalten
-    1-5 Zifferntasten : Wechseln Sie die voreingestellten Sichtbarkeitsregeln
-    Alt + O : Rotoskopieren umschalten
-    9 Zifferntaste : Vorherige rotoskopische Bilddatei
-    0 Zifferntaste : Nächste rotoskopische Bilddatei
-    D : Schalten Sie um, ob mehrere Modifikatoren im Bearbeitungsmodus ausgeführt werden sollen
-    Alt + D : Legen Sie fest, dass das Ziel des Modifikators nicht ausgewählt werden soll, auch wenn die Auswahlsperre im Bearbeitungsmodus aufgehoben wird
-    Alt + G : Zeigt Objekte, die im Bearbeitungsmodus keinen Modifikatoren unterliegen, als graue Farbe an
-    Alt + B : Vorschau des Berechnungsergebnisses für Bones im Bearbeitungsmodus
-    Alt + C : Vorschau des Berechnungsergebnisses für Farbe im Bearbeitungsmodus
+- <color=blue>Verbesserte Gameplay-Leistung</color>
+    Die Gesamtleistung im Gameplay wurde verbessert.
+    Das Speicherproblem beim Aktualisieren von Modifikatoren wurde verbessert.
 
-- <color=blue>Menü "Ansicht" hinzugefügt</color> und <color=blue>Verbesserungen der Benutzeroberfläche des Arbeitsbereichs</color>
-    "Menü Ansicht" wurde hinzugefügt, um die Rolle der vorhandenen Ansichtssymbole zu ersetzen
-    Optionsfelder für die Anzeige von Zwiebelschalen, Maschen und Knochen wurden gelöscht (Diese können so eingestellt werden, dass sie im Dialogfeld "Einstellungen" wieder angezeigt werden.)
-    In der oberen rechten Ecke werden Statussymbole angezeigt, die angeben, wie Objekte im Arbeitsbereich angezeigt und bearbeitet werden können.
+- <color=blue>Hilfslinien</color>
+    Die Funktion "Hilfslinien" zur Ausgabe einer beliebigen geraden Linie im Arbeitsbereich wurde dem "Ansichtsmenü" hinzugefügt.
     <color=red>(Weitere Informationen finden Sie auf unserer Homepage)</color>
 
-- <color=blue>Sichtbarkeitsvoreinstellung</color>
-    Dem "Ansichtsmenü" wurde eine neue Funktion "Sichtbarkeitsvoreinstellung" hinzugefügt, mit der der Benutzer vordefinieren kann, welche Knochen und Netze im Arbeitsbereich angezeigt werden sollen.
+- <color=blue>Hierarchie-Rechtsklick-Menü</color>
+    Sie können mit der rechten Maustaste in die Hierarchie klicken, um ein Menü zu öffnen und verschiedene Funktionen zu verwenden.
+    Die Funktion "Suchen" wurde dem Rechtsklickmenü in der Hierarchie hinzugefügt.
     <color=red>(Weitere Informationen finden Sie auf unserer Homepage)</color>
 
-- <color=blue> Erneuerung der Modifikatorsperre</color>
-    Die Modifikatorsperre wurde entfernt und durch "Optionen für Bearbeitungsmodus" ersetzt (zum Menü "Ansicht" hinzugefügt).
-    Die Option, dass Modifikatoren im Bearbeitungsmodus bearbeitet werden oder Objekte, die nicht zur Zeitachse gehören, von anderen Modifikatoren angewendet werden, wurde hinzugefügt
-    Die Option, nur Objekte auszuwählen, die im Modifikator registriert sind, wenn die Auswahlsperre aufgehoben wird, wurde hinzugefügt
-    Die Option, Objekte, die nicht im Modifikator registriert sind, als grau unscharfe Bilder anzuzeigen, wurde hinzugefügt
+- <color=blue>Synchronisierte Spielfunktion</color>
+    Die Skriptfunktion "Synchronisieren" wurde hinzugefügt, um Animations- oder Steuerungsparameter zu synchronisieren, indem eine Verbindung zu einem anderen apPortrait hergestellt wird.
     <color=red>(Weitere Informationen finden Sie auf unserer Homepage)</color>
 
-- <color=blue>Verbesserung der automatischen Netzgenerierung</color>
-    Die vorherige Funktion zur automatischen Netzgenerierung wurde entfernt, und es wurde eine völlig neue und verbesserte Funktion zur automatischen Netzgenerierung bereitgestellt
-    Mesh kann direkt über das Mesh-Einstellungsmenü erstellt werden
-    Das Ändern des Bereichs für die Netzgenerierung wird verbessert und kann einfach mit der Maus bearbeitet werden.
-    Wenn Sie ein aus einer PSD-Datei erstelltes Netz auswählen, wird dieser Nachricht eine Option zum automatischen Generieren eines Netzes hinzugefügt, wenn Sie die Option auswählen, mit der Sie aufgefordert werden, Scheitelpunkte zu entfernen.
-    <color=red>(Weitere Informationen finden Sie auf unserer Homepage)</color>
-
-- <color=blue>Rotoskopieren</color>
-    Die Funktion "Rotoskopieren", mit der externe Bilddateien im Hintergrund des Arbeitsbereichs angezeigt werden, wird dem Menü "Ansicht" hinzugefügt
-    <color=red>(Weitere Informationen finden Sie auf unserer Homepage)</color>
-
-- <color=blue>Kopieren und Einfügen von Werten aus mehreren Tasten</color> und <color=blue>Verbesserung der Kopierfunktion</color>
-    Die Funktion zum Einfügen von zwei oder mehr Tasten in Kombination in den Modifikator nach Steuerparametern wurde hinzugefügt.
-    Nachdem Sie Werte in bis zu 4 Slots kopiert haben, können Sie sie in Form von Summenwerten oder Durchschnittswerten einfügen.
-    Es wurde verbessert, sodass kopierte Werte eingefügt werden können, auch wenn sie nicht dasselbe Objekt sind, solange die Mindestbedingungen erfüllt sind (außer beim Kopieren und Einfügen in Animationen).
-    <color=red>(Weitere Informationen finden Sie auf unserer Homepage)</color>
-
-- <color=blue>Skriptfunktionen</color>
-    Die Skriptfunktion zum Abrufen der Sortierreihenfolge des Zielnetzes wurde hinzugefügt
-    Physikfunktionen wie AddForce werden verbessert, um auf "Wackelknochen" angewendet zu werden.
-    Es werden die Skriptfunktionen hinzugefügt, die den aktuell wiedergegebenen apOptRootUnit oder Index zurückgeben
-    <color=red>(Weitere Informationen finden Sie auf unserer Homepage)</color>
-
-- Die Größe der oberen Benutzeroberfläche des Editors und der ersten Benutzeroberfläche rechts wurde verringert
-- Die Benutzeroberfläche für Steuerparameter wurde reduziert und verbessert, um mehr Benutzeroberfläche für Steuerparameter auf dem Bildschirm anzuzeigen. (Verknüpfungstaste bearbeiten wurde gelöscht)
-- Bei der Auswahl von Keyframes durch Ziehen in der Benutzeroberfläche der Animationszeitleiste wurde das automatische vertikale und horizontale Scrollen verbessert.
-- Wenn Sie ein Netz aus dem Menü auswählen, wird der Bildschirm automatisch gescrollt, um dem Bereich oder Drehpunkt des Netzes zu entsprechen.
-- Die Funktion "Alle Steuerparameter zur Timeline hinzufügen" wurde hinzugefügt
-- Die Reihenfolge der Teilnetzgruppen auf der Registerkarte "Knochen" der Hierarchie-Benutzeroberfläche der Netzgruppe wurde verbessert, um nach Tiefe sortiert zu werden
-- Es wurde verbessert, sodass Objekte beim Hinzufügen von Objekten zur Zeitachse in derselben Reihenfolge wie die Hierarchie sortiert werden.
-- Es wurde verbessert, sodass die Timeline-Ebenen in derselben Reihenfolge wie in der Hierarchie sortiert werden, wenn die Schaltfläche "Sortieren von Timeline-Ebenen nach Tiefe" gedrückt wird.
-- Bei Verwendung der Methode "Depth To Order" im Dialogfeld "Bake" wurde eine Option zum Zuweisen der Sortierreihenfolge in anderen Intervallen als 1 hinzugefügt.
-- Wenn nur ein Bild vorhanden ist, wird das Bild beim Erstellen eines Netzes automatisch festgelegt
-- Beim Öffnen oder Speichern einer externen Datei wird der letzte Pfad aufgezeichnet und verbessert, um beim nächsten Öffnen des Dialogfelds als Standardpfad verwendet zu werden.
-- Die Option, die Funktion "Auto-Key" auch nach dem Beenden des Bearbeitungsmodus beizubehalten, wurde hinzugefügt.
-- Beim Umbenennen einer Netzgruppe wird der Name des verbundenen Objekts synchronisiert, wenn es als untergeordnetes Element einer anderen Netzgruppe registriert ist, sodass es gemeinsam geändert wird (umgekehrt wird es nicht synchronisiert).
-- Es wurde so geändert, dass die Fehlermeldung beim Erstellen eines überlappenden Keyframes nicht angezeigt wird. (v1.3.1)
+- Beim Erstellen eines neuen Porträts im Editor wird das Textfeld automatisch fokussiert.
+- Funktionen wie Duplizieren und Migrieren können gleichzeitig mit mehreren in der Netzgruppeneinstellung ausgewählten Objekten verwendet werden.
+- Die bearbeiteten Werte können kopiert, eingefügt oder initialisiert werden, während mehrere Objekte auf dem Bearbeitungsbildschirm des mit dem Steuerparameter verknüpften Modifikators ausgewählt sind.
+- Mehrere Ebenen können mit den Strg- und Umschalttasten im PSD-Dateiimportdialog ausgewählt werden.
+- "RemoveForce"-Funktion und überladene "RemoveTouch"-Funktion zum Deaktivieren nur der Zielphysikkraft wurden hinzugefügt.
+- Editor-Timer und FPS-Zähler wurden verbessert (v1.3.3)
+- Modifikator "Color Only" hinzugefügt (v1.3.3)
 
 
 
 <size=13>Problem behoben</size>
 
-- Es wurde ein Problem behoben, das in den internen Funktionen von apOptTransform, GetMeshTransform und GetMeshGroupTransform aufgetreten ist.
-- Es wurde ein Problem behoben, durch das der Transparenz-Sortiermodus zwangsweise auf Orthographisch behoben wurde, selbst wenn die Plakatoption deaktiviert war.
-- Es wurde ein Problem behoben, durch das die Interpolation der Animationszeitleiste vom Typ "Steuerparameter" während des Spiels nicht ordnungsgemäß verarbeitet wurde.
-- Es wurde ein Problem behoben, bei dem eine "Geistereingabe" auftrat, die diese Tasten nach dem Loslassen anderer Tastenkombinationen nach Drücken von Strg, Umschalt, Alt noch eine Weile zu tippen schien
-- Es wurde das Problem behoben, dass der Steuerparameter nicht richtig ausgewählt wurde, wenn auf eine andere Steuerparameter-Benutzeroberfläche unmittelbar nach dem Bewegen des Cursors aus dem Editor geklickt wurde, während er in bestimmten Versionen des Unity-Editors ausgewählt wurde.
-- Es wurde ein Problem behoben, bei dem zu viele Registrierungswerte erstellt wurden, als die Editoroptionen gespeichert wurden.
-- Es wurde ein Problem behoben, bei dem die Sicherungsdatei je nach Geräteumgebung des Benutzers fälschlicherweise anders als in der Spezifikation gespeichert wurde. (Sicherungsdateien aus früheren Versionen können in dieser Version geöffnet werden. Im Gegenteil, Sicherungsdateien, die in dieser Version erstellt wurden, können in früheren Versionen nicht geöffnet werden.)
-- Es wurde ein Problem behoben, bei dem die Vorschau nicht normal angezeigt wurde, da die "Standardposition, Drehung und Größe der Netzgruppe" in der Funktion "PSD erneut importieren" nicht angewendet wurde.
-- Es wurde ein Problem behoben, bei dem die Einstellung "Wackelknochen" beim Exportieren der Knochenstruktur in eine Datei fehlte.
-- Es wurde ein Problem behoben, durch das einige Schaltflächen in der Benutzeroberfläche von Animationsclips ohne verbundene Netzgruppen anklickbar zu sein schienen
-- "Physic" des Modifikatornamens wurde in "Physics" geändert.
-- Es wurde ein Problem behoben, bei dem beim Importieren einer PSD-Datei keine Ebenenopazität angewendet wurde
-- Es wurde ein Problem behoben, durch das das Backen nicht ausgeführt werden konnte, als der Modifikator "Physik" auf das doppelseitige Netz angewendet wurde.
-- Es wurde ein Problem behoben, durch das beim Backen, während die Größe des GameObject von apPortrait oder der darüber liegenden GameObjects invertiert wurde, nicht normal gerendert wurde, selbst wenn die Skalierung auf ihren ursprünglichen Wert zurückgesetzt wurde.
-- Es wurde ein Problem behoben, bei dem "Knochen ohne aufgesetztes Rigging-Gewicht grau erscheinen" nicht unmittelbar nach dem Ausführen der Funktion "Pos-Paste" aktualisiert wird.
-- Es wurde ein Problem behoben, durch das der Dialog während des Öffnens einer PSD-Datei aufgrund eines Unity Editor-Fehlers im neuesten macOS zwangsweise geschlossen wurde (das Fehlerprotokoll kann jedoch weiterhin auftreten, bis es in macOS oder Unity aktualisiert wird).
-- Es wurde ein Problem behoben, durch das das Bearbeiten des Modifikators einer untergeordneten Netzgruppe beim Rückgängigmachen nicht mehr bearbeitet werden konnte
-- Es wurde ein Problem behoben, bei dem ein Nachbild von 1 Frame übrig blieb, als die Root-Einheit durch Animation gewechselt wurde.
-- Es wurde das Problem behoben, dass beim Abspielen von Animationen mit einem Skript nach dem Aufrufen von "Ausblenden und Anzeigen" diese normalerweise nicht in die mehr als zweite Root-Einheit konvertiert wurden
-- Es wurde ein Problem behoben, bei dem das Verarbeitungsergebnis beim Abspielen der Animation mit einem Skript nicht auf den Steuerparameter im ersten Frame angewendet wurde
-- Es wurde ein Problem behoben, durch das einige Daten anderer Animationsclips initialisiert werden konnten, wenn Sie sie unmittelbar nach dem Erstellen von Daten während der Animationsarbeit rückgängig machen (v1.3.1)
+- Es wurde ein Problem behoben, bei dem die Additiv-Methode nicht richtig funktioniert, wenn die Skalierung eines Objekts im Modifikator mithilfe von zwei oder mehr Kontrollparametern geändert wird.
+- Es wurde ein Problem behoben, durch das Objekte in einer untergeordneten Mesh-Gruppe nicht in der Hierarchie-Benutzeroberfläche angezeigt werden, wenn sie sofort nach dem Kopieren oder Migrieren von Objekten rückgängig gemacht werden.
+- Es wurde ein Problem behoben, bei dem der Bearbeitungsstatus zeitweise nicht richtig wiederhergestellt wird, wenn Rückgängig und Wiederholen wiederholt werden.
+- Es wurde ein Problem behoben, bei dem sich die Animation von Objekten mit deaktivierter Option "Wichtig" beim Ändern von Unitys Time.timeScale seltsam verhielt.
+- Es wurde ein Problem behoben, das nach der Migration von Objekten in einer Mesh-Gruppe nicht rückgängig gemacht werden kann.
+- Es wurde ein Problem behoben, das Rückgängigmachen funktioniert nicht, nachdem die Tiefe von Objekten in einer Netzgruppe geändert wurde.
+- Es wurde ein Problem behoben, bei dem dem Pfadeinstellungswert Escape-Zeichen hinzugefügt wurden, sodass das Problem, dass der Pfad je nach Systemumgebung nicht erkannt wird.
+- Es wurde ein Problem behoben, bei dem das Speichern und Öffnen von Dateien nicht normal funktioniert, da die Codierung je nach Systemumgebung nicht UTF-8 ist.
+- Es wurde ein Problem behoben, bei dem sich das Rotations-Gizmo umgekehrt verhält, wenn die Skalierung des Knochens umgekehrt wird
+- Es wurde ein Problem behoben, bei dem sich der Physik-Modifikator je nach Ausführungsumgebung so verhielt, als würde er mit niedrigen FPS ausgeführt
+- Es wurde ein Problem behoben, bei dem der Editor verlangsamt wurde, weil zu viele Rückgängig-Daten generiert wurden (v1.3.3)
+- Es wurde ein Problem behoben, bei dem die Hierarchie-Benutzeroberfläche nicht richtig aktualisiert wurde, wenn eine Netzgruppe ausgewählt und bearbeitet wurde, die zu einer anderen Netzgruppe gehört (v1.3.3)
+- Es wurde ein Problem behoben, bei dem der Fehler beim Ausführen von Bake auftrat, wenn Rigging-Gewichte mit der Funktion "Pos-Paste" an Bones anderer Mesh-Gruppen zugewiesen wurden (v1.3.3)
+- Es wurde ein Problem behoben, bei dem Bones und Meshes im Arbeitsbereich nicht richtig ausgewählt wurden (v1.3.3)
 
 
 
 
 -----------------------------------------
 (스페인어)
-<size=16>AnyPortrait Update Log v1.3.0/v1.3.1</size>
-(Construido el 19 de abril de 2021)
-
+<size=16>AnyPortrait Update Log v1.3.2/v1.3.3</size>
+(Construido el 10 de julio de 2021/20 de julio de 2021)
 
 <size=13>Mejoras</size>
 
-- <color=blue>Mejora del rendimiento</color>
-    Mejoras en el rendimiento del procesamiento de animación y el modificador de aparejos durante el juego
-
-- <color=blue>Personalizar teclas de método abreviado</color>
-    Se ha agregado al cuadro de diálogo de configuración un menú que permite a los usuarios asignar la mayoría de las teclas de acceso directo en el editor.
-    El contenido del mensaje superior que aparece al presionar la tecla de método abreviado se cambia con más detalle y se mejora para que no se muestren los casos innecesarios.
+- <color=blue>Rendimiento mejorado del editor</color>
+    Se ha mejorado el rendimiento del editor.
+    Se ha agregado el "Modo acelerado" que además mejora el rendimiento del editor al instalar un complemento por separado. (Cambio en el cuadro de diálogo de configuración)
     <color=red>(Para obtener más información, visite nuestra página de inicio)</color>
 
-- <color=blue>Se agregó un atajo principal</color>
-    Page Up, Page Down : Desplaza la interfaz de usuario de la línea de tiempo de la animación hacia arriba y hacia abajo
-    Ctrl + <,> : Ir al fotograma clave anterior o siguiente
-    N : Activa o desactiva la función "Auto-Key" de la animación.
-    ~ : Cambia entre la pestaña Jerarquía y la pestaña Controlador en el lado izquierdo del editor
-    Enter : Ejecuta la función Make Polygon al hacer una malla.
-    1-6 teclas numéricas : Cambia el menú de edición de malla
-    F2 : El foco se mueve a la interfaz de usuario que modifica el nombre del objeto actual
-    I : Alternar ajuste preestablecido de visibilidad
-    1-5 teclas numéricas : Cambiar reglas predeterminadas de visibilidad
-    Alt + O : Alternar rotoscopia
-    9 Tecla numérica : Archivo de imagen de rotoscopia anterior
-    0 Tecla numérica : Siguiente archivo de imagen de rotoscopia
-    D : Cambie si desea hacer que varios modificadores se ejecuten en el modo de edición
-    Alt + D : Establece que el objetivo del modificador no se seleccione incluso si el bloqueo de selección se libera en el modo de edición
-    Alt + G : Muestra los objetos que no están sujetos a modificadores en el modo de edición como color gris
-    Alt + B : Vista previa del resultado del cálculo para huesos en modo de edición
-    Alt + C : Vista previa del resultado del cálculo del color en el modo de edición
+- <color=blue>Rendimiento de juego mejorado</color>
+    Se ha mejorado el rendimiento general en el juego.
+    Se ha mejorado el problema de la memoria al actualizar los modificadores.
 
-- <color=blue>Se agregó el menú Ver</color> y <color=blue>Mejoras en la interfaz de usuario del área de trabajo</color>
-    Se agregó el "menú Ver" para reemplazar la función de los íconos de vista existentes.
-    Se han eliminado los botones de opción de visualización de piel de cebolla, malla y hueso (se pueden configurar para que reaparezcan en el cuadro de diálogo Configuración)
-    Los iconos de estado que indican cómo se pueden mostrar y editar los objetos en el espacio de trabajo aparecen en la esquina superior derecha.
+- <color=blue>Pautas</color>
+    La función "Pautas" para generar una línea recta arbitraria en el espacio de trabajo se ha agregado al "menú Ver".
     <color=red>(Para obtener más información, visite nuestra página de inicio)</color>
 
-- <color=blue>Visibilidad preestablecida</color>
-    Se ha agregado una nueva función "Visibilidad preestablecida" al "Menú Ver" que permite al usuario predefinir qué huesos y mallas mostrar en el espacio de trabajo.
+- <color=blue>Menú contextual de jerarquía</color>
+    Puede hacer clic con el botón derecho en la jerarquía para abrir un menú y utilizar varias funciones.
+    La función "Buscar" se ha agregado al menú contextual en Jerarquía.
     <color=red>(Para obtener más información, visite nuestra página de inicio)</color>
 
-- <color=blue>Renovación del bloqueo del modificador</color>
-    El bloqueo de modificador se elimina y se reemplaza con "Opciones del Modo de edición" (agregado al menú Ver)
-    Se agrega la opción de hacer que los modificadores que se están editando en el modo de edición o que otros modificadores apliquen objetos que no pertenecen a la línea de tiempo
-    Se agrega la opción para seleccionar solo objetos registrados en el modificador cuando se libera el bloqueo de selección
-    Se agrega la opción de mostrar objetos que no están registrados en el modificador como imágenes borrosas en gris
+- <color=blue>Función de reproducción sincronizada</color>
+    Se ha añadido la función de secuencia de comandos "Sincronizar" para sincronizar la animación o los parámetros de control mediante la conexión a otro retrato.
     <color=red>(Para obtener más información, visite nuestra página de inicio)</color>
 
-- <color=blue>Mejora de la generación automática de malla</color>
-    Se ha eliminado la función anterior de generación automática de malla y se proporciona una función de generación automática de malla completamente nueva y mejorada
-    La malla se puede crear directamente desde el menú de configuración de malla
-    La modificación del área para la generación de mallas se mejora y se puede editar fácilmente con el mouse.
-    Al seleccionar una malla creada a partir de un archivo PSD, se agrega una opción para generar automáticamente una malla a este mensaje al seleccionar la opción que le solicita que elimine los vértices.
-    <color=red>(Para obtener más información, visite nuestra página de inicio)</color>
-
-- <color=blue>Rotoscopia</color>
-    La función "Rotoscopia", que muestra archivos de imagen externos en el fondo del espacio de trabajo, se agrega al menú Ver.
-    <color=red>(Para obtener más información, visite nuestra página de inicio)</color>
-
-- <color=blue>Copiar y pegar valores de varias teclas</color> y <color=blue>Mejora de la función de copia</color>
-    Se agrega la función para pegar dos o más teclas en combinación en el modificador por parámetro de control.
-    Después de hacer frente a los valores en hasta 4 espacios, puede pegarlos en forma de valores de suma o valores promedio.
-    Se ha mejorado para que los valores copiados se puedan pegar incluso si no son el mismo objeto siempre que se cumplan las condiciones mínimas (excepto para copiar y pegar en la animación)
-    <color=red>(Para obtener más información, visite nuestra página de inicio)</color>
-
-- <color=blue>Funciones de script</color>
-    Se agrega la función de secuencia de comandos para obtener el orden de clasificación de la malla de destino
-    Se han mejorado las funciones físicas, como AddForce, que se aplicará a "Jiggle Bones".
-    Se agregan las funciones de script que devuelven el índice o apOptRootUnit que se está reproduciendo actualmente
-    <color=red>(Para obtener más información, visite nuestra página de inicio)</color>
-
-- Se ha reducido el tamaño de la interfaz de usuario superior del editor y la primera interfaz de usuario a la derecha.
-- La interfaz de usuario de parámetros de control se ha reducido y mejorado para mostrar más interfaz de usuario de parámetros de control en la pantalla. (Se ha eliminado el botón Editar acceso directo)
-- Al seleccionar fotogramas clave arrastrándolos en la interfaz de usuario de la línea de tiempo de la animación, se ha mejorado para desplazarse automáticamente vertical y horizontalmente.
-- Al seleccionar una malla del menú, la pantalla se desplaza automáticamente para adaptarse al área o pivote de la malla.
-- Se agrega la función "Agregar todos los parámetros de control a la línea de tiempo"
-- Se ha mejorado el orden de los grupos de submallas en la pestaña Hueso de la IU de jerarquía del grupo de malla para que se ordenen por profundidad
-- Se ha mejorado para que los objetos se clasifiquen en el mismo orden que la jerarquía al agregar objetos a la línea de tiempo.
-- Se ha mejorado para que las capas de la línea de tiempo se clasifiquen en el mismo orden que en la jerarquía cuando se presiona el "botón para ordenar las capas de la línea de tiempo por profundidad".
-- Cuando se utiliza el método "Profundidad a pedido" en el cuadro de diálogo Hornear, se ha agregado una opción para asignar el orden de clasificación a intervalos distintos de 1.
-- Si solo hay una imagen, la imagen se configura automáticamente al crear una malla
-- Al abrir o guardar un archivo externo, se registra la última ruta y se mejora para usarla como ruta predeterminada la próxima vez que se abra el cuadro de diálogo.
-- Se ha agregado la opción de mantener la función "Auto-Key" incluso después de que se sale del modo de edición.
-- Al renombrar un grupo de mallas, si está registrado como hijo de otro grupo de mallas, el nombre del objeto conectado se sincroniza para que se cambien juntos (lo contrario no se sincroniza)
-- Se cambia para que el mensaje de error no aparezca al crear un fotograma clave superpuesto (v1.3.1)
+- Al crear un nuevo retrato en el editor, el cuadro de texto se enfoca automáticamente.
+- Las funciones como Duplicar y Migrar se pueden utilizar simultáneamente con varios objetos seleccionados en la configuración del grupo de malla.
+- Los valores editados se pueden copiar, pegar o inicializar mientras se seleccionan varios objetos en la pantalla de edición del modificador vinculado al parámetro de control.
+- Se pueden seleccionar varias capas usando las teclas Ctrl y Shift en el cuadro de diálogo de importación de archivos PSD.
+- Se agregan la función "RemoveForce" y la función "RemoveTouch" sobrecargada para deshabilitar solo la fuerza física objetivo.
+- Se mejoraron el temporizador del editor y el contador de FPS (v1.3.3)
+- Se agregó el modificador "Color Only" (v1.3.3)
 
 
 
 <size=13>Problema solucionado</size>
 
-- Se solucionó un problema que ocurría en las funciones internas de apOptTransform, GetMeshTransform y GetMeshGroupTransform.
-- Se solucionó un problema por el que el modo de clasificación de transparencia se corrigió a la fuerza en ortográfico incluso cuando la opción de vallas publicitarias estaba desactivada.
-- Se solucionó el problema de que la interpolación de la línea de tiempo de la animación del tipo "parámetro de control" no se procesaba correctamente mientras se ejecutaba el juego.
-- Se solucionó un problema que provocaba que se produjera una "entrada fantasma" que parecía seguir escribiendo estas teclas durante un tiempo después de soltar otras teclas de método abreviado después de presionar Ctrl, Shift, Alt.
-- Se solucionó el problema de que el parámetro de control no se seleccionaba correctamente al hacer clic en la IU de otro parámetro de control inmediatamente después de mover el cursor fuera del editor mientras se seleccionaba en ciertas versiones del editor de Unity.
-- Se solucionó el problema de que se creaban demasiados valores de registro cuando se guardaban las opciones del editor.
-- Se solucionó el problema de que el archivo de copia de seguridad se guardó incorrectamente de manera diferente a la especificación según el entorno del dispositivo del usuario. (Los archivos de respaldo de versiones anteriores se pueden abrir en esta versión, pero por el contrario, los archivos de respaldo creados en esta versión no se pueden abrir en versiones anteriores).
-- Se solucionó el problema de que la vista previa se mostraba de manera anormal porque la "posición, rotación y tamaño predeterminados del grupo de malla" no se aplicaba en la función "Volver a importar PSD".
-- Se solucionó un problema por el que faltaba el ajuste Jiggle Bone al exportar la estructura ósea a un archivo.
-- Se solucionó un problema que hacía que se pudiera hacer clic en algunos botones en la interfaz de usuario de los clips de animación sin grupos de malla conectados
-- "Physic" del nombre del modificador se ha modificado a "Physics"
-- Se solucionó el problema de que la opacidad de la capa no se aplicaba al importar un archivo PSD
-- Se solucionó el problema de que Bake no se podía ejecutar cuando se aplicaba el modificador Física a la malla de doble cara.
-- Se solucionó un problema que cuando se realizaba Bake mientras el tamaño del GameObject de apPortrait o GameObjects anterior estaba invertido, no se procesaba normalmente incluso si la escala se restauraba a su valor original.
-- Se solucionó el problema de que "Los huesos sin peso de aparejo aplicado aparecen grises" no se actualiza inmediatamente después de realizar la función "Pos-Paste".
-- Se solucionó el problema de que el cuadro de diálogo se cerró a la fuerza durante el proceso de apertura de un archivo PSD debido a un error del Editor de Unity en la última versión de macOS (sin embargo, el registro de errores puede continuar hasta que se actualice en macOS o Unity)
-- Se solucionó un problema que hacía que la edición del modificador de un grupo de malla secundario no se pudiera editar al deshacerlo.
-- Se solucionó el problema de que quedaba una imagen secundaria de 1 fotograma cuando la unidad raíz se cambiaba por animación.
-- Se solucionó un problema que al reproducir una animación con un script después de llamar a Hide and Show, normalmente no se convertía a la segunda unidad raíz.
-- Se solucionó el problema de que el resultado del procesamiento no se aplicó al parámetro de control en el primer cuadro al reproducir la animación con un guión
-- Se solucionó el problema de que algunos datos de otros clips de animación podrían inicializarse si deshace inmediatamente después de crear cualquier dato durante el trabajo de animación. (v1.3.1)
+- Se ha solucionado un problema por el que el método Aditivo no funciona correctamente al cambiar la escala de un objeto en el modificador utilizando dos o más parámetros de control.
+- Se solucionó el problema de que los objetos en un grupo de malla secundario no aparecen en la IU de jerarquía cuando se deshacen inmediatamente después de copiar o migrar objetos.
+- Se ha solucionado el problema de que el estado de edición correctamente no se recupera de forma intermitente si se repiten deshacer y rehacer.
+- Se ha solucionado un problema que provocaba que la animación de los objetos con la opción Importante desactivada se comportara de forma extraña al cambiar el Time.timeScale de Unity.
+- Se ha solucionado un problema que no es posible deshacer después de la migración de objetos en un grupo de malla.
+- Se ha solucionado un problema. Deshacer no funciona después de modificar la profundidad de los objetos en un grupo de malla.
+- Se ha solucionado un problema por el que se agregan caracteres de escape al valor de configuración de la ruta, por lo que el problema de que la ruta no se reconoce según el entorno del sistema.
+- Se ha solucionado un problema por el cual guardar y abrir archivos no funciona normalmente debido a que la codificación no es UTF-8 según el entorno del sistema.
+- Se ha solucionado un problema por el que el gizmo de rotación se comporta de manera opuesta cuando la escala del hueso está invertida
+- Se ha solucionado un problema por el que el modificador de física se comportaba como si se estuviera ejecutando a un FPS bajo según el entorno de ejecución.
+- Se ha solucionado un problema que provocaba que el editor se ralentizara debido a que se generaban demasiados datos de deshacer (v1.3.3)
+- Se ha solucionado un problema por el que la IU de jerarquía no se actualizaba correctamente al seleccionar y editar un grupo de mallas que pertenecía a otro grupo de mallas (v1.3.3)
+- Se solucionó un problema que ocurría durante la ejecución de Bake al asignar pesos de aparejos usando la función "Pos-Paste" a huesos que pertenecen a otros grupos de mallas (v1.3.3)
+- Se ha solucionado un problema que provocaba que los huesos y las mallas no se seleccionaran correctamente en el espacio de trabajo (v1.3.3)
+
 
 
 
 
 -----------------------------------------
 (이탈리아어)
-<size=16>Registro aggiornamenti AnyPortrait v1.3.0/v1.3.1</size>
-(Build 19 aprile 2021)
-
+<size=16>Registro aggiornamenti AnyPortrait v1.3.2/v1.3.3</size>
+(Build 10 luglio 2021/20 luglio 2021)
 
 <size=13>Miglioramenti</size>
 
-- <color=blue>Miglioramento delle prestazioni</color>
-    Modificatore di rigging e miglioramenti delle prestazioni di elaborazione dell'animazione durante il gioco
-
-- <color=blue>Personalizza i tasti di scelta rapida</color>
-    Alla finestra di dialogo delle impostazioni è stato aggiunto un menu che consente agli utenti di assegnare la maggior parte dei tasti di scelta rapida nell'editor.
-    Il contenuto del messaggio superiore che appare quando si preme il tasto di scelta rapida viene modificato in modo più dettagliato e migliorato in modo che i casi non necessari non vengano visualizzati.
+- <color=blue>Prestazioni dell'editor migliorate</color>
+    Le prestazioni dell'editor sono state migliorate.
+    È stata aggiunta la "Modalità accelerata" che migliora ulteriormente le prestazioni dell'editor installando un plug-in separato. (Cambia nella finestra di dialogo delle impostazioni)
     <color=red>(Per maggiori informazioni, visita la nostra homepage)</color>
 
-- <color=blue>Aggiunta scorciatoia principale</color>
-    Page Up, Page Down : Scorri l'interfaccia utente della sequenza temporale dell'animazione su e giù
-    Ctrl + <,> : Passa al fotogramma chiave precedente o successivo
-    N : Attiva o disattiva la funzione "Auto-Key" dell'animazione
-    ~ : Passa dalla scheda Gerarchia alla scheda Controller sul lato sinistro dell'editor
-    Enter : esegue la funzione Crea poligono durante la creazione della mesh
-    1-6 Tasti numerici : Cambia il menu di modifica della trama
-    F2 : Lo stato attivo si sposta sull'interfaccia utente che modifica il nome dell'oggetto corrente
-    I : Attiva / disattiva la preimpostazione di visibilità
-    1-5 Tasti numerici : Cambia le regole delle preimpostazioni di visibilità
-    Alt + O : Attiva / disattiva Rotoscoping
-    9 Tasto numerico : File immagine rotoscoping precedente
-    0 Tasto numerico : File immagine rotoscoping successivo
-    D : Cambia se eseguire più modificatori in modalità di modifica
-    Alt + D : Consente di non selezionare l'obiettivo del modificatore anche se il blocco della selezione viene rilasciato in modalità di modifica
-    Alt + G : Visualizza gli oggetti che non sono soggetti a modificatori in modalità di modifica come colore grigio
-    Alt + B : Anteprima del risultato del calcolo per le ossa in modalità di modifica
-    Alt + C : Anteprima del risultato del calcolo per il colore in modalità di modifica
+- <color=blue>Prestazioni di gioco migliorate</color>
+    Le prestazioni complessive nel gioco sono state migliorate.
+    Il problema della memoria durante l'aggiornamento dei modificatori è stato migliorato.
 
-- <color=blue>Menu Visualizza aggiunto</color> e <color=blue>miglioramenti dell'interfaccia utente dell'area di lavoro</color>
-    Il "menu Visualizza" è stato aggiunto per sostituire il ruolo delle icone di visualizzazione esistenti
-    I pulsanti delle opzioni di visualizzazione Onion Skin, mesh, bone sono stati eliminati (possono essere impostati per riapparire nella finestra di dialogo Setting)
-    Nell'angolo in alto a destra vengono visualizzate le icone di stato che indicano come gli oggetti possono essere visualizzati e modificati nell'area di lavoro.
+- <color=blue>Linee guida</color>
+    La funzione "Linee guida" per l'output di una linea retta arbitraria nell'area di lavoro è stata aggiunta a "Menu Visualizza".
     <color=red>(Per maggiori informazioni, visita la nostra homepage)</color>
 
-- <color=blue>Preset di visibilità</color>
-    Una nuova funzione "Visibility Preset" è stata aggiunta al "View Menu" che consente all'utente di pre-definire quali bone e mesh visualizzare nell'area di lavoro.
+- <color=blue>Menu di scelta rapida Gerarchia</color>
+    È possibile fare clic con il pulsante destro del mouse in Gerarchia per aprire un menu e utilizzare varie funzioni.
+    La funzione "Cerca" è stata aggiunta al menu di scelta rapida in Gerarchia.
     <color=red>(Per maggiori informazioni, visita la nostra homepage)</color>
 
-- <color=blue>Rinnovo blocco modificatore</color>
-    Il Blocco modificatore viene rimosso e sostituito con "Opzioni Modalità di modifica" (aggiunto al menu Visualizza)
-    È stata aggiunta l'opzione per fare in modo che i modificatori in fase di modifica in modalità di modifica o gli oggetti non appartenenti alla sequenza temporale vengano applicati da altri modificatori
-    L'opzione per selezionare solo gli oggetti registrati nel modificatore quando viene rilasciato il blocco della selezione viene aggiunta
-    Viene aggiunta l'opzione per mostrare gli oggetti che non sono registrati nel modificatore come immagini sfocate in grigio
+- <color=blue>Funzione di riproduzione sincronizzata</color>
+    La funzione di script "Sincronizza" è stata aggiunta per sincronizzare l'animazione o controllare i parametri collegandosi a un altro apPortrait.
     <color=red>(Per maggiori informazioni, visita la nostra homepage)</color>
 
-- <color=blue>Miglioramento della generazione automatica di mesh</color>
-    La precedente funzione di generazione automatica della mesh è stata rimossa e viene fornita una funzione di generazione automatica della mesh completamente nuova e migliorata
-    La mesh può essere creata direttamente dal menu delle impostazioni della mesh
-    La modifica dell'area per la generazione della mesh è migliorata e può essere facilmente modificata con il mouse.
-    Quando si seleziona una mesh creata da un file PSD, un'opzione per generare automaticamente una mesh viene aggiunta a questo messaggio quando si seleziona l'opzione che richiede di rimuovere i vertici.
-    <color=red>(Per maggiori informazioni, visita la nostra homepage)</color>
-
-- <color=blue>Rotoscoping</color>
-    La funzione "Rotoscoping", che mostra i file di immagini esterne sullo sfondo dell'area di lavoro, viene aggiunta al menu Visualizza
-    <color=red>(Per maggiori informazioni, visita la nostra homepage)</color>
-
-- <color=blue>Copia e incolla valori da più chiavi</color> e <color=blue>Miglioramento della funzione di copia</color>
-    Viene aggiunta la funzione per incollare due o più tasti in combinazione nel modificatore tramite il parametro di controllo.
-    Dopo aver copiato i valori in un massimo di 4 slot, è possibile incollarli sotto forma di valori di somma o valori medi.
-    È migliorato in modo che i valori copiati possano essere incollati anche se non sono lo stesso oggetto purché siano soddisfatte le condizioni minime (eccetto per copia e incolla nell'animazione)
-    <color=red>(Per maggiori informazioni, visita la nostra homepage)</color>
-
-- <color=blue>Funzioni di script</color>
-    Viene aggiunta la funzione di script per ottenere l'ordinamento della mesh di destinazione
-    Le funzioni fisiche sono migliorate come AddForce da applicare a "Jiggle Bones"
-    Vengono aggiunte le funzioni di script che restituiscono l'apOptRootUnit o l'indice attualmente in riproduzione
-    <color=red>(Per maggiori informazioni, visita la nostra homepage)</color>
-
-- Le dimensioni dell'interfaccia utente superiore dell'editor e della prima interfaccia utente a destra sono state ridotte
-- L'interfaccia utente dei parametri di controllo è stata ridotta e migliorata per mostrare più interfaccia utente dei parametri di controllo sullo schermo. (Il pulsante di scelta rapida Modifica è stato eliminato)
-- Quando si selezionano i fotogrammi chiave trascinando nell'interfaccia utente della sequenza temporale dell'animazione, è stato migliorato lo scorrimento automatico in verticale e in orizzontale.
-- Quando si seleziona una mesh dal menu, lo schermo scorre automaticamente per adattarsi all'area o al perno della mesh.
-- Viene aggiunta la funzione "Aggiungi tutti i parametri di controllo alla sequenza temporale"
-- L'ordine dei gruppi di sotto-mesh nella scheda Osso dell'interfaccia utente Gerarchia del gruppo di mesh è stato migliorato per essere ordinato in base alla profondità
-- È migliorato in modo che gli oggetti vengano ordinati nello stesso ordine della gerarchia quando si aggiungono oggetti alla sequenza temporale.
-- È migliorato in modo che i livelli della timeline siano ordinati nello stesso ordine della gerarchia quando viene premuto il "pulsante per ordinare i livelli della timeline in base alla profondità".
-- Quando si utilizza il metodo "Depth To Order" nella finestra di dialogo Bake, è stata aggiunta un'opzione per assegnare l'ordinamento a intervalli diversi da 1.
-- Se è presente una sola immagine, l'immagine viene impostata automaticamente durante la creazione di una trama
-- Quando si apre o si salva un file esterno, l'ultimo percorso viene registrato e viene migliorato per essere utilizzato come percorso predefinito alla successiva apertura della finestra di dialogo.
-- È stata aggiunta l'opzione per mantenere la funzione "Auto-Key" anche dopo l'uscita dalla modalità di modifica.
-- Quando si rinomina un gruppo di mesh, se è registrato come figlio di un altro gruppo di mesh, il nome dell'oggetto connesso viene sincronizzato in modo che venga modificato insieme (il viceversa non è sincronizzato)
-- Viene modificato in modo che il messaggio di errore non venga visualizzato durante la creazione di un fotogramma chiave sovrapposto (v1.3.1)
+- Quando si crea un nuovo ritratto nell'editor, la casella di testo viene messa a fuoco automaticamente.
+- Funzioni come Duplica e Migra possono essere utilizzate contemporaneamente con più oggetti selezionati nell'impostazione del gruppo mesh.
+- I valori modificati possono essere copiati, incollati o inizializzati mentre sono selezionati più oggetti nella schermata di modifica del modificatore collegato al parametro di controllo.
+- È possibile selezionare più livelli utilizzando i tasti Ctrl e Shift nella finestra di dialogo di importazione del file PSD.
+- Vengono aggiunte la funzione "RemoveForce" e la funzione "RemoveTouch" sovraccaricata per disabilitare solo la forza fisica target.
+- Miglioramento del timer dell'editor e del contatore FPS (v1.3.3)
+- Aggiunto il modificatore "Color Only" (v1.3.3)
 
 
 
 <size=13>Risolto il problema</size>
 
-- È stato risolto un problema che si verificava nelle funzioni interne di apOptTransform, GetMeshTransform e GetMeshGroupTransform.
-- È stato risolto un problema per cui la modalità di ordinamento della trasparenza veniva forzatamente fissata su Ortografica anche quando l'opzione cartellone era disattivata.
-- È stato risolto un problema per cui l'interpolazione della sequenza temporale dell'animazione del tipo "parametro di controllo" non veniva elaborata correttamente durante l'esecuzione del gioco.
-- È stato risolto un problema per cui si verificava un "input fantasma" che sembrava continuare a digitare questi tasti per un po 'dopo aver rilasciato altri tasti di scelta rapida dopo aver premuto i tasti Ctrl, Maiusc, Alt
-- È stato risolto un problema per cui il parametro di controllo non veniva selezionato correttamente quando si faceva clic sull'interfaccia utente di un altro parametro di controllo immediatamente dopo aver spostato il cursore fuori dall'editor mentre veniva selezionato in alcune versioni dell'editor di Unity.
-- È stato risolto un problema a causa della creazione di troppi valori di registro durante il salvataggio delle opzioni dell'editor.
-- È stato risolto un problema per cui il file di backup veniva salvato in modo errato in modo diverso dalle specifiche a seconda dell'ambiente del dispositivo dell'utente. (I file di backup delle versioni precedenti possono essere aperti in questa versione, ma al contrario, i file di backup creati in questa versione non possono essere aperti nelle versioni precedenti.)
-- È stato risolto un problema per cui l'anteprima veniva visualizzata in modo anomalo perché la "posizione, rotazione e dimensione predefinite del gruppo di mesh" non veniva applicata nella funzione "Reimport PSD".
-- È stato risolto un problema a causa della mancanza dell'impostazione Osso oscillante durante l'esportazione della struttura ossea in un file.
-- È stato risolto un problema per cui alcuni pulsanti sembravano essere cliccabili nell'interfaccia utente di clip di animazione senza gruppi di mesh collegati
-- "Physic" del nome del modificatore è stato modificato in "Physics"
-- È stato risolto un problema per cui l'opacità del livello non veniva applicata durante l'importazione di un file PSD
-- È stato risolto un problema per cui Bake non poteva essere eseguito quando il modificatore Physics veniva applicato alla mesh a doppia faccia.
-- È stato risolto un problema per cui quando Bake veniva eseguito mentre le dimensioni del GameObject di apPortrait o GameObjects sopra erano invertite, il rendering non veniva eseguito normalmente anche se la scala veniva ripristinata al valore originale.
-- È stato risolto un problema per cui "Le ossa a cui non è stato applicato alcun peso di rigging appaiono grigie" non viene aggiornato immediatamente dopo aver eseguito la funzione "Pos-Paste".
-- È stato risolto un problema per cui la finestra di dialogo veniva chiusa forzatamente durante il processo di apertura di un file PSD a causa di un errore di Unity Editor nell'ultimo macOS (tuttavia, il registro degli errori potrebbe continuare a verificarsi fino all'aggiornamento in macOS o Unity)
-- È stato risolto un problema per cui la modifica del modificatore di un gruppo di mesh figlio diventava non modificabile quando lo si annullava
-- È stato risolto un problema a causa del quale rimaneva un'immagine residua di 1 fotogramma quando l'unità principale veniva cambiata dall'animazione.
-- È stato risolto un problema che durante la riproduzione di un'animazione con uno script dopo aver chiamato Nascondi e mostra, normalmente non veniva convertito in più della seconda unità radice
-- È stato risolto un problema per cui il risultato dell'elaborazione non veniva applicato al parametro di controllo nel primo fotogramma durante la riproduzione di un'animazione con uno script
-- È stato risolto un problema per cui alcuni dati di altre clip di animazione potevano essere inizializzati se si annulla immediatamente dopo la creazione di dati durante il lavoro di animazione (v1.3.1)
+- È stato risolto un problema per cui il metodo Additivo non funziona correttamente quando si modifica la scala di un oggetto nel modificatore utilizzando due o più parametri di controllo.
+- È stato risolto un problema per cui gli oggetti in un gruppo mesh figlio non vengono visualizzati nell'interfaccia utente della gerarchia quando si annulla immediatamente dopo la copia o la migrazione degli oggetti.
+- È stato risolto un problema per cui lo stato di modifica non viene ripristinato correttamente in modo intermittente se si ripetono Annulla e Ripeti.
+- È stato risolto un problema per cui l'animazione degli oggetti con l'opzione Importante disattivata si comportava in modo strano quando si modificava Time.timeScale di Unity.
+- È stato risolto un problema che non è possibile annullare dopo la migrazione di oggetti in un gruppo mesh.
+- È stato risolto un problema che l'annullamento non funziona dopo aver modificato la profondità degli oggetti in un gruppo mesh.
+- È stato risolto un problema per cui i caratteri di escape vengono aggiunti al valore dell'impostazione del percorso, quindi il problema che il percorso non viene riconosciuto dipende dall'ambiente di sistema.
+- È stato risolto un problema per cui il salvataggio e l'apertura dei file non funzionano normalmente a causa del fatto che la codifica non è UTF-8 a seconda dell'ambiente di sistema.
+- È stato risolto un problema per cui il gizmo di rotazione si comporta in modo opposto quando la scala dell'osso è invertita
+- È stato risolto un problema per cui il modificatore di fisica si comportava come se fosse in esecuzione a un FPS basso a seconda dell'ambiente di esecuzione
+- È stato risolto un problema relativo al rallentamento dell'editor a causa della generazione di troppi dati di annullamento (v1.3.3)
+- È stato risolto un problema per cui l'interfaccia utente della gerarchia non si aggiornava correttamente durante la selezione e la modifica di un gruppo mesh appartenente a un altro gruppo mesh (v1.3.3)
+- È stato risolto un problema relativo all'errore che si verificava durante l'esecuzione di Bake durante l'assegnazione dei pesi di rigging utilizzando la funzione "Pos-Paste" alle ossa appartenenti ad altri gruppi di mesh (v1.3.3)
+- È stato risolto un problema per cui le ossa e le mesh non venivano selezionate correttamente nell'area di lavoro (v1.3.3)
 
 
 
 
 -----------------------------------------
 (덴마크어)
-<size=16>AnyPortrait Update Log v1.3.0/v1.3.1</size>
-(Byg 19. april 2021)
-
+<size=16>AnyPortrait Update Log v1.3.2/v1.3.3</size>
+(Byg 10. juli 2021/20. juli 2021)
 
 <size=13>Forbedringer</size>
 
-- <color=blue>Performance</color>
-    Rigging modifier og animationsbehandling forbedring af ydeevne under spil
-
-- <color=blue>Tilpas genvejstaster</color>
-    En menu, der giver brugerne mulighed for at tildele de fleste genvejstaster i editoren, er blevet føjet til indstillingsdialogboksen.
-    Indholdet af den øverste meddelelse, der vises, når du trykker på genvejstasten, ændres mere detaljeret, og den forbedres, så unødvendige tilfælde ikke vises.
+- <color=blue>Forbedret editorens ydeevne</color>
+    Editorens ydeevne er blevet forbedret.
+    "Accelerated Mode", der yderligere forbedrer editorens ydeevne ved at installere en separat plug-in, er blevet tilføjet. (Ændring i indstillingsdialog)
     <color=red>(For mere information, se venligst vores hjemmeside)</color>
 
-- <color=blue>Tilføjet hovedgenvej</color>
-    Page Up, Page Down : Rul animationens tidslinje UI op og ned
-    Ctrl + <,> : Gå til forrige eller næste nøgleramme
-    N : Slå animationens “Auto-Key” -funktion til eller fra
-    ~ : Skift mellem fanen Hierarki og fanen Controller på venstre side af editoren
-    Enter : Udfør funktionen Make Polygon, når du laver mesh
-    1-6 Nummertaster : Skift redigeringsmenuen til masken
-    F2 : Fokus flyttes til brugergrænsefladen, der ændrer navnet på det aktuelle objekt
-    I : Skift forudindstilling for synlighed
-    1-5 taltaster : Skift forudindstillede regler for synlighed
-    Alt + O : Skift Rotoscoping
-    9 Taltast : Tidligere Rotoscoping-billedfil
-    0 Nummernøgle : Næste Rotoscoping-billedfil
-    D : Skift om der skal laves flere modifikatorer til at køre i redigeringstilstand
-    Alt + D : Indstil modifikatorens mål, som ikke skal vælges, selvom valglåsen frigøres i redigeringstilstand
-    Alt + G : Vis objekter, der ikke er underlagt modifikatorer i redigeringstilstand, som grå farve
-    Alt + B : Eksempel på beregningsresultat for knogler i redigeringstilstand
-    Alt + C : Eksempel på beregningsresultat for farve i redigeringstilstand
+- <color=blue>Forbedret gameplay-ydeevne</color>
+    Den samlede præstation i gameplay er blevet forbedret.
+    Hukommelsesproblemet ved opdatering af modifikatorer er blevet forbedret.
 
-- <color=blue>Visningsmenu tilføjet</color> og <color=blue>Forbedringer af arbejdsrumsgrænsefladen</color>
-    "Visningsmenu" er tilføjet for at erstatte rollen som de eksisterende visningsikoner
-    Onion Skin, mesh, bone display option knapper er blevet slettet (Disse kan indstilles til at dukke op igen i dialogboksen Setting)
-    Statusikoner, der angiver, hvordan objekter kan vises og redigeres i arbejdsområdet, vises i øverste højre hjørne.
+- <color=blue>Retningslinier</color>
+    "Retningslinier" -funktion til output af vilkårlig lige linje i arbejdsområdet er blevet føjet til "Vis-menu".
     <color=red>(For mere information, se venligst vores hjemmeside)</color>
 
-- <color=blue>Forudindstillet synlighed</color>
-    En ny "Visibility Preset" -funktion er blevet tilføjet til "View Menu", der gør det muligt for brugeren at foruddefinere, hvilke knogler og masker der skal vises i arbejdsområdet.
+- <color=blue>Hierarki Højreklik på menuen</color>
+    Du kan højreklikke i hierarkiet for at åbne en menu og bruge forskellige funktioner.
+    "Søg" -funktionen er blevet føjet til højreklikmenuen i Hierarki.
     <color=red>(For mere information, se venligst vores hjemmeside)</color>
 
-- <color=blue>Fornyelse af ændringslås</color>
-    Modifier Lock fjernes og erstattes med "Indstillinger for Rediger tilstand" (tilføjet til menuen Vis)
-    Muligheden for at gøre, at modifikatorer redigeres i redigeringstilstand, eller at objekter, der ikke hører til tidslinjen, anvendes af andre modifikatorer tilføjes
-    Muligheden for kun at vælge objekter, der er registreret i modifikatoren, når valglåsen frigøres, tilføjes
-    Muligheden for at vise objekter, der ikke er registreret i modifikatoren som grå slørede billeder, tilføjes
+- <color=blue>Synkroniseret afspilningsfunktion</color>
+    "Synkroniser" scriptfunktion er tilføjet for at synkronisere animations- eller kontrolparametre ved at oprette forbindelse til en anden apPortrait.
     <color=red>(For mere information, se venligst vores hjemmeside)</color>
 
-- <color=blue>Forbedring af automatisk maskegenerering</color>
-    Den tidligere automatiske maskegenereringsfunktion er fjernet, og en helt ny og forbedret automatisk maskegenereringsfunktion leveres
-    Net kan oprettes direkte fra mesh-indstillingsmenuen
-    Ændring af området til maskegenerering forbedres let redigeres med musen.
-    Når du vælger et mesh, der er oprettet fra en PSD-fil, tilføjes en indstilling til automatisk at generere et mesh til denne meddelelse, når du vælger den mulighed, der beder dig om at fjerne hjørner.
-    <color=red>(For mere information, se venligst vores hjemmeside)</color>
-
-- <color=blue>Rotoscoping</color>
-    Funktionen "Rotoscoping", der viser eksterne billedfiler i baggrunden af ​​arbejdsområdet, føjes til menuen Vis
-    <color=red>(For mere information, se venligst vores hjemmeside)</color>
-
-- <color=blue>Kopiér og indsæt værdier fra flere taster</color> og <color=blue>Forbedring af kopifunktion</color>
-    Funktionen til at indsætte to eller flere nøgler i kombination i modifikatoren efter kontrolparameter tilføjes.
-    Når du har kopieret værdier i op til 4 slots, kan du indsætte dem i form af sumværdier eller gennemsnitsværdier.
-    Det forbedres, så kopierede værdier kan indsættes, selvom de ikke er det samme objekt, så længe minimumsbetingelserne er opfyldt (undtagen kopi & indsæt i animation)
-    <color=red>(For mere information, se venligst vores hjemmeside)</color>
-
-- <color=blue>Scriptfunktioner</color>
-    Scriptfunktionen for at få sorteringsrækkefølgen for målnet tilføjes
-    Fysikfunktioner forbedres, såsom AddForce, der skal anvendes på "Jiggle Bones"
-    Scriptfunktionerne tilføjes, der returnerer den aktuelt spillede apOptRootUnit eller indeks
-    <color=red>(For mere information, se venligst vores hjemmeside)</color>
-
-- Størrelsen på editorens øverste brugergrænseflade og den første brugergrænseflade til højre er reduceret
-- Kontrolparameter UI er reduceret og forbedret for at vise mere kontrolparameter UI på skærmen. (Rediger genvejsknappen er blevet slettet)
-- Når du vælger nøglerammer ved at trække i animationens tidslinje UI, er det blevet forbedret til automatisk at rulle lodret og vandret.
-- Når du vælger et maske fra menuen, rulles skærmen automatisk for at passe til nettets område eller drejning.
-- Funktionen "Tilføj alle kontrolparametre til tidslinjen" tilføjes
-- Rækkefølgen af ​​undermaskegrupper i fanen Knogle i Hierarki-brugergrænsefladen i maskegruppen er blevet forbedret for at blive sorteret efter dybden
-- Det forbedres, så objekter sorteres i samme rækkefølge som hierarkiet, når objekter tilføjes til tidslinjen.
-- Det forbedres, så tidslinjelagene sorteres i samme rækkefølge som i hierarkiet, når der trykkes på "knappen til at sortere tidslinjelag efter dybde".
-- Når du bruger metoden "Dybde til ordre" i dialogboksen Bag, er der tilføjet en mulighed for at tildele sorteringsrækkefølgen med andre intervaller end 1.
-- Hvis der kun er ét billede, indstilles billedet automatisk, når der oprettes et net
-- Når du åbner eller gemmer en ekstern fil, registreres den sidste sti og forbedres, så den bruges som standardsti næste gang dialogen åbnes.
-- Muligheden for at beholde "Auto-Key" -funktionen, selv efter at redigeringstilstanden er afsluttet, er blevet tilføjet.
-- Ved omdøbning af en mesh-gruppe, hvis den er registreret som et barn i en anden mesh-gruppe, synkroniseres navnet på det tilsluttede objekt, så det ændres sammen (omvendt synkroniseres ikke)
-- Det ændres, så fejlmeddelelsen ikke vises, når du opretter en overlappende keyframe (v1.3.1)
+- Når du opretter et nyt portræt i editoren, fokuseres tekstboksen automatisk.
+- Funktioner som Duplicate og Migrate kan bruges samtidigt med flere objekter valgt i maskegruppeindstillingen.
+- De redigerede værdier kan kopieres, indsættes eller initialiseres, mens flere objekter vælges på redigeringsskærmen for modifikatoren, der er knyttet til kontrolparameteren.
+- Flere lag kan vælges ved hjælp af Ctrl- og Shift-tasterne i PSD-filimportdialogen.
+- "FjernForce" -funktion og overbelastet "FjernTouch" -funktion for kun at deaktivere målfysikstyrke tilføjes.
+- Editor-timer og FPS-tæller forbedres (v1.3.3)
+- Tilføjet "Color Only" modifikator (v1.3.3)
 
 
 
 <size=13>Faste problem</size>
 
-- Der er løst et problem, der opstod i de interne funktioner i apOptTransform, GetMeshTransform og GetMeshGroupTransform.
-- Et problem er løst, at Transparency Sort Mode blev tvangsrettet til Orthographic, selv når billboard-indstillingen blev slået fra.
-- Et problem er løst, at interpolationen af ​​animationens tidslinje af typen "kontrolparameter" ikke blev behandlet korrekt, mens spillet kørte.
-- Et problem er løst, at en "ghost input", der syntes at fortsætte med at skrive disse taster et stykke tid efter at have frigivet andre genvejstaster efter at have trykket på Ctrl, Shift, Alt-tasterne
-- Et problem er løst, at kontrolparameteren ikke blev valgt korrekt, når du klikker på en anden kontrolparameter UI umiddelbart efter at markøren blev flyttet ud af editoren, mens den blev valgt i bestemte versioner af Unity-editoren.
-- Et problem er løst, at der blev oprettet for mange registreringsdatabaseværdier, da redigeringsindstillingerne blev gemt.
-- Et problem er løst, at sikkerhedskopifilen blev gemt forkert forskelligt fra specifikationen afhængigt af brugerens enhedsmiljø. (Sikkerhedskopifiler fra tidligere versioner kan åbnes i denne version, men tværtimod kan backupfiler oprettet i denne version ikke åbnes i tidligere versioner.)
-- Et problem er løst, at forhåndsvisningen blev vist unormalt, fordi "standardposition, rotation og størrelse af maskegruppen" ikke blev anvendt i "Reimport PSD" -funktionen.
-- Et problem er løst, at Jiggle Bone-indstillingen manglede, når du eksporterede knoglestrukturen til en fil.
-- Et problem er løst, at nogle knapper syntes at være klikbare i brugergrænsefladen til animationsklip uden tilsluttede maskegrupper
-- "Physic" af ændringsnavnet er blevet ændret til "Physics"
-- Et problem er løst, at lagets opacitet ikke blev anvendt, når du importerede en PSD-fil
-- Et problem er løst, at Bake ikke kunne udføres, når Physics-modifikatoren blev anvendt på det dobbeltsidede maske.
-- Et problem er løst, at når Bake blev udført, mens størrelsen af ​​GameObject af apPortrait eller GameObjects over det var inverteret, ville det ikke gengive normalt, selvom skalaen blev gendannet til sin oprindelige værdi.
-- Et problem er løst, at "Knogler uden brug af rigningsvægt på dem vises grå" opdateres ikke straks efter udførelse af "Pos-Paste" -funktionen.
-- Et problem er løst, at dialogen blev lukket med magt under processen med at åbne en PSD-fil på grund af en Unity Editor-fejl i den nyeste macOS (dog kan fejlloggen fortsætte, indtil den opdateres i macOS eller Unity)
-- Et problem er løst, at redigering af modifikatoren for en underordnet maskegruppe bliver uredigerbar, når du fortryder den
-- Et problem er løst, at der var et efterbillede af 1 ramme, da rodenheden blev skiftet med animation.
-- Et problem er løst, at når du spiller animation med et script efter at have kaldet Skjul og vis, blev det normalt ikke konverteret til den mere end anden rodenhed
-- Et problem er løst, at behandlingsresultatet ikke blev anvendt på kontrolparameteren i den første ramme, når der afspilles animation med et script
-- Et problem er løst, at nogle data fra andre animationsklip kunne initialiseres, hvis du fortryder straks efter oprettelse af data under animationsarbejdet (v1.3.1)
+- Et problem er løst, at Additive-metoden ikke fungerer korrekt, når du ændrer skalaen på et objekt i modifikatoren ved hjælp af to eller flere kontrolparametre.
+- Et problem er rettet, at objekter i en underordnet maskegruppe ikke vises i Hierarki-brugergrænsefladen, når de fortrydes umiddelbart efter kopiering eller migrering af objekter.
+- Et problem er rettet, at redigeringstilstanden korrekt ikke gendannes med mellemrum, hvis fortrydelse og gentagelse gentages.
+- Et problem er rettet. Animationen af ​​objekter med indstillingen Vigtig slået fra opførte sig underligt, når du ændrede Unity's Time.timeScale.
+- Et problem er rettet, fortrydelse er ikke mulig efter migrering af objekter i en maskegruppe.
+- Et problem er rettet, fortryd ikke fungerer efter ændring af dybden af ​​objekter i en maskegruppe.
+- Der er rettet et problem, hvor escape-tegn føjes til stiindstillingsværdien, så problemet med at stien ikke genkendes afhængigt af systemmiljøet.
+- Et problem er løst, at lagring og åbning af filer ikke fungerer normalt, fordi kodning ikke er UTF-8 afhængigt af systemmiljøet.
+- Et problem er løst, at rotation gizmo opfører sig på den modsatte måde, når knoglens skala er inverteret
+- Et problem er rettet, at fysikmodifikatoren opførte sig som om den kørte ved lav FPS afhængigt af eksekveringsmiljøet
+- Et problem er rettet, at redaktøren sænker tempoet på grund af, at der genereres for mange fortrydelsesdata (v1.3.3)
+- Et problem er rettet, at Hierarchy UI ikke opdateres ordentligt, når du vælger og redigerer en mesh-gruppe, der tilhører en anden mesh-gruppe (v1.3.3)
+- Et problem er rettet, at fejlen opstod under udførelse af Bake, når der tildeles rigningsvægte ved hjælp af "Pos-Paste" -funktionen til knogler, der tilhører andre maskegrupper (v1.3.3)
+- Et problem er rettet, at knogler og masker ikke blev valgt korrekt i arbejdsområdet (v1.3.3)
 
 
 
 
 -----------------------------------------
 (일본어)
-<size=16> AnyPortrait更新ログv1.3.0/v1.3.1</size>
-（2021年4月19日ビルド）
+<size=16> AnyPortrait更新ログv1.3.2/v1.3.3</size>
+（2021年7月10日/2021年7月20日ビルド）
 
 <size=13>改善点</size>
 
-- <color=blue>パフォーマンスの改善</color>
-    ゲーム実行中のRiggingモディファイヤとアニメーション処理性能の向上
-
-- <color=blue>ショートカットの設定</color>
-    エディタ内のほとんどのショートカットキーをユーザーが指定できるメニューが設定ダイアログに追加
-    ショートカットをクリックした場合に表示される上部メッセージの内容がより詳細に変更され、不要な場合は、表示されないように改善
+- <color=blue>エディターのパフォーマンスの向上</color>
+    エディタのパフォーマンスが向上しました。
+    別のプラグインをインストールすることでエディターのパフォーマンスをさらに向上させる「加速モード」が追加されました。 （設定ダイアログの変更）
     <color=red>（詳細はホームページを確認してください）</color>
 
-- <color=blue>追加された主なショートカットキー</color>
-    Page Up、Page Down：アニメーションタイムラインUIを上下にスクロール
-    Ctrl + <、>：前、次のキーフレームに移動
-    N：アニメの「Auto-Key」機能をオンまたはオフに
-    〜：エディタの左側のHierarchyタブとControllerタブを切り替え
-    Enter：メッシュ製作時Make Polygon機能が実行さ
-    数字1〜6キー：メッシュ編集メニューを切り替え
-    F2：現在のオブジェクトの名前を変更しUIでフォーカスが移動
-    I：可視性プリセットの切り替え
-    数字1〜5キー：可視性プリセットルールの切り替え
-    Alt + O：ロトスコーピングを切り替えます
-    数字9キー：前のロトスコーピング画像ファイル
-    数字0キー：次のロトスコーピング画像ファイル
-    D：編集モードで実行する複数の修飾子を作成するかどうかを切り替えます
-    Alt + D：編集モードで選択ロックが解除されてもモディファイアのターゲットが選択されないように設定します
-    Alt + G：編集モードでモディファイアの対象とならないオブジェクトを灰色で表示します
-    Alt + B：編集モードでボーンの計算結果をプレビューします
-    Alt + C：編集モードでの色の計算結果のプレビュー
+- <color=blue>ゲームプレイパフォーマンスの向上</color>
+    ゲームプレイの全体的なパフォーマンスが向上しました。
+    修飾子を更新するときのメモリの問題が改善されました。
 
-- <color=blue>表示メニューを追加</color>と<color=blue>ワークスペースUIの改善</color>
-    「表示メニュー」が追加され、既存の表示アイコンの役割を代替
-    既存の残像（Onion Skin）、メッシ、ボーンの出力オプションボタンが削除され（設定ダイアログで再度表示設定可能）
-    ワークスペース内のオブジェクトがどのように出力され、編集することができるかどうかを示すステータスアイコンが右上に登場
+- <color=blue>ガイド</color>
+    「表示メニュー」に、ワークスペースに任意の直線を出力する「ガイド」機能を追加しました。
     <color=red>（詳細はホームページを確認してください）</color>
 
-- <color=blue>可視性プリセット</color>
-    ワークスペースからのボーンとメッシュを出力するかどうか、ユーザーが直接事前に指定できる「可視性プリセット」機能が「表示メニュー」に新たに追加された
+- <color=blue>Hierarchy右クリックメニュー</color>
+    Hierarchyを右クリックしてメニューを開き、さまざまな機能を使用できます。
+    Hierarchyの右クリックメニューに「検索」機能を追加しました。
     <color=red>（詳細はホームページを確認してください）</color>
 
-- <color=blue>モディファイヤロックリニューアル</color>
-    モディファイヤロックオプションが削除され、「編集モードのオプション」に置き換え（表示メニューの追加）
-    編集モードで編集しているモディファイヤまたはタイムラインに属していないオブジェクトが他のモディファイヤの適用を受けることにするオプションを追加
-    選択ロックが解除された場合にはモディファイヤに登録されたオブジェクトだけを選択するオプションを追加
-    モディファイヤに登録されていないオブジェクトはグレーのぼかし画像で表示されるオプションを追加
+- <color=blue>同期再生機能</color>
+    同期別のapPortraitに接続してアニメーションや制御パラメータを同期するスクリプト機能を追加しました。
     <color=red>（詳細はホームページを確認してください）</color>
 
-- <color=blue>自動メッシュ生成機能リニューアル</color>
-    既存の自動メッシュ生成機能は削除され、完全に新しく改良された自動メッシュ生成機能が提供
-    メッシュ設定画面でもメッシュをすぐに作成可能
-    メッシュを生成するための領域（Area）を簡単にマウスで編集できるように改善
-    PSDファイルから生成されたメッシュを選択すると、頂点を削除するかどうかを尋ねるメッセージが表示されるオプションを選択すると、このメッセージに自動的にメッシュを生成する選択肢が追加
-    <color=red>（詳細はホームページを確認してください）</color>
-
-- <color=blue>ロトスコーピング（Rotoscoping）</color>
-    ワークスペースの背景に外部画像を出力する「ロトスコーピング」機能が表示メニューに追加
-    <color=red>（詳細はホームページを確認してください）</color>
-
-- <color=blue>複数のキーでの値をコピーする機能を追加</color>と<color=blue>コピー機能の改善</color>
-    コントロールパラメータによるモディファイヤで2つ以上のキーを組み合わせて貼り付けることができる機能が追加さ
-    最大4つのスロットに値を保存した後、これを加算した値や平均値の形で貼り付け可能
-    最小の条件だけ満足すると、同じオブジェクトがなくても、コピーされた値を貼り付けることができるよう改善（ただし、アニメーションでのコピー＆ペーストは例外）
-    <color=red>（詳細はホームページを確認してください）</color>
-
-- <color=blue>スクリプト関数を追加し、改善</color>
-    特定のメッシュのSorting Orderをもたらすことができる関数の追加
-    AddForceのような物理的関数が「Jiggle Bone」にも適用されるように改善
-    現在再生中のapOptRootUnitやインデックスを返す関数の追加
-    <color=red>（詳細はホームページを確認してください）</color>
-
-- エディタの上部UI、右の最初のUIのサイズが縮小
-- コントロールパラメータUI縮小されて画面に多くのコントロールパラメータUIが表示されるよう改善。 （編集ショートカットボタンが削除）
-- アニメーションタイムラインUIでドラッグをして、キーフレームを選択すると、上下左右に自動的にスクロールになるように改善
-- メニューからメッシュを選択すると、メッシュの領域（Area）またはピボット（Pivot）に合わせて自動的に画面がスクロールされるように改善
-- 「コントロールパラメータを一括してタイムラインに追加する」機能を追加
-- メッシュグループのHierarchy UIのBoneタブのサブメッシュグループの順序がDepthに合わせて整列
-- 一括でオブジェクトをタイムラインに追加すると、Hierarchyのと同じ順序で並べ替え
-- 「タイムラインレイヤーをDepthでソートするボタン」を押すと、タイムラインのレイヤーがHierarchyでの順序と同じに整列
-- BakeダイアログでDepth To Order方式を使用するとき、1ではない、それ以上の間隔でSorting Orderを割り当てることができるオプションを追加
-- 画像が一つである場合には、メッシュを作成すると、その画像が自動的に設定され
-- 外部のファイルを開いたり保存するときに、最後のパスが記録され、次に、そのダイアログを開いたときにデフォルトのパスとして使用される
-- 「Auto-Key」機能が編集モードが終了した後も維持されるオプションの追加
-- メッシュグループの名前を変更するとき、これが他のメッシュグループの子として登録された場合、接続されたオブジェクトの名前が同期されてように変更されるように改善（その逆は同期されません）
-- オーバーラップしたキーフレームを作成するときに失敗メッセージが表示されないように変更されました（v1.3.1）
+- エディタで新しいポートレートを作成すると、テキストボックスが自動的にフォーカスされます。
+- メッシュグループ設定で選択した複数のオブジェクトと同時に、複製や移行などの機能を使用できます。
+- 制御パラメータにリンクされたモディファイアの編集画面で複数のオブジェクトを選択しているときに、編集した値をコピー、貼り付け、または初期化できます。
+- PSDファイルのインポートダイアログでCtrlキーとShiftキーを使用して、複数のレイヤーを選択できます。
+- 「RemoveForce」関数と、ターゲットの物理力のみを無効にするオーバーロードされた「RemoveTouch」関数が追加されました。
+- エディタータイマーとFPSカウンターが改善されました（v1.3.3）
+-「Color Only」モディファイアを追加しました（v1.3.3）
 
 
 
 <size=13>修正された問題</size>
 
-- apOptTransformの内部関数であるGetMeshTransform、GetMeshGroupTransformで発生するエラーが修正されまし
-- ビルボードオプションを切った状態でも、Transparency Sort Modeが強制的にOrthographicで固定される問題が修正されまし
-- ゲームの実行中に「コントロールパラメータ」タイプのアニメーションタイムラインの補間が正常に処理されない問題が修正されまし
-- Ctrl、Shift、Altキーを押した後、他のショートカットを離した後もしばらくの間は、このキーが継続して入力されたかのような「ゴースト」が修正されまし
-- Unityエディタの特定のバージョンでは、コントロールパラメータが選択された状態で、エディタの外部にカーソルが出た入ってきた直後に、別のコントロールパラメータUIをクリックすると、正しく選択されない問題が修正されまし
-- エディタのオプションが保存されるとき、あまりにも多くのレジストリ値が生成される問題が修正されまし
-- ユーザーの機器の環境に応じて、バックアップファイルが仕様と異なって正しく保存されている問題が修正されまし（以前のバージョンでのバックアップファイルを、今回のバージョンで開くことができますが、逆に、今回のバージョンで作成されたバックアップファイルは、以前のバージョンで開くことができません）
-- 「PSDの再インポート」機能で「メッシュグループの基本的な位置、回転、サイズ"が適用されなくて、プレビューが異常に出力される問題が修正されまし
-- ボーン構造をファイルにエクスポートするとき、暑いこの（Jiggle Bone）の設定が欠落している問題が修正されまし
-- メッシュグループが接続されていないアニメーションクリップのUIで、いくつかのボタンが押されたことがあるかのように表示される問題が修正されまし
-- モディファイヤ名の「Physic」を「Physics 」に変更されまし
-- PSDファイルを読み込むとき、レイヤーの不透明度が適用されない問題が修正されまし
-- 両面メッシュのPhysicsモディファイヤが適用された場合、Bakeをすることができない問題が修正されまし
-- apPortraitのGameObjectやその上位のGameObjectの大きさが反転した状態でBakeをすれば、Scaleを元に復元しても正常に表示されない問題が修正されまし
-- 「リギング重みが適用されていないボーンは灰色で表示する」が「Pos-Paste」機能を実行した直後には、更新されない問題が修正されまし
-- 最新のmacOSでUnity EditorエラーによりPSDファイルを開く過程でダイアログが強制的に終了される問題が修正される（ただし、そのエラーログはmacOSまたはUnityでの更新されるまでは、発生可能）
-- 子メッシュグループのモディファイヤを変更するとき、元に戻すのと、編集が不可能な状態になってしまうという問題が修正されまし
-- アニメーションでルートユニットが転換される場合、1フレーム残像が残る問題が修正されまし
-- Hide、Showを呼び出した後にスクリプトでアニメーションを再生すると、通常は2つ以上のルートユニットに変換されないという問題が修正されました。
-- スクリプトでアニメーションを再生するときに、処理結果が最初のフレームの制御パラメーターに適用されなかった問題が修正されました
-- アニメーション作業中にデータを作成した直後に元に戻すと、他のアニメーションクリップの一部のデータが初期化される可能性がある問題が修正されました（v1.3.1）
-​
+- 2つ以上の制御パラメーターを使用してモディファイア内のオブジェクトのスケールを変更すると、Additiveメソッドが正しく機能しない問題が修正されました。
+- オブジェクトをコピーまたは移行した直後に元に戻すと、子メッシュグループ内のオブジェクトが階層UIに表示されない問題が修正されました。
+- 元に戻すとやり直しを繰り返すと、編集状態が断続的に正しく回復しない問題が修正されました。
+- UnityのTime.timeScaleを変更すると、重要オプションがオフになっているオブジェクトのアニメーションが奇妙に動作する問題が修正されました。
+- メッシュグループ内のオブジェクトの移行後に元に戻すことができない問題が修正されました。
+- メッシュグループ内のオブジェクトの深さを変更した後、元に戻すことが機能しない問題が修正されました。
+- パス設定値にエスケープ文字が追加される問題を修正し、システム環境によってはパスが認識されない問題を修正しました。
+- システム環境によっては、エンコードがUTF-8でないために、ファイルの保存とオープンが正常に機能しないという問題が修正されました。
+- ボーンのスケールが反転したときに回転ギズモが逆に動作する問題が修正されました
+- 実行環境に応じて、物理モディファイアが低FPSで実行されているかのように動作する問題が修正されました
+- 生成される元に戻すデータが多すぎるためにエディターの速度が低下する問題が修正されました（v1.3.3）
+- 別のメッシュグループに属するメッシュグループを選択および編集すると、「Hierarchy UI」が正しく更新されない問題が修正されました（v1.3.3）
+- 他のメッシュグループに属するボーンに「Pos-Paste」機能を使用してリギングウェイトを割り当てるときに「Bake」の実行中にエラーが発生する問題が修正されました（v1.3.3）
+- ワークスペースでボーンとメッシュが正しく選択されなかった問題が修正されました（v1.3.3）​
 
 
 
 -----------------------------------------
 (중국어-번체)
-<size=16>AnyPortrait更新日誌v1.3.0/v1.3.1</size>
-（2021年4月19日）
-
+<size=16>AnyPortrait更新日誌v1.3.2/v1.3.3</size>
+（2021年7月10日/2021年7月20日）
 
 <size=13>改進</size>
 
-- <color=blue>性能提升</color>
-    在玩遊戲時改進了索具修改器和動畫處理的性能
-
-- <color=blue>自定義快捷鍵</color>
-    允許用戶在編輯器中分配大多數快捷鍵的菜單已添加到設置對話框。
-    按下快捷鍵時出現的上方消息的內容會更詳細地更改，並且會得到改進，從而不會顯示不必要的情況。
+- <color=blue>改進的編輯器性能</color>
+    編輯器性能已得到改進。
+    添加了通過安裝單獨的插件進一步提高編輯器性能的 "加速模式"。 （在設置對話框中更改）
     <color=red>（有關更多信息，請訪問我們的主頁）</color>
 
-- <color=blue>添加了主快捷方式</color>
-    Page Up，Page Down：上下滾動動畫時間軸UI
-    Ctrl + <，>：移至上一個或下一個關鍵幀
-    N：打開或關閉動畫的“自動關鍵點”功能
-    〜：在編輯器左側的“層次結構”選項卡和“控制器”選項卡之間切換
-    Enter：製作網格時執行“製作多邊形”功能
-    1-6數字鍵：切換網格編輯菜單
-    F2：焦點移至修改當前對象名稱的UI
-    I：切換可見性預設
-    1〜5數字鍵：切換可見性預設規則
-    Alt + O：切換Rotoscoping
-    9數字鍵：上一個Rotoscoping圖像文件
-    0數字鍵：下一個Rotoscoping圖像文件
-    D：切換是否使多個修改器在編輯模式下運行
-    Alt + D：即使在編輯模式下釋放選擇鎖定，也可以設置不選擇修改器的目標
-    Alt + G：將在編輯模式下不受修飾符約束的對象顯示為灰色
-    Alt + B：在編輯模式下預覽骨骼的計算結果
-    Alt + C：在編輯模式下預覽顏色的計算結果
+- <color=blue>改進的遊戲性能</color>
+    遊戲的整體性能得到了改善。
+    更新修改器時的內存問題已得到改善。
 
-- 添加了<color=blue>視圖菜單</color>和<color=blue>工作區UI改進</color>
-    添加了“視圖菜單”以替換現有視圖圖標的角色
-    洋蔥皮，網格，骨骼顯示選項按鈕已刪除（可以將其設置為在“設置”對話框中重新出現）
-    指示如何在工作區中顯示和編輯對象的狀態圖標顯示在右上角。
+- <color=blue>指南</color>
+    在"視圖菜單"中增加了在工作區輸出任意直線的"指南"功能。
     <color=red>（有關更多信息，請訪問我們的主頁）</color>
 
-- <color=blue>可見性預設</color>
-    新的“可見性預設”功能已添加到“視圖菜單”，該功能使用戶可以預定義要在工作空間中顯示的骨骼和網格。
+- <color=blue>層級右鍵菜單</color>
+    您可以在層次結構中右鍵單擊以打開菜單並使用各種功能。
+    層級右鍵菜單新增搜索功能。
     <color=red>（有關更多信息，請訪問我們的主頁）</color>
 
-- <color=blue>修改器鎖續訂</color>
-    修改器鎖已刪除，並被“編輯模式選項”（已添加到“查看”菜單）取代
-    添加了使修改器在編輯模式下進行編輯或不屬於時間軸的對像被其他修改器應用的選項
-    添加了在釋放選擇鎖時僅選擇在修改器中註冊的對象的選項
-    添加了用於顯示未在修改器中註冊為灰色模糊圖像的對象的選項
+- <color=blue>同步播放功能</color>
+    新增同步腳本功能，通過連接其他人像來同步動畫或控制參數。
     <color=red>（有關更多信息，請訪問我們的主頁）</color>
 
-- <color=blue>自動網格生成改進</color>
-    以前的自動網格生成功能已被刪除，並提供了一個全新的改進的自動網格生成功能
-    可以直接從網格設置菜單創建網格
-    使用鼠標可以輕鬆地修改用於生成網格的區域的修改。
-    選擇從PSD文件創建的網格時，選擇提示您刪除頂點的選項時，將自動生成網格的選項添加到此消息。
-    <color=red>（有關更多信息，請訪問我們的主頁）</color>
-
-- <color=blue>Rotoscoping</color>
-    “Rotoscoping”功能（在工作區的背景中顯示外部圖像文件）已添加到“視圖”菜單中
-    <color=red>（有關更多信息，請訪問我們的主頁）</color>
-
-- <color=blue>通過多個鍵複製和粘貼值</color>和<color=blue>複製功能改進</color>
-    添加了通過控制參數將兩個或多個鍵組合粘貼到修飾符中的功能。
-    在最多4個插槽中處理值之後，您可以將它們粘貼為求和值或平均值的形式。
-    進行了改進，以便只要滿足最低條件（即使動畫中的複制和粘貼除外），即使復制的值不是同一對象，也可以粘貼複製的值
-    <color=red>（有關更多信息，請訪問我們的主頁）</color>
-
-- <color=blue>腳本功能</color>
-    添加了用於獲取目標網格的排序順序的腳本功能
-    改進了諸如AddForce之類的物理功能，可將其應用於“微動骨骼”
-    添加了腳本函數，這些函數返回當前正在播放的apOptRootUnit或索引
-    <color=red>（有關更多信息，請訪問我們的主頁）</color>
-
-- 編輯器頂部UI和右側第一個UI的尺寸已減小
-- 減少並改進了控制參數UI，以在屏幕上顯示更多控制參數UI。 （“編輯快捷方式”按鈕已刪除）
-- 通過在動畫時間軸UI中拖動來選擇關鍵幀時，此功能已得到改進，可以自動垂直和水平滾動。
-- 從菜單中選擇網格時，屏幕將自動滾動以適合網格的區域或樞軸。
-- 添加了“將所有控制參數添加到時間線”功能
-- 改進了網格組的“層次結構” UI的“骨骼”選項卡中的子網格組的順序，以按深度排序
-- 進行了改進，以便在將對象添加到時間線時以與層次結構相同的順序對對象進行排序。
-- 進行了改進，以便在按下“按深度對時間線圖層進行排序的按鈕”時，時間線圖層的排序順序與層次結構中的排序順序相同。
-- 在“烘烤”對話框中使用“按順序排列的深度”方法時，已添加了一個選項，用於以1以外的時間間隔分配排序順序。
-- 如果只有一張圖像，則在創建網格時會自動設置該圖像
-- 打開或保存外部文件時，將記錄最後一個路徑，並改進該路徑以在下次打開對話框時用作默認路徑。
-- 添加了即使退出編輯模式後仍保持“自動鍵”功能的選項。
-- 重命名網格組時，如果將其註冊為另一個網格組的子級，則已連接對象的名稱將同步，以便一起更改（反之則不同步）
-- 進行了更改，以便在創建重疊的關鍵幀時不會出現故障消息 (v1.3.1)
+- 在編輯器中創建新肖像時，文本框會自動聚焦。
+- 複製和遷移等功能可以與網格組設置中選擇的多個對象同時使用。
+- 在鏈接到控制參數的修改器的編輯屏幕上選擇多個對象時，可以復制、粘貼或初始化編輯的值。
+- 可以使用 PSD 文件導入對話框中的 Ctrl 和 Shift 鍵選擇多個圖層。
+- 添加了 "RemoveForce" 功能和重載的 "RemoveTouch" 功能，僅禁用目標物理力。
+- 改進了編輯器計時器和 FPS 計數器（v1.3.3）
+- 添加了“Color Only”修飾符（v1.3.3）
 
 
 
 <size=13>修復了問題</size>
 
-- 修復了apOptTransform，GetMeshTransform和GetMeshGroupTransform的內部函數中發生的問題。
-- 修復了即使在廣告牌選項關閉的情況下，透明排序模式也被強制固定為正交的問題。
-- 修復了在運行遊戲時未正確處理“控制參數”類型的動畫時間軸的插值的問題。
-- 修復了一個問題，即在按Ctrl，Shift，Alt鍵後釋放其他快捷鍵後，似乎在一段時間內一直在鍵入這些鍵的“鬼輸入”會出現
-- 已修復以下問題：在某些版本的Unity編輯器中將光標移出編輯器後，立即單擊另一個控制參數UI時，未正確選擇控制參數。
-- 解決了保存編輯器選項時創建太多註冊表值的問題。
-- 修復了一個問題，即根據用戶的設備環境，備份文件被錯誤地保存為不同於規範的文件。 （可以在此版本中打開以前版本的備份文件，但是相反，不能在以前的版本中打開以此版本創建的備份文件。）
-- 修復了由於“重新導入PSD”功能未應用“網格組的默認位置，旋轉和大小”而導致預覽顯示異常的問題。
-- 已修復將骨骼結構導出到文件時缺少“跳動骨骼”設置的問題。
-- 修復了以下問題：在未連接網格組的情況下，某些按鈕在動畫剪輯的UI中似乎可單擊
-- 修改器名稱的“Physic”已修改為“Physics”
-- 修復了導入PSD文件時未應用圖層不透明度的問題
-- 已修復將“物理”修改器應用於雙面網格時無法執行“烘焙”的問題。
-- 已修復一個問題，當在執行apPortrait時apPortrait或上面的GameObjects的遊戲對象的大小反轉時執行烘焙時，即使縮放比例恢復到其原始值，也無法正常渲染。
-- 修復了執行“位置粘貼”功能後，沒有立即更新“未施加索具重量的骨頭顯示為灰色”的問題。
-- 修復了由於最新macOS中的Unity編輯器錯誤而在打開PSD文件的過程中強制關閉對話框的問題（但是，錯誤日誌可能會繼續發生，直到在macOS或Unity中進行更新為止）
-- 解決了以下問題：撤消子網格組的修改器後，其編輯變得不可編輯的問題
-- 修復了通過動畫切換根單元時殘留1幀殘像的問題。
-- 修復了以下問題：在調用“隱藏和顯示”後使用腳本播放動畫時，通常不會將其轉換為第二個以上的根單元
-- 修復了使用腳本播放動畫時，處理結果未應用於第一幀中的控制參數的問題
-- 修復了在動畫工作期間創建任何數據後立即撤消其他動畫剪輯的某些數據可能會初始化的問題 (v1.3.1)
+- 修復了使用兩個或多個控制參數更改修改器中對象的比例時，加法方法無法正常工作的問題。
+- 修復了在復製或遷移對像後立即撤消時，子網格組中的對像不會出現在層次結構 UI​​ 中的問題。
+- 如果重複撤消和重做，編輯狀態不會間歇性恢復的問題已得到修復。
+- 修復了在更改 Unity 的 Time.timeScale 時關閉重要選項的對象動畫行為異常的問題。
+- 已修復在網格組中遷移對像後無法撤消的問題。
+- 修復了在修改網格組中對象的深度後撤消不起作用的問題。
+- 修復了路徑設置值中添加了轉義字符，導致根據系統環境無法識別路徑的問題。
+- 修復了因係統環境編碼不是UTF-8而導致無法正常保存和打開文件的問題。
+- 已修復一個問題，即當骨骼的比例反轉時，旋轉 Gizmo 的行為方式相反
+- 修復了物理修改器根據執行環境以低 FPS 運行的問題
+- 修復了由於生成的撤消數據過多而導致編輯器變慢的問題（v1.3.3）
+- 修復了在選擇和編輯屬於另一個網格組的網格組時“層次結構 UI”沒有正確更新的問題 (v1.3.3)
+- 修復了使用“Pos-Paste”功能將索具權重分配給屬於其他網格組的骨骼時，在執行“烘焙”期間發生錯誤的問題（v1.3.3）
+- 修復了在工作區中沒有正確選擇骨骼和網格的問題 (v1.3.3)
 
 
 
 -----------------------------------------
 (중국어-간체)
-<size=16>AnyPortrait更新日志v1.3.0/v1.3.1</size>
-（2021年4月19日）
-
+<size=16>AnyPortrait更新日志v1.3.2/v1.3.3</size>
+（2021年7月10日/2021年7月20日）
 
 <size=13>改进</size>
 
-- <color=blue>性能提升</color>
-    在玩游戏时改进了索具修改器和动画处理的性能
-
-- <color=blue>自定义快捷键</color>
-    允许用户在编辑器中分配大多数快捷键的菜单已添加到设置对话框。
-    按下快捷键时出现的上方消息的内容会更详细地更改，并且会得到改进，从而不会显示不必要的情况。
+- <color=blue>改进的编辑器性能</color>
+    编辑器性能已得到改进。
+    添加了通过安装单独的插件进一步提高编辑器性能的 "加速模式"。 （在设置对话框中更改）
     <color=red>（有关更多信息，请访问我们的主页）</color>
 
-- <color=blue>添加了主快捷方式</color>
-    Page Up，Page Down：上下滚动动画时间轴UI
-    Ctrl + <，>：移至上一个或下一个关键帧
-    N：打开或关闭动画的“自动关键点”功能
-    〜：在编辑器左侧的“层次结构”选项卡和“控制器”选项卡之间切换
-    Enter：制作网格时执行“制作多边形”功能
-    1-6数字键：切换网格编辑菜单
-    F2：焦点移至修改当前对象名称的UI
-    I：切换可见性预设
-    1〜5数字键：切换可见性预设规则
-    Alt + O：切换Rotoscoping
-    9数字键：上一个Rotoscoping图像文件
-    0数字键：下一个Rotoscoping图像文件
-    D：切换是否使多个修改器在编辑模式下运行
-    Alt + D：即使在编辑模式下释放选择锁定，也可以设置不选择修改器的目标
-    Alt + G：将在编辑模式下不受修饰符约束的对象显示为灰色
-    Alt + B：在编辑模式下预览骨骼的计算结果
-    Alt + C：在编辑模式下预览颜色的计算结果
+- <color=blue>改进的游戏性能</color>
+    游戏的整体性能得到了改善。
+    更新修改器时的内存问题已得到改善。
 
-- 添加了<color=blue>视图菜单</color>和<color=blue>工作区UI改进</color>
-    添加了“视图菜单”以替换现有视图图标的角色
-    洋葱皮，网格，骨骼显示选项按钮已删除（可以将其设置为在“设置”对话框中重新出现）
-    指示如何在工作区中显示和编辑对象的状态图标显示在右上角。
+- <color=blue>指南</color>
+    在"视图菜单"中增加了在工作区输出任意直线的"指南"功能。
     <color=red>（有关更多信息，请访问我们的主页）</color>
 
-- <color=blue>可见性预设</color>
-    新的“可见性预设”功能已添加到“视图菜单”，该功能使用户可以预定义要在工作空间中显示的骨骼和网格。
+- <color=blue>层级右键菜单</color>
+    您可以在层次结构中右键单击以打开菜单并使用各种功能。
+    层级右键菜单新增搜索功能。
     <color=red>（有关更多信息，请访问我们的主页）</color>
 
-- <color=blue>修改器锁续订</color>
-    修改器锁已删除，并被“编辑模式选项”（已添加到“查看”菜单）取代
-    添加了使修改器在编辑模式下进行编辑或不属于时间轴的对像被其他修改器应用的选项
-    添加了在释放选择锁时仅选择在修改器中注册的对象的选项
-    添加了用于显示未在修改器中注册为灰色模糊图像的对象的选项
+- <color=blue>同步播放功能</color>
+    新增同步脚本功能，通过连接其他人像来同步动画或控制参数。
     <color=red>（有关更多信息，请访问我们的主页）</color>
 
-- <color=blue>自动网格生成改进</color>
-    以前的自动网格生成功能已被删除，并提供了一个全新的改进的自动网格生成功能
-    可以直接从网格设置菜单创建网格
-    使用鼠标可以轻松地修改用于生成网格的区域的修改。
-    选择从PSD文件创建的网格时，选择提示您删除顶点的选项时，将自动生成网格的选项添加到此消息。
-    <color=red>（有关更多信息，请访问我们的主页）</color>
-
-- <color=blue>Rotoscoping</color>
-    “Rotoscoping”功能（在工作区的背景中显示外部图像文件）已添加到“视图”菜单中
-    <color=red>（有关更多信息，请访问我们的主页）</color>
-
-- <color=blue>通过多个键复制和粘贴值</color>和<color=blue>复制功能改进</color>
-    添加了通过控制参数将两个或多个键组合粘贴到修饰符中的功能。
-    在最多4个插槽中处理值之后，您可以将它们粘贴为求和值或平均值的形式。
-    进行了改进，以便只要满足最低条件（即使动画中的复制和粘贴除外），即使复制的值不是同一对象，也可以粘贴复制的值
-    <color=red>（有关更多信息，请访问我们的主页）</color>
-
-- <color=blue>脚本功能</color>
-    添加了用于获取目标网格的排序顺序的脚本功能
-    改进了诸如AddForce之类的物理功能，可将其应用于“微动骨骼”
-    添加了脚本函数，这些函数返回当前正在播放的apOptRootUnit或索引
-    <color=red>（有关更多信息，请访问我们的主页）</color>
-
-- 编辑器顶部UI和右侧第一个UI的尺寸已减小
-- 减少并改进了控制参数UI，以在屏幕上显示更多控制参数UI。 （“编辑快捷方式”按钮已删除）
-- 通过在动画时间轴UI中拖动来选择关键帧时，此功能已得到改进，可以自动垂直和水平滚动。
-- 从菜单中选择网格时，屏幕将自动滚动以适合网格的区域或枢轴。
-- 添加了“将所有控制参数添加到时间线”功能
-- 改进了网格组的“层次结构” UI的“骨骼”选项卡中的子网格组的顺序，以按深度排序
-- 进行了改进，以便在将对象添加到时间线时以与层次结构相同的顺序对对象进行排序。
-- 进行了改进，以便在按下“按深度对时间线图层进行排序的按钮”时，时间线图层的排序顺序与层次结构中的排序顺序相同。
-- 在“烘烤”对话框中使用“按顺序排列的深度”方法时，已添加了一个选项，用于以1以外的时间间隔分配排序顺序。
-- 如果只有一张图像，则在创建网格时会自动设置该图像
-- 打开或保存外部文件时，将记录最后一个路径，并改进该路径以在下次打开对话框时用作默认路径。
-- 添加了即使退出编辑模式后仍保持“自动键”功能的选项。
-- 重命名网格组时，如果将其注册为另一个网格组的子级，则已连接对象的名称将同步，以便一起更改（反之则不同步）
-- 进行了更改，以便在创建重叠的关键帧时不会出现故障消息 (v1.3.1)
+- 在编辑器中创建新肖像时，文本框会自动聚焦。
+- 复制和迁移等功能可以与网格组设置中选择的多个对象同时使用。
+- 在链接到控制参数的修改器的编辑屏幕上选择多个对象时，可以复制、粘贴或初始化编辑的值。
+- 可以使用 PSD 文件导入对话框中的 Ctrl 和 Shift 键选择多个图层。
+- 添加了 "RemoveForce" 功能和重载的 "RemoveTouch" 功能，仅禁用目标物理力。
+- 改进了编辑器计时器和 FPS 计数器（v1.3.3）
+- 添加了“Color Only”修饰符（v1.3.3）
 
 
 
 <size=13>修复了问题</size>
 
-- 修复了apOptTransform，GetMeshTransform和GetMeshGroupTransform的内部函数中发生的问题。
-- 修复了即使在广告牌选项关闭的情况下，透明排序模式也被强制固定为正交的问题。
-- 修复了在运行游戏时未正确处理“控制参数”类型的动画时间轴的插值的问题。
-- 修复了一个问题，即在按Ctrl，Shift，Alt键后释放其他快捷键后，似乎在一段时间内一直在键入这些键的“鬼输入”会出现
-- 已修复以下问题：在某些版本的Unity编辑器中将光标移出编辑器后，立即单击另一个控制参数UI时，未正确选择控制参数。
-- 解决了保存编辑器选项时创建太多注册表值的问题。
-- 修复了一个问题，即根据用户的设备环境，备份文件被错误地保存为不同于规范的文件。 （可以在此版本中打开以前版本的备份文件，但是相反，不能在以前的版本中打开以此版本创建的备份文件。）
-- 修复了由于“重新导入PSD”功能未应用“网格组的默认位置，旋转和大小”而导致预览显示异常的问题。
-- 已修复将骨骼结构导出到文件时缺少“跳动骨骼”设置的问题。
-- 修复了以下问题：在未连接网格组的情况下，某些按钮在动画剪辑的UI中似乎可单击
-- 修改器名称的“Physic”已修改为“Physics”
-- 修复了导入PSD文件时未应用图层不透明度的问题
-- 已修复将“物理”修改器应用于双面网格时无法执行“烘焙”的问题。
-- 已修复一个问题，当在执行apPortrait时apPortrait或上面的GameObjects的游戏对象的大小反转时执行烘焙时，即使缩放比例恢复到其原始值，也无法正常渲染。
-- 修复了执行“位置粘贴”功能后，没有立即更新“未施加索具重量的骨头显示为灰色”的问题。
-- 修复了由于最新macOS中的Unity编辑器错误而在打开PSD文件的过程中强制关闭对话框的问题（但是，错误日志可能会继续发生，直到在macOS或Unity中进行更新为止）
-- 解决了以下问题：撤消子网格组的修改器后，其编辑变得不可编辑的问题
-- 修复了通过动画切换根单元时残留1帧残像的问题。
-- 修复了以下问题：在调用“隐藏和显示”后使用脚本播放动画时，通常不会将其转换为第二个以上的根单元
-- 修复了使用脚本播放动画时，处理结果未应用于第一帧中的控制参数的问题
-- 修复了在动画工作期间创建任何数据后立即撤消其他动画剪辑的某些数据可能会初始化的问题 (v1.3.1)
+- 修复了使用两个或多个控制参数更改修改器中对象的比例时，加法方法无法正常工作的问题。
+- 修复了在复制或迁移对象后立即撤消时，子网格组中的对象不会出现在层次结构 UI 中的问题。
+- 如果重复撤消和重做，编辑状态不会间歇性恢复的问题已得到修复。
+- 修复了在更改 Unity 的 Time.timeScale 时关闭重要选项的对象动画行为异常的问题。
+- 已修复在网格组中迁移对象后无法撤消的问题。
+- 修复了在修改网格组中对象的深度后撤消不起作用的问题。
+- 修复了路径设置值中添加了转义字符，导致根据系统环境无法识别路径的问题。
+- 修复了因系统环境编码不是UTF-8而导致无法正常保存和打开文件的问题。
+- 已修复一个问题，即当骨骼的比例反转时，旋转 Gizmo 的行为方式相反
+- 修复了物理修改器根据执行环境以低 FPS 运行的问题
+- 修复了由于生成的撤消数据过多而导致编辑器变慢的问题（v1.3.3）
+- 修复了在选择和编辑属于另一个网格组的网格组时“层次结构 UI”没有正确更新的问题 (v1.3.3)
+- 修复了在使用“Pos-Paste”功能将索具权重分配给属于其他网格组的骨骼时，在执行“烘焙”期间发生错误的问题（v1.3.3）
+- 修复了在工作区中没有正确选择骨骼和网格的问题 (v1.3.3)
 
 
 
 -----------------------------------------
 (폴란드어)
-<size=16>Dziennik aktualizacji AnyPortret v1.3.0/v1.3.1</size>
-(Zbuduj 19 kwietnia 2021 r.)
+<size=16>Dziennik aktualizacji AnyPortret v1.3.2/v1.3.3</size>
+(Zbuduj 10 lipca 2021/20 lipca 2021 r.)
 
 
 <size=13>Ulepszenia</size>
 
-- <color=blue>Poprawa wydajności</color>
-    Modyfikator podwieszania i ulepszenia wydajności przetwarzania animacji podczas gry
-
-- <color=blue>Dostosuj klawisze skrótów</color>
-    Do okna dialogowego ustawień dodano menu, które umożliwia użytkownikom przypisanie większości klawiszy skrótów w edytorze.
-    Treść górnej wiadomości, która pojawia się po naciśnięciu klawisza skrótu, została zmieniona bardziej szczegółowo i została ulepszona, aby niepotrzebne przypadki nie były wyświetlane.
+- <color=blue>Ulepszona wydajność edytora</color>
+    Poprawiono wydajność edytora.
+    Dodano "Tryb przyspieszony", który dodatkowo poprawia wydajność edytora poprzez zainstalowanie osobnej wtyczki. (Zmiana w oknie ustawień)
     <color=red>(Aby uzyskać więcej informacji, odwiedź naszą stronę główną)</color>
 
-- <color=blue>Dodano główny skrót</color>
-    Page Up, Page Down: Przewiń interfejs użytkownika osi czasu animacji w górę iw dół
-    Ctrl + <,>: Przejdź do poprzedniej lub następnej klatki kluczowej
-    N: Włącz lub wyłącz funkcję „Auto-Key” animacji
-    ~: Przełączanie między zakładką Hierarchia i zakładką Kontroler po lewej stronie edytora
-    Enter: Wykonaj funkcję Make Polygon podczas tworzenia siatki
-    1-6 Klawisze numeryczne: Przełącz menu edycji siatki
-    F2: Fokus przenosi się do interfejsu użytkownika, który modyfikuje nazwę bieżącego obiektu
-    I : Przełącz ustawienie wstępne widoczności
-    1-5 Klawisze numeryczne : Przełącz wstępnie ustawione reguły widoczności
-    Alt + O : Przełącz Rotoscoping
-    9 Klawisz numeryczny : poprzedni plik obrazu rotoskopii
-    0 Klawisz numeryczny : następny plik obrazu rotoskopii
-    D : Przełącz, czy chcesz, aby wiele modyfikatorów działało w trybie edycji
-    Alt + D : Ustaw cel modyfikatora tak, aby nie był zaznaczany, nawet jeśli blokada wyboru zostanie zwolniona w trybie edycji
-    Alt + G : Wyświetl obiekty, które nie podlegają modyfikacjom w trybie edycji, jako kolor szary
-    Alt + B : Podgląd wyniku obliczeń kości w trybie edycji
-    Alt + C : Podgląd wyniku obliczenia koloru w trybie edycji
+- <color=blue>Ulepszona wydajność rozgrywki</color>
+    Poprawiono ogólną wydajność rozgrywki.
+    Poprawiono problem z pamięcią podczas aktualizacji modyfikatorów.
 
-- <color=blue>Dodano menu Widok</color> i <color=blue>Ulepszenia interfejsu użytkownika obszaru roboczego</color>
-    Dodano „menu Widok”, aby zastąpić rolę istniejących ikon widoku
-    Przyciski opcji wyświetlania skórki cebuli, siatki i kości zostały usunięte (można je ustawić tak, aby pojawiały się ponownie w oknie dialogowym Ustawienia)
-    Ikony stanu wskazujące, jak obiekty mogą być wyświetlane i edytowane w obszarze roboczym, pojawiają się w prawym górnym rogu.
+- <color=blue>Wytyczne</color>
+    Do menu "Widok" dodano funkcję "Guideline" umożliwiającą wyprowadzanie dowolnej linii prostej w obszarze roboczym.
     <color=red>(Aby uzyskać więcej informacji, odwiedź naszą stronę główną)</color>
 
-- <color=blue>Preset widoczności</color>
-    Do menu „Widok” dodano nową funkcję „Wstępne ustawienie widoczności”, która pozwala użytkownikowi wstępnie zdefiniować, które kości i siatki mają być wyświetlane w obszarze roboczym.
+- <color=blue>Hierarchia Menu prawego przycisku myszy</color>
+    Możesz kliknąć prawym przyciskiem myszy w hierarchii, aby otworzyć menu i korzystać z różnych funkcji.
+    Funkcja "Szukaj" została dodana do menu prawego przycisku myszy w Hierarchii.
     <color=red>(Aby uzyskać więcej informacji, odwiedź naszą stronę główną)</color>
 
-- <color=blue>Odnowienie blokady modyfikatora</color>
-    Blokada modyfikatora została usunięta i zastąpiona przez „Opcje trybu edycji” (dodana do menu Widok)
-    Dodano opcję, aby modyfikatory edytowane w trybie edycji lub obiekty nienależące do osi czasu były stosowane przez inne modyfikatory
-    Dodano opcję zaznaczania tylko obiektów zarejestrowanych w modyfikatorze po zwolnieniu blokady wyboru
-    Dodano opcję pokazania obiektów, które nie są zarejestrowane w modyfikatorze, jako szare rozmyte obrazy
+- <color=blue>Funkcja zsynchronizowanego odtwarzania</color>
+    Dodano funkcję skryptu "Synchronizuj", aby synchronizować parametry animacji lub sterowania przez połączenie z innym aPortretem.
     <color=red>(Aby uzyskać więcej informacji, odwiedź naszą stronę główną)</color>
 
-- <color=blue>Poprawa automatycznego generowania siatki</color>
-    Poprzednia funkcja automatycznego generowania siatki została usunięta, a dostępna jest zupełnie nowa i ulepszona funkcja automatycznego generowania siatki
-    Siatkę można utworzyć bezpośrednio z menu ustawień siatki
-    Modyfikowanie obszaru generowania siatki jest ulepszone i można je łatwo edytować za pomocą myszy.
-    Podczas wybierania siatki utworzonej z pliku PSD, opcja automatycznego generowania siatki jest dodawana do tego komunikatu podczas wybierania opcji, która monituje o usunięcie wierzchołków.
-    <color=red>(Aby uzyskać więcej informacji, odwiedź naszą stronę główną)</color>
-
-- <color=blue>Rotoscoping</color>
-    Do menu Widok dodano funkcję „Rotoscoping”, która pokazuje zewnętrzne pliki graficzne w tle obszaru roboczego
-    <color=red>(Aby uzyskać więcej informacji, odwiedź naszą stronę główną)</color>
-
-- <color=blue>Kopiuj i wklej wartości z wielu kluczy</color> i <color=blue>Poprawa funkcji kopiowania</color>
-    Dodano funkcję wklejania dwóch lub więcej kluczy w kombinacji w modyfikatorze za pomocą parametru sterującego.
-    Po skopiowaniu wartości do 4 slotów można je wkleić w postaci wartości sumarycznych lub średnich.
-    Ulepszono, aby skopiowane wartości można było wklejać, nawet jeśli nie są tym samym obiektem, o ile spełnione są minimalne warunki (z wyjątkiem kopiowania i wklejania w animacji)
-    <color=red>(Aby uzyskać więcej informacji, odwiedź naszą stronę główną)</color>
-
-- <color=blue>Funkcje skryptów</color>
-    Dodano funkcję skryptu, która pobiera kolejność sortowania docelowej siatki
-    Ulepszone funkcje fizyczne, takie jak AddForce, które można zastosować do „Jiggle Bones”
-    Dodawane są funkcje skryptowe, które zwracają aktualnie odtwarzany apOptRootUnit lub indeks
-    <color=red>(Aby uzyskać więcej informacji, odwiedź naszą stronę główną)</color>
-
-- Zmniejszono rozmiar górnego interfejsu użytkownika edytora i pierwszego interfejsu użytkownika po prawej stronie
-- Interfejs użytkownika parametrów sterowania został zmniejszony i ulepszony, aby wyświetlać więcej interfejsu użytkownika parametrów sterowania na ekranie. (Przycisk edycji skrótu został usunięty)
-- Podczas wybierania klatek kluczowych przez przeciąganie w interfejsie użytkownika osi czasu animacji poprawiono automatyczne przewijanie w pionie i poziomie.
-- Podczas wybierania siatki z menu ekran jest automatycznie przewijany w celu dopasowania do obszaru lub obrotu siatki.
-- Dodano funkcję „Dodaj wszystkie parametry sterowania do osi czasu”
-- Poprawiono kolejność grup podsiatek na karcie Kość w interfejsie Hierarchia grupy siatek, aby były sortowane według głębokości
-- Ulepszono, że obiekty są sortowane w tej samej kolejności, co hierarchia podczas dodawania obiektów do osi czasu.
-- Ulepszono, że warstwy osi czasu są sortowane w tej samej kolejności, jak w hierarchii po naciśnięciu przycisku „sortowanie warstw osi czasu według głębokości”.
-- Podczas korzystania z metody „Głębokość do zamówienia” w oknie dialogowym Pieczenia dodano opcję przypisywania kolejności sortowania w odstępach innych niż 1.
-- Jeśli jest tylko jeden obraz, jest on automatycznie ustawiany podczas tworzenia siatki
-- Podczas otwierania lub zapisywania pliku zewnętrznego zapisywana jest ostatnia ścieżka i może zostać użyta jako domyślna ścieżka przy następnym otwarciu okna dialogowego.
-- Dodano możliwość zachowania funkcji „Auto-Key” nawet po wyjściu z trybu edycji.
-- Podczas zmiany nazwy grupy siatki, jeśli jest zarejestrowana jako dziecko innej grupy siatki, nazwa podłączonego obiektu jest synchronizowana, aby była razem zmieniana (odwrotnie nie jest synchronizowana)
-- Został zmieniony, aby komunikat o błędzie nie pojawiał się podczas tworzenia nakładającej się klatki kluczowej (v1.3.1)
+- Podczas tworzenia nowego portretu w edytorze pole tekstowe jest automatycznie ustawiane.
+- Funkcje takie jak Duplikuj i Migruj mogą być używane jednocześnie z wieloma obiektami wybranymi w ustawieniach grupy siatki.
+- Edytowane wartości można kopiować, wklejać lub inicjować, gdy na ekranie edycji modyfikatora połączonego z parametrem kontrolnym zaznaczono wiele obiektów.
+- Wiele warstw można wybrać za pomocą klawiszy Ctrl i Shift w oknie dialogowym importu pliku PSD.
+- Dodano funkcję "RemoveForce" i przeciążoną funkcję "RemoveTouch" wyłączającą tylko docelową siłę fizyczną.
+- Poprawiono timer edytora i licznik FPS (v1.3.3)
+- Dodano modyfikator "Color Only" (v1.3.3)
 
 
 
 <size=13>Naprawiono problem</size>
 
-- Naprawiono problem występujący w wewnętrznych funkcjach apOptTransform, GetMeshTransform i GetMeshGroupTransform.
-- Naprawiono błąd polegający na tym, że tryb sortowania przez przezroczystość został wymuszony na ortograficzny, nawet gdy opcja billboardu była wyłączona.
-- Naprawiono błąd polegający na tym, że interpolacja osi czasu animacji typu „parametr kontrolny” nie była poprawnie przetwarzana podczas działania gry.
-- Naprawiono problem polegający na tym, że pojawia się „widmo wprowadzania”, które wydawało się ciągnąć te klawisze przez chwilę po zwolnieniu innych klawiszy skrótu po naciśnięciu Ctrl, Shift, Alt
-- Naprawiono błąd polegający na tym, że parametr sterujący nie był wybierany poprawnie po kliknięciu interfejsu użytkownika innego parametru kontrolnego natychmiast po przeniesieniu kursora z edytora podczas wybierania go w niektórych wersjach edytora Unity.
-- Rozwiązano problem polegający na tym, że podczas zapisywania opcji edytora utworzono zbyt wiele wartości rejestru.
-- Naprawiono błąd polegający na tym, że plik kopii zapasowej był nieprawidłowo zapisywany inaczej niż w specyfikacji, w zależności od środowiska urządzenia użytkownika. (Pliki kopii zapasowych z poprzednich wersji można otwierać w tej wersji, ale wręcz przeciwnie, plików kopii zapasowych utworzonych w tej wersji nie można otwierać w poprzednich wersjach).
-- Naprawiono błąd polegający na tym, że podgląd był wyświetlany nieprawidłowo, ponieważ „domyślna pozycja, obrót i rozmiar grupy siatki” nie została zastosowana w funkcji „Ponowny import PSD”.
-- Naprawiono błąd polegający na tym, że podczas eksportowania struktury kości do pliku brakowało ustawienia Jiggle Bone.
-- Naprawiono błąd polegający na tym, że niektóre przyciski wydawały się klikalne w interfejsie użytkownika klipów animacji bez podłączonych grup siatki
-- „Physic” nazwy modyfikatora została zmieniona na „Physics”
-- Rozwiązano problem polegający na tym, że krycie warstwy nie było stosowane podczas importowania pliku PSD
-- Naprawiono błąd uniemożliwiający wykonanie wypalania po zastosowaniu modyfikatora Fizyki do dwustronnej siatki.
-- Naprawiono błąd polegający na tym, że gdy Bake było wykonywane, gdy rozmiar GameObject apPortrait lub GameObjects powyżej był odwrócony, nie renderował się normalnie, nawet jeśli skala została przywrócona do pierwotnej wartości.
-- Naprawiono błąd polegający na tym, że „Kości bez obciążenia takielunku wyglądają na szare” nie są aktualizowane natychmiast po wykonaniu funkcji „Pos-Wklej”.
-- Naprawiono problem polegający na tym, że okno dialogowe zostało przymusowo zamknięte podczas procesu otwierania pliku PSD z powodu błędu edytora Unity w najnowszym systemie macOS (jednak dziennik błędów może nadal występować, dopóki nie zostanie zaktualizowany w systemie macOS lub Unity)
-- Naprawiono błąd powodujący, że edycja modyfikatora podrzędnej grupy siatki stała się niemożliwa do edycji podczas jej cofania
-- Naprawiono błąd polegający na tym, że po przełączeniu jednostki głównej przez animację pozostawał powidok 1 klatki.
-- Naprawiono błąd polegający na tym, że podczas odtwarzania animacji ze skryptem po wywołaniu funkcji Hide and Show, normalnie nie była ona konwertowana na więcej niż drugą jednostkę główną
-- Naprawiono błąd polegający na tym, że wynik przetwarzania nie był stosowany do parametru kontrolnego w pierwszej klatce podczas odtwarzania animacji za pomocą skryptu
-- Naprawiono problem polegający na tym, że niektóre dane innych klipów animacji mogły zostać zainicjowane, jeśli cofniesz natychmiast po utworzeniu jakichkolwiek danych podczas pracy z animacją (v1.3.1)
-
+- Naprawiono problem polegający na tym, że metoda Additive nie działa poprawnie podczas zmiany skali obiektu w modyfikatorze za pomocą co najmniej dwóch parametrów kontrolnych.
+— Naprawiono błąd, który powodował, że obiekty w podrzędnej grupie siatki nie pojawiały się w interfejsie użytkownika hierarchii podczas cofania natychmiast po skopiowaniu lub migracji obiektów.
+— Rozwiązano problem polegający na tym, że stan edycji prawidłowo nie przywracał się sporadycznie, jeśli cofanie i ponawianie się powtarza.
+- Naprawiono błąd, w którym animacja obiektów z wyłączoną opcją Ważne zachowywała się dziwnie podczas zmiany Time.timeScale w Unity.
+- Naprawiono błąd, w którym nie można cofnąć po migracji obiektów w grupie siatki.
+- Naprawiono błąd, który nie działa cofania po zmodyfikowaniu głębokości obiektów w grupie siatki.
+- Naprawiono błąd polegający na dodawaniu znaków ucieczki do wartości ustawienia ścieżki, co powodowało, że ścieżka nie była rozpoznawana w zależności od środowiska systemowego.
+— Rozwiązano problem polegający na tym, że zapisywanie i otwieranie plików nie działa normalnie z powodu kodowania innego niż UTF-8 w zależności od środowiska systemowego.
+- Naprawiono problem polegający na tym, że gadżet obracania zachowuje się w odwrotny sposób, gdy skala kości jest odwrócona
+- Naprawiono błąd polegający na tym, że modyfikator fizyki zachowywał się tak, jakby działał z niską liczbą klatek na sekundę w zależności od środowiska wykonawczego
+- Naprawiono błąd, który powodował spowolnienie edytora z powodu zbyt dużej ilości generowanych danych cofania (v1.3.3)
+- Naprawiono problem polegający na tym, że interfejs hierarchii nie aktualizował się poprawnie podczas wybierania i edytowania grupy siatki należącej do innej grupy siatki (v1.3.3)
+- Naprawiono błąd polegający na tym, że podczas wykonywania funkcji „Piecz” podczas przypisywania ciężarów olinowania za pomocą funkcji „Pos-Paste” do kości należących do innych grup siatek (v1.3.3)
+- Naprawiono błąd, który powodował, że kości i siatki nie były poprawnie wybierane w obszarze roboczym (wersja 1.3.3)
 
 
 

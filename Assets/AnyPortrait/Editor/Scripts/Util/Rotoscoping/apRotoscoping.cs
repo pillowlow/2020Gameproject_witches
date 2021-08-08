@@ -378,8 +378,13 @@ namespace AnyPortrait
 
 			try
 			{
-				fs = new FileStream(filePath, FileMode.Create, FileAccess.Write);
-				sw = new StreamWriter(fs);
+				//이전
+				//fs = new FileStream(filePath, FileMode.Create, FileAccess.Write);
+				//sw = new StreamWriter(fs);
+
+				//변경
+				fs = new FileStream(apUtil.ConvertEscapeToPlainText(filePath), FileMode.Create, FileAccess.Write);
+				sw = new StreamWriter(fs, System.Text.Encoding.UTF8);
 
 				//값 저장시 KEY (3) + VALUE 방식으로 저장한다.
 				//Delimeter 단위로 값을 나눈다.
@@ -443,8 +448,14 @@ namespace AnyPortrait
 
 			try
 			{
+				//이전
+				//fs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+				//sr = new StreamReader(fs);
+
+				//변경 21.7.3 : 경로 문제와 인코딩 문제
+				filePath = apUtil.ConvertEscapeToPlainText(filePath);
 				fs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-				sr = new StreamReader(fs);
+				sr = new StreamReader(fs, System.Text.Encoding.UTF8, true);
 
 				
 				ImageSetData curImageSetData = null;

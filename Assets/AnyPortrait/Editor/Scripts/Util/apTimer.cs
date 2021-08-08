@@ -18,6 +18,7 @@ using System.Diagnostics;
 using System;
 
 using AnyPortrait;
+using UnityEditor;
 
 namespace AnyPortrait
 {
@@ -50,72 +51,116 @@ namespace AnyPortrait
 		private const int UPDATE_ALL_FRAME = 1;
 		private const int REPAINT = 2;
 
+		//이전 : Stopwatch 이용. 이건 심플한 방식으로 바꾸자
+		#region [미사용 코드]
+		//private Stopwatch[] _stopWatch = new Stopwatch[NUM_TIME_TYPE];
+		//private long[] _deltaTimeCount = new long[NUM_TIME_TYPE];//누적되는 값(msec)
+		//private double[] _prevDeltaTime = new double[NUM_TIME_TYPE];//<<결과값에 사용되는 값은 이 값이다. 
+		#endregion
 
-		private Stopwatch[] _stopWatch = new Stopwatch[NUM_TIME_TYPE];
-		private long[] _deltaTimeCount = new long[NUM_TIME_TYPE];//누적되는 값(msec)
-		private double[] _prevDeltaTime = new double[NUM_TIME_TYPE];//<<결과값에 사용되는 값은 이 값이다.
+		//추가 21.7.17 : EditorApplication.timeSinceStartup를 이용해서 시간을 측정할 수 있다.
+		private double [] _prevEditorTime = new double[NUM_TIME_TYPE];
+		private double[] _deltaTimeCount2 = new double[NUM_TIME_TYPE];
+		private double[] _lastDeltaTime2 = new double[NUM_TIME_TYPE];
 
-		//각 스톱워치별로 추가적인 누적형 타이머를 두어서 배율을 계산한다.
-		//특정 시간 간격으로 StopWatch에 의한 누적 시간과 DateTime에 의한 누적 시간을 비교하여 타이머 비율을 계산한다.
-		//(짧은 시간은 StopWatch가 정확하고 긴 시간은 DateTime이 정확하기 때문)
-		private class SubTimer
-		{
-			private DateTime _recordTime;
-			private double _timeMultiply = 0.0f;
-			private long _curTotalStopwatchTime = 0;
+		//삭제 21.7.17 : 복잡한 시간 계산은 없애기로
+		#region [미사용 코드]
+		////각 스톱워치별로 추가적인 누적형 타이머를 두어서 배율을 계산한다.
+		////특정 시간 간격으로 StopWatch에 의한 누적 시간과 DateTime에 의한 누적 시간을 비교하여 타이머 비율을 계산한다.
+		////(짧은 시간은 StopWatch가 정확하고 긴 시간은 DateTime이 정확하기 때문)
+		//private class SubTimer
+		//{
+		//	private DateTime _recordTime;
+		//	private double _timeMultiply = 0.0f;
+		//	private long _curTotalStopwatchTime = 0;
 
-			private const long CHECK_TIME_UNIT_LONG_MS = 5000;//<<2초마다 정확도 갱신
-			public SubTimer()
-			{
-				Reset();
-			}
-			public void Reset()
-			{
-				_recordTime = DateTime.Now;
-				_timeMultiply = 1.0f;
-				_curTotalStopwatchTime = 0;
-			}
-			public void UpdateTime(long addedStopwatchTimeMs)
-			{
-				_curTotalStopwatchTime += addedStopwatchTimeMs;
-				if(_curTotalStopwatchTime > CHECK_TIME_UNIT_LONG_MS)
-				{
-					double dateTime = DateTime.Now.Subtract(_recordTime).TotalSeconds;
+		//	private const long CHECK_TIME_UNIT_LONG_MS = 5000;//<<2초마다 정확도 갱신
+		//	public SubTimer()
+		//	{
+		//		Reset();
+		//	}
+		//	public void Reset()
+		//	{
+		//		_recordTime = DateTime.Now;
+		//		_timeMultiply = 1.0f;
+		//		_curTotalStopwatchTime = 0;
+		//	}
+		//	public void UpdateTime(long addedStopwatchTimeMs)
+		//	{
+		//		_curTotalStopwatchTime += addedStopwatchTimeMs;
+		//		if(_curTotalStopwatchTime > CHECK_TIME_UNIT_LONG_MS)
+		//		{
+		//			double dateTime = DateTime.Now.Subtract(_recordTime).TotalSeconds;
 
-					_timeMultiply = (dateTime / ((double)_curTotalStopwatchTime / 1000.0));//시간 비율 = 실제 시간(DateTime) / Stopwatch 누적 시간
+		//			_timeMultiply = (dateTime / ((double)_curTotalStopwatchTime / 1000.0));//시간 비율 = 실제 시간(DateTime) / Stopwatch 누적 시간
 
-					//UnityEngine.Debug.Log("Sub Timer : " + _timeMultiply + " : " + dateTime + " / " + ((double)_curTotalStopwatchTime / 1000.0));
-					_recordTime = DateTime.Now;
-					_curTotalStopwatchTime = 0;
-				}
-			}
+		//			//UnityEngine.Debug.Log("Sub Timer : " + _timeMultiply + " : " + dateTime + " / " + ((double)_curTotalStopwatchTime / 1000.0));
+		//			_recordTime = DateTime.Now;
+		//			_curTotalStopwatchTime = 0;
+		//		}
+		//	}
 
-			public double TimeMultiply { get { return _timeMultiply; } }
-		}
-		private SubTimer[] _subTimer = new SubTimer[NUM_TIME_TYPE];
+		//	public double TimeMultiply { get { return _timeMultiply; } }
+		//}
+		//private SubTimer[] _subTimer = new SubTimer[NUM_TIME_TYPE]; 
+		#endregion
 
 
-		private int _fps = 0;//Repaint 타입의 연산 시간을 계산한다.
+		//Repaint 타입의 연산 시간을 계산한다.
+		//private int _fps = 0;
+		
+		
 
-		private const long MIN_UPDATE_DELTA_TIME = 16;//(16)60FPS보다 작으면 강제 업데이트 갱신을 막아야 한다.
-		private const long MIN_UPDATE_DELTA_TIME_LOWCPU_LOW = 500;//(500) LowCPU_Low 모드에서는 2FPS 기준으로 동작
-		private const long MIN_UPDATE_DELTA_TIME_LOWCPU_MID = 50;//(50) LowCPU_Mid 모드에서는 20FPS 기준으로 동작
+		//private const long MIN_UPDATE_DELTA_TIME = 16;//(16)60FPS보다 작으면 강제 업데이트 갱신을 막아야 한다.
+		private const long MIN_UPDATE_DELTA_TIME = 8;//변경 21.7.17. 기준 FPS를 60에서 120으로 증가
 
-		private bool _isValidFrame = false;
+		private const long MIN_UPDATE_DELTA_TIME_LOWCPU_LOW = 500;//(500 = 0.5초) LowCPU_Low 모드에서는 2FPS 기준으로 동작
+		private const long MIN_UPDATE_DELTA_TIME_LOWCPU_MID = 50;//(50 = 0.05초) LowCPU_Mid 모드에서는 20FPS 기준으로 동작
+
+		//포커스가 이탈하여 에디터가 멈추면, 그동안 시간이 누적되어 DeltaTime이 크게 증가한다.
+		//Max값을 정해야한다.
+		private const double MAX_DELTA_TIME = 1.0;//1초가 넘으면 에디터가 멈춘 것으로 판단.
+		private const double MAX_DELTA_TIME_LOWCPU_LOW = 2.0;//LOW > 2초
+		private const double MAX_DELTA_TIME_LOWCPU_MID = 2.0;//MID > 2초
+
+		//private bool _isValidFrame = false;
+		private bool _isValidFrame2 = false;
+
 		// Init
 		//----------------------------------------
 		private apTimer()
 		{
+
+			#region [미사용 코드]
+			//if(_stopWatch == null || _stopWatch.Length != NUM_TIME_TYPE)				{ _stopWatch = new Stopwatch[NUM_TIME_TYPE]; }			
+			//if(_deltaTimeCount == null || _deltaTimeCount.Length != NUM_TIME_TYPE)		{ _deltaTimeCount = new long[NUM_TIME_TYPE]; }
+			//if(_prevDeltaTime == null || _prevDeltaTime.Length != NUM_TIME_TYPE)		{ _prevDeltaTime = new double[NUM_TIME_TYPE]; }			 
+			#endregion
+
+			//추가 21.7.17 : 에디터 API를 이용한다.
+			if(_prevEditorTime == null || _prevEditorTime.Length != NUM_TIME_TYPE)		{ _prevEditorTime = new double[NUM_TIME_TYPE]; }
+			if(_deltaTimeCount2 == null || _deltaTimeCount2.Length != NUM_TIME_TYPE)	{ _deltaTimeCount2 = new double[NUM_TIME_TYPE]; }
+			if(_lastDeltaTime2 == null || _lastDeltaTime2.Length != NUM_TIME_TYPE)		{ _lastDeltaTime2 = new double[NUM_TIME_TYPE]; }
+
+
 			for (int i = 0; i < NUM_TIME_TYPE; i++)
 			{
-				_stopWatch[i] = new Stopwatch();
-				_stopWatch[i].Start();
-				_deltaTimeCount[i] = 0;
-				_prevDeltaTime[i] = 0.0f;
+				#region [미사용 코드]
+				//_stopWatch[i] = new Stopwatch();
+				//_stopWatch[i].Start();
+				//_deltaTimeCount[i] = 0;
+				//_prevDeltaTime[i] = 0.0; 
+				#endregion
 
-				_subTimer[i] = new SubTimer();
+				//추가 21.7.17
+				_prevEditorTime[i] = EditorApplication.timeSinceStartup;
+				_deltaTimeCount2[i] = 0;
+				_lastDeltaTime2[i] = 0;
+
+				//_subTimer[i] = new SubTimer();
 			}
-			_fps = 0;
+
+			//_fps = 0;
 		}
 
 		// Functions
@@ -128,69 +173,140 @@ namespace AnyPortrait
 			//	//UnityEngine.Debug.LogError("Timer DemoViolation");
 			//	return false;
 			//}
-			_isValidFrame = false;
+			
+			//_isValidFrame = false;
+			_isValidFrame2 = false;
 
-			_stopWatch[UPDATE].Stop();
-			_stopWatch[UPDATE_ALL_FRAME].Stop();
+			//이전 코드
+			#region [미사용 코드]
+			//_stopWatch[UPDATE].Stop();
+			//_stopWatch[UPDATE_ALL_FRAME].Stop();
 
-			long deltaTime_Update = _stopWatch[UPDATE].ElapsedMilliseconds;
-			long deltaTime_UpdateAllFrame = _stopWatch[UPDATE_ALL_FRAME].ElapsedMilliseconds;
+			//long deltaTime_Update = _stopWatch[UPDATE].ElapsedMilliseconds;
+			//long deltaTime_UpdateAllFrame = _stopWatch[UPDATE_ALL_FRAME].ElapsedMilliseconds;
 
-			//Sub Time도 계산
-			_subTimer[UPDATE].UpdateTime(deltaTime_Update);
-			_subTimer[UPDATE_ALL_FRAME].UpdateTime(deltaTime_UpdateAllFrame);
+			////Sub Time도 계산
+			//_subTimer[UPDATE].UpdateTime(deltaTime_Update);
+			//_subTimer[UPDATE_ALL_FRAME].UpdateTime(deltaTime_UpdateAllFrame);
 
 
-			_deltaTimeCount[UPDATE] += deltaTime_Update;
-			_deltaTimeCount[UPDATE_ALL_FRAME] += deltaTime_UpdateAllFrame;
+			//_deltaTimeCount[UPDATE] += deltaTime_Update;
+			//_deltaTimeCount[UPDATE_ALL_FRAME] += deltaTime_UpdateAllFrame; 
+			#endregion
 
-			//Update는 60FPS보다 높으면 프레임 스킵을 해야한다.
+
+			//추가 21.7.17 : 에디터의 시간 이용			
+			_deltaTimeCount2[UPDATE] += (EditorApplication.timeSinceStartup - _prevEditorTime[UPDATE]);
+			_prevEditorTime[UPDATE] = EditorApplication.timeSinceStartup;
+
+			
+
+
+			//Update는 60FPS -> 120FPS 보다 높으면(해당 시간보다 낮으면) 프레임 스킵을 해야한다.
+			//그 적당한 시간이 지난 경우에 ValidFrame 설정
 
 			if(lowCPUStatus == apEditor.LOW_CPU_STATUS.LowCPU_Low)
 			{
-				//약 2FPS
-				if (_deltaTimeCount[UPDATE] > MIN_UPDATE_DELTA_TIME_LOWCPU_LOW)
+				//약 2FPS (0.5초)
+				//이전 방식
+				#region [미사용 코드]
+				//if (_deltaTimeCount[UPDATE] > MIN_UPDATE_DELTA_TIME_LOWCPU_LOW)
+				//{
+				//	_prevDeltaTime[UPDATE] = (_deltaTimeCount[UPDATE] / 1000.0);
+				//	_deltaTimeCount[UPDATE] = 0;
+				//	_isValidFrame = true;
+				//} 
+				#endregion
+
+				//추가 21.7.17 : 에디터 시간
+				if((long)(_deltaTimeCount2[UPDATE] * 1000.0) > MIN_UPDATE_DELTA_TIME_LOWCPU_LOW)
 				{
-					_prevDeltaTime[UPDATE] = (_deltaTimeCount[UPDATE] / 1000.0);
-					_deltaTimeCount[UPDATE] = 0;
-					_isValidFrame = true;
+					_lastDeltaTime2[UPDATE] = _deltaTimeCount2[UPDATE];
+					if(_lastDeltaTime2[UPDATE] > MAX_DELTA_TIME_LOWCPU_LOW)
+					{
+						_lastDeltaTime2[UPDATE] = MAX_DELTA_TIME_LOWCPU_LOW;
+					}
+					_deltaTimeCount2[UPDATE] = 0.0;
+					_isValidFrame2 = true;
 				}
+
 			}
 			else if(lowCPUStatus == apEditor.LOW_CPU_STATUS.LowCPU_Mid)
 			{
-				//약 10FPS
-				if (_deltaTimeCount[UPDATE] > MIN_UPDATE_DELTA_TIME_LOWCPU_MID)
+				//약 20FPS
+				//이전 코드
+				#region [미사용 코드]
+				//if (_deltaTimeCount[UPDATE] > MIN_UPDATE_DELTA_TIME_LOWCPU_MID)
+				//{
+				//	_prevDeltaTime[UPDATE] = (_deltaTimeCount[UPDATE] / 1000.0);
+				//	_deltaTimeCount[UPDATE] = 0;
+				//	_isValidFrame = true;
+				//} 
+				#endregion
+
+				//추가 21.7.17 : 에디터 시간
+				if((long)(_deltaTimeCount2[UPDATE] * 1000.0) > MIN_UPDATE_DELTA_TIME_LOWCPU_MID)
 				{
-					_prevDeltaTime[UPDATE] = (_deltaTimeCount[UPDATE] / 1000.0);
-					_deltaTimeCount[UPDATE] = 0;
-					_isValidFrame = true;
+					_lastDeltaTime2[UPDATE] = _deltaTimeCount2[UPDATE];
+					if(_lastDeltaTime2[UPDATE] > MAX_DELTA_TIME_LOWCPU_MID)
+					{
+						_lastDeltaTime2[UPDATE] = MAX_DELTA_TIME_LOWCPU_MID;
+					}
+					_deltaTimeCount2[UPDATE] = 0.0;
+					_isValidFrame2 = true;
 				}
 			}
 			else
 			{
 				//정상적인 FPS
-				if (_deltaTimeCount[UPDATE] > MIN_UPDATE_DELTA_TIME)
+				//이전 코드
+				#region [미사용 코드]
+				//if (_deltaTimeCount[UPDATE] > MIN_UPDATE_DELTA_TIME)
+				//{
+				//	_prevDeltaTime[UPDATE] = (_deltaTimeCount[UPDATE] / 1000.0);
+				//	_deltaTimeCount[UPDATE] = 0;
+				//	_isValidFrame = true;
+				//} 
+				#endregion
+
+				//추가 21.7.17 : 에디터 시간
+				if((long)(_deltaTimeCount2[UPDATE] * 1000.0) > MIN_UPDATE_DELTA_TIME)
 				{
-					_prevDeltaTime[UPDATE] = (_deltaTimeCount[UPDATE] / 1000.0);
-					_deltaTimeCount[UPDATE] = 0;
-					_isValidFrame = true;
+					_lastDeltaTime2[UPDATE] = _deltaTimeCount2[UPDATE];
+					if(_lastDeltaTime2[UPDATE] > MAX_DELTA_TIME)
+					{
+						_lastDeltaTime2[UPDATE] = MAX_DELTA_TIME;
+					}
+					_deltaTimeCount2[UPDATE] = 0.0;
+					_isValidFrame2 = true;
 				}
 			}
-			
-			
 
+
+
+			//이전 코드
+			#region [미사용 코드]
+			////Update All Frame은 프레임 스킵 없이 매번 경과 시간을 리턴한다.
+			//_prevDeltaTime[UPDATE_ALL_FRAME] = (_deltaTimeCount[UPDATE_ALL_FRAME] / 1000.0);
+			//_deltaTimeCount[UPDATE_ALL_FRAME] = 0;
+
+
+			//_stopWatch[UPDATE].Reset();
+			//_stopWatch[UPDATE].Start();
+
+			//_stopWatch[UPDATE_ALL_FRAME].Reset();
+			//_stopWatch[UPDATE_ALL_FRAME].Start(); 
+			#endregion
+
+			//추가 21.7.17
 			//Update All Frame은 프레임 스킵 없이 매번 경과 시간을 리턴한다.
-			_prevDeltaTime[UPDATE_ALL_FRAME] = (_deltaTimeCount[UPDATE_ALL_FRAME] / 1000.0);
-			_deltaTimeCount[UPDATE_ALL_FRAME] = 0;
+			_deltaTimeCount2[UPDATE_ALL_FRAME] += (EditorApplication.timeSinceStartup - _prevEditorTime[UPDATE_ALL_FRAME]);
+			_prevEditorTime[UPDATE_ALL_FRAME] = EditorApplication.timeSinceStartup;
+			_lastDeltaTime2[UPDATE_ALL_FRAME] = _deltaTimeCount2[UPDATE_ALL_FRAME];
+			_deltaTimeCount2[UPDATE_ALL_FRAME] = 0.0;
 
-
-			_stopWatch[UPDATE].Reset();
-			_stopWatch[UPDATE].Start();
-
-			_stopWatch[UPDATE_ALL_FRAME].Reset();
-			_stopWatch[UPDATE_ALL_FRAME].Start();
-
-			return _isValidFrame;
+			//return _isValidFrame;
+			return _isValidFrame2;
 		}
 
 		public void CheckTime_Repaint(apEditor.LOW_CPU_STATUS lowCPUStatus)
@@ -202,45 +318,74 @@ namespace AnyPortrait
 			//}
 
 			//Repaint 상에서의 경과 시간을 리턴한다.
-			_stopWatch[REPAINT].Stop();
+			//이전 코드
+			#region [미사용 코드]
+			//_stopWatch[REPAINT].Stop();
 
-			long deltaTime_Repaint = _stopWatch[REPAINT].ElapsedMilliseconds;
+			//long deltaTime_Repaint = _stopWatch[REPAINT].ElapsedMilliseconds;
 
-			//SubTimer 갱신
-			_subTimer[REPAINT].UpdateTime(deltaTime_Repaint);
+			////SubTimer 갱신
+			//_subTimer[REPAINT].UpdateTime(deltaTime_Repaint);
 
-			_deltaTimeCount[REPAINT] = deltaTime_Repaint;
-			_prevDeltaTime[REPAINT] = (_deltaTimeCount[REPAINT] / 1000.0f);
+			//_deltaTimeCount[REPAINT] = deltaTime_Repaint;
+			//_prevDeltaTime[REPAINT] = (_deltaTimeCount[REPAINT] / 1000.0f); 
+			#endregion
 
-			if (lowCPUStatus == apEditor.LOW_CPU_STATUS.LowCPU_Low || lowCPUStatus == apEditor.LOW_CPU_STATUS.LowCPU_Mid)
+
+			//추가 21.7.17 : 에디터 API
+			_deltaTimeCount2[REPAINT] += (EditorApplication.timeSinceStartup - _prevEditorTime[REPAINT]);
+			_prevEditorTime[REPAINT] = EditorApplication.timeSinceStartup;
+
+			_lastDeltaTime2[REPAINT] = _deltaTimeCount2[REPAINT];
+
+			if(_lastDeltaTime2[REPAINT] > MAX_DELTA_TIME)
 			{
-				//Low CPU에서는 Repaint가 아주 낮은 단위로 호출되는데,
-				//이때 중간중간에 2프레임간 연속으로 실행되면서 FPS가 높은걸로 나타난다.
-				//따라서 일정값의 FPS보다 높다면 (=시간 간격이 짧다면)
-				//그 프레임은 무시해야한다.
-				if (_prevDeltaTime[REPAINT] > 0.01f)
-				{
-					_fps = (int)(1.0f / (_prevDeltaTime[REPAINT] * _subTimer[REPAINT].TimeMultiply));
-				}
+				_lastDeltaTime2[REPAINT] = MAX_DELTA_TIME;
 			}
-			else
-			{
-				if (_prevDeltaTime[REPAINT] > 0.0f)
-				{
-					_fps = (int)(1.0f / (_prevDeltaTime[REPAINT] * _subTimer[REPAINT].TimeMultiply));
-				}
-			}
-			
 
-			_stopWatch[REPAINT].Reset();
-			_stopWatch[REPAINT].Start();
+
+			_deltaTimeCount2[REPAINT] = 0.0;
+
+
+
+			#region [미사용 코드]
+			//if (lowCPUStatus == apEditor.LOW_CPU_STATUS.LowCPU_Low || lowCPUStatus == apEditor.LOW_CPU_STATUS.LowCPU_Mid)
+			//{
+			//	//Low CPU에서는 Repaint가 아주 낮은 단위로 호출되는데,
+			//	//이때 중간중간에 2프레임간 연속으로 실행되면서 FPS가 높은걸로 나타난다.
+			//	//따라서 일정값의 FPS보다 높다면 (=시간 간격이 짧다면)
+			//	//그 프레임은 무시해야한다.
+			//	//이전 코드
+			//	//if (_prevDeltaTime[REPAINT] > 0.01f)
+			//	//{
+			//	//	_fps = (int)(1.0f / (_prevDeltaTime[REPAINT] * _subTimer[REPAINT].TimeMultiply));
+			//	//}				
+			//}
+			//else
+			//{
+			//	//이전 코드
+			//	//if (_prevDeltaTime[REPAINT] > 0.0f)
+			//	//{
+			//	//	_fps = (int)(1.0f / (_prevDeltaTime[REPAINT] * _subTimer[REPAINT].TimeMultiply));
+			//	//}				
+			//} 
+			#endregion
+
+
+			//이전 코드
+			//_stopWatch[REPAINT].Reset();
+			//_stopWatch[REPAINT].Start();
 
 			if (lowCPUStatus == apEditor.LOW_CPU_STATUS.LowCPU_Low || lowCPUStatus == apEditor.LOW_CPU_STATUS.LowCPU_Mid)
 			{
 				//LowCPU 모드일때는
 				//Repaint직후에 불필요한 Update를 막고자 Update용 StopWatch를 리셋한다
-				_stopWatch[UPDATE].Reset();
-				_stopWatch[UPDATE].Start();
+				//이전 코드
+				//_stopWatch[UPDATE].Reset();
+				//_stopWatch[UPDATE].Start();
+
+				//추가 21.7.17 : 에디터 API
+				_prevEditorTime[UPDATE] = EditorApplication.timeSinceStartup;
 			}
 		}
 
@@ -248,23 +393,42 @@ namespace AnyPortrait
 		public void ResetTime_Update()
 		{
 			//매번 연산하는 값이 아닌 누적 연산을 하는 Update 타입은 외부에서 중복 처리시 타이머를 리셋할 수 있다.
-			_stopWatch[UPDATE].Stop();
-			_stopWatch[UPDATE].Reset();
-			_stopWatch[UPDATE].Start();
+			//이전 코드
+			#region [미사용 코드]
+			//_stopWatch[UPDATE].Stop();
+			//_stopWatch[UPDATE].Reset();
+			//_stopWatch[UPDATE].Start();
 
-			_deltaTimeCount[UPDATE] = 0;
-			_prevDeltaTime[UPDATE] = 0.0f;
+			//_deltaTimeCount[UPDATE] = 0;
+			//_prevDeltaTime[UPDATE] = 0.0f; 
+			#endregion
+
+
+			//추가 21.7.17 : 에디터 API
+			_prevEditorTime[UPDATE] = EditorApplication.timeSinceStartup;
+			_deltaTimeCount2[UPDATE] = 0.0;
+			_lastDeltaTime2[UPDATE] = 0.0;
 		}
 
 
 		// Get / Set
 		//----------------------------------------
-		public float DeltaTime_Update { get { return (float)(_prevDeltaTime[UPDATE] * _subTimer[UPDATE].TimeMultiply); } }
-		public float DeltaTime_UpdateAllFrame { get { return (float)(_prevDeltaTime[UPDATE_ALL_FRAME] * _subTimer[UPDATE_ALL_FRAME].TimeMultiply); } }
-		public float DeltaTime_Repaint { get { return (float)(_prevDeltaTime[REPAINT] * _subTimer[REPAINT].TimeMultiply); } }
-		
+		//타입1 : Stopwatch를 이용한 방식
+		#region [미사용 코드]
+		//public float DeltaTime_Update { get { return (float)(_prevDeltaTime[UPDATE] * _subTimer[UPDATE].TimeMultiply); } }
+		//public float DeltaTime_UpdateAllFrame { get { return (float)(_prevDeltaTime[UPDATE_ALL_FRAME] * _subTimer[UPDATE_ALL_FRAME].TimeMultiply); } }
+		//public float DeltaTime_Repaint { get { return (float)(_prevDeltaTime[REPAINT] * _subTimer[REPAINT].TimeMultiply); } }
+		//public int FPS { get { return _fps; } } 
+		#endregion
 
-		public int FPS { get { return _fps; } }
+		//타입2 : EditorAPI를 이용한 방식
+		//public float DeltaTime_Update { get { return (float)(_lastDeltaTime2[UPDATE]); } }//이 값은 사용되지는 않는다. (Update 함수의 리턴 값으로 조절)
+		public float DeltaTime_UpdateAllFrame { get { return (float)(_lastDeltaTime2[UPDATE_ALL_FRAME]); } }
+		public float DeltaTime_Repaint { get { return (float)(_lastDeltaTime2[REPAINT]); } }
+		//public int FPS { get { return _fps2; } }//삭제 21.7.17 : FPS 계산 방식 변경으로 
+
+		//디버그용 (기존 방식과 변경된 방식의 시간 차이 > "거의 없더라")
+		//public int GapMsec { get { return Mathf.Abs((int)(((_prevDeltaTime[UPDATE_ALL_FRAME] * _subTimer[UPDATE_ALL_FRAME].TimeMultiply) - _prevDeltaTime2[UPDATE_ALL_FRAME]) * 1000.0)); } }
 	}
 
 }

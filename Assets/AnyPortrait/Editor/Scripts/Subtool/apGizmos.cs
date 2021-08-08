@@ -3016,7 +3016,12 @@ namespace AnyPortrait
 
 				if(targetMesh != null)
 				{
-					apEditorUtil.SetRecord_Mesh(apUndoGroupData.ACTION.MeshEdit_VertexMoved, Editor, targetMesh, targetMesh, false);
+					apEditorUtil.SetRecord_Mesh(	apUndoGroupData.ACTION.MeshEdit_VertexMoved, 
+													Editor, 
+													targetMesh, 
+													//targetMesh, 
+													false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 				}
 				
 			}
@@ -3031,8 +3036,12 @@ namespace AnyPortrait
 
 				if(targetMeshGroup != null && targetModifier != null)
 				{
-					apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Modifier_FFDStart, 
-																editor, targetModifier, targetMeshGroup, false);
+					apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Modifier_FFDStart, 
+														editor, 
+														targetModifier, 
+														//targetMeshGroup, 
+														false,
+														apEditorUtil.UNDO_STRUCT.ValueOnly);
 				}
 			}
 			else if (editor.Select.SelectionType == apSelection.SELECTION_TYPE.Animation)
@@ -3052,8 +3061,12 @@ namespace AnyPortrait
 
 					if (targetMeshGroup != null && targetModifier != null)
 					{
-						apEditorUtil.SetRecord_Modifier(apUndoGroupData.ACTION.Modifier_FFDStart, 
-																editor, targetModifier, targetMeshGroup, false);
+						apEditorUtil.SetRecord_Modifier(	apUndoGroupData.ACTION.Modifier_FFDStart, 
+															editor, 
+															targetModifier, 
+															//targetMeshGroup, 
+															false,
+															apEditorUtil.UNDO_STRUCT.ValueOnly);
 					}
 				}
 			}
@@ -3393,7 +3406,11 @@ namespace AnyPortrait
 				{
 					if (targetModifier != null)
 					{
-						apEditorUtil.SetRecord_MeshGroupAndModifier(apUndoGroupData.ACTION.Modifier_FFDAdapt, editor, targetMeshGroup, targetModifier, targetMeshGroup, false);
+						apEditorUtil.SetRecord_MeshGroupAndModifier(	apUndoGroupData.ACTION.Modifier_FFDAdapt, 
+																		editor, targetMeshGroup, targetModifier, 
+																		//targetMeshGroup, 
+																		false,
+																		apEditorUtil.UNDO_STRUCT.ValueOnly);
 						isRecordedComplete = true;
 					}
 					else
@@ -3472,7 +3489,13 @@ namespace AnyPortrait
 				{
 					if (targetModifier != null)
 					{
-						apEditorUtil.SetRecord_MeshGroupAndModifier(apUndoGroupData.ACTION.Modifier_FFDRevert, editor, targetMeshGroup, targetModifier, targetMeshGroup, false);
+						apEditorUtil.SetRecord_MeshGroupAndModifier(	apUndoGroupData.ACTION.Modifier_FFDRevert, 
+																		editor, 
+																		targetMeshGroup, 
+																		targetModifier, 
+																		//targetMeshGroup, 
+																		false,
+																		apEditorUtil.UNDO_STRUCT.ValueOnly);
 						isRecordedComplete = true;
 					}
 					else
@@ -3919,6 +3942,8 @@ namespace AnyPortrait
 
 			//_isForceUpdateFlagRequest = false;
 
+			//여기서 GL을 다시 사용한다.
+
 			if (!_isGizmoEventRegistered)
 			{
 				return;
@@ -3927,11 +3952,15 @@ namespace AnyPortrait
 			if (_isFFDMode)
 			{
 				RenderControl_TransformControl(editor._colorOption_GizmoFFDLine, editor._colorOption_GizmoFFDInnerLine);
+				
+				apGL.EndPass();
 			}
 
 			if (_isAreaSelecting)
 			{
 				RenderControl_AreaSelect();
+
+				apGL.EndPass();
 			}
 
 			if (!_isGizmoRenderable)
@@ -3982,6 +4011,11 @@ namespace AnyPortrait
 					_isForceDrawFlag = false;
 				}
 			}
+
+			//남은 Pass를 종료한다.
+			apGL.EndPass();
+
+			
 
 		}
 
@@ -4239,7 +4273,10 @@ namespace AnyPortrait
 			apGL.DrawBoldLine(new Vector2(areaMax.x, areaMin.y), new Vector2(areaMax.x, areaMax.y), 3.0f, lineColor, false);
 			apGL.DrawBoldLine(new Vector2(areaMax.x, areaMax.y), new Vector2(areaMin.x, areaMax.y), 3.0f, lineColor, false);
 			apGL.DrawBoldLine(new Vector2(areaMin.x, areaMax.y), new Vector2(areaMin.x, areaMin.y), 3.0f, lineColor, false);
-			apGL.EndBatch();
+			
+			
+			//삭제 21.5.19
+			//apGL.EndBatch();
 		}
 
 		private void RenderControl_TransformControl(Color FFDLineColor, Color FFDInnerLineColor)
@@ -4309,7 +4346,8 @@ namespace AnyPortrait
 			//apGL.DrawBoldLine(_transformControlPoints[7]._worldPos, _transformControlPoints[4]._worldPos, 3, FFDInnerLineColor, false);
 			//apGL.DrawBoldLine(_transformControlPoints[4]._worldPos, _transformControlPoints[1]._worldPos, 3, FFDInnerLineColor, false);
 
-			apGL.EndBatch();
+			//삭제 21.5.19
+			//apGL.EndBatch();
 
 			for (int i = 0; i < _transformControlPoints.Count; i++)
 			{

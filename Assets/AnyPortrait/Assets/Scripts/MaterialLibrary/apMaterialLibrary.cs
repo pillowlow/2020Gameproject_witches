@@ -950,8 +950,13 @@ namespace AnyPortrait
 			{
 				MakeReservedPresets();
 
-				fs = new FileStream(filePath, FileMode.Create, FileAccess.Write);
-				sw = new StreamWriter(fs);
+				//이전
+				//fs = new FileStream(filePath, FileMode.Create, FileAccess.Write);
+				//sw = new StreamWriter(fs);
+
+				//변경 21.7.3 : 경로 + 인코딩 문제 (UTF8 강제)
+				fs = new FileStream(apUtil.ConvertEscapeToPlainText(filePath), FileMode.Create, FileAccess.Write);
+				sw = new StreamWriter(fs, System.Text.Encoding.UTF8);
 
 				for (int i = 0; i < _presets.Count; i++)
 				{
@@ -1008,11 +1013,18 @@ namespace AnyPortrait
 
 			try
 			{
+				
 				ClearPresets();
 				MakeReservedPresets();//Reserved가 추가되지 않았으면 자동으로 미리 추가하자
 
+				//이전
+				//fs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+				//sr = new StreamReader(fs);
+
+				//변경 21.7.3 : 경로 문제 + 인코딩 문제
+				filePath = apUtil.ConvertEscapeToPlainText(filePath);
 				fs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-				sr = new StreamReader(fs);
+				sr = new StreamReader(fs, System.Text.Encoding.UTF8);
 
 				List<string> strData = new List<string>();
 				//유효한 데이터를 긁어온 후,

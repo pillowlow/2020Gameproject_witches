@@ -202,20 +202,22 @@ namespace AnyPortrait
 		//[SerializeField]
 		//public List<apModifierParamSetGroupVertWeight> _calculatedWeightedVertexList = new List<apModifierParamSetGroupVertWeight>();
 
-		//Editor 제어를 위한 apLinkedMatrix
-		//변경 3.26 : 계산용 행렬 (apMatrixCal)을 사용하자
-		[NonSerialized]
-		//public apMatrix _tmpMatrix = new apMatrix();
-		public apMatrixCal _tmpMatrix = new apMatrixCal();
 
-		[NonSerialized]
-		public Vector2[] _tmpPositions = null;
+		//삭제 > 모디파이어로 옮긴다. 원래는 메시마다 지정하려고 했으나, 이게 메시마다 할당하는게 아니더라. 내 착각
+		////Editor 제어를 위한 apLinkedMatrix
+		////변경 3.26 : 계산용 행렬 (apMatrixCal)을 사용하자
+		//[NonSerialized]
+		////public apMatrix _tmpMatrix = new apMatrix();
+		//public apMatrixCal _tmpMatrix = new apMatrixCal();
 
-		[NonSerialized]
-		public apMatrix3x3[] _tmpVertMatrices = null;//<<Rigging의 경우 Vert마다 Matrix가 필요하다
+		//[NonSerialized]
+		//public Vector2[] _tmpPositions = null;
 
-		[NonSerialized]
-		public float[] _tmpVertRiggingWeights = null;//<<Rigging의 경우 Vert마다 Matrix의 Weight가 필요하다
+		//[NonSerialized]
+		//public apMatrix3x3[] _tmpVertMatrices = null;//<<Rigging의 경우 Vert마다 Matrix가 필요하다
+
+		//[NonSerialized]
+		//public float[] _tmpVertRiggingWeights = null;//<<Rigging의 경우 Vert마다 Matrix의 Weight가 필요하다
 
 
 		//[NonSerialized]

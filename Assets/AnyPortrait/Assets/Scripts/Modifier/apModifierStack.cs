@@ -56,6 +56,13 @@ namespace AnyPortrait
 		[SerializeField]
 		private List<apModifier_AnimatedFFD> _modifiers_AnimatedFFD = new List<apModifier_AnimatedFFD>();
 
+		//추가 21.7.20 : 색상만 다루는 모디파이어 추가
+		[SerializeField]
+		private List<apModifier_ColorOnly> _modifiers_ColorOnly = new List<apModifier_ColorOnly>();
+
+		[SerializeField]
+		private List<apModifier_AnimatedColorOnly> _modifiers_AnimatedColorOnly = new List<apModifier_AnimatedColorOnly>();
+
 
 		//실제로 작동하는 Modifier 리스트 (Layer 순서에 맞게 Sort)
 		[NonSerialized]
@@ -129,6 +136,17 @@ namespace AnyPortrait
 				_modifiers.Add(_modifiers_AnimatedFFD[i]);
 			}
 
+			//추가 21.7.20 : 색상 전용 모디파이어
+			for (int i = 0; i < _modifiers_ColorOnly.Count; i++)
+			{
+				_modifiers.Add(_modifiers_ColorOnly[i]);
+			}
+
+			for (int i = 0; i < _modifiers_AnimatedColorOnly.Count; i++)
+			{
+				_modifiers.Add(_modifiers_AnimatedColorOnly[i]);
+			}
+
 
 			_modifiers.Sort(delegate (apModifierBase a, apModifierBase b)
 			{
@@ -188,6 +206,50 @@ namespace AnyPortrait
 		}
 
 
+
+		/// <summary>
+		/// 추가 21.5.14 : C++ DLL을 이용하여 업데이트를 한다.
+		/// </summary>
+		/// <param name="tDelta"></param>
+		public void Update_Pre_DLL(float tDelta)
+		{
+			if (_modifiers.Count == 0 && !_isSorted)
+			{
+				RefreshAndSort(false);
+			}
+
+			//Profiler.BeginSample("Modifier Calculate");
+			for (int i = 0; i < _modifiers.Count; i++)
+			{
+				if (!_modifiers[i].IsPreUpdate)
+				{
+					//Post-Update라면 패스
+					continue;
+				}
+				if (_modifiers[i]._isActive
+#if UNITY_EDITOR
+					//&& _modifiers[i]._editorExclusiveActiveMod != apModifierBase.MOD_EDITOR_ACTIVE.Disabled//<<이건 에디터에서만 작동한다.
+					&& _modifiers[i]._editorExclusiveActiveMod != apModifierBase.MOD_EDITOR_ACTIVE.Disabled_Force//변경 21.2.14 : 편집 모드에 의한 값 헤분화
+#endif
+				)
+				{
+					//_modifiers[i].Calculate(tDelta);//기본
+					_modifiers[i].Calculate_DLL(tDelta);//C++ DLL
+				}
+				else
+				{
+					//Debug.LogError("Not Update Mod Stack : " + _modifiers[i].DisplayName + " / " + _parentMeshGroup._name);
+					_modifiers[i].InitCalculate(tDelta);
+				}
+			}
+
+			//Profiler.EndSample();
+		}
+
+
+
+
+
 		public void Update_Post(float tDelta)
 		{
 			//Profiler.BeginSample("Modifier Calculate - Post");
@@ -207,6 +269,41 @@ namespace AnyPortrait
 
 				{
 					_modifiers[i].Calculate(tDelta);
+				}
+				else
+				{
+					//Debug.Log("Not Update Mod Stack : " + _modifiers[i].DisplayName + " / " + _parentMeshGroup._name);
+					_modifiers[i].InitCalculate(tDelta);
+				}
+			}
+
+			//Profiler.EndSample();
+		}
+
+
+		/// <summary>
+		/// 추가 21.5.14 : C++ DLL을 이용하여 업데이트를 한다.
+		/// </summary>
+		/// <param name="tDelta"></param>
+		public void Update_Post_DLL(float tDelta)
+		{
+			//Profiler.BeginSample("Modifier Calculate - Post");
+			for (int i = 0; i < _modifiers.Count; i++)
+			{
+				if (_modifiers[i].IsPreUpdate)
+				{
+					//Pre-Update라면 패스
+					continue;
+				}
+				if (_modifiers[i]._isActive
+#if UNITY_EDITOR
+				//&& _modifiers[i]._editorExclusiveActiveMod != apModifierBase.MOD_EDITOR_ACTIVE.Disabled//<<이건 에디터에서만 작동한다.
+				&& _modifiers[i]._editorExclusiveActiveMod != apModifierBase.MOD_EDITOR_ACTIVE.Disabled_Force
+#endif
+				)
+				{
+					//_modifiers[i].Calculate(tDelta);//기본
+					_modifiers[i].Calculate_DLL(tDelta);//DLL을 이용하여 업데이트
 				}
 				else
 				{
@@ -1003,6 +1100,16 @@ namespace AnyPortrait
 					_modifiers_AnimatedFFD.Add((apModifier_AnimatedFFD)modifier);
 					break;
 
+
+					//추가 21.7.20 : 색상 모디파이어 추가
+				case apModifierBase.MODIFIER_TYPE.ColorOnly:
+					_modifiers_ColorOnly.Add((apModifier_ColorOnly)modifier);
+					break;
+
+				case apModifierBase.MODIFIER_TYPE.AnimatedColorOnly:
+					_modifiers_AnimatedColorOnly.Add((apModifier_AnimatedColorOnly)modifier);
+					break;
+
 				default:
 					Debug.LogError("TODO : 정의되지 않은 타입 [" + modifier + "]");
 					break;
@@ -1054,6 +1161,15 @@ namespace AnyPortrait
 
 				case apModifierBase.MODIFIER_TYPE.AnimatedFFD:
 					_modifiers_AnimatedFFD.Remove((apModifier_AnimatedFFD)modifier);
+					break;
+
+					//추가 21.7.20 : 색상 모디파이어
+				case apModifierBase.MODIFIER_TYPE.ColorOnly:
+					_modifiers_ColorOnly.Remove((apModifier_ColorOnly)modifier);
+					break;
+
+				case apModifierBase.MODIFIER_TYPE.AnimatedColorOnly:
+					_modifiers_AnimatedColorOnly.Remove((apModifier_AnimatedColorOnly)modifier);
 					break;
 			}
 		}

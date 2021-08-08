@@ -35,6 +35,7 @@ namespace AnyPortrait
 		private FUNC_NEW_PORTRAIT_RESULT _funcResult = null;
 
 		private string _newPortraitName = "";
+		private bool _isInitFocused = false;
 
 		// Show Window
 		//------------------------------------------------------------------
@@ -94,6 +95,7 @@ namespace AnyPortrait
 			_loadKey = loadKey;
 			_funcResult = funcResult;
 			_newPortraitName = "New Portrait";
+			_isInitFocused = false;
 		}
 
 		// GUI
@@ -122,6 +124,7 @@ namespace AnyPortrait
 
 			GUILayout.Space(10);
 
+			apEditorUtil.SetNextGUIID(apStringFactory.I.GUI_ID__NewPortraitName);
 			_newPortraitName = EditorGUILayout.TextField(_newPortraitName, GUILayout.Width(width));
 
 			GUILayout.Space(20);
@@ -139,6 +142,13 @@ namespace AnyPortrait
 			}
 			EditorGUILayout.EndHorizontal();
 
+
+			//추가 21.6.13 : 다이얼로그를 열면 자동으로 이름 텍스트 필드에 포커스를 설정하자
+			if(!_isInitFocused)
+			{
+				_isInitFocused = true;
+				apEditorUtil.SetGUIFocus_TextField(apStringFactory.I.GUI_ID__NewPortraitName);
+			}
 		}
 	}
 

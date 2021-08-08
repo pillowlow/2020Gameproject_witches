@@ -409,6 +409,9 @@ namespace AnyPortrait
 																		apEditorUtil.GetLastOpenSaveFileDirectoryPath(apEditorUtil.SAVED_LAST_FILE_PATH.BoneAnimExport), "", "ani");
 					if (!string.IsNullOrEmpty(saveFilePath))
 					{
+						//추가 21.7.3 : 이스케이프 문자 삭제
+						saveFilePath = apUtil.ConvertEscapeToPlainText(saveFilePath);
+
 						//TODO : Save를 하자
 						bool isResult = apRetarget.SaveAnimClip(_targetAnimClip, saveFilePath);
 
@@ -470,6 +473,10 @@ namespace AnyPortrait
 																		apEditorUtil.GetLastOpenSaveFileDirectoryPath(apEditorUtil.SAVED_LAST_FILE_PATH.BoneAnimExport), "ani");
 					if (!string.IsNullOrEmpty(loadFilePath))
 					{
+						//추가 21.7.3 : 이스케이프 문자 삭제
+						loadFilePath = apUtil.ConvertEscapeToPlainText(loadFilePath);
+
+
 						bool loadResult = _retargetData.LoadAnimClip(loadFilePath);
 						apEditorUtil.SetLastExternalOpenSaveFilePath(loadFilePath, apEditorUtil.SAVED_LAST_FILE_PATH.BoneAnimExport);//추가 21.3.1
 
@@ -960,11 +967,15 @@ namespace AnyPortrait
 										switch (timelineUnit._linkedModifierType)
 										{
 											case apModifierBase.MODIFIER_TYPE.AnimatedTF:
-												strName = "Animation (Transform)";
+												strName = "Transform";
 												break;
 
 											case apModifierBase.MODIFIER_TYPE.AnimatedMorph:
-												strName = "Animation (Morph)";
+												strName = "Morph";
+												break;
+
+											case apModifierBase.MODIFIER_TYPE.AnimatedColorOnly://추가 21.7.21
+												strName = "Color Only";
 												break;
 
 											default:
@@ -2192,6 +2203,9 @@ namespace AnyPortrait
 			string filePath = EditorUtility.SaveFilePanel("Save Mapping", apEditorUtil.GetLastOpenSaveFileDirectoryPath(apEditorUtil.SAVED_LAST_FILE_PATH.BoneAnimExport), "", "amp");
 			if(!string.IsNullOrEmpty(filePath))
 			{
+				//추가 21.7.3 : 이스케이프 문자 삭제
+				filePath = apUtil.ConvertEscapeToPlainText(filePath);
+
 				apEditorUtil.SetLastExternalOpenSaveFilePath(filePath, apEditorUtil.SAVED_LAST_FILE_PATH.BoneAnimExport);//추가 21.3.1
 
 				_mapping.SaveMapping(filePath, _retargetData.AnimFile);
@@ -2208,6 +2222,9 @@ namespace AnyPortrait
 			string filePath = EditorUtility.OpenFilePanel("Load Mapping", apEditorUtil.GetLastOpenSaveFileDirectoryPath(apEditorUtil.SAVED_LAST_FILE_PATH.BoneAnimExport), "amp");
 			if(!string.IsNullOrEmpty(filePath))
 			{
+				//추가 21.7.3 : 이스케이프 문자 삭제
+				filePath = apUtil.ConvertEscapeToPlainText(filePath);
+
 				apEditorUtil.SetLastExternalOpenSaveFilePath(filePath, apEditorUtil.SAVED_LAST_FILE_PATH.BoneAnimExport);//21.3.1
 				_mapping.LoadMapping(filePath, _retargetData.AnimFile, _targetTransforms, _targetBones, _targetControlParams, _targetTimelines);
 			}

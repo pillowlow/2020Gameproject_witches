@@ -723,6 +723,25 @@ namespace AnyPortrait
 		Setting_InitAutoKeyframeOption = 695,
 		DLG_RenameSyncSubMeshGroupObject_Title = 696,
 		DLG_RenameSyncSubMeshGroupObject_Body = 697,
+		Setting_UpdateMode = 698,
+		Setting_WarningAccPlugin_NotSupported = 699,
+		Setting_WarningAccPlugin_NotInstalled = 700,
+		Setting_WarningAccPlugin_PrevVersion = 701,
+		Setting_WarningAccPlugin_InstallReserved = 702,
+		Setting_AccPlugin_Install = 703,
+		DLG_AccPluginInstall_Title = 704,
+		DLG_AccPluginInstall_Body = 705,
+		Direction = 706,
+		Thickness = 707,
+		AddNewGuidelines = 708,
+		RemoveAllGuidelines = 709,
+		DLG_RemoveGuideline_Title = 710,
+		DLG_RemoveGuideline_All_Body = 711,
+		DLG_RemoveGuideline_Single_Body = 712,
+		DLG_MigratationMultipleMeshTF_Title = 713,
+		DLG_MigratationMultipleMeshTF_Body = 714,
+		DLG_ModInfo_ColorOnly = 715,
+		DLG_ModInfo_AnimatedColorOnly = 716,
 	}
 
 
@@ -1169,6 +1188,14 @@ namespace AnyPortrait
 		GUIMenu_ShowHowToEdit = 434,
 		SelectMore = 435,
 		DeselectAll = 436,
+		GUIMenu_Guidelines = 437,
+		GUIMenu_ShowGuidelines = 438,
+		Rename = 439,
+		MoveUp = 440,
+		MoveDown = 441,
+		Search = 442,
+		SelectAll = 443,
+		Remove = 444,
 	}
 
 

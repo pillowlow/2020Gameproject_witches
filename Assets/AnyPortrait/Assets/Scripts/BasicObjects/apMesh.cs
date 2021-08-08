@@ -116,12 +116,16 @@ namespace AnyPortrait
 		[SerializeField, HideInInspector, NonBackupField]
 		public bool _isNeedToAskRemoveVertByPSDImport = false;
 
+		[NonSerialized, HideInInspector, NonBackupField]
+		public apMatrix3x3 _matrix_VertToLocal = apMatrix3x3.identity;//변경 21.5.15 : Private에서 Public(NonSerialized)로 변경
 
-		private apMatrix3x3 _matrix_VertToLocal = apMatrix3x3.identity;
+		[NonSerialized, HideInInspector, NonBackupField]
+		public apMatrix3x3 _matrix_VertToLocal_Inv = apMatrix3x3.identity;//변경 21.5.15 : Private에서 Public(NonSerialized)로 변경
 		
 		public void MakeOffsetPosMatrix()
 		{
 			_matrix_VertToLocal = apMatrix3x3.TRS(new Vector2(-_offsetPos.x, -_offsetPos.y), 0, Vector2.one);
+			_matrix_VertToLocal_Inv = _matrix_VertToLocal.inverse;
 		}
 
 		public apMatrix3x3 Matrix_VertToLocal
@@ -130,6 +134,15 @@ namespace AnyPortrait
 			{
 				//return apMatrix3x3.TRS(new Vector3(-_offsetPos.x, -_offsetPos.y, 0.0f), Quaternion.identity, Vector3.one);
 				return _matrix_VertToLocal;
+			}
+		}
+
+		//추가 21.5.16 : 역행렬 연산량을 줄이기 위해
+		public apMatrix3x3 Matrix_VertToLocal_Inverse
+		{
+			get
+			{
+				return _matrix_VertToLocal_Inv;
 			}
 		}
 		

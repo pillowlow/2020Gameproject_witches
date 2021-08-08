@@ -280,15 +280,26 @@ namespace AnyPortrait
 			apSelection.MULTI_SELECT multiSelect = (selectType == apGizmos.SELECT_TYPE.Add) ? apSelection.MULTI_SELECT.AddOrSubtract : apSelection.MULTI_SELECT.Main;
 
 			//<BONE_EDIT> : 여기서는 자기 자신의 Bone만 선택할 수 있다.
-			List<apBone> boneList = meshGroup._boneList_Root;
-			for (int i = 0; i < boneList.Count; i++)
+			List<apBone> boneRootList = meshGroup._boneList_Root;
+			if (boneRootList != null && boneRootList.Count > 0)
 			{
-				bone = CheckBoneClickRecursive(boneList[i], mousePosW, mousePosGL, Editor._boneGUIRenderMode, -1, Editor.Select.IsBoneIKRenderable, true);
-				if (bone != null)
+				//for (int i = 0; i < boneList.Count; i++)//출력 순서
+				for (int i = boneRootList.Count - 1; i >= 0; i--)//선택 순서
 				{
-					resultBone = bone;
+					bone = CheckBoneClickRecursive(	boneRootList[i], 
+													mousePosW, mousePosGL, 
+													Editor._boneGUIRenderMode, 
+													//-1, 
+													Editor.Select.IsBoneIKRenderable, true,
+													false);
+					if (bone != null)
+					{
+						resultBone = bone;
+						break;//다른 Root를 볼 필요가 없다.
+					}
 				}
 			}
+			
 
 			_prevSelected_TransformBone_Default = null;
 
@@ -335,20 +346,32 @@ namespace AnyPortrait
 		private apBone CheckBoneClickRecursive(	apBone targetBone, 
 												Vector2 mousePosW, Vector2 mousePosGL, 
 												apEditor.BONE_RENDER_MODE boneRenderMode, 
-												int curBoneDepth, bool isBoneIKRenderable, bool isNotEditObjSelectable)
+												//ref int curBoneDepth,
+												bool isBoneIKRenderable, bool isNotEditObjSelectable,
+												bool isCheckHiddenByRiggingWork)
 		{
 			apBone resultBone = null;
 			apBone bone = null;
 			//Child가 먼저 렌더링되므로, 여기가 우선순위
-			for (int i = 0; i < targetBone._childBones.Count; i++)
+			if (targetBone._childBones != null && targetBone._childBones.Count > 0)
 			{
-				bone = CheckBoneClickRecursive(targetBone._childBones[i], mousePosW, mousePosGL, boneRenderMode, curBoneDepth, isBoneIKRenderable, isNotEditObjSelectable);
-				if (bone != null)
+				//for (int i = 0; i < targetBone._childBones.Count; i++)//출력 순서
+				for (int i = targetBone._childBones.Count - 1; i >= 0; i--)//선택 순서
 				{
-					if (bone._depth > curBoneDepth)//Depth 처리를 해야한다.
+					bone = CheckBoneClickRecursive(	targetBone._childBones[i], mousePosW, mousePosGL, boneRenderMode, 
+													//ref curBoneDepth, 
+													isBoneIKRenderable, isNotEditObjSelectable, isCheckHiddenByRiggingWork);
+					if (bone != null)
 					{
+						//if (bone._depth > curBoneDepth)//Depth 처리를 해야한다.
+						//{
+						//	resultBone = bone;
+						//	curBoneDepth = bone._depth;//처리된 Depth 갱신
+						//}
+
+						//변경 21.7.20
 						resultBone = bone;
-						curBoneDepth = bone._depth;//처리된 Depth 갱신
+						break;
 					}
 				}
 			}
@@ -368,9 +391,16 @@ namespace AnyPortrait
 					//클릭 체크 안하고 바로 null 리턴
 					return null;
 				}
+				
 
 				if (IsBoneClick(targetBone, mousePosW, mousePosGL, boneRenderMode, isBoneIKRenderable, Editor._boneGUIOption_RenderType))
 				{
+					//추가 21.7.20 : 리깅 옵션에 의해 숨겨진 본은 선택하지 않는다.
+					if(isCheckHiddenByRiggingWork && !Editor.Select.LinkedToModifierBones.ContainsKey(targetBone))
+					{
+						return null;
+					}
+
 					return targetBone;
 				}
 			}
@@ -1033,9 +1063,9 @@ namespace AnyPortrait
 				apEditorUtil.SetRecord_MeshGroup(apUndoGroupData.ACTION.MeshGroup_BoneDefaultEdit,
 													Editor,
 													meshGroup, 
-													//Editor.Select.Bone,
-													Editor.Select.SubObjects.GizmoBone,//<< [GizmoMain] <<
-													false, false);//하위 메시 그룹으로의 편집은 막으므로 재귀적 Undo는 필요없다.
+													//Editor.Select.SubObjects.GizmoBone,//<< [GizmoMain] <<
+													false, false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);//하위 메시 그룹으로의 편집은 막으므로 재귀적 Undo는 필요없다.
 			}
 
 
@@ -1423,9 +1453,9 @@ namespace AnyPortrait
 				apEditorUtil.SetRecord_MeshGroup(apUndoGroupData.ACTION.MeshGroup_BoneDefaultEdit,
 													Editor,
 													meshGroup, 
-													//Editor.Select.Bone,
-													Editor.Select.SubObjects.GizmoBone,//<< [GizmoMain] <<
-													false, false);//하위 메시 그룹으로의 편집은 막으므로 재귀적 Undo는 필요없다.
+													//Editor.Select.SubObjects.GizmoBone,//<< [GizmoMain] <<
+													false, false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);//하위 메시 그룹으로의 편집은 막으므로 재귀적 Undo는 필요없다.
 			}
 
 
@@ -1439,8 +1469,16 @@ namespace AnyPortrait
 					continue;
 				}
 
+
+				//추가 : 21.7.3 : 본의 World Matrix가 반전된 상태면 Delta Angle을 뒤집는다.
+				float rotateBoneAngleW = deltaAngleW;					
+				if(bone._worldMatrix.Is1AxisFlipped())
+				{
+					rotateBoneAngleW = -deltaAngleW;
+				}
+
 				//Default Angle은 -180 ~ 180 범위 안에 들어간다.
-				bone._defaultMatrix.SetRotate(apUtil.AngleTo180(bone._defaultMatrix._angleDeg + deltaAngleW), true);
+				bone._defaultMatrix.SetRotate(apUtil.AngleTo180(bone._defaultMatrix._angleDeg + rotateBoneAngleW), true);
 			}
 
 			//전체 본 업데이트
@@ -1620,9 +1658,9 @@ namespace AnyPortrait
 			{
 				apEditorUtil.SetRecord_MeshGroup(apUndoGroupData.ACTION.MeshGroup_BoneDefaultEdit,
 													Editor, meshGroup, 
-													//Editor.Select.Bone, 
-													Editor.Select.SubObjects.GizmoBone,//<< [GizmoMain]
-													false, false);
+													//Editor.Select.SubObjects.GizmoBone,//<< [GizmoMain]
+													false, false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 			apBone bone = null;
@@ -1710,8 +1748,10 @@ namespace AnyPortrait
 
 			apEditorUtil.SetRecord_MeshGroup(apUndoGroupData.ACTION.MeshGroup_BoneDefaultEdit,
 												Editor,
-												meshGroup, mainBone,
-												false, false);
+												meshGroup, 
+												//mainBone,
+												false, false,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 			Vector2 deltaPos = pos - mainBone._defaultMatrix._pos;
 
@@ -1806,8 +1846,9 @@ namespace AnyPortrait
 			apEditorUtil.SetRecord_MeshGroup(apUndoGroupData.ACTION.MeshGroup_BoneDefaultEdit,
 												Editor,
 												meshGroup, 
-												mainBone,
-												false, false);
+												//mainBone,
+												false, false,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 			float deltaAngle = angle - mainBone._defaultMatrix._angleDeg;
 
@@ -1915,8 +1956,10 @@ namespace AnyPortrait
 
 			apEditorUtil.SetRecord_MeshGroup(apUndoGroupData.ACTION.MeshGroup_BoneDefaultEdit,
 												Editor,
-												meshGroup, mainBone,
-												false, false);
+												meshGroup, 
+												//mainBone,
+												false, false,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 			Vector2 deltaScale = Vector2.one;
 			deltaScale.x = (mainBone._defaultMatrix._scale.x != 0.0f) ? (scale.x / mainBone._defaultMatrix._scale.x) : 1.0f;
 			deltaScale.y = (mainBone._defaultMatrix._scale.y != 0.0f) ? (scale.y / mainBone._defaultMatrix._scale.y) : 1.0f;
@@ -1979,7 +2022,12 @@ namespace AnyPortrait
 				return;
 			}
 
-			apEditorUtil.SetRecord_MeshGroup(apUndoGroupData.ACTION.MeshGroup_BoneDefaultEdit, Editor, bone._meshGroup, null, false, false);
+			apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_BoneDefaultEdit, 
+												Editor, 
+												bone._meshGroup, 
+												//null, 
+												false, false,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 
 			//Depth가 추가되었다.
 			if (bone._depth != depth)
@@ -2195,9 +2243,9 @@ namespace AnyPortrait
 				apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_BoneDefaultEdit, 
 													Editor, 
 													meshGroup, 
-													//Editor.Select.Bone, 
-													Editor.Select.SubObjects.GizmoBone,//<< [GizmoMain]
-													false, false);//하위 메시 그룹으로의 편집은 막으므로 재귀적 Undo는 필요없다.
+													//Editor.Select.SubObjects.GizmoBone,//<< [GizmoMain]
+													false, false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);//하위 메시 그룹으로의 편집은 막으므로 재귀적 Undo는 필요없다.
 			}
 
 
@@ -2413,9 +2461,9 @@ namespace AnyPortrait
 				apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_BoneDefaultEdit, 
 													Editor, 
 													meshGroup, 
-													//Editor.Select.Bone, 
-													Editor.Select.SubObjects.GizmoBone,//<< [GizmoMain]
-													false, false);//하위 메시 그룹으로의 편집은 막으므로 재귀적 Undo는 필요없다.
+													//Editor.Select.SubObjects.GizmoBone,//<< [GizmoMain]
+													false, false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);//하위 메시 그룹으로의 편집은 막으므로 재귀적 Undo는 필요없다.
 			}
 
 			apBone bone = null;
@@ -2428,8 +2476,16 @@ namespace AnyPortrait
 					continue;
 				}
 
+
+				//추가 : 21.7.3 : 본의 World Matrix가 반전된 상태면 Delta Angle을 뒤집는다.
+				float rotateBoneAngleW = deltaAngleW;					
+				if(bone._worldMatrix.Is1AxisFlipped())
+				{
+					rotateBoneAngleW = -deltaAngleW;
+				}
+
 				//Default Angle은 -180 ~ 180 범위 안에 들어간다.
-				bone._defaultMatrix.SetRotate(apUtil.AngleTo180(bone._defaultMatrix._angleDeg + deltaAngleW), true);
+				bone._defaultMatrix.SetRotate(apUtil.AngleTo180(bone._defaultMatrix._angleDeg + rotateBoneAngleW), true);
 			}
 			
 			//전체 본 업데이트
@@ -2493,9 +2549,9 @@ namespace AnyPortrait
 			{
 				apEditorUtil.SetRecord_MeshGroup(	apUndoGroupData.ACTION.MeshGroup_BoneDefaultEdit, 
 													Editor, meshGroup, 
-													//Editor.Select.Bone, 
-													Editor.Select.SubObjects.GizmoBone,//<< [GizmoMain]
-													false, false);
+													//Editor.Select.SubObjects.GizmoBone,//<< [GizmoMain]
+													false, false,
+													apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 			apBone bone = null;

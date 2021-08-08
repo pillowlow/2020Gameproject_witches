@@ -129,8 +129,6 @@ namespace AnyPortrait
 		private apOptRenderVertex[] _renderVerts = null;
 
 
-
-		//RenderVert의 
 		[SerializeField]
 		private Vector3[] _vertPositions = null;
 
@@ -154,29 +152,45 @@ namespace AnyPortrait
 		[NonSerialized]
 		private int _nRenderVerts = 0;
 
-		[NonSerialized]
-		private int _nVertPos = 0;
+		//사용하지 않는다.
+		//[NonSerialized]
+		//private int _nVertPos = 0;
 		
 
 
 		/// <summary>Rendered Vertices</summary>
 		public apOptRenderVertex[] RenderVertices { get { return _renderVerts; } }
 
-		public Vector3[] LocalVertPositions { get { return _vertPositions; } }
+		
+		//추가 21.5.23 > 다시 삭제 > CalculateResultStack으로 이동
+		//RenderVert의 일부값을 배열로 뺀다. (할당 횟수를 줄임)
+		//개수는 RenderVert와 같다.
+		//[NonSerialized]
+		//private Vector2[] _renderVertCal_VertexLocalPos = null;
 
+		//[NonSerialized]
+		//private apMatrix3x3[] _renderVertCal_RiggingMatrix = null;
+
+		
 
 		//<업데이트>
-		[SerializeField, NonSerialized]
-		//[NonSerialized]
+		//[SerializeField, NonSerialized]//<<이게 뭔소리야??
+		[NonSerialized]//다시 이걸로 복구 21.5.22
 		private Vector3[] _vertPositions_Updated = null;
 
-		[SerializeField, NonSerialized]
-		//[NonSerialized]
-		private Vector3[] _vertPositions_Local = null;
+		//삭제 21.5.23 : 불필요하다.
+		////[SerializeField, NonSerialized]
+		//[NonSerialized]//복구 21.5.22
+		//private Vector3[] _vertPositions_Local = null;
 
-		[SerializeField, NonSerialized]
-		//[NonSerialized]
-		private Vector2[] _vertPositions_World = null;
+		//삭제 21.5.23 : 불필요하다
+		////[SerializeField, NonSerialized]
+		//[NonSerialized]//복구 21.5.22
+		//private Vector2[] _vertPositions_World = null;
+
+		
+
+
 
 		//[SerializeField]
 		//private Texture2D _texture_Updated = null;
@@ -445,6 +459,19 @@ namespace AnyPortrait
 		private CLIPPING_FUNC_CALL_TYPE _clippingFuncCallType = CLIPPING_FUNC_CALL_TYPE.None;
 		
 
+		//추가 21.5.23
+		[NonSerialized]
+		private float _cal_flipWeight_X = 0.0f;
+		
+		[NonSerialized]
+		private float _cal_flipWeight_Y = 0.0f;
+
+		[NonSerialized]
+		private apOptRenderVertex _cal_rVert = null;
+
+		[NonSerialized]
+		private apOptCalculatedResultStack _cal_parentCalculateStack = null;
+
 
 		// Init
 		//------------------------------------------------
@@ -617,7 +644,13 @@ namespace AnyPortrait
 
 			_parentTransform = parentTransform;
 
-			_vertPositions = vertPositions;
+			//변경 21.5.22 : 그냥 할당하지 말고, Copy 이용
+			_vertPositions = new Vector3[vertPositions.Length];
+			Array.Copy(vertPositions, _vertPositions, vertPositions.Length);
+			
+			
+
+
 			_vertUVs = vertUVs;
 			//_vertUniqueIDs = vertUniqueIDs;//<<삭제. 의미가 없다.
 			_vertTris = vertTris;
@@ -664,27 +697,31 @@ namespace AnyPortrait
 				_vertTris = vertTris2Side;//적용
 
 				//다른 리스트도 두배로 증가
+				
+				
 				_vertPositions = new Vector3[nVert2Side];
+				
+
 				_vertUVs = new Vector2[nVert2Side];
 				
 				for (int i = 0; i < nVert; i++)
 				{
 					_vertPositions[i] = vertPositions[i];
 					_vertPositions[i + nVert] = vertPositions[i];//<<nVert만큼 뒤에 더 추가
-
+					
 					_vertUVs[i] = vertUVs[i];
 					_vertUVs[i + nVert] = vertUVs[i];
 				}
 				
 				//변경 19.7.3 : 양면 렌더링일때 (버텍스 수가 다름)
 				_nRenderVerts = nVert;
-				_nVertPos = nVert2Side;
+				//_nVertPos = nVert2Side;//사용하지 않음
 			}
 			else
 			{
 				//변경 19.7.3 : 단면 렌더링일때 (버텍스 수가 같음)
-				_nRenderVerts = _vertPositions.Length;
-				_nVertPos = _vertPositions.Length;
+				_nRenderVerts = vertPositions.Length;
+				//_nVertPos = vertPositions.Length;//사용하지 않음
 			}
 			_texture = texture;
 			_textureID = textureID;
@@ -753,6 +790,10 @@ namespace AnyPortrait
 
 			//RenderVert를 만들어주자
 			_renderVerts = new apOptRenderVertex[_nRenderVerts];
+
+			//여기서 생성하는 걸로 변경 21.5.23
+			_vertPositions_Updated = new Vector3[_nRenderVerts];
+
 			for (int i = 0; i < _nRenderVerts; i++)
 			{
 				_renderVerts[i] = new apOptRenderVertex(
@@ -763,8 +804,15 @@ namespace AnyPortrait
 											depths[i]);
 
 				_renderVerts[i].SetMatrix_1_Static_Vert2Mesh(_matrix_Vert2Mesh);
-				_renderVerts[i].SetMatrix_3_Transform_Mesh(parentTransform._matrix_TFResult_WorldWithoutMod.MtrxToSpace);
-				_renderVerts[i].Calculate();
+
+				//이전 방식
+				//_renderVerts[i].SetMatrix_3_Transform_Mesh(parentTransform._matrix_TFResult_WorldWithoutMod.MtrxToSpace);
+				//_renderVerts[i].Calculate();
+
+				//변경 21.5.23
+				_renderVerts[i].Calculate_None(
+					ref parentTransform._matrix_TFResult_WorldWithoutMod._mtrxToSpace,
+					1.0f, 1.0f, ref _vertPositions_Updated[i]);
 			}
 
 			if (_meshFilter == null || _mesh == null)
@@ -776,13 +824,13 @@ namespace AnyPortrait
 				_mesh.Clear();
 
 				_mesh.vertices = _vertPositions;
+
 				_mesh.uv = _vertUVs;
 				_mesh.triangles = _vertTris;
 
 				_mesh.RecalculateNormals();
 				_mesh.RecalculateBounds();
-
-				
+				_mesh.MarkDynamic();//<<추가 21.5.22
 
 				_meshFilter.sharedMesh = _mesh;
 			}
@@ -876,29 +924,44 @@ namespace AnyPortrait
 			_clipParentID = -1;
 			_clipChildIDs = null;
 
-			_vertPositions_Updated = new Vector3[_vertPositions.Length];
-			_vertPositions_Local = new Vector3[_vertPositions.Length];
-			_vertPositions_World = new Vector2[_vertPositions.Length];
+			//여기서 생성하는건 삭제. 위에서 생성하는 걸로 변경 (21.5.23)
+			////여기서 변수를 임시로 생성하자. (Refresh를 위해서)
+			//_vertPositions_Updated = new Vector3[_nRenderVerts];
+			////_vertPositions_Local = new Vector3[_nRenderVerts];//삭제 21.5.23
+			////_vertPositions_World = new Vector2[_nRenderVerts];//삭제 21.5.23
+			///
 
+
+			
 			if (!_isAlways2Side)
 			{
 				//일반 업데이트
 
-				for (int i = 0; i < _vertPositions.Length; i++)
-				{
-					//Calculate 전에는 직접 Pivot Pos를 적용해주자 (Calculate에서는 자동 적용)
-					_vertPositions_Updated[i] = _renderVerts[i]._vertPos3_LocalUpdated;
-				}
+				//삭제 21.5.23 : _vertPositions_Updated가 위에서 이미 갱신되었다.
+				//for (int i = 0; i < _nRenderVerts; i++)
+				//{
+				//	//Calculate 전에는 직접 Pivot Pos를 적용해주자 (Calculate에서는 자동 적용)
+				//	_vertPositions_Updated[i] = _renderVerts[i]._vertPos3_LocalUpdated;
+				//}
 			}
 			else
 			{
 				//양면 업데이트
-				for (int i = 0; i < _nRenderVerts; i++)
-				{
-					//Calculate 전에는 직접 Pivot Pos를 적용해주자 (Calculate에서는 자동 적용)
-					_vertPositions_Updated[i] = _renderVerts[i]._vertPos3_LocalUpdated;
-					_vertPositions_Updated[i + _nRenderVerts] = _renderVerts[i]._vertPos3_LocalUpdated;
-				}
+				//이전 코드
+				//for (int i = 0; i < _nRenderVerts; i++)
+				//{
+				//	//Calculate 전에는 직접 Pivot Pos를 적용해주자 (Calculate에서는 자동 적용)
+				//	_vertPositions_Updated[i] = _renderVerts[i]._vertPos3_LocalUpdated;
+				//	_vertPositions_Updated[i + _nRenderVerts] = _renderVerts[i]._vertPos3_LocalUpdated;
+				//}
+
+				//변경 21.5.23
+				Vector3[] prevVertPositions_Update = _vertPositions_Updated;
+				_vertPositions_Updated = new Vector3[_vertPositions.Length];
+				
+				//복사 (2배)
+				Array.Copy(prevVertPositions_Update, 0, _vertPositions_Updated, 0, _nRenderVerts);//앞쪽
+				Array.Copy(prevVertPositions_Update, 0, _vertPositions_Updated, _nRenderVerts, _nRenderVerts);//뒤쪽
 			}
 			
 			
@@ -1011,6 +1074,19 @@ namespace AnyPortrait
 
 				_mesh.RecalculateNormals();
 				_mesh.RecalculateBounds();
+				_mesh.MarkDynamic();//<<추가 21.5.22
+			}
+			else
+			{
+				_mesh.Clear();
+
+				_mesh.vertices = _vertPositions;
+				_mesh.triangles = _vertTris;
+				_mesh.uv = _vertUVs;
+
+				_mesh.RecalculateNormals();
+				_mesh.RecalculateBounds();
+				_mesh.MarkDynamic();//<<추가 21.5.22
 			}
 
 			
@@ -1044,12 +1120,33 @@ namespace AnyPortrait
 
 
 			_vertPositions_Updated = new Vector3[_vertPositions.Length];
-			_vertPositions_Local = new Vector3[_vertPositions.Length];
-			_vertPositions_World = new Vector2[_vertPositions.Length];
-			for (int i = 0; i < _vertPositions.Length; i++)
-			{
-				_vertPositions_Updated[i] = _vertPositions[i];
-			}
+
+			//삭제 21.5.23 : 필요없는 배열들
+			//_vertPositions_Local = new Vector3[_vertPositions.Length];
+			//_vertPositions_World = new Vector2[_vertPositions.Length];
+
+			//다시 삭제 21.5.27
+			////추가 21.5.23 : 계산 변수가 RenderVertex에서 삭제되고 여기로 이동되었다.
+			////개수는 RenderVertex 만큼
+			//_renderVertCal_VertexLocalPos = new Vector2[_renderVerts.Length];
+			
+			////추가 21.5.24 : Rigging Matrix도 여기에 저장한다. RenderVertex의 Rigging Matrix를 대체한다.
+			//_renderVertCal_RiggingMatrix = new apMatrix3x3[_renderVerts.Length];
+
+
+			//이전
+			//for (int i = 0; i < _vertPositions.Length; i++)
+			//{
+			//	_vertPositions_Updated[i] = _vertPositions[i];
+			//}
+
+			//변경 21.5.22
+			Array.Copy(_vertPositions, _vertPositions_Updated, _vertPositions.Length);
+
+			//다시 삭제 21.5.27
+			//Array.Clear(_renderVertCal_VertexLocalPos, 0, _renderVerts.Length);			
+			//Array.Clear(_renderVertCal_RiggingMatrix, 0, _renderVerts.Length);
+
 
 			//_texture_Updated = _texture;
 
@@ -1062,13 +1159,16 @@ namespace AnyPortrait
 
 			//추가 19.7.3 : 버텍스 개수는 InitMesh에서 설정
 			_nRenderVerts = (_renderVerts != null) ? _renderVerts.Length : 0;
-			_nVertPos = (_vertPositions != null) ? _vertPositions.Length : 0;
+			//_nVertPos = (_vertPositions != null) ? _vertPositions.Length : 0;//사용하지 않음
 
 
 
 			//추가 20.4.21 : ExtraOption 초기화
 			_textureMode = TEXTURE_MODE.Base;
 			_texture_Base = _texture;
+
+			//여기서 생성되었을 것
+			_cal_parentCalculateStack = _parentTransform.CalculatedStack;
 			
 		}
 
@@ -1085,6 +1185,7 @@ namespace AnyPortrait
 
 			_mesh = Instantiate<Mesh>(_meshFilter.sharedMesh);
 			_meshFilter.mesh = _mesh;
+			_mesh.MarkDynamic();//<<추가 21.5.22
 		}
 
 
@@ -1319,10 +1420,11 @@ namespace AnyPortrait
 
 		// 외부 업데이트
 		//------------------------------------------------
-		public void ReadyToUpdate()
-		{
-			//?
-		}
+		//삭제 21.5.23 : 미사용 함수
+		//public void ReadyToUpdate()
+		//{
+		//	//?
+		//}
 
 		/// <summary>
 		/// [Please do not use it]
@@ -1434,121 +1536,300 @@ namespace AnyPortrait
 			_cal_isRootFlipped = (_cal_isRootFlipped_X && !_cal_isRootFlipped_Y)
 								|| (!_cal_isRootFlipped_X && _cal_isRootFlipped_Y);
 
-			float flipWeight_X = 1;
-			float flipWeight_Y = 1;
+			
+			//이전
+			//float flipWeight_X = 1;
+			//float flipWeight_Y = 1;
+
+			//변경 21.5.23
+			_cal_flipWeight_X = 1.0f;
+			_cal_flipWeight_Y = 1.0f;
 
 			if(_cal_isRootFlipped)
 			{
-				flipWeight_X = _cal_isRootFlipped_X ? -1 : 1;
-				flipWeight_Y = _cal_isRootFlipped_Y ? -1 : 1;
+				//이전
+				//flipWeight_X = _cal_isRootFlipped_X ? -1 : 1;
+				//flipWeight_Y = _cal_isRootFlipped_Y ? -1 : 1;
+
+				//변경
+				_cal_flipWeight_X = _cal_isRootFlipped_X ? -1 : 1;
+				_cal_flipWeight_Y = _cal_isRootFlipped_Y ? -1 : 1;
 			}
 				
 
 			_cal_Matrix_TFResult_World = _parentTransform._matrix_TFResult_World.MtrxToSpace;
 
-			apOptRenderVertex rVert = null;
+			//apOptRenderVertex rVert = null;//삭제
+			_cal_rVert = null;//변경 21.5.23
 
 //#if UNITY_EDITOR
-//			UnityEngine.Profiling.Profiler.BeginSample("Opt Mesh - Update calculate Render Vertices");
+//			UnityEngine.Profiling.Profiler.BeginSample("Opt Mesh - 1. Calculate Render Vertices");
 //#endif
 
 
-			apOptCalculatedResultStack calculateStack = _parentTransform.CalculatedStack;
+			//삭제
+			//apOptCalculatedResultStack calculateStack = _parentTransform.CalculatedStack;
 
-
-			for (int i = 0; i < _nRenderVerts; i++)
+			//변경 21.5.23
+			if(_cal_parentCalculateStack == null)
 			{
+				_cal_parentCalculateStack = _parentTransform.CalculatedStack;
+			}
+			
 
-				rVert = _renderVerts[i];
 
-				//리깅 추가
-				if (isRigging)
+			#region [미사용 코드] 원칙에 충실한 이전 방식
+			//for (int i = 0; i < _nRenderVerts; i++)
+			//{
+
+			//	rVert = _renderVerts[i];
+
+			//	//리깅 추가
+			//	if (isRigging)
+			//	{	
+
+			//		//변경 20.11.26 : 더 개선된 버전!
+			//		if (!_isUseRiggingCache)
+			//		{
+			//			rVert._matrix_Rigging.SetMatrixWithWeight(
+			//				calculateStack.GetDeferredRiggingMatrix_WithLUT(i),
+			//				calculateStack._result_RiggingWeight * calculateStack.GetDeferredRiggingWeight(i)//<이 Weight는 런타임에서는 바뀌지 않는다.
+			//				);
+			//		}
+			//		else
+			//		{
+			//			//캐시를 이용해서 Weight를 가져온다.
+			//			rVert._matrix_Rigging.SetMatrixWithWeight(
+			//				calculateStack.GetDeferredRiggingMatrix_WithLUT(i),
+			//				//calculateStack._result_RiggingWeight * calculateStack.GetDeferredRiggingWeightCache(i)
+			//				calculateStack._result_RiggingWeight * calculateStack._result_RiggingVertWeight_Cache[i]//변경 21.5.22 : 직접 호출
+			//				);
+			//		}
+
+
+			//	}
+
+			//	if (isVertexLocal)
+			//	{
+			//		rVert._matrix_Cal_VertLocal.SetTRS(calculateStack.GetDeferredLocalPos(i));//<OPT : VertLocal도 Vector면 된다. + 미리 계산하고 값 복사?할 것>
+			//	}
+
+			//	rVert.SetMatrix_3_Transform_Mesh(_cal_Matrix_TFResult_World);//<OPT : _cal_Matrix_TFResult_World도 삭제하고, Calculate에서 바로 전달>
+
+			//	if (isVertexWorld)
+			//	{
+			//		rVert._matrix_Cal_VertWorld.SetTRS(calculateStack._result_VertWorld[i]);//<OPT : VertWorld는 Matrix가 아닌 Vector면 된다.>
+			//	}
+
+			//	//추가
+			//	if(isOrthoCorrection)
+			//	{
+			//		rVert.SetMatrix_5_OrthoCorrection(_parentTransform._convert2TargetMatrix3x3);//<OPT : 이거 할당 삭제할 것>
+			//	}
+
+			//	//추가
+			//	rVert.SetMatrix_6_FlipWeight(flipWeight_X, flipWeight_Y);//<OPT : 이거 할당 삭제할 것>
+
+			//	rVert.Calculate();
+
+			//	//업데이트 데이터를 넣어준다.
+			//	_vertPositions_Updated[i] =  rVert._vertPos3_LocalUpdated;
+			//	_vertPositions_World[i] = rVert._vertPos_World;
+
+			//} 
+			#endregion
+
+
+			//변경 21.5.23 : RenderVertex에서 계산하던 것을 외부로 뺐다.
+			//조건에 따라 Calculated가 모두 다르다.
+			if (isVertexLocal)
+			{
+//#if UNITY_EDITOR
+//				UnityEngine.Profiling.Profiler.BeginSample("<Local Pos>");
+//#endif
+				//Array.Clear(_renderVertCal_VertexLocalPos, 0, _renderVerts.Length);//다시 삭제
+				_cal_parentCalculateStack.SetDeferredLocalPos(/*_renderVertCal_VertexLocalPos, _nRenderVerts*/);
+
+//#if UNITY_EDITOR
+//				UnityEngine.Profiling.Profiler.EndSample();
+//#endif
+			}
+
+			if(isRigging)
+			{
+				//_cal_parentCalculateStack.GetDeferredRiggingWeight(i)
+				//if (!_isUseRiggingCache)
+				//{
+				//	_cal_rVert._matrix_Rigging.SetMatrixWithWeight(
+				//		_cal_parentCalculateStack.GetDeferredRiggingMatrix_WithLUT(i),
+				//		_cal_parentCalculateStack._result_RiggingWeight * _cal_parentCalculateStack.GetDeferredRiggingWeight(i)//<이 Weight는 런타임에서는 바뀌지 않는다.
+				//		);
+				//}
+				//else
+				//{
+				//	//캐시를 이용해서 Weight를 가져온다.
+				//	_cal_rVert._matrix_Rigging.SetMatrixWithWeight(
+				//		_cal_parentCalculateStack.GetDeferredRiggingMatrix_WithLUT(i),
+				//		_cal_parentCalculateStack._result_RiggingWeight * _cal_parentCalculateStack._result_RiggingVertWeight_Cache[i]//변경 21.5.22 : 직접 호출
+				//		);
+				//}
+
+				//_cal_parentCalculateStack.SetDeferredRiggingMatrix_WithLUT(_renderVertCal_RiggingMatrix);
+				_cal_parentCalculateStack.SetDeferredRiggingMatrix_WithLUT();
+			}
+
+
+			if (isVertexLocal)
+			{
+				if (isVertexWorld)
 				{
-
-					//TODO : 이 부분의 코드를 개선할 수 있을 것 같다!
-					//TODO : Rigging의 경우 Modifier에서 계산을 하지 말고, 여기서만 계산하자
-
-					//지연 코드 버전
-					//이전 버전
-					//rVert._matrix_Rigging.SetMatrixWithWeight(calculateStack.GetDeferredRiggingMatrix(i), calculateStack._result_RiggingWeight);
-
-					//개선된 버전 + 캐시
-					//이전..
-					//if (!_isUseRiggingCache)
-					//{
-					//	rVert._matrix_Rigging.SetMatrixWithWeight(
-					//		calculateStack.GetDeferredRiggingMatrix(i),
-					//		calculateStack._result_RiggingWeight * calculateStack.GetDeferredRiggingWeight(i)//<이 Weight는 런타임에서는 바뀌지 않는다.
-					//		);
-					//}
-					//else
-					//{
-					//	//캐시를 이용해서 Weight를 가져온다.
-					//	rVert._matrix_Rigging.SetMatrixWithWeight(
-					//		calculateStack.GetDeferredRiggingMatrix(i),
-					//		calculateStack._result_RiggingWeight * calculateStack.GetDeferredRiggingWeightCache(i)
-					//		);
-					//}
-
-					//변경 20.11.26 : 더 개선된 버전!
-					if (!_isUseRiggingCache)
+					if (isRigging)
 					{
-						rVert._matrix_Rigging.SetMatrixWithWeight(
-							calculateStack.GetDeferredRiggingMatrix_WithLUT(i),
-							calculateStack._result_RiggingWeight * calculateStack.GetDeferredRiggingWeight(i)//<이 Weight는 런타임에서는 바뀌지 않는다.
-							);
+						if (isOrthoCorrection)
+						{
+							// Local + World + Rigging + OrthoCorrection
+							CalculateRenderVertices_Local_World_Rigging_OrthoCorrection();
+						}
+						else
+						{
+							// Local + World + Rigging
+							CalculateRenderVertices_Local_World_Rigging();
+						}
 					}
 					else
 					{
-						//캐시를 이용해서 Weight를 가져온다.
-						rVert._matrix_Rigging.SetMatrixWithWeight(
-							calculateStack.GetDeferredRiggingMatrix_WithLUT(i),
-							calculateStack._result_RiggingWeight * calculateStack.GetDeferredRiggingWeightCache(i)
-							);
+						if (isOrthoCorrection)
+						{
+							// Local + World + OrthoCorrection
+							CalculateRenderVertices_Local_World_OrthoCorrection();
+						}
+						else
+						{
+							// Local + World
+							CalculateRenderVertices_Local_World();
+						}
 					}
-
-
-				}
-
-				if (isVertexLocal)
-				{
-					rVert._matrix_Cal_VertLocal.SetTRS(calculateStack.GetDeferredLocalPos(i));
-				}
-
-				//rVert.SetMatrix_3_Transform_Mesh(_parentTransform._matrix_TFResult_World.MtrxToSpace);//<<기존
-				rVert.SetMatrix_3_Transform_Mesh(_cal_Matrix_TFResult_World);//<<한번 더 계산된 값으로 변경
 					
+				}
+				else
+				{
+					if (isRigging)
+					{
+						if (isOrthoCorrection)
+						{
+							// Local + Rigging + OrthoCorrection
+							CalculateRenderVertices_Local_Rigging_OrthoCorrection();
+						}
+						else
+						{
+							// Local + Rigging
+							CalculateRenderVertices_Local_Rigging();
+						}
+					}
+					else
+					{
+						if (isOrthoCorrection)
+						{
+							// Local + OrthoCorrection
+							CalculateRenderVertices_Local_OrthoCorrection();
+						}
+						else
+						{
+							// Local
+							CalculateRenderVertices_Local();
+						}
+					}
+				}
+			}
+			else
+			{
 				if (isVertexWorld)
 				{
-					rVert._matrix_Cal_VertWorld.SetTRS(calculateStack._result_VertWorld[i]);
-				}
-
-				//추가
-				if(isOrthoCorrection)
-				{
-					rVert.SetMatrix_5_OrthoCorrection(_parentTransform._convert2TargetMatrix3x3);
-				}
-
-				//추가
-				rVert.SetMatrix_6_FlipWeight(flipWeight_X, flipWeight_Y);
-
-				rVert.Calculate();
-
-				//업데이트 데이터를 넣어준다.
-				_vertPositions_Updated[i] =  rVert._vertPos3_LocalUpdated;
-				_vertPositions_World[i] = rVert._vertPos_World;
+					if (isRigging)
+					{
+						if (isOrthoCorrection)
+						{
+							// World + Rigging + OrthoCorrection
+							CalculateRenderVertices_World_Rigging_OrthoCorrection();
+						}
+						else
+						{
+							// World + Rigging
+							CalculateRenderVertices_World_Rigging();
+						}
+					}
+					else
+					{
+						if (isOrthoCorrection)
+						{
+							// World + OrthoCorrection
+							CalculateRenderVertices_World_OrthoCorrection();
+						}
+						else
+						{
+							// World
+							CalculateRenderVertices_World();
+						}
+					}
 					
+				}
+				else
+				{
+					if (isRigging)
+					{
+						if (isOrthoCorrection)
+						{
+							// Rigging + OrthoCorrection
+							CalculateRenderVertices_Rigging_OrthoCorrection();
+						}
+						else
+						{
+							// Rigging
+//#if UNITY_EDITOR
+//							UnityEngine.Profiling.Profiler.BeginSample("Calculate Rigging");
+//#endif
+							CalculateRenderVertices_Rigging();
+
+//#if UNITY_EDITOR
+//							UnityEngine.Profiling.Profiler.EndSample();
+//#endif
+
+						}
+					}
+					else
+					{
+						if (isOrthoCorrection)
+						{
+							// OrthoCorrection
+							CalculateRenderVertices_OrthoCorrection();
+						}
+						else
+						{
+							// <None>
+							CalculateRenderVertices_None();
+						}
+					}
+				}
 			}
+
+
+
+
+
 
 			//추가 19.7.3 : 양면인 경우에는, 뒤쪽면도 업데이트를 해야한다.
 			if(_isAlways2Side)
 			{
-				for (int i = 0; i < _nRenderVerts; i++)
-				{
-					rVert = _renderVerts[i];
-					_vertPositions_Updated[i + _nRenderVerts] = rVert._vertPos3_LocalUpdated;
-					_vertPositions_World[i + _nRenderVerts] = rVert._vertPos_World;
-				}
+				//이전 : 직접 할당
+				//for (int i = 0; i < _nRenderVerts; i++)
+				//{
+				//	rVert = _renderVerts[i];
+				//	_vertPositions_Updated[i + _nRenderVerts] = rVert._vertPos3_LocalUpdated;
+				//	_vertPositions_World[i + _nRenderVerts] = rVert._vertPos_World;
+				//}
+
+				//변경 21.5.23 : 앞 절반을 뒤 절반에 복사
+				Array.Copy(_vertPositions_Updated, 0, _vertPositions_Updated, _nRenderVerts, _nRenderVerts);
 			}
 
 			//리깅 캐시를 사용하는 것으로 변경
@@ -1664,7 +1945,7 @@ namespace AnyPortrait
 			}
 
 //#if UNITY_EDITOR
-//			Profiler.BeginSample("Opt Mesh - Refresh Mesh");
+//			UnityEngine.Profiling.Profiler.BeginSample("Opt Mesh - 2. Refresh Mesh");
 //#endif
 
 			RefreshMesh();
@@ -1679,16 +1960,421 @@ namespace AnyPortrait
 				_funcUpdateCommandBuffer();//변경
 			}
 
-			if(_mesh != null)
-			{
-				_mesh.RecalculateNormals();
-			}
+			//TODO 21.5.22 : 이건 옵션으로
+			//if (_mesh != null)
+			//{
+			//	_mesh.RecalculateNormals();
+			//}
 
 //#if UNITY_EDITOR
-//			Profiler.EndSample();
+//			UnityEngine.Profiling.Profiler.EndSample();
 //#endif
 		}
 
+
+
+
+
+		//추가 21.5.23 : Render Vertex Calculate를 조건 4개에 따라 총 16개의 함수로 나뉘어 호출한다.
+		//다 비슷하지만 다르다..
+		
+		// Local + World + [Rigging] + OrthoCorrection
+		private void CalculateRenderVertices_Local_World_Rigging_OrthoCorrection()
+		{	
+			for (int i = 0; i < _nRenderVerts; i++)
+			{
+				_cal_rVert = _renderVerts[i];
+
+				//if (!_isUseRiggingCache)
+				//{
+				//	_cal_rVert._matrix_Rigging.SetMatrixWithWeight(
+				//		_cal_parentCalculateStack.GetDeferredRiggingMatrix_WithLUT(i),
+				//		_cal_parentCalculateStack._result_RiggingWeight * _cal_parentCalculateStack.GetDeferredRiggingWeight(i)//<이 Weight는 런타임에서는 바뀌지 않는다.
+				//		);
+				//}
+				//else
+				//{
+				//	//캐시를 이용해서 Weight를 가져온다.
+				//	_cal_rVert._matrix_Rigging.SetMatrixWithWeight(
+				//		_cal_parentCalculateStack.GetDeferredRiggingMatrix_WithLUT(i),
+				//		_cal_parentCalculateStack._result_RiggingWeight * _cal_parentCalculateStack._result_RiggingVertWeight_Cache[i]//변경 21.5.22 : 직접 호출
+				//		);
+				//}
+
+				_cal_rVert.Calculate_Local_World_Rigging_OrthoCorrection(	ref _cal_parentCalculateStack._result_VertLocal[i],
+																			ref _cal_Matrix_TFResult_World,
+																			ref _cal_parentCalculateStack._result_VertWorld[i],
+																			ref _cal_parentCalculateStack._result_RiggingMatrices[i],
+																			ref _parentTransform._convert2TargetMatrix3x3,
+																			_cal_flipWeight_X, _cal_flipWeight_Y,
+																			ref _vertPositions_Updated[i]);
+			}
+		}
+
+
+		// Local + World + [Rigging]
+		private void CalculateRenderVertices_Local_World_Rigging()
+		{	
+			for (int i = 0; i < _nRenderVerts; i++)
+			{
+				_cal_rVert = _renderVerts[i];
+
+				//if (!_isUseRiggingCache)
+				//{
+				//	_cal_rVert._matrix_Rigging.SetMatrixWithWeight(
+				//		_cal_parentCalculateStack.GetDeferredRiggingMatrix_WithLUT(i),
+				//		_cal_parentCalculateStack._result_RiggingWeight * _cal_parentCalculateStack.GetDeferredRiggingWeight(i)//<이 Weight는 런타임에서는 바뀌지 않는다.
+				//		);
+				//}
+				//else
+				//{
+				//	//캐시를 이용해서 Weight를 가져온다.
+				//	_cal_rVert._matrix_Rigging.SetMatrixWithWeight(
+				//		_cal_parentCalculateStack.GetDeferredRiggingMatrix_WithLUT(i),
+				//		_cal_parentCalculateStack._result_RiggingWeight * _cal_parentCalculateStack._result_RiggingVertWeight_Cache[i]//변경 21.5.22 : 직접 호출
+				//		);
+				//}
+
+				_cal_rVert.Calculate_Local_World_Rigging(	ref _cal_parentCalculateStack._result_VertLocal[i],
+															ref _cal_Matrix_TFResult_World,
+															ref _cal_parentCalculateStack._result_VertWorld[i],
+															ref _cal_parentCalculateStack._result_RiggingMatrices[i],
+															_cal_flipWeight_X, _cal_flipWeight_Y,
+															ref _vertPositions_Updated[i]);
+			}
+		}
+
+		
+
+		// Local + World + OrthoCorrection
+		private void CalculateRenderVertices_Local_World_OrthoCorrection()
+		{	
+			for (int i = 0; i < _nRenderVerts; i++)
+			{
+				_cal_rVert = _renderVerts[i];
+
+				_cal_rVert.Calculate_Local_World_OrthoCorrection(	ref _cal_parentCalculateStack._result_VertLocal[i],
+																	ref _cal_Matrix_TFResult_World,
+																	ref _cal_parentCalculateStack._result_VertWorld[i],
+																	ref _parentTransform._convert2TargetMatrix3x3,
+																	_cal_flipWeight_X, _cal_flipWeight_Y,
+																	ref _vertPositions_Updated[i]);
+			}
+		}
+
+		// Local + World
+		private void CalculateRenderVertices_Local_World()
+		{	
+			for (int i = 0; i < _nRenderVerts; i++)
+			{
+				_cal_rVert = _renderVerts[i];
+
+				_cal_rVert.Calculate_Local_World(	ref _cal_parentCalculateStack._result_VertLocal[i],
+													ref _cal_Matrix_TFResult_World,
+													ref _cal_parentCalculateStack._result_VertWorld[i],
+													_cal_flipWeight_X, _cal_flipWeight_Y,
+													ref _vertPositions_Updated[i]);
+			}
+		}
+
+		// Local + [Rigging] + OrthoCorrection
+		private void CalculateRenderVertices_Local_Rigging_OrthoCorrection()
+		{	
+			for (int i = 0; i < _nRenderVerts; i++)
+			{
+				_cal_rVert = _renderVerts[i];
+
+				//if (!_isUseRiggingCache)
+				//{
+				//	_cal_rVert._matrix_Rigging.SetMatrixWithWeight(
+				//		_cal_parentCalculateStack.GetDeferredRiggingMatrix_WithLUT(i),
+				//		_cal_parentCalculateStack._result_RiggingWeight * _cal_parentCalculateStack.GetDeferredRiggingWeight(i)//<이 Weight는 런타임에서는 바뀌지 않는다.
+				//		);
+				//}
+				//else
+				//{
+				//	//캐시를 이용해서 Weight를 가져온다.
+				//	_cal_rVert._matrix_Rigging.SetMatrixWithWeight(
+				//		_cal_parentCalculateStack.GetDeferredRiggingMatrix_WithLUT(i),
+				//		_cal_parentCalculateStack._result_RiggingWeight * _cal_parentCalculateStack._result_RiggingVertWeight_Cache[i]//변경 21.5.22 : 직접 호출
+				//		);
+				//}
+
+				_cal_rVert.Calculate_Local_Rigging_OrthoCorrection(	ref _cal_parentCalculateStack._result_VertLocal[i],
+																	ref _cal_Matrix_TFResult_World,
+																	ref _cal_parentCalculateStack._result_RiggingMatrices[i],
+																	ref _parentTransform._convert2TargetMatrix3x3,
+																	_cal_flipWeight_X, _cal_flipWeight_Y,
+																	ref _vertPositions_Updated[i]);
+			}
+		}
+
+
+		// Local + [Rigging]
+		private void CalculateRenderVertices_Local_Rigging()
+		{	
+			for (int i = 0; i < _nRenderVerts; i++)
+			{
+				_cal_rVert = _renderVerts[i];
+
+				//if (!_isUseRiggingCache)
+				//{
+				//	_cal_rVert._matrix_Rigging.SetMatrixWithWeight(
+				//		_cal_parentCalculateStack.GetDeferredRiggingMatrix_WithLUT(i),
+				//		_cal_parentCalculateStack._result_RiggingWeight * _cal_parentCalculateStack.GetDeferredRiggingWeight(i)//<이 Weight는 런타임에서는 바뀌지 않는다.
+				//		);
+				//}
+				//else
+				//{
+				//	//캐시를 이용해서 Weight를 가져온다.
+				//	_cal_rVert._matrix_Rigging.SetMatrixWithWeight(
+				//		_cal_parentCalculateStack.GetDeferredRiggingMatrix_WithLUT(i),
+				//		_cal_parentCalculateStack._result_RiggingWeight * _cal_parentCalculateStack._result_RiggingVertWeight_Cache[i]//변경 21.5.22 : 직접 호출
+				//		);
+				//}
+
+				_cal_rVert.Calculate_Local_Rigging(	ref _cal_parentCalculateStack._result_VertLocal[i],
+													ref _cal_Matrix_TFResult_World,
+													ref _cal_parentCalculateStack._result_RiggingMatrices[i],
+													_cal_flipWeight_X, _cal_flipWeight_Y,
+													ref _vertPositions_Updated[i]);
+			}
+		}
+
+		
+
+		// Local + OrthoCorrection
+		private void CalculateRenderVertices_Local_OrthoCorrection()
+		{	
+			for (int i = 0; i < _nRenderVerts; i++)
+			{
+				_cal_rVert = _renderVerts[i];
+
+				_cal_rVert.Calculate_Local_OrthoCorrection(	ref _cal_parentCalculateStack._result_VertLocal[i],
+															ref _cal_Matrix_TFResult_World,
+															ref _parentTransform._convert2TargetMatrix3x3,
+															_cal_flipWeight_X, _cal_flipWeight_Y,
+															ref _vertPositions_Updated[i]);
+			}
+		}
+
+		// Local
+		private void CalculateRenderVertices_Local()
+		{	
+			for (int i = 0; i < _nRenderVerts; i++)
+			{
+				_cal_rVert = _renderVerts[i];
+
+				_cal_rVert.Calculate_Local(	ref _cal_parentCalculateStack._result_VertLocal[i],
+											ref _cal_Matrix_TFResult_World,
+											_cal_flipWeight_X, _cal_flipWeight_Y,
+											ref _vertPositions_Updated[i]);
+			}
+		}
+
+
+		//=====
+
+		// World + [Rigging] + OrthoCorrection
+		private void CalculateRenderVertices_World_Rigging_OrthoCorrection()
+		{	
+			for (int i = 0; i < _nRenderVerts; i++)
+			{
+				_cal_rVert = _renderVerts[i];
+
+				//if (!_isUseRiggingCache)
+				//{
+				//	_cal_rVert._matrix_Rigging.SetMatrixWithWeight(
+				//		_cal_parentCalculateStack.GetDeferredRiggingMatrix_WithLUT(i),
+				//		_cal_parentCalculateStack._result_RiggingWeight * _cal_parentCalculateStack.GetDeferredRiggingWeight(i)//<이 Weight는 런타임에서는 바뀌지 않는다.
+				//		);
+				//}
+				//else
+				//{
+				//	//캐시를 이용해서 Weight를 가져온다.
+				//	_cal_rVert._matrix_Rigging.SetMatrixWithWeight(
+				//		_cal_parentCalculateStack.GetDeferredRiggingMatrix_WithLUT(i),
+				//		_cal_parentCalculateStack._result_RiggingWeight * _cal_parentCalculateStack._result_RiggingVertWeight_Cache[i]//변경 21.5.22 : 직접 호출
+				//		);
+				//}
+
+				_cal_rVert.Calculate_World_Rigging_OrthoCorrection(	ref _cal_Matrix_TFResult_World,
+																	ref _cal_parentCalculateStack._result_VertWorld[i],
+																	ref _cal_parentCalculateStack._result_RiggingMatrices[i],
+																	ref _parentTransform._convert2TargetMatrix3x3,
+																	_cal_flipWeight_X, _cal_flipWeight_Y,
+																	ref _vertPositions_Updated[i]);
+			}
+		}
+
+
+		// World + [Rigging]
+		private void CalculateRenderVertices_World_Rigging()
+		{	
+			for (int i = 0; i < _nRenderVerts; i++)
+			{
+				_cal_rVert = _renderVerts[i];
+
+				//if (!_isUseRiggingCache)
+				//{
+				//	_cal_rVert._matrix_Rigging.SetMatrixWithWeight(
+				//		_cal_parentCalculateStack.GetDeferredRiggingMatrix_WithLUT(i),
+				//		_cal_parentCalculateStack._result_RiggingWeight * _cal_parentCalculateStack.GetDeferredRiggingWeight(i)//<이 Weight는 런타임에서는 바뀌지 않는다.
+				//		);
+				//}
+				//else
+				//{
+				//	//캐시를 이용해서 Weight를 가져온다.
+				//	_cal_rVert._matrix_Rigging.SetMatrixWithWeight(
+				//		_cal_parentCalculateStack.GetDeferredRiggingMatrix_WithLUT(i),
+				//		_cal_parentCalculateStack._result_RiggingWeight * _cal_parentCalculateStack._result_RiggingVertWeight_Cache[i]//변경 21.5.22 : 직접 호출
+				//		);
+				//}
+
+				_cal_rVert.Calculate_World_Rigging(	ref _cal_Matrix_TFResult_World,
+													ref _cal_parentCalculateStack._result_VertWorld[i],
+													ref _cal_parentCalculateStack._result_RiggingMatrices[i],
+													_cal_flipWeight_X, _cal_flipWeight_Y,
+													ref _vertPositions_Updated[i]);
+			}
+		}
+
+		
+
+		// World + OrthoCorrection
+		private void CalculateRenderVertices_World_OrthoCorrection()
+		{	
+			for (int i = 0; i < _nRenderVerts; i++)
+			{
+				_cal_rVert = _renderVerts[i];
+
+				_cal_rVert.Calculate_World_OrthoCorrection(	ref _cal_Matrix_TFResult_World,
+															ref _cal_parentCalculateStack._result_VertWorld[i],
+															ref _parentTransform._convert2TargetMatrix3x3,
+															_cal_flipWeight_X, _cal_flipWeight_Y,
+															ref _vertPositions_Updated[i]);
+			}
+		}
+
+		// World
+		private void CalculateRenderVertices_World()
+		{	
+			for (int i = 0; i < _nRenderVerts; i++)
+			{
+				_cal_rVert = _renderVerts[i];
+
+				_cal_rVert.Calculate_World(	ref _cal_Matrix_TFResult_World,
+											ref _cal_parentCalculateStack._result_VertWorld[i],
+											_cal_flipWeight_X, _cal_flipWeight_Y,
+											ref _vertPositions_Updated[i]);
+			}
+		}
+
+		// [Rigging] + OrthoCorrection
+		private void CalculateRenderVertices_Rigging_OrthoCorrection()
+		{	
+			for (int i = 0; i < _nRenderVerts; i++)
+			{
+				_cal_rVert = _renderVerts[i];
+
+				//if (!_isUseRiggingCache)
+				//{
+				//	_cal_rVert._matrix_Rigging.SetMatrixWithWeight(
+				//		_cal_parentCalculateStack.GetDeferredRiggingMatrix_WithLUT(i),
+				//		_cal_parentCalculateStack._result_RiggingWeight * _cal_parentCalculateStack.GetDeferredRiggingWeight(i)//<이 Weight는 런타임에서는 바뀌지 않는다.
+				//		);
+				//}
+				//else
+				//{
+				//	//캐시를 이용해서 Weight를 가져온다.
+				//	_cal_rVert._matrix_Rigging.SetMatrixWithWeight(
+				//		_cal_parentCalculateStack.GetDeferredRiggingMatrix_WithLUT(i),
+				//		_cal_parentCalculateStack._result_RiggingWeight * _cal_parentCalculateStack._result_RiggingVertWeight_Cache[i]//변경 21.5.22 : 직접 호출
+				//		);
+				//}
+
+				_cal_rVert.Calculate_Rigging_OrthoCorrection(	ref _cal_Matrix_TFResult_World,
+																ref _cal_parentCalculateStack._result_RiggingMatrices[i],
+																ref _parentTransform._convert2TargetMatrix3x3,
+																_cal_flipWeight_X, _cal_flipWeight_Y,
+																ref _vertPositions_Updated[i]);
+			}
+		}
+
+
+		// [Rigging]
+		private void CalculateRenderVertices_Rigging()
+		{	
+			for (int i = 0; i < _nRenderVerts; i++)
+			{
+				_cal_rVert = _renderVerts[i];
+
+//				//이게 제일 무겁다;;
+//				if (!_isUseRiggingCache)
+//				{
+//					_cal_rVert._matrix_Rigging.SetMatrixWithWeight(
+//						_cal_parentCalculateStack.GetDeferredRiggingMatrix_WithLUT(i),
+//						_cal_parentCalculateStack._result_RiggingWeight * _cal_parentCalculateStack.GetDeferredRiggingWeight(i)//<이 Weight는 런타임에서는 바뀌지 않는다.
+//						);
+//				}
+//				else
+//				{
+//					//캐시를 이용해서 Weight를 가져온다.
+//					_cal_rVert._matrix_Rigging.SetMatrixWithWeight(
+//						_cal_parentCalculateStack.GetDeferredRiggingMatrix_WithLUT(i),
+//						_cal_parentCalculateStack._result_RiggingWeight * _cal_parentCalculateStack._result_RiggingVertWeight_Cache[i]//변경 21.5.22 : 직접 호출
+//						);
+//				}
+
+
+				if(_cal_parentCalculateStack == null)
+				{
+					Debug.LogError("_cal_parentCalculateStack is null");
+				}
+				if(_cal_parentCalculateStack._result_RiggingMatrices == null)
+				{
+					Debug.LogError("_cal_parentCalculateStack._result_RiggingMatrices is null");
+				}
+				if(_vertPositions_Updated == null)
+				{
+					Debug.LogError("_vertPositions_Updated is null");
+				}
+				_cal_rVert.Calculate_Rigging(	ref _cal_Matrix_TFResult_World,
+												ref _cal_parentCalculateStack._result_RiggingMatrices[i],
+												_cal_flipWeight_X, _cal_flipWeight_Y,
+												ref _vertPositions_Updated[i]);
+
+			}
+		}
+
+		
+
+		// OrthoCorrection
+		private void CalculateRenderVertices_OrthoCorrection()
+		{	
+			for (int i = 0; i < _nRenderVerts; i++)
+			{
+				_cal_rVert = _renderVerts[i];
+
+				_cal_rVert.Calculate_OrthoCorrection(	ref _cal_Matrix_TFResult_World,
+														ref _parentTransform._convert2TargetMatrix3x3,
+														_cal_flipWeight_X, _cal_flipWeight_Y,
+														ref _vertPositions_Updated[i]);
+			}
+		}
+
+		// None
+		private void CalculateRenderVertices_None()
+		{	
+			for (int i = 0; i < _nRenderVerts; i++)
+			{
+				_cal_rVert = _renderVerts[i];
+
+				_cal_rVert.Calculate_None(	ref _cal_Matrix_TFResult_World,
+											_cal_flipWeight_X, _cal_flipWeight_Y,
+											ref _vertPositions_Updated[i]);
+			}
+		}
 
 
 
@@ -1785,14 +2471,6 @@ namespace AnyPortrait
 			//	return;
 			//}
 
-			//변경 -> MaskParent는 그대로 업데이트 가능하고, Child만 따로 업데이트하자
-			#region [미사용 코드 : 스텐실 병합 방식에서는 MaskChild는 Refresh를 생략했다.]
-			//if (_isMaskChild)
-			//{
-			//	return;
-			//} 
-			#endregion
-
 
 
 			//Flipped 계산
@@ -1810,8 +2488,6 @@ namespace AnyPortrait
 				_transform.localPosition = new Vector3((_cal_isRootFlipped_X ? _pivotPos.x : -_pivotPos.x),
 														(_cal_isRootFlipped_Y ? _pivotPos.y : -_pivotPos.y),
 														0);
-
-				//Debug.Log("Mesh [" + this.name + "] Changed" + (_cal_isRootFlipped_X ? " : Flipped X" : "") + (_cal_isRootFlipped_Y ? " : Flipped Y" : "") );
 			}
 
 
@@ -1864,15 +2540,26 @@ namespace AnyPortrait
 				_vertRange_YMin = float.MaxValue;//Max -> Min
 				_vertRange_YMax = float.MinValue;//Min -> Max
 
-				for (int i = 0; i < _nVertPos; i++)
-				{
-					//_vertPositions_Local[i] = _transform.InverseTransformPoint(_vertPositions_Updated[i]);
-					_vertPositions_Local[i] = _vertPositions_Updated[i];
+				
+				//_vertPositions_Local를 삭제했다.
+				//Array.Copy(_vertPositions_Updated, _vertPositions_Local, _nVertPos);//추가 21.5.22
 
-					_vertRange_XMin = Mathf.Min(_vertRange_XMin, _vertPositions_Local[i].x);
-					_vertRange_XMax = Mathf.Max(_vertRange_XMax, _vertPositions_Local[i].x);
-					_vertRange_YMin = Mathf.Min(_vertRange_YMin, _vertPositions_Local[i].y);
-					_vertRange_YMax = Mathf.Max(_vertRange_YMax, _vertPositions_Local[i].y);
+				//for (int i = 0; i < _nVertPos; i++)
+				for (int i = 0; i < _nRenderVerts; i++)//모든 버텍스 체크 필요없다. RenderVertex 만큼만 체크하면 된다.
+				{
+					//_vertPositions_Local[i] = _vertPositions_Updated[i];//삭제 21.5.22 > Array.Copy로 변경
+
+					//이전
+					//_vertRange_XMin = Mathf.Min(_vertRange_XMin, _vertPositions_Local[i].x);
+					//_vertRange_XMax = Mathf.Max(_vertRange_XMax, _vertPositions_Local[i].x);
+					//_vertRange_YMin = Mathf.Min(_vertRange_YMin, _vertPositions_Local[i].y);
+					//_vertRange_YMax = Mathf.Max(_vertRange_YMax, _vertPositions_Local[i].y);
+
+					//변경 21.5.23 : Local 삭제 > Update 바로 이용
+					_vertRange_XMin = Mathf.Min(_vertRange_XMin, _vertPositions_Updated[i].x);
+					_vertRange_XMax = Mathf.Max(_vertRange_XMax, _vertPositions_Updated[i].x);
+					_vertRange_YMin = Mathf.Min(_vertRange_YMin, _vertPositions_Updated[i].y);
+					_vertRange_YMax = Mathf.Max(_vertRange_YMax, _vertPositions_Updated[i].y);
 				}
 
 				//마스크를 만들 영역을 잡아준다.
@@ -1888,17 +2575,25 @@ namespace AnyPortrait
 			}
 			else
 			{
-				for (int i = 0; i < _nVertPos; i++)
-				{
-					//_vertPositions_Local[i] = _transform.InverseTransformPoint(_vertPositions_Updated[i]);
-					_vertPositions_Local[i] = _vertPositions_Updated[i];
-				}
+				//이전
+				//for (int i = 0; i < _nVertPos; i++)
+				//{
+				//	//_vertPositions_Local[i] = _transform.InverseTransformPoint(_vertPositions_Updated[i]);
+				//	_vertPositions_Local[i] = _vertPositions_Updated[i];
+				//}
+
+				//변경 21.5.22 > 삭제 21.5.23 : Local 사용하지 않음
+				//Array.Copy(_vertPositions_Updated, _vertPositions_Local, _nVertPos);
 			}
 			
 
+			//이전
+			//_mesh.vertices = _vertPositions_Local;
+			//변경 21.5.23 : Update 배열 바로 사용하면 된다.
+			_mesh.vertices = _vertPositions_Updated;
 
-			_mesh.vertices = _vertPositions_Local;
-			_mesh.uv = _vertUVs;
+
+			//_mesh.uv = _vertUVs;//삭제 21.5.22
 			//추가3.22 : Flip 여부에 따라서 다른 Vertex 배열을 사용한다.
 			if (_isAlways2Side)
 			{
@@ -1925,59 +2620,10 @@ namespace AnyPortrait
 				}
 			}
 			
-			
-			
-
 			_mesh.RecalculateBounds();
 
 		}
 
-
-
-		#region [미사용 코드 : 스텐실 병합 방식]
-		//public void RefreshClippedMesh()
-		//{
-		//	if (!_isMaskChild)
-		//	{
-		//		return;
-		//	}
-		//	apOptMesh targetMesh = null;
-		//	int iVertOffset = 0;
-		//	for (int i = 0; i < 2; i++)
-		//	{
-
-		//		if (i == 0)
-		//		{
-		//			targetMesh = _parentOptMesh;
-		//			iVertOffset = 0;
-		//		}
-		//		else
-		//		{
-		//			targetMesh = this;
-		//			iVertOffset = _nVertParent;
-		//		}
-		//		int nVert = targetMesh._nVert;
-		//		for (int iVert = 0; iVert < nVert; iVert++)
-		//		{
-		//			_vertPosList_ClippedMerge[iVert + iVertOffset] =
-		//				_transform.InverseTransformPoint(
-		//					targetMesh._transform.TransformPoint(
-		//						targetMesh._vertPositions_Updated[iVert]));
-		//		}
-		//	}
-
-
-		//	_material.SetColor("_Color", MeshColor);
-		//	_material.SetColor("_MaskColor", _parentOptMesh.MeshColor);
-		//	_mesh.vertices = _vertPosList_ClippedMerge;
-
-
-
-		//	_mesh.RecalculateBounds();
-		//	_mesh.RecalculateNormals();
-
-		//} 
-		#endregion
 
 		//--------------------------------------------------------------------------------
 		// 클리핑 Mask Parent

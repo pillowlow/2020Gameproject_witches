@@ -285,7 +285,12 @@ namespace AnyPortrait
 
 			if (isFirstMove)
 			{
-				apEditorUtil.SetRecord_Mesh(apUndoGroupData.ACTION.MeshEdit_EditVertex, Editor, mesh, mesh, true);
+				apEditorUtil.SetRecord_Mesh(	apUndoGroupData.ACTION.MeshEdit_EditVertex, 
+												Editor, 
+												mesh, 
+												//mesh, 
+												true,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 			//Vector2 prevPos = Editor.VertController.Vertex._pos;
@@ -333,7 +338,12 @@ namespace AnyPortrait
 
 			if (isFirstRotate)
 			{
-				apEditorUtil.SetRecord_Mesh(apUndoGroupData.ACTION.MeshEdit_EditVertex, Editor, mesh, mesh, true);
+				apEditorUtil.SetRecord_Mesh(	apUndoGroupData.ACTION.MeshEdit_EditVertex, 
+												Editor, 
+												mesh, 
+												//mesh, 
+												true,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 			apVertex curVert = null;
@@ -396,7 +406,12 @@ namespace AnyPortrait
 			
 			if (isFirstScale)
 			{
-				apEditorUtil.SetRecord_Mesh(apUndoGroupData.ACTION.MeshEdit_EditVertex, Editor, mesh, mesh, true);
+				apEditorUtil.SetRecord_Mesh(	apUndoGroupData.ACTION.MeshEdit_EditVertex, 
+												Editor, 
+												mesh, 
+												//mesh, 
+												true,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 			apVertex curVert = null;
@@ -520,7 +535,12 @@ namespace AnyPortrait
 
 			if (isFirstMove)
 			{
-				apEditorUtil.SetRecord_Mesh(apUndoGroupData.ACTION.MeshEdit_EditVertex, Editor, mesh, mesh, true);
+				apEditorUtil.SetRecord_Mesh(	apUndoGroupData.ACTION.MeshEdit_EditVertex, 
+												Editor, 
+												mesh, 
+												//mesh, 
+												true,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 
@@ -584,7 +604,12 @@ namespace AnyPortrait
 
 			if (isFirstRotate)
 			{
-				apEditorUtil.SetRecord_Mesh(apUndoGroupData.ACTION.MeshEdit_EditVertex, Editor, mesh, mesh, true);
+				apEditorUtil.SetRecord_Mesh(	apUndoGroupData.ACTION.MeshEdit_EditVertex, 
+												Editor, 
+												mesh, 
+												//mesh, 
+												true,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 			if(Mathf.Abs(deltaAngleW) == 0.0f)
@@ -650,7 +675,12 @@ namespace AnyPortrait
 			
 			if (isFirstScale)
 			{
-				apEditorUtil.SetRecord_Mesh(apUndoGroupData.ACTION.MeshEdit_EditVertex, Editor, mesh, mesh, true);
+				apEditorUtil.SetRecord_Mesh(	apUndoGroupData.ACTION.MeshEdit_EditVertex, 
+												Editor, 
+												mesh, 
+												//mesh, 
+												true,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 			apVertex curVert = null;
@@ -715,7 +745,12 @@ namespace AnyPortrait
 				return;
 			}
 			
-			apEditorUtil.SetRecord_Mesh(apUndoGroupData.ACTION.MeshEdit_EditVertex, Editor, mesh, mesh, true);
+			apEditorUtil.SetRecord_Mesh(	apUndoGroupData.ACTION.MeshEdit_EditVertex, 
+											Editor, 
+											mesh, 
+											//mesh, 
+											true,
+											apEditorUtil.UNDO_STRUCT.ValueOnly);
 			
 			apVertex curVert = null;
 			Vector2 centerPos = Vector2.zero;
@@ -870,7 +905,12 @@ namespace AnyPortrait
 
 			if (isRecord)
 			{
-				apEditorUtil.SetRecord_Mesh(apUndoGroupData.ACTION.MeshEdit_VertexMoved, Editor, mesh, mesh, true);
+				apEditorUtil.SetRecord_Mesh(	apUndoGroupData.ACTION.MeshEdit_VertexMoved, 
+												Editor, 
+												mesh, 
+												//mesh, 
+												true,
+												apEditorUtil.UNDO_STRUCT.ValueOnly);
 			}
 
 			apVertex vert = null;

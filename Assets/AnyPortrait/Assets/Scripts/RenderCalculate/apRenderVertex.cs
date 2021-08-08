@@ -18,6 +18,7 @@ using System;
 
 
 using AnyPortrait;
+using System.Runtime.InteropServices;
 
 namespace AnyPortrait
 {
@@ -72,6 +73,7 @@ namespace AnyPortrait
 
 		//3. [TF+Cal] 중첩된 Mesh/MeshGroup Transform (Parent / Local로 나뉨)
 		public apMatrix3x3 _matrix_MeshTransform = apMatrix3x3.identity;
+		public apMatrix3x3 _matrix_MeshTransform_Inv = apMatrix3x3.identity;
 
 
 		//4. [Cal] Vert World - Blended
@@ -135,6 +137,7 @@ namespace AnyPortrait
 			_matrix_Static_Vert2Mesh = apMatrix3x3.identity;
 			_matrix_Cal_VertLocal = apMatrix3x3.identity;
 			_matrix_MeshTransform = apMatrix3x3.identity;
+			_matrix_MeshTransform_Inv = apMatrix3x3.identity;
 
 			_matrix_Cal_VertWorld = apMatrix3x3.identity;
 			_matrix_ToWorld = apMatrix3x3.identity;
@@ -180,6 +183,7 @@ namespace AnyPortrait
 			_matrix_Static_Vert2Mesh = apMatrix3x3.identity;
 			_matrix_Cal_VertLocal = apMatrix3x3.identity;
 			_matrix_MeshTransform = apMatrix3x3.identity;
+			_matrix_MeshTransform_Inv = apMatrix3x3.identity;
 
 			_matrix_Cal_VertWorld = apMatrix3x3.identity;
 			_matrix_ToWorld = apMatrix3x3.identity;
@@ -219,7 +223,7 @@ namespace AnyPortrait
 			_pos_Rigging = posRiggingResult;
 			_weight_Rigging = weight;
 			
-			_matrix_Rigging.SetMatrixWithWeight(matrix_rigging, _weight_Rigging);
+			_matrix_Rigging.SetMatrixWithWeight(ref matrix_rigging, _weight_Rigging);
 
 			//if(_vertex._index == 0)
 			//{
@@ -241,9 +245,10 @@ namespace AnyPortrait
 			_matrix_Cal_VertLocal = apMatrix3x3.TRS(deltaPos, 0, Vector2.one);
 		}
 
-		public void SetMatrix_3_Transform_Mesh(apMatrix3x3 matrix_meshTransform)
+		public void SetMatrix_3_Transform_Mesh(apMatrix3x3 matrix_meshTransform, apMatrix3x3 matrix_meshTransformInv)
 		{
 			_matrix_MeshTransform = matrix_meshTransform;
+			_matrix_MeshTransform_Inv = matrix_meshTransformInv;
 		}
 
 		public void SetMatrix_4_Calculate_VertWorld(Vector2 deltaPos)
@@ -254,31 +259,6 @@ namespace AnyPortrait
 
 		public void Calculate(float tDelta)//<<tDelta가 추가되었다.
 		{
-			#region [미사용 코드] 해시코드 체크 부분을 없앴다. 퍼포먼스 잘나온다 =3=b
-			//if (_isMatrixChanged)
-			//{
-			//	//테스트
-			//	//상대값이 아니라 절대값을 World로 사용하자
-			//	//_matrix_ToWorld = _matrix_MeshTransform * _matrix_Cal_VertLocal * _matrix_Static_Vert2Mesh;
-			//	//_pos_World3 = _matrix_ToWorld.MultiplyPoint3x4(Vector3.zero);
-			//	//_pos_World3 = _matrix_ToWorld.MultiplyPoint3x4(_vertex._pos);
-
-			//	//역순으로 World Matrix를 계산하자
-			//	_matrix_ToWorld = _matrix_Cal_VertWorld
-			//					//* _matrix_TF_Cal_Parent 
-			//					//* _matrix_Cal_Mesh 
-			//					//* _matrix_TF_Mesh 
-			//					* _matrix_MeshTransform
-			//					* _matrix_Cal_VertLocal
-			//					* _matrix_Static_Vert2Mesh;
-
-			//	//_matrix_ToVert = _matrix_ToWorld.inverse;
-
-
-			//} 
-			#endregion
-
-
 			
 			//역순으로 World Matrix를 계산하자
 			//1. 기존 식
@@ -302,12 +282,41 @@ namespace AnyPortrait
 
 
 			//World -> Local
-			_pos_LocalOnMesh = (_matrix_MeshTransform.inverse).MultiplyPoint(_pos_World);
+			//_pos_LocalOnMesh = (_matrix_MeshTransform.inverse).MultiplyPoint(_pos_World);//일일이 inverse 계산
+			_pos_LocalOnMesh = (_matrix_MeshTransform_Inv).MultiplyPoint(_pos_World);//계산된 inverse 가져오기
 			
 
 			_isCalculated = true;
 			
 		}
+
+
+
+
+		
+		/// <summary>
+		/// 추가 21.5.14 : Calculate 함수의 C++ DLL 버전.
+		/// </summary>
+		/// <param name="tDelta"></param>
+		public void Calculate_DLL(float tDelta)
+		{	
+			//DLL 함수
+			//RenderVertex_Calculate(	ref _matrix_ToWorld, 
+			//						ref _pos_World,
+			//						ref _pos_LocalOnMesh,
+			//						ref _matrix_Static_Vert2Mesh,
+			//						ref _matrix_Cal_VertLocal,
+			//						ref _matrix_Rigging,
+			//						ref _matrix_MeshTransform,
+			//						ref _matrix_MeshTransform_Inv,
+			//						ref _matrix_Cal_VertWorld,
+			//						ref _vertex._pos);
+
+			_isCalculated = true;			
+		}
+
+
+
 
 		public void CalculateByComputeShader(Vector2 posWorld2, Vector2 posLocalOnMesh, apMatrix3x3 mtxWorld)
 		{

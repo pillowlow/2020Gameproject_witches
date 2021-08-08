@@ -58,7 +58,7 @@ namespace AnyPortrait
 		public float[] _result_RiggingVertWeight_Cache = null;//추가 : Vertex의 Rigging Weight이다. 1회 계산후 Rigging Weight가 바뀌지 않는 것을 이용
 															  //public List<Vector2> _result_VertWorld = null;
 
-
+		
 		public Vector2[] _result_VertWorld = null;
 
 		private Vector2 _tmpPos = Vector2.zero;
@@ -70,6 +70,7 @@ namespace AnyPortrait
 		//public Vector2[] _result_Rigging = null;//<<이건 사용하지 않는다.
 		public float _result_RiggingWeight = 0.0f;
 		public apMatrix3x3[] _result_RiggingMatrices = null;
+		public apMatrix3x3[] _result_RiggingMatrices_Init = null;//추가 21.5.22 : 초기화용 배열
 
 
 		//Bone Transform
@@ -105,6 +106,9 @@ namespace AnyPortrait
 		private delegate Vector2 FUNC_GET_DEFERRED_LOCAL_POS(int vertexIndex);
 		private FUNC_GET_DEFERRED_LOCAL_POS _funcGetDeferredLocalPos = null;
 
+		//추가 21.5.22 : Local Vertex 할당 함수의 변경을 ModMeshSet 사용 여부에 따라 결정
+		private delegate void FUNC_SET_DEFERRED_LOCAL_POS(Vector2[] vertsLocal, int nVerts);
+		private FUNC_SET_DEFERRED_LOCAL_POS _funcSetDeferredLocalPos = null;
 
 		//private Color _color_Default = new Color(0.5f, 0.5f, 0.5f, 1.0f);
 		//private Vector3 _color_2XTmp_Prev = Vector3.zero;
@@ -239,6 +243,101 @@ namespace AnyPortrait
 		//Rigging이 있을 때에만 만든다.
 		private apOptCalculatedRigPairLUT _riggingLUT = null;
 
+		//추가 21.5.24 : 버텍스마다 LUT들, 기본 Weight들을 미리 저장하자
+		public class VertLUTTableSet
+		{
+			public apOptCalculatedRigPairLUT.LUTUnit[] _LUTUnits = null;
+			public float[] _weights = null;
+			public int _nLUT = 0;
+
+			//개수에 따라서 단축 함수를 호출할 수도 있다.
+			private delegate void FUNC_CALCULATE(ref apMatrix3x3 dstMatrix, float lerpWeight);
+			private FUNC_CALCULATE _funcCalculate = null;
+
+			public VertLUTTableSet(List<apOptCalculatedRigPairLUT.LUTUnit> srcLUTUnits, List<float> srcweights)
+			{
+				_nLUT = srcLUTUnits.Count;
+				_LUTUnits = new apOptCalculatedRigPairLUT.LUTUnit[_nLUT];
+				_weights = new float[_nLUT];
+
+				for (int i = 0; i < _nLUT; i++)
+				{
+					_LUTUnits[i] = srcLUTUnits[i];
+					_weights[i] = srcweights[i];
+				}
+
+				//LUT 개수에 따라서 단축함수를 이용할 수 있다. 현재로는 최대 5개. 그 이상은 Loop를 돌아야 한다.
+				if(_nLUT == 0) { _funcCalculate = OnCalculateLUT_0; }
+				else if(_nLUT == 1) { _funcCalculate = OnCalculateLUT_1; }
+				else if(_nLUT == 2) { _funcCalculate = OnCalculateLUT_2; }
+				else if(_nLUT == 3) { _funcCalculate = OnCalculateLUT_3; }
+				else if(_nLUT == 4) { _funcCalculate = OnCalculateLUT_4; }
+				else if(_nLUT == 5) { _funcCalculate = OnCalculateLUT_5; }
+				else
+				{
+					_funcCalculate = OnCalculateLUT_More;
+				}
+			}
+
+			public void CalculateLUT(ref apMatrix3x3 dstMatrix, float lerpWeight)
+			{
+				//저장된 함수를 이용한다.				
+				_funcCalculate(ref dstMatrix, lerpWeight);
+			}
+
+			private void OnCalculateLUT_0(ref apMatrix3x3 dstMatrix, float lerpWeight)
+			{
+				//dstMatrix.SetZero3x2();
+				dstMatrix.SetZero3x2AndSetMatrixWithWeight(lerpWeight);
+			}
+			private void OnCalculateLUT_1(ref apMatrix3x3 dstMatrix, float lerpWeight)
+			{
+				dstMatrix.Make_AddedMatrixWithWeight_SetMatrixWithWeight_1(ref _LUTUnits[0]._resultMatrix, _weights[0], lerpWeight);
+			}
+			private void OnCalculateLUT_2(ref apMatrix3x3 dstMatrix, float lerpWeight)
+			{
+				dstMatrix.Make_AddedMatrixWithWeight_SetMatrixWithWeight_2(	ref _LUTUnits[0]._resultMatrix, _weights[0],
+														ref _LUTUnits[1]._resultMatrix, _weights[1], lerpWeight);
+			}
+			private void OnCalculateLUT_3(ref apMatrix3x3 dstMatrix, float lerpWeight)
+			{
+				dstMatrix.Make_AddedMatrixWithWeight_SetMatrixWithWeight_3(	ref _LUTUnits[0]._resultMatrix, _weights[0],
+														ref _LUTUnits[1]._resultMatrix, _weights[1],
+														ref _LUTUnits[2]._resultMatrix, _weights[2], lerpWeight);
+			}
+			private void OnCalculateLUT_4(ref apMatrix3x3 dstMatrix, float lerpWeight)
+			{
+				dstMatrix.Make_AddedMatrixWithWeight_SetMatrixWithWeight_4(	ref _LUTUnits[0]._resultMatrix, _weights[0],
+														ref _LUTUnits[1]._resultMatrix, _weights[1],
+														ref _LUTUnits[2]._resultMatrix, _weights[2],
+														ref _LUTUnits[3]._resultMatrix, _weights[3], lerpWeight);
+			}
+			private void OnCalculateLUT_5(ref apMatrix3x3 dstMatrix, float lerpWeight)
+			{
+				dstMatrix.Make_AddedMatrixWithWeight_SetMatrixWithWeight_5(	ref _LUTUnits[0]._resultMatrix, _weights[0],
+														ref _LUTUnits[1]._resultMatrix, _weights[1],
+														ref _LUTUnits[2]._resultMatrix, _weights[2],
+														ref _LUTUnits[3]._resultMatrix, _weights[3],
+														ref _LUTUnits[4]._resultMatrix, _weights[4], lerpWeight);
+			}
+			private void OnCalculateLUT_More(ref apMatrix3x3 dstMatrix, float lerpWeight)
+			{
+				dstMatrix.SetZero3x2();
+				for (int i = 0; i < _nLUT; i++)
+				{
+					dstMatrix.AddMatrixWithWeight(ref _LUTUnits[i]._resultMatrix, _weights[i]);
+				}
+				dstMatrix.SetMatrixSelfWithWeight(lerpWeight);
+			}
+		}
+		private VertLUTTableSet[] _vertLUTTables = null;
+
+
+
+
+
+		//추가 21.5.22 : 버텍스 개수도 여기서 설정
+		private int _nRenderVerts = 0;
 
 		// Init
 		//--------------------------------------------
@@ -252,13 +351,44 @@ namespace AnyPortrait
 			if (_isUseModMeshSet)
 			{
 				_funcGetDeferredLocalPos = GetDeferredLocalPos_UseModMeshSet;//새로운 버전
+				_funcSetDeferredLocalPos = SetDeferredLocalPosResult_UseModMeshSet;//추가 21.5.22
 			}
 			else
 			{
 				_funcGetDeferredLocalPos = GetDeferredLocalPos_Prev;//이전 버전
+				_funcSetDeferredLocalPos = SetDeferredLocalPosResult_Prev;//추가 21.5.22
 			}
+			_nRenderVerts = _targetOptMesh != null ? _targetOptMesh.RenderVertices.Length : 0;
+			//Debug.Log("apOptCalculatedResultStack : _nRenderVerts : " + _nRenderVerts);
+			//if(_targetOptMesh == null)
+			//{
+			//	Debug.LogError("_targetOptMesh가 null (" + _parentOptTransform.name + ")");
+			//}
+		}
 
+		public void ReconnectTransformForBake(apOptTransform parentOptTransform)
+		{
+			_parentOptTransform = parentOptTransform;
+			_targetOptMesh = _parentOptTransform._childMesh;
 
+			//추가 19.5.24 : ModMeshSet에 따라서 
+			_isUseModMeshSet = parentOptTransform._isUseModMeshSet;
+			if (_isUseModMeshSet)
+			{
+				_funcGetDeferredLocalPos = GetDeferredLocalPos_UseModMeshSet;//새로운 버전
+				_funcSetDeferredLocalPos = SetDeferredLocalPosResult_UseModMeshSet;//추가 21.5.22
+			}
+			else
+			{
+				_funcGetDeferredLocalPos = GetDeferredLocalPos_Prev;//이전 버전
+				_funcSetDeferredLocalPos = SetDeferredLocalPosResult_Prev;//추가 21.5.22
+			}
+			_nRenderVerts = _targetOptMesh != null ? _targetOptMesh.RenderVertices.Length : 0;
+			//Debug.Log("ReconnectTransformForBake : _nRenderVerts : " + _nRenderVerts);
+			//if(_targetOptMesh == null)
+			//{
+			//	Debug.LogError("_targetOptMesh가 null");
+			//}
 		}
 
 		// Functions
@@ -437,6 +567,7 @@ namespace AnyPortrait
 			_isAnyExtra = false;
 
 			_riggingLUT = null;
+			_vertLUTTables = null;
 		}
 
 
@@ -512,6 +643,7 @@ namespace AnyPortrait
 		//LUT같은 객체들은 여기서 생성하자
 		public void SortAndMakeMetaData()
 		{
+			//Debug.Log("SortAndMakeMetaData");
 			//다른 RenderUnit에 대해서는
 			//Level이 큰게(하위) 먼저 계산되도록 내림차순 정렬 > 변경 ) Level 낮은 상위가 먼저 계산되도록 (오름차순)
 
@@ -580,10 +712,57 @@ namespace AnyPortrait
 			{
 				_riggingLUT = new apOptCalculatedRigPairLUT(_parentOptTransform);
 				_riggingLUT.MakeLUTAndLink(this, _resultParams_Rigging);
+
+				//추가 21.5.24 : 버텍스별로 LUT의 참조 정보를 미리 저장하자
+				//GetDeferredRiggingMatrix_WithLUT 함수의 내용을 미리 저장한다고 보면 된다. (매번 돌릴 필요 없이)
+				_vertLUTTables = new VertLUTTableSet[_nRenderVerts];
+
+				//Debug.Log("LUT 만들기 [" + _nRenderVerts + "]");
+
+				for (int iVert = 0; iVert < _nRenderVerts; iVert++)
+				{
+					List<apOptCalculatedRigPairLUT.LUTUnit> LUTUnits = new List<apOptCalculatedRigPairLUT.LUTUnit>();
+					List<float> weights = new List<float>();
+
+					//GetDeferredRiggingMatrix_WithLUT 함수에서 내용을 조금 바꾸었다.
+					for (int iParam = 0; iParam < _resultParams_Rigging.Count; iParam++)
+					{
+						_cal_resultParam = _resultParams_Rigging[iParam];
+						for (int iVR = 0; iVR < _cal_resultParam._result_VertLocalPairs.Count; iVR++)
+						{
+							_cal_vertRequest = _cal_resultParam._result_VertLocalPairs[iVR];
+							
+
+							_tmpVertRigWeightTable = _cal_vertRequest._rigBoneWeightTables[iVert];
+							if (_tmpVertRigWeightTable._nRigTable == 0)
+							{
+								continue;
+							}
+
+							for (int iRig = 0; iRig < _tmpVertRigWeightTable._nRigTable; iRig++)
+							{
+								//LUT 정보를 연결하자
+								LUTUnits.Add(_riggingLUT._LUT[_tmpVertRigWeightTable._rigTable[iRig]._iRigPairLUT]);
+								weights.Add(_tmpVertRigWeightTable._rigTable[iRig]._weight);								
+							}
+						}
+					}
+					//LUT 연결 정보(리스트)를 저장하자
+					_vertLUTTables[iVert] = new VertLUTTableSet(LUTUnits, weights);
+				}
+
+				//리깅 Weight Cache도 여기서 생성하자
+				if (_result_RiggingVertWeight_Cache == null ||
+					_result_RiggingVertWeight_Cache.Length != _nRenderVerts)
+				{
+					_result_RiggingVertWeight_Cache = new float[_nRenderVerts];
+				}
+				SetRiggingWeightToCache();
 			}
 			else
 			{
 				_riggingLUT = null;
+				_vertLUTTables = null;
 			}
 		}
 
@@ -601,6 +780,7 @@ namespace AnyPortrait
 				_result_VertLocal = null;
 				_result_VertWorld = null;
 				_result_RiggingMatrices = null;
+				_result_RiggingMatrices_Init = null;//추가 21.5.22
 				_result_RiggingWeight = 0.0f;
 				_result_RiggingVertWeight_Cache = null;
 				//_resultParams_Extra = null;//<<삭제 19.11.23
@@ -629,15 +809,17 @@ namespace AnyPortrait
 			if (_isAnyRigging)
 			{
 				_result_RiggingMatrices = new apMatrix3x3[nVerts];
+				_result_RiggingMatrices_Init = new apMatrix3x3[nVerts];
 				_result_RiggingWeight = 0.0f;
 				_result_RiggingVertWeight_Cache = new float[nVerts];//8.4 추가
 
 				for (int i = 0; i < nVerts; i++)
 				{
 					_result_RiggingMatrices[i].SetIdentity();
+					_result_RiggingMatrices_Init[i].SetIdentity();//추가 21.5.22
 					_result_RiggingVertWeight_Cache[i] = 0.0f;
 				}
-			}
+			}			
 
 			if (_resultParams_VertLocal != null)
 			{
@@ -689,8 +871,6 @@ namespace AnyPortrait
 		//----------------------------------------------------------------------------
 		public void ReadyToCalculate()
 		{
-			//TODO : 여기서부터 작성
-
 			if (_targetOptMesh == null)
 			{
 				if (_isAnyVertLocal)
@@ -700,50 +880,71 @@ namespace AnyPortrait
 				return;
 			}
 
-			int nRenderVerts = _targetOptMesh.RenderVertices.Length;
+			//int nRenderVerts = _targetOptMesh.RenderVertices.Length;//삭제 21.5.22
 
 			//수정 3.22
 			//따로 리셋하자.
 			if (_isAnyVertLocal)
 			{
-				if (_result_VertLocal == null || _result_VertLocal.Length != nRenderVerts)
+				if (_result_VertLocal == null || _result_VertLocal.Length != _nRenderVerts)
 				{
-					_result_VertLocal = new Vector2[nRenderVerts];
+					_result_VertLocal = new Vector2[_nRenderVerts];
 				}
 
-				for (int i = 0; i < nRenderVerts; i++)
-				{
-					_result_VertLocal[i] = Vector2.zero;
-				}
+				//이전
+				//for (int i = 0; i < nRenderVerts; i++)
+				//{
+				//	_result_VertLocal[i] = Vector2.zero;
+				//}
+
+				//변경 21.5.22
+				Array.Clear(_result_VertLocal, 0, _nRenderVerts);
 			}
 
 
 			if (_isAnyVertWorld)
 			{
-				if (_result_VertWorld == null || _result_VertWorld.Length != nRenderVerts)
+				if (_result_VertWorld == null || _result_VertWorld.Length != _nRenderVerts)
 				{
-					_result_VertWorld = new Vector2[nRenderVerts];
+					_result_VertWorld = new Vector2[_nRenderVerts];
 				}
 
-				for (int i = 0; i < nRenderVerts; i++)
-				{
-					_result_VertWorld[i] = Vector2.zero;
-				}
+				//이전
+				//for (int i = 0; i < nRenderVerts; i++)
+				//{
+				//	_result_VertWorld[i] = Vector2.zero;
+				//}
+				//변경 21.5.22
+				Array.Clear(_result_VertWorld, 0, _nRenderVerts);
 			}
 
 			if (_isAnyRigging)
 			{
-				if (_result_RiggingMatrices == null || _result_RiggingMatrices.Length != nRenderVerts
-					|| _result_RiggingVertWeight_Cache == null || _result_RiggingVertWeight_Cache.Length != nRenderVerts)
+				if (_result_RiggingMatrices == null || _result_RiggingMatrices.Length != _nRenderVerts
+					|| _result_RiggingVertWeight_Cache == null || _result_RiggingVertWeight_Cache.Length != _nRenderVerts)
 				{
-					_result_RiggingMatrices = new apMatrix3x3[nRenderVerts];
-					_result_RiggingVertWeight_Cache = new float[nRenderVerts];//<<이 값의 초기화는 하지 않는다.
+					_result_RiggingMatrices = new apMatrix3x3[_nRenderVerts];
+					_result_RiggingMatrices_Init = new apMatrix3x3[_nRenderVerts];
+					_result_RiggingVertWeight_Cache = new float[_nRenderVerts];//<<이 값의 초기화는 하지 않는다.
+
+					//Rigging Matrix 초기화는 여기서 한번만 하고, 그 이후엔 ArrayCopy만 한다.
+					for (int i = 0; i < _nRenderVerts; i++)
+					{
+						_result_RiggingMatrices_Init[i].SetIdentity();
+					}
+
+					SetRiggingWeightToCache();//캐시를 지금 구하자
 				}
 
-				for (int i = 0; i < nRenderVerts; i++)
-				{
-					_result_RiggingMatrices[i].SetIdentity();
-				}
+				//이 부분도 ArrayCopy를 이용하면 되지 않을까
+				//이전
+				//for (int i = 0; i < _nRenderVerts; i++)
+				//{
+				//	_result_RiggingMatrices[i].SetIdentity();
+				//}
+				//변경 21.5.22 : Array.Copy를 이용한 초기화
+				Array.Copy(_result_RiggingMatrices_Init, _result_RiggingMatrices, _nRenderVerts);
+				
 
 				_result_RiggingWeight = 0.0f;
 			}
@@ -1032,8 +1233,9 @@ namespace AnyPortrait
 						)
 					{
 						continue;
-					}//<<TODO
+					}
 
+					
 
 					// Blend 방식에 맞게 Matrix를 만들자 하자
 					if (_cal_resultParam.ModifierBlendMethod == apModifierBase.BLEND_METHOD.Interpolation || _iCalculatedParam == 0)
@@ -1060,6 +1262,7 @@ namespace AnyPortrait
 					_result_IsVisible = true;
 				}
 
+				//Debug.Log("Calculate : Color (" + _nMeshColorCalculated + ") : " + _result_Color + " / visible : " + _result_IsVisible);
 
 				//#if UNITY_EDITOR
 				//				Profiler.EndSample();
@@ -1442,6 +1645,13 @@ namespace AnyPortrait
 			return _funcGetDeferredLocalPos(vertexIndex);
 		}
 
+		//추가 21.5.22 : GetDeferredLocalPos > SetDeferredLocalPos로 변경
+		//public void SetDeferredLocalPos(Vector2[] vertsLocal, int nVerts)
+		public void SetDeferredLocalPos()//변경 21.5.21
+		{
+			_funcSetDeferredLocalPos(_result_VertLocal, _nRenderVerts);
+		}
+
 
 		private Vector2 GetDeferredLocalPos_Prev(int vertexIndex)
 		{
@@ -1529,6 +1739,120 @@ namespace AnyPortrait
 			return _result_VertLocal[vertexIndex];
 		}
 
+
+
+
+		/// <summary>
+		/// 추가 21.5.22 : Get 함수 대신, 버텍스 배열을 입력받아서 한번에 값을 할당하는 함수로 변경.
+		/// 구버전인 GetDeferredLocalPos_Prev의 함수 형태가 바뀐 것.
+		/// 배열은 초기화 되었다고 가정한다.
+		/// </summary>
+		/// <param name="vertexIndex"></param>
+		/// <returns></returns>
+		private void SetDeferredLocalPosResult_Prev(Vector2[] vertLocal, int nVerts)
+		{
+			float weight_VertRequest = 0.0f;
+			float weight_ModWeightPair = 0.0f;
+
+			for (int iParam = 0; iParam < _resultParams_VertLocal.Count; iParam++)
+			{
+				_cal_resultParam = _resultParams_VertLocal[iParam];
+
+
+				for (int iVR = 0; iVR < _cal_resultParam._result_VertLocalPairs.Count; iVR++)
+				{
+					_cal_vertRequest = _cal_resultParam._result_VertLocalPairs[iVR];
+
+
+					if (!_cal_vertRequest._isCalculated || _cal_vertRequest._totalWeight == 0.0f)
+					{
+						continue;
+					}
+
+					weight_VertRequest = _cal_vertRequest._totalWeight;
+
+					for (int iModPair = 0; iModPair < _cal_vertRequest._nModWeightPairs; iModPair++)
+					{
+						_cal_vertRequestModWeightPair = _cal_vertRequest._modWeightPairs[iModPair];
+						if (!_cal_vertRequestModWeightPair._isCalculated)
+						{
+							continue;
+
+						}
+
+						weight_ModWeightPair = _cal_vertRequestModWeightPair._weight;
+
+						for (int iVert = 0; iVert < nVerts; iVert++)
+						{
+							vertLocal[iVert] += _cal_vertRequestModWeightPair._modMesh._vertices[iVert]._deltaPos * weight_ModWeightPair * weight_VertRequest;
+						}
+					}
+				}
+
+			}
+		}
+
+
+		/// <summary>
+		/// 추가 21.5.22 : Get 함수 대신, 버텍스 배열을 입력받아서 한번에 값을 할당하는 함수로 변경.
+		/// GetDeferredLocalPos_UseModMeshSet의 함수 진행 방향이 바뀐 것이다.
+		/// 값은 초기화되었다고 가정한다.
+		/// </summary>
+		/// <param name="vertexIndex"></param>
+		/// <returns></returns>
+		private void SetDeferredLocalPosResult_UseModMeshSet(Vector2[] vertLocal, int nVerts)
+		{
+			float weight_VertRequest = 0.0f;
+			float weight_ModWeightPair = 0.0f;
+
+			for (int iParam = 0; iParam < _resultParams_VertLocal.Count; iParam++)
+			{
+				_cal_resultParam = _resultParams_VertLocal[iParam];
+
+
+				for (int iVR = 0; iVR < _cal_resultParam._result_VertLocalPairs.Count; iVR++)
+				{
+					_cal_vertRequest = _cal_resultParam._result_VertLocalPairs[iVR];
+
+					if (!_cal_vertRequest._isCalculated || _cal_vertRequest._totalWeight == 0.0f)
+					{
+						continue;
+					}
+
+					weight_VertRequest = _cal_vertRequest._totalWeight;
+
+					for (int iModPair = 0; iModPair < _cal_vertRequest._nModWeightPairs; iModPair++)
+					{
+						_cal_vertRequestModWeightPair = _cal_vertRequest._modWeightPairs[iModPair];
+						if (!_cal_vertRequestModWeightPair._isCalculated)
+						{
+							continue;
+						}
+
+						weight_ModWeightPair = _cal_vertRequestModWeightPair._weight;
+
+						for (int iVert = 0; iVert < nVerts; iVert++)
+						{
+							vertLocal[iVert] += _cal_vertRequestModWeightPair._modMeshSet_Vertex._vertDeltaPos[iVert] * weight_ModWeightPair * weight_VertRequest;
+						}
+						
+					}
+				}
+
+			}
+
+		}
+
+
+
+
+
+
+
+
+
+
+
 		//public Vector2 GetVertexRigging(int vertexIndex)
 		//{
 		//	return _result_Rigging[vertexIndex];
@@ -1582,6 +1906,9 @@ namespace AnyPortrait
 		/// <returns></returns>
 		public apMatrix3x3 GetDeferredRiggingMatrix_WithLUT(int vertexIndex)
 		{
+#if UNITY_EDITOR
+			UnityEngine.Profiling.Profiler.BeginSample("Get LUT Matrix");
+#endif
 			_tmpMatrix.SetZero3x2();
 
 			for (int iParam = 0; iParam < _resultParams_Rigging.Count; iParam++)
@@ -1607,11 +1934,14 @@ namespace AnyPortrait
 						//_tmpVertRigWeightTable._rigTable[iRig].CalculateMatrix();//<<TODO : 이걸 호출하면 성능이 떨어진다.
 						//_tmpMatrix.AddMatrixWithWeight(_tmpVertRigWeightTable._rigTable[iRig]._boneMatrix, _tmpVertRigWeightTable._rigTable[iRig]._weight);
 						//LUT 코드로 변경
-						_tmpMatrix.AddMatrixWithWeight(_riggingLUT._LUT[_tmpVertRigWeightTable._rigTable[iRig]._iRigPairLUT]._resultMatrix, _tmpVertRigWeightTable._rigTable[iRig]._weight);
+						_tmpMatrix.AddMatrixWithWeight(ref _riggingLUT._LUT[_tmpVertRigWeightTable._rigTable[iRig]._iRigPairLUT]._resultMatrix, _tmpVertRigWeightTable._rigTable[iRig]._weight);
 					}
 				}
 			}
 
+#if UNITY_EDITOR
+			UnityEngine.Profiling.Profiler.EndSample();
+#endif
 			return _tmpMatrix;
 		}
 
@@ -1653,10 +1983,104 @@ namespace AnyPortrait
 			return _tmpWeight;
 		}
 
+
+
 		public float GetDeferredRiggingWeightCache(int vertexIndex)
 		{
 			return _result_RiggingVertWeight_Cache[vertexIndex];
 		}
+
+		//추가 21.5.25
+		public void SetRiggingWeightToCache()
+		{
+			for (int iVert = 0; iVert < _nRenderVerts; iVert++)
+			{
+				_tmpWeight = 0.0f;
+				for (int iParam = 0; iParam < _resultParams_Rigging.Count; iParam++)
+				{
+
+					_cal_resultParam = _resultParams_Rigging[iParam];
+
+					for (int iVR = 0; iVR < _cal_resultParam._result_VertLocalPairs.Count; iVR++)
+					{
+						_cal_vertRequest = _cal_resultParam._result_VertLocalPairs[iVR];
+
+						//삭제 20.11.26 : Opt에서 계산 여부는 필요하지 않다.
+						//if (!_cal_vertRequest._isCalculated || _cal_vertRequest._totalWeight == 0.0f)
+						//{
+						//	continue;
+						//}
+						//이전
+						//_tmpWeight += _cal_vertRequest._totalRiggingWeight;
+
+						//변경됨
+						_tmpWeight = _cal_vertRequest._rigBoneWeightTables[iVert]._totalRiggingWeight;
+
+					}
+				}
+				if (_tmpWeight > 1.0f)
+				{
+					_result_RiggingVertWeight_Cache[iVert] = 1.0f;//캐시에 저장하자
+				}
+
+				_result_RiggingVertWeight_Cache[iVert] = _tmpWeight;//캐시에 저장하자
+			}
+			
+		}
+
+		//추가 21.5.24 : GetDeferredRiggingMatrix_WithLUT 함수가 매 버텍스마다 호출하는 거였고,
+		//이번엔 Set 방식으로 순회하면서 배열에 넣는 방식. VertLUTTableSet을 이용한다.
+		//public void SetDeferredRiggingMatrix_WithLUT(apMatrix3x3[] dstRigMatrix)
+		public void SetDeferredRiggingMatrix_WithLUT()//변경 21.5.27 : 인자 삭제.
+		{
+//#if UNITY_EDITOR
+//			UnityEngine.Profiling.Profiler.BeginSample("Set LUT Matrix");
+//#endif
+
+			if(_vertLUTTables == null)
+			{
+				Debug.LogError("_vertLUTTables가 null임");
+			}
+			else if(_vertLUTTables.Length != _nRenderVerts)
+			{
+				Debug.LogError("_vertLUTTables의 크기가 RenderVert와 다르다. [" + _vertLUTTables.Length + " / " + _nRenderVerts + "]");
+			}
+
+			if(_result_RiggingMatrices == null)
+			{
+				Debug.LogError("_result_RiggingMatrices가 null임");
+			}
+			else if(_result_RiggingMatrices.Length != _nRenderVerts)
+			{
+				Debug.LogError("_result_RiggingMatrices의 크기가 RenderVert와 다르다. [" + _result_RiggingMatrices.Length + " / " + _nRenderVerts + "]");
+			}
+			
+			if(_result_RiggingVertWeight_Cache == null)
+			{
+				Debug.LogError("_result_RiggingVertWeight_Cache가 null임");
+			}
+			else if(_result_RiggingVertWeight_Cache.Length != _nRenderVerts)
+			{
+				Debug.LogError("_result_RiggingVertWeight_Cache의 크기가 RenderVert와 다르다. [" + _result_RiggingVertWeight_Cache.Length + " / " + _nRenderVerts + "]");
+			}
+
+			for (int iVert = 0; iVert < _nRenderVerts; iVert++)
+			{
+				//이전
+				//_vertLUTTables[iVert].CalculateLUT(ref dstRigMatrix[iVert]);
+				//_result_RiggingMatrices[iVert].SetMatrixWithWeight(ref dstRigMatrix[iVert], _result_RiggingWeight * _result_RiggingVertWeight_Cache[iVert]);
+
+				//변경 21.5.27 : 한번에 하자
+				_vertLUTTables[iVert].CalculateLUT(ref _result_RiggingMatrices[iVert], _result_RiggingWeight * _result_RiggingVertWeight_Cache[iVert]);
+			}
+
+//#if UNITY_EDITOR
+//			UnityEngine.Profiling.Profiler.EndSample();
+//#endif
+		}
+
+
+
 
 
 		public apMatrix3x3 MeshWorldMatrix
