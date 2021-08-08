@@ -1,6 +1,4 @@
-﻿using System;
-using JetBrains.Annotations;
-
+﻿
 public interface CustomEvent
 { 
     

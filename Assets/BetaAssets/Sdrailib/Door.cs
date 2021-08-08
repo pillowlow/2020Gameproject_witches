@@ -63,6 +63,8 @@ public class Door : MonoBehaviour
         {
             CameraController.instance.UnseenAreas[UnseenAreaIndex].enable = false;
         }
+        if(interact != null) interact.SetEventDone(true);
+
     }
 
     private void CloseDoor([CanBeNull]OnInteract interact)
@@ -71,7 +73,7 @@ public class Door : MonoBehaviour
         ClosedDoor.SetActive(true);
         isClosed = true;
         CameraController.instance.UnseenAreas[UnseenAreaIndex].enable = false;
-        if(interact != null) interact.SetEventDone(transform);
+        if(interact != null) interact.SetEventDone(true);
     }
 
     IEnumerator WaitForRespone([CanBeNull]OnInteract interact)
@@ -98,7 +100,6 @@ public class Door : MonoBehaviour
             {
                 UnlockUI.SetActive(false);
                 OpenDoor(interact);
-                CameraController.instance.StartCameraMovement(0);
             }
         }
         else
@@ -112,7 +113,7 @@ public class Door : MonoBehaviour
         Yes = false;
         No = false;
         UI.SetActive(false);
-        if(isClosed) interact.SetEventDone(false);
+        if(isClosed && interact != null) interact.SetEventDone(false);
     }
 
 

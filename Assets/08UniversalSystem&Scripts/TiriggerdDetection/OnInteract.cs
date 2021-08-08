@@ -16,8 +16,7 @@ public class OnInteract : MonoBehaviour
         [CanBeNull] public String path;
         [CanBeNull] public GameObject gameObject;
         [CanBeNull] public Vector2 vec;
-        public bool shouldClearInteract;
-        public bool canRetry;
+        public bool removeAfterDone;
     }
     
     [Serializable]
@@ -87,6 +86,7 @@ public class OnInteract : MonoBehaviour
             if (EventsQueue.Count==0 && PlayerManager.instance.input.GetKeyDown(InputAction.Interact))
             {
                 if(PlayerManager.state==PlayerManager.StateCode.Stop) return;
+                Hint.SetActive(false);
                 DataIndex = 0;
                 foreach (String e in EventsData.EventsList)
                     EventsQueue.Enqueue(e);
@@ -108,7 +108,7 @@ public class OnInteract : MonoBehaviour
     
     public void ExecuteEvent()
     {   
-        if(!EventDone) return;
+        if(!EventDone || EventsQueue.Count == 0) return;
         EventDone = false;
         PlayerManager.state = PlayerManager.StateCode.Stop;
         Type t = Type.GetType("CustomEventNamespace." + EventsQueue.Peek());
@@ -123,14 +123,19 @@ public class OnInteract : MonoBehaviour
         if (success)
         {
             EventsQueue.Dequeue();
-            if (EventsData.Data[DataIndex].shouldClearInteract)
+            if (EventsData.Data[DataIndex].removeAfterDone)
             {
-                mat.SetFloat(shaderID,0);
-                Hint.SetActive(false);
-                canInteract = false;
-            }
-            DataIndex++;
+                EventsData.EventsList.RemoveAt(DataIndex);
+                EventsData.Data.RemoveAt(DataIndex);
+            }else DataIndex++;
+            if (EventsData.EventsList.Count == 0)
+            {
+                    mat.SetFloat(shaderID,0);
+                    Hint.SetActive(false);
+                    canInteract = false; 
+            }else ExecuteEvent();
         }
+        else EventsQueue.Clear();
     }
     
     public OnInteract AddEvent(String e,DataStruct data)
