@@ -16,7 +16,7 @@ public class OnInteract : MonoBehaviour
         [CanBeNull] public String path;
         [CanBeNull] public GameObject gameObject;
         [CanBeNull] public Vector2 vec;
-        public bool clearEvents;
+        public bool removeAfterDone;
     }
     
     [Serializable]
@@ -35,8 +35,14 @@ public class OnInteract : MonoBehaviour
     private int DataIndex=0;
     private LayerMask playerLayer;
     public GameObject Hint;
+    [CanBeNull] public GameObject HintObject;
 
-    
+    private Renderer shader;
+    private Material mat;
+    private int shaderID;
+    public float maxEffectStrength = 0.04f;
+    public bool canInteract = true;
+
     //get all CustomEvents using Reflection
 
     public static String[] GetEvents()
@@ -47,8 +53,18 @@ public class OnInteract : MonoBehaviour
             select t.ToString();
         return clazz.Select(n=>n.Replace("CustomEventNamespace.","")).ToArray();
     }
+    
+    private void OnEnable()
+    {
+        HintObject = HintObject == null ? gameObject : HintObject;
+        shader = HintObject.GetComponent<SpriteRenderer>();
+        mat = shader.material;
+        shaderID = Shader.PropertyToID("Vector1_4C8E13CA");
+        mat.SetFloat(shaderID, 0);
+        canInteract = true;
+    }
 
-    public void Start()
+    private void Start()
     {
         playerLayer = PlayerManager.instance.layer;
     }
@@ -56,33 +72,35 @@ public class OnInteract : MonoBehaviour
     private void OnTriggerEnter2D(Collider2D col)
     {
         //check if gameObject layer is in playerLayer
-        if (((1 << col.gameObject.layer) & playerLayer) != 0)
+        if (((1 << col.gameObject.layer) & playerLayer) != 0 && canInteract)
         {
+            mat.SetFloat(shaderID, maxEffectStrength);
             Hint.SetActive(true);
         }
     }
 
     void OnTriggerStay2D(Collider2D col)
     {
-        if (((1 << col.gameObject.layer) & playerLayer) != 0)
+        if (((1 << col.gameObject.layer) & playerLayer) != 0 && canInteract)
         {
             if (EventsQueue.Count==0 && PlayerManager.instance.input.GetKeyDown(InputAction.Interact))
             {
                 if(PlayerManager.state==PlayerManager.StateCode.Stop) return;
+                Hint.SetActive(false);
                 DataIndex = 0;
                 foreach (String e in EventsData.EventsList)
                     EventsQueue.Enqueue(e);
                 if (EventsQueue.Count!=0) 
                     ExecuteEvent();
-                
             }
         }
         
     }
     private void OnTriggerExit2D(Collider2D col)
     {
-        if (((1 << col.gameObject.layer) & playerLayer) != 0)
+        if (((1 << col.gameObject.layer) & playerLayer) != 0 && canInteract)
         {
+            mat.SetFloat(shaderID, 0);
             Hint.SetActive(false);
         }
     }
@@ -90,33 +108,49 @@ public class OnInteract : MonoBehaviour
     
     public void ExecuteEvent()
     {   
-        if(!EventDone) return;
+        if(!EventDone || EventsQueue.Count == 0) return;
         EventDone = false;
         PlayerManager.state = PlayerManager.StateCode.Stop;
-        Type t = Type.GetType("CustomEventNamespace." + EventsQueue.Dequeue());
+        Type t = Type.GetType("CustomEventNamespace." + EventsQueue.Peek());
         CustomEvent _event =(CustomEvent)Activator.CreateInstance(t,EventsData.Data[DataIndex]);
         _event.StartEvent(this);
     }
 
-    public void SetEventDone()
+    public void SetEventDone(bool success)
     {
         EventDone = true;
-        if(EventsQueue.Count==0) PlayerManager.state = PlayerManager.StateCode.Idle;
-        
+        PlayerManager.state = PlayerManager.StateCode.Idle;
+        if (success)
+        {
+            EventsQueue.Dequeue();
+            if (EventsData.Data[DataIndex].removeAfterDone)
+            {
+                EventsData.EventsList.RemoveAt(DataIndex);
+                EventsData.Data.RemoveAt(DataIndex);
+            }else DataIndex++;
+            if (EventsData.EventsList.Count == 0)
+            {
+                    mat.SetFloat(shaderID,0);
+                    Hint.SetActive(false);
+                    canInteract = false; 
+            }else ExecuteEvent();
+        }
+        else EventsQueue.Clear();
     }
-
-    public OnInteract AddAction(String e,DataStruct data)
+    
+    public OnInteract AddEvent(String e,DataStruct data)
     {
         if (GetEvents().Contains(e))
         {
             EventsData.EventsList.Add(e);
             EventsData.Data.Add(data);
-        }else Debug.LogWarning("[Warning] No event called "+e+", skip");
+        }
+        else Debug.LogWarning("[Warning] No event called "+e+", skip");
         return this;
 
     }
 
-    public OnInteract AddAction(CustomEvent e, DataStruct data)
+    public OnInteract AddEvent(CustomEvent e, DataStruct data)
     {
         String str = e.ToString().Replace("CustomEventNamespace.", "");
         EventsData.EventsList.Add(str);

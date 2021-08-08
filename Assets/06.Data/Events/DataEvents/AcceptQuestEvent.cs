@@ -16,7 +16,7 @@ namespace CustomEventNamespace
         public void StartEvent(OnInteract action)
         {
             Quest.SetFlag(_flagID);
-            action.SetEventDone();
+            action.SetEventDone(true);
         }
 
 
