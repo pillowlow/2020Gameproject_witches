@@ -136,7 +136,6 @@ public class PlayerMovement : MonoBehaviour
             StartCoroutine(nameof(_CollisionDetectionHelper));
             DontDestroyOnLoad(this.gameObject);
             PrepareStateMachine();
-            PrepareAnyPortrait();
         }
         else if (instance != this)
         {
@@ -191,13 +190,10 @@ public class PlayerMovement : MonoBehaviour
         States[(int)PlayerManager.StateCode.Action_port_idle] = PortIdleState;
         States[(int)PlayerManager.StateCode.Action_port_walk] = PortWalkState;
         States[(int)PlayerManager.StateCode.None] = (bool a) => { };
-    }
+        States[(int)PlayerManager.StateCode.Stop] = (bool a) => { };
 
-    void PrepareAnyPortrait()
-    {
-        portrait = GetComponent<apPortrait>();
-        Swing_parameter = portrait.GetControlParam("Swing");
     }
+    
 
     void Movement()//Calculate her speed and detect braking state
     {

@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 namespace CustomEventNamespace
 {
-    public class LoadTextEvent : CustomEvent
+    public class LoadTextEvent : ICustomEvent
     {
         private TextUIScript TextScript;
         private String TextPath;

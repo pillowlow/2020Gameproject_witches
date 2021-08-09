@@ -1,5 +1,5 @@
 ﻿
-public interface CustomEvent
+public interface ICustomEvent
 { 
     
     //StartEvent

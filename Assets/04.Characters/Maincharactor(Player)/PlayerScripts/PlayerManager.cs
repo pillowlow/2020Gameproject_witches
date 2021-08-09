@@ -22,11 +22,11 @@ public class PlayerManager:MonoBehaviour
             instance = this;
             player = gameObject;
             input = new InputManager();
-            DontDestroyOnLoad(this.gameObject);
+            DontDestroyOnLoad(gameObject);
         }
         else if(instance != this)
         {
-            Destroy(this.gameObject);
+            Destroy(gameObject);
         }
     }
     public enum StateCode
@@ -38,6 +38,11 @@ public class PlayerManager:MonoBehaviour
     public static bool isTaking = false;
     public static bool onGround = false;
     public static StateCode state = StateCode.Idle;
+
+    public static void SetState(StateCode code)
+    {
+        state = code;
+    }
     
 }
    

@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace CustomEventNamespace
 {
-    public class OpenDoorEvent : MonoBehaviour, CustomEvent
+    public class OpenDoorEvent : MonoBehaviour, ICustomEvent
     {
         private Door door;
         public OpenDoorEvent(OnInteract.DataStruct data)

@@ -11,7 +11,8 @@ public enum InputAction
     Down,
     Interact,
     Attack,
-    Number_of_Actions
+    Number_of_Actions,
+    Backpack
 }
 
 public class InputConfig
@@ -24,7 +25,8 @@ public class InputConfig
         {InputAction.Jump, KeyCode.Space },
         {InputAction.Down, KeyCode.S },
         {InputAction.Interact, KeyCode.E },
-        {InputAction.Attack, KeyCode.K }
+        {InputAction.Attack, KeyCode.K },
+        {InputAction.Backpack, KeyCode.E}
     };
     public Dictionary<InputAction, KeyCode> KeyCodes;
     public InputConfig()

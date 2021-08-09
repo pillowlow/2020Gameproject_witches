@@ -10,6 +10,15 @@ using UnityEngine.UI;
 public class OnInteract : MonoBehaviour
 {
     
+    /// <summary>
+    ///     Data struct which contains needed data for <c>CustomEvent</c>
+    ///     <value>
+    ///         <para>(Need Implement)<c>path</c> is for needed file path</para>
+    ///         <para>gameObject is for target <c>gameObject</c> of the Event</para>
+    ///         <para>vec if for target <c>Vector2</c> of the Event</para>
+    ///         <para>removeAfterDone is a mark for one time Event</para>
+    ///     </value>
+    /// </summary>
     [Serializable]
     public struct DataStruct
     {
@@ -112,7 +121,7 @@ public class OnInteract : MonoBehaviour
         EventDone = false;
         PlayerManager.state = PlayerManager.StateCode.Stop;
         Type t = Type.GetType("CustomEventNamespace." + EventsQueue.Peek());
-        CustomEvent _event =(CustomEvent)Activator.CreateInstance(t,EventsData.Data[DataIndex]);
+        ICustomEvent _event =(ICustomEvent)Activator.CreateInstance(t,EventsData.Data[DataIndex]);
         _event.StartEvent(this);
     }
 
@@ -150,7 +159,7 @@ public class OnInteract : MonoBehaviour
 
     }
 
-    public OnInteract AddEvent(CustomEvent e, DataStruct data)
+    public OnInteract AddEvent(ICustomEvent e, DataStruct data)
     {
         String str = e.ToString().Replace("CustomEventNamespace.", "");
         EventsData.EventsList.Add(str);
