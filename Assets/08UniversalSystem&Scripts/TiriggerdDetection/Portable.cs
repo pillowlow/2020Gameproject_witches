@@ -14,28 +14,30 @@ public class Portable : MonoBehaviour
     [SerializeField] private AnimationCurve Pickup_x_offset;
     [SerializeField] private float x_offset = 1;
     [HideInInspector] public GameObject box;
+    private Collider2D m_collider;
     private Rigidbody2D rig;
     private void Start()
     {
         box = transform.parent.gameObject;
         OriginalParent = box.transform.parent;
         rig = box.GetComponent<Rigidbody2D>();
+        m_collider = GetComponent<Collider2D>();
     }
     private void OnTriggerStay2D(Collider2D collision)
     {
         if (((1 << collision.gameObject.layer) & PlayerManager.instance.layer) != 0)
         {
-            if(PlayerManager.instance.input.GetKey(InputAction.Interact) && ported == null && PlayerManager.instance.isFreeToDoAction)
+            if(ported == null && PlayerManager.instance.isFreeToDoAction && PlayerManager.instance.input.GetKeyDown(InputAction.Interact))
             {
                 ported = this;
                 PlayerManager.instance.isFreeToDoAction = false;
                 ready2port = true;
-                StartCoroutine(nameof(Take));
+                StartCoroutine(nameof(StartToTake));
             }
         }
     }
 
-    IEnumerator Take()
+    IEnumerator StartToTake()
     {
         float time = 0;
         rig.simulated = false;

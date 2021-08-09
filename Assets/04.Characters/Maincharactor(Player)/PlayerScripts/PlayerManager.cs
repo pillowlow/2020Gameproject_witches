@@ -12,6 +12,7 @@ public class PlayerManager:MonoBehaviour
     public Transform RightHand;
     public Transform LeftHand;
     [HideInInspector] public bool isFreeToDoAction = true;
+    [HideInInspector] public bool CanWalkOnStairs = true;
     [Range(0,100)] public float Stamina = 100;
     public bool isInWater = false;
     private void Awake()
