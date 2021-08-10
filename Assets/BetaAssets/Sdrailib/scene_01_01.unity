@@ -98,7 +98,7 @@ LightmapSettings:
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
   m_LightingDataAsset: {fileID: 0}
-  m_UseShadowmask: 0
+  m_UseShadowmask: 1
 --- !u!196 &4
 NavMeshSettings:
   serializedVersion: 2
@@ -911,12 +911,12 @@ PrefabInstance:
     - target: {fileID: 90872842855389637, guid: 52ba6eceb4bee405bade40b326c09c2c,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 601.7474
+      value: 725
       objectReference: {fileID: 0}
     - target: {fileID: 90872842855389637, guid: 52ba6eceb4bee405bade40b326c09c2c,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 404.01505
+      value: 257
       objectReference: {fileID: 0}
     - target: {fileID: 90872842855389637, guid: 52ba6eceb4bee405bade40b326c09c2c,
         type: 3}
@@ -1366,17 +1366,17 @@ PrefabInstance:
     - target: {fileID: 4749751004439630735, guid: 52ba6eceb4bee405bade40b326c09c2c,
         type: 3}
       propertyPath: m_AnchorMin.x
-      value: 0
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 4749751004439630735, guid: 52ba6eceb4bee405bade40b326c09c2c,
         type: 3}
       propertyPath: m_AnchorMax.x
-      value: 0
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 4749751004439630735, guid: 52ba6eceb4bee405bade40b326c09c2c,
         type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4749751004636982204, guid: 52ba6eceb4bee405bade40b326c09c2c,
         type: 3}
@@ -1386,12 +1386,12 @@ PrefabInstance:
     - target: {fileID: 4749751004937902400, guid: 52ba6eceb4bee405bade40b326c09c2c,
         type: 3}
       propertyPath: m_AnchorMax.x
-      value: 0
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 4749751004937902400, guid: 52ba6eceb4bee405bade40b326c09c2c,
         type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4749751005019200808, guid: 52ba6eceb4bee405bade40b326c09c2c,
         type: 3}
@@ -1401,27 +1401,27 @@ PrefabInstance:
     - target: {fileID: 4749751006015139629, guid: 52ba6eceb4bee405bade40b326c09c2c,
         type: 3}
       propertyPath: m_AnchorMax.x
-      value: 0
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 4749751006015139629, guid: 52ba6eceb4bee405bade40b326c09c2c,
         type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4749751006155028182, guid: 52ba6eceb4bee405bade40b326c09c2c,
         type: 3}
       propertyPath: m_AnchorMin.x
-      value: 0
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 4749751006155028182, guid: 52ba6eceb4bee405bade40b326c09c2c,
         type: 3}
       propertyPath: m_AnchorMax.x
-      value: 0
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 4749751006155028182, guid: 52ba6eceb4bee405bade40b326c09c2c,
         type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6318711749170279872, guid: 52ba6eceb4bee405bade40b326c09c2c,
         type: 3}
@@ -1447,6 +1447,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: MainBackPackUI
+      objectReference: {fileID: 0}
+    - target: {fileID: 8930339802180251991, guid: 52ba6eceb4bee405bade40b326c09c2c,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 52ba6eceb4bee405bade40b326c09c2c, type: 3}
@@ -14323,10 +14328,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_UiScaleMode: 0
+  m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
+  m_ReferenceResolution: {x: 1920, y: 1080}
   m_ScreenMatchMode: 0
   m_MatchWidthOrHeight: 0
   m_PhysicalUnit: 3
@@ -14365,8 +14370,8 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_Children:
-  - {fileID: 2048511437}
   - {fileID: 1679559346}
+  - {fileID: 2048511437}
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -14387,6 +14392,7 @@ GameObject:
   - component: {fileID: 1679559349}
   - component: {fileID: 1679559348}
   - component: {fileID: 1679559347}
+  - component: {fileID: 1679559350}
   m_Layer: 5
   m_Name: LoadButton
   m_TagString: Untagged
@@ -14407,12 +14413,12 @@ RectTransform:
   m_Children:
   - {fileID: 1610713656}
   m_Father: {fileID: 1672400220}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 186.6, y: 226}
-  m_SizeDelta: {x: 160, y: 30}
+  m_AnchorMin: {x: 1, y: 1}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: -244.80005, y: -18.099976}
+  m_SizeDelta: {x: 161, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1679559347
 MonoBehaviour:
@@ -14494,6 +14500,52 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1679559345}
   m_CullTransparentMesh: 0
+--- !u!114 &1679559350
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1679559345}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9a75baa305ab36f43b58c18fff78fd41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  AlignmentType: 3
+  alignmnetFields:
+    Target: {fileID: 2048511436}
+    Alignment: 5
+    Offset: {x: 0, y: 0}
+  gridFields:
+    Elements:
+    - {fileID: 1679559345}
+    - {fileID: 2048511436}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    Width: 3
+    Height: 4
+    WidthStride: 365.2
+    HeightStride: 147.3
+  polygonFields:
+    Elements:
+    - {fileID: 1679559345}
+    - {fileID: 2048511436}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    Sides: 8
+    AngleOffset: 0
+    Radius: 460.36
+    Direction: 1
+  AutoApply: 0
 --- !u!21 &1694094128
 Material:
   serializedVersion: 6
@@ -17542,12 +17594,12 @@ RectTransform:
   m_Children:
   - {fileID: 1894069249}
   m_Father: {fileID: 1672400220}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 346.59998, y: 226}
-  m_SizeDelta: {x: 160, y: 30}
+  m_AnchorMin: {x: 1, y: 1}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: -81.400024, y: -18.099976}
+  m_SizeDelta: {x: 161, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2048511438
 MonoBehaviour:
