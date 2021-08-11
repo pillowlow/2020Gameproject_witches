@@ -11,8 +11,8 @@ public enum InputAction
     Down,
     Interact,
     Attack,
+    Backpack,
     Number_of_Actions,
-    Backpack
 }
 
 public class InputConfig

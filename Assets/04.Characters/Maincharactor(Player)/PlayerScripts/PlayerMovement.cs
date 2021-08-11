@@ -129,6 +129,7 @@ public class PlayerMovement : MonoBehaviour
             instance = this;
             rig = GetComponent<Rigidbody2D>();
             m_collider = GetComponent<CapsuleCollider2D>();
+            portrait = GetComponent<apPortrait>();
             Scale = transform.localScale;
             input = PlayerManager.instance.input;
             PlayerManager.state = PlayerManager.StateCode.Idle;
