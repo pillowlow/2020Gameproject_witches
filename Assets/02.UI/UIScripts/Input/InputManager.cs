@@ -6,6 +6,8 @@ public class InputManager
 {
     private readonly InputConfig inputConfig;
     KeyCode[] Keys;
+    float LastRightTap = -1;
+    float LastLeftTap = -1;
     public InputManager()
     {
         if(inputConfig == null)
@@ -89,5 +91,39 @@ public class InputManager
             }
             Keys = inputConfig.ToKeys();
         }
+    }
+
+    public bool DoubleTapRight()
+    {
+        if(GetKeyDown(InputAction.Right))
+        {
+            float time = Time.time;
+            bool result = time - LastRightTap < 1f;
+            LastRightTap = time;
+            return result;
+        }
+        return false;
+    }
+
+    public bool DoubleTapLeft()
+    {
+        if (GetKeyDown(InputAction.Left))
+        {
+            float time = Time.time;
+            bool result = time - LastLeftTap < 1f;
+            LastLeftTap = time;
+            return result;
+        }
+        return false;
+    }
+    public bool Investigate(Collider2D target_collider)
+    {
+        if(Input.GetKey(KeyCode.Mouse0))
+        {
+            Vector2 mouse = CameraController.ScreenToWorldPoint(Input.mousePosition);
+            if (target_collider == null) { return true; }
+            return target_collider.OverlapPoint(mouse);
+        }
+        return false;
     }
 }

@@ -12,6 +12,7 @@ public class PlayerManager:MonoBehaviour
     public Transform RightHand;
     public Transform LeftHand;
     [HideInInspector] public bool isFreeToDoAction = true;
+    [HideInInspector] public bool CanWalkOnStairs = true;
     [Range(0,100)] public float Stamina = 100;
     public bool isInWater = false;
     private void Awake()
@@ -21,11 +22,11 @@ public class PlayerManager:MonoBehaviour
             instance = this;
             player = gameObject;
             input = new InputManager();
-            DontDestroyOnLoad(this.gameObject);
+            DontDestroyOnLoad(gameObject);
         }
         else if(instance != this)
         {
-            Destroy(this.gameObject);
+            Destroy(gameObject);
         }
     }
     public enum StateCode
@@ -37,6 +38,11 @@ public class PlayerManager:MonoBehaviour
     public static bool isTaking = false;
     public static bool onGround = false;
     public static StateCode state = StateCode.Idle;
+
+    public static void SetState(StateCode code)
+    {
+        state = code;
+    }
     
 }
    

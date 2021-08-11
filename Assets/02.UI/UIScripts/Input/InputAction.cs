@@ -9,12 +9,10 @@ public enum InputAction
     Up,
     Jump,
     Down,
-    Crawl,
     Interact,
-    Inventory,
-    Sprint,
     Attack,
-    Number_of_Actions
+    Number_of_Actions,
+    Backpack
 }
 
 public class InputConfig
@@ -26,11 +24,9 @@ public class InputConfig
         {InputAction.Up, KeyCode.W },
         {InputAction.Jump, KeyCode.Space },
         {InputAction.Down, KeyCode.S },
-        {InputAction.Crawl, KeyCode.Z },
-        {InputAction.Interact, KeyCode.F },
-        {InputAction.Inventory, KeyCode.E },
-        {InputAction.Sprint, KeyCode.LeftShift },
-        {InputAction.Attack, KeyCode.K }
+        {InputAction.Interact, KeyCode.E },
+        {InputAction.Attack, KeyCode.K },
+        {InputAction.Backpack, KeyCode.E}
     };
     public Dictionary<InputAction, KeyCode> KeyCodes;
     public InputConfig()

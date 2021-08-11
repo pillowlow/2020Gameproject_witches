@@ -3,7 +3,7 @@ using JetBrains.Annotations;
 
 namespace CustomEventNamespace
 {
-    public class AcceptQuestEvent : CustomEvent
+    public class AcceptQuestEvent : ICustomEvent
     {
         private FlagID _flagID;
 

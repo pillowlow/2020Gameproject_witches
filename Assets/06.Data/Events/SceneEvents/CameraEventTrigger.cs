@@ -7,7 +7,7 @@ using UnityEngine;
 namespace CustomEventNamespace
 {
     [RequireComponent(typeof (BoxCollider2D))]
-    public class CameraEventTrigger : MonoBehaviour,CustomEvent
+    public class CameraEventTrigger : MonoBehaviour,ICustomEvent
     {
         [SerializeField] private string _showText = "";
     

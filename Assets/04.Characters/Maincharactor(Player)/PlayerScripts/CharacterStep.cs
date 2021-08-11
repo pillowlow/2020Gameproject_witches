@@ -16,11 +16,18 @@ public class CharacterStep : MonoBehaviour
     {
         if ((((1 << collision.gameObject.layer) & groundLayer) != 0))
         {
-            if(PlayerManager.instance.input.GetHorizonInput() != 0)
+            if(PlayerMovement.instance._isMoveable && PlayerManager.instance.CanWalkOnStairs)
             {
-                Vector2 dir = new Vector2((PlayerMovement.instance.orient ? StepHeight : -StepHeight), StepHeight) * Time.deltaTime;
-                Character.MovePosition(Character.position + dir);
-                material.friction = 2;
+                float input = PlayerMovement.instance.WalkOnStaris();
+                if (input != 0)
+                {
+                    Vector2 dir = new Vector2(input * StepHeight, StepHeight) * Time.deltaTime;
+                    Character.MovePosition(Character.position + dir);
+                }
+                else
+                {
+                    Character.velocity = Vector2.zero;
+                }
             }
         }
     }

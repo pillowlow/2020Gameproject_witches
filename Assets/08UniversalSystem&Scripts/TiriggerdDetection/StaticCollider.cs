@@ -4,34 +4,51 @@ using UnityEngine;
 
 public class StaticCollider : MonoBehaviour
 {
-    public LayerMask playerLayer;
-    public float Opaque = 0.5f;
-    public float FadingSpeed = 1.0f;
+    [SerializeField] private float Opaque = 0.5f;
+    [SerializeField] private float FadingSpeed = 1.0f;
+    [SerializeField] private float ColliderInvalidTime = 0.5f;
+    [SerializeField] private float AdditionalGravity = 1.0f;
     private SpriteRenderer spriteRenderer;
     private float currentAlpha = 1;
     private bool notFading = true;
     private bool notFadingIn = true;
-    // Start is called before the first frame update
+    private Collider2D m_collider;
+    private Rigidbody2D Character;
+    [HideInInspector] public static bool isNotDropping = true;
     void Start()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
+        m_collider = GetComponent<Collider2D>();
+        Character = PlayerMovement.instance.rig;
     }
-    private void OnTriggerStay2D(Collider2D collision)
+
+    private void OnCollisionStay2D(Collision2D collision)
     {
-        if ((((1 << collision.gameObject.layer) & playerLayer) != 0))
+        if ((((1 << collision.gameObject.layer) & PlayerManager.instance.layer) != 0))
         {
-            notFading = false;
-            if(currentAlpha>Opaque)
+            Vector2 bottom = PlayerManager.instance.player.transform.position + new Vector3(0, -1.86f);
+            if(m_collider.OverlapPoint(bottom))
             {
-                currentAlpha = (currentAlpha >= Opaque) ? (currentAlpha - FadingSpeed * Time.deltaTime) : Opaque;
-                spriteRenderer.color = new Color(spriteRenderer.color.r, spriteRenderer.color.g, spriteRenderer.color.b, currentAlpha);
+                if (PlayerManager.instance.input.GetKeyDown(InputAction.Down))
+                {
+                    StartCoroutine(nameof(FallDownPlatform));
+                }
+            }
+            else
+            {
+                notFading = false;
+                if (currentAlpha > Opaque)
+                {
+                    currentAlpha = (currentAlpha >= Opaque) ? (currentAlpha - FadingSpeed * Time.deltaTime) : Opaque;
+                    spriteRenderer.color = new Color(spriteRenderer.color.r, spriteRenderer.color.g, spriteRenderer.color.b, currentAlpha);
+                }
             }
         }
     }
 
-    private void OnTriggerExit2D(Collider2D collision)
+    private void OnCollisionExit2D(Collision2D collision)
     {
-        if ((((1 << collision.gameObject.layer) & playerLayer) != 0))
+        if ((((1 << collision.gameObject.layer) & PlayerManager.instance.layer) != 0))
         {
             notFading = true;
             if(notFadingIn)
@@ -52,5 +69,16 @@ public class StaticCollider : MonoBehaviour
             yield return new WaitForEndOfFrame();
         }
         notFadingIn = true;
+    }
+
+    IEnumerator FallDownPlatform()
+    {
+        m_collider.enabled = false;
+        isNotDropping = false;
+        PlayerMovement.instance.rig.gravityScale += AdditionalGravity;
+        yield return new WaitForSeconds(ColliderInvalidTime);
+        m_collider.enabled = true;
+        PlayerMovement.instance.rig.gravityScale -= AdditionalGravity;
+        isNotDropping = true;
     }
 }

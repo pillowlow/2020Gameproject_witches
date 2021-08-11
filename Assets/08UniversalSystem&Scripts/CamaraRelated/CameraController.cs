@@ -219,6 +219,10 @@ public class CameraController : MonoBehaviour
     }
 
 
+    public static Vector3 ScreenToWorldPoint(Vector3 position)
+    {
+        return instance.cam[0].ScreenToWorldPoint(position);
+    }
     private void OnDrawGizmos()
     {
         foreach(var a in UnseenAreas)
