@@ -29,6 +29,10 @@ public class Portable : MonoBehaviour
         {
             if(ported == null && PlayerManager.instance.isFreeToDoAction && PlayerManager.instance.input.GetKeyDown(InputAction.Interact))
             {
+                if ((transform.position.x - PlayerManager.instance.player.transform.position.x < 0) == PlayerMovement.instance.orient)
+                {
+                    return;
+                }
                 ported = this;
                 PlayerManager.instance.isFreeToDoAction = false;
                 ready2port = true;
@@ -44,14 +48,15 @@ public class Portable : MonoBehaviour
         box.GetComponent<Collider2D>().enabled = false;
         Vector3 ori_degree = box.transform.rotation.eulerAngles;
         float ori_pos = box.transform.position.x;
-        while (time<Animation_time)
+        while (time < Animation_time)
         {
             time += Time.deltaTime;
             float ratio = time / Animation_time;
-            float x_final = Mathf.Lerp(ori_pos, box.transform.position.x + (PlayerMovement.instance.orient ? x_offset : -x_offset), Pickup_x_offset.Evaluate(ratio));
+            float x_final = Mathf.Lerp(ori_pos, PlayerManager.instance.player.transform.position.x + (PlayerMovement.instance.orient ? x_offset : -x_offset), Pickup_x_offset.Evaluate(ratio));
             box.transform.SetPositionAndRotation(new Vector3(x_final, box.transform.position.y + Pickup_y_offset.Evaluate(ratio), box.transform.position.z), Quaternion.Euler(ori_degree.x, ori_degree.y, ori_degree.z + (PlayerMovement.instance.orient ? Pickup_Rotation_offset.Evaluate(ratio) : -Pickup_Rotation_offset.Evaluate(ratio))));
             yield return new WaitForEndOfFrame();
         }
+        box.transform.SetPositionAndRotation(new Vector3(PlayerManager.instance.player.transform.position.x + (PlayerMovement.instance.orient ? x_offset : -x_offset), box.transform.position.y + Pickup_y_offset.Evaluate(1), box.transform.position.z), Quaternion.Euler(ori_degree.x, ori_degree.y, ori_degree.z + (PlayerMovement.instance.orient ? Pickup_Rotation_offset.Evaluate(1) : -Pickup_Rotation_offset.Evaluate(1))));
         box.transform.parent = PlayerManager.instance.RightHand;
     }
     public void PutDown()

@@ -21,6 +21,7 @@ public class Pickable : MonoBehaviour
     private Collider2D m_collider;
     private Vector2 Scale;
     private Transform Pivot;
+    private float Idle_Rotation = 0;
     private void Start()
     {
         box = transform.parent.gameObject;
@@ -78,10 +79,14 @@ public class Pickable : MonoBehaviour
         while (time <= offset_time)
         {
             PlayerMovement.instance.SlowDown(32);
+            float ratio = time / offset_time;
             final_position = new Vector2((PlayerMovement.instance.orient ? offset_position.x : -offset_position.x), offset_position.y) + (Vector2)PlayerManager.instance.player.transform.position;
-            Vector2 cur_pos = Vector2.Lerp(ori_pos, final_position, time / offset_time);
-            Quaternion cur_rot = Quaternion.Lerp(ori_rot, _final_rotation, time / offset_time);
-
+            Vector2 cur_pos = Vector2.Lerp(ori_pos, final_position, ratio);
+            Quaternion cur_rot = Quaternion.Lerp(ori_rot, _final_rotation, ratio);
+            if(PlayerMovement.instance.orient)
+            {
+                Pivot.localScale = new Vector2(Mathf.Lerp(-1,1, ratio),1);
+            }
             Pivot.transform.SetPositionAndRotation(cur_pos, cur_rot);
             time += Time.deltaTime;
             yield return new WaitForEndOfFrame();
@@ -89,6 +94,7 @@ public class Pickable : MonoBehaviour
         final_position = new Vector2((PlayerMovement.instance.orient ? offset_position.x : -offset_position.x), offset_position.y) + (Vector2)PlayerManager.instance.player.transform.position;
         Pivot.transform.SetPositionAndRotation(final_position, _final_rotation);
         Pivot.transform.parent = hand;
+        Idle_Rotation = PlayerMovement.instance.orient ? Pivot.transform.rotation.eulerAngles.z : -Pivot.transform.rotation.eulerAngles.z;
     }
 
     public void PutDown()
@@ -103,15 +109,15 @@ public class Pickable : MonoBehaviour
     IEnumerator AttackRotationCoroutine()
     {
         float time = 0;
-        float ori_degree = Pivot.transform.rotation.eulerAngles.z;
-        bool orient = Pivot.transform.lossyScale.x > 0;
-        while(time < attack_time)
+        float ori_rot = PlayerMovement.instance.orient ? Idle_Rotation : -Idle_Rotation;
+        while (time < attack_time)
         {
             float eval = attack_rotation.Evaluate(time / attack_time);
-            float value = ori_degree + (orient ? eval : -eval);
+            float value = ori_rot + (PlayerMovement.instance.orient ? -eval : eval);
             Pivot.transform.rotation = Quaternion.Euler(box.transform.rotation.eulerAngles.x, box.transform.rotation.eulerAngles.y, value);
             time += Time.deltaTime;
             yield return new WaitForEndOfFrame();
         }
+        Pivot.transform.rotation = Quaternion.Euler(0, 0, ori_rot);
     }
 }

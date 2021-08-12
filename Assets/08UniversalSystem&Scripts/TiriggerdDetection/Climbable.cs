@@ -52,7 +52,13 @@ public static Climbable climbed = null;
             {
                 if (climbed == null || transform.position.y > climbed.transform.position.y)
                 {
-                    climbed = this;
+                    Climbable target = this;
+                    for (int i = 0; i < 3; i++)
+                    {
+                        if (target.Up == null) { break; }
+                        target = target.Up;
+                    }
+                    climbed = target;
                     PlayerManager.instance.isFreeToDoAction = false;
                     PlayerMovement.instance.Climb();
                 }

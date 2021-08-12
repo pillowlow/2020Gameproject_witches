@@ -29,7 +29,7 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("Jump")]
     [SerializeField] private float jumpForce;
-    [SerializeField] private float highJump = 1;
+    [SerializeField] private float lowJumpFactor = 0.5f;
     [SerializeField] private float JumpForwardFactor = 1;
     [SerializeField] private float Jump_StaminaCost = 10;
 
@@ -137,6 +137,7 @@ public class PlayerMovement : MonoBehaviour
             StartCoroutine(nameof(_CollisionDetectionHelper));
             DontDestroyOnLoad(this.gameObject);
             PrepareStateMachine();
+            Swing_parameter = portrait.GetControlParam("Swing");
         }
         else if (instance != this)
         {
@@ -389,7 +390,7 @@ public class PlayerMovement : MonoBehaviour
         //idle
         if (Mathf.Abs(rig.velocity.x) < 0.1f && (input.GetHorizonInput() == 0))
         {
-            if (idle_time > 0.5f)
+            if (idle_time > 0.2f)
             {
                 rig.velocity = new Vector2(0, rig.velocity.y);
                 IdleState(true);
@@ -401,8 +402,12 @@ public class PlayerMovement : MonoBehaviour
                 idle_time += Time.deltaTime;
             }
         }
+        if (PlayerManager.isTaking && Pickable.held.isWeapon && input.GetKey(InputAction.Attack))
+        {
+            AttackState(true);
+            return;
+        }
         //run
-
         if (isSprinting)
         {
             RunState(true);
@@ -554,20 +559,20 @@ public class PlayerMovement : MonoBehaviour
         //Additional speed boost
         {
             //high jump
-            if (rig.velocity.y > 0 && input.GetKey(InputAction.Jump))
+            if (rig.velocity.y > 0 && input.GetKeyUp(InputAction.Jump))
             {
-                rig.velocity += highJump * Time.deltaTime * Vector2.up;
+                rig.velocity = new Vector2(rig.velocity.x, rig.velocity.y * lowJumpFactor);
             }
 
             //Horizontal movement
 
             if (input.GetKey(InputAction.Right) && rig.velocity.x < SpeedInAir && rig.velocity.x > -0.001f)
             {
-                rig.AddForce(new Vector2(16 * (SpeedInAir - rig.velocity.x), 0));
+                rig.AddForce(new Vector2(8 * (SpeedInAir - rig.velocity.x), 0));
             }
             else if (input.GetKey(InputAction.Left) && rig.velocity.x > -SpeedInAir && rig.velocity.x < 0.001f)
             {
-                rig.AddForce(new Vector2(16 * (rig.velocity.x - SpeedInAir), 0));
+                rig.AddForce(new Vector2(8 * (rig.velocity.x - SpeedInAir), 0));
             }
 
         }
@@ -672,11 +677,11 @@ public class PlayerMovement : MonoBehaviour
 
         if (input.GetKey(InputAction.Right) && rig.velocity.x < SpeedInAir && rig.velocity.x > -0.001f)
         {
-            rig.AddForce(new Vector2(16 * (SpeedInAir - rig.velocity.x), 0));
+            rig.AddForce(new Vector2(8 * (SpeedInAir - rig.velocity.x), 0));
         }
         else if (input.GetKey(InputAction.Left) && rig.velocity.x > -SpeedInAir && rig.velocity.x < 0.001f)
         {
-            rig.AddForce(new Vector2(16 * (rig.velocity.x - SpeedInAir), 0));
+            rig.AddForce(new Vector2(8 * (rig.velocity.x - SpeedInAir), 0));
         }
         UpdateOrientation();
 
@@ -706,14 +711,29 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+
+    float MoveObjectLagTime = 0;
     void MoveObjectState(bool transition)
     {
         if (transition) { PlayerManager.state = PlayerManager.StateCode.Action_move_object; setIsFirstFrame(true); return; }
         /*------------Start of State Transitions------------*/
-        if ((Mathf.Abs(rig.velocity.x) < 0.1f && input.GetHorizonInput() == 0) || !Input.GetKey(KeyCode.Mouse0))
+        if((Mathf.Abs(rig.velocity.x) < 0.1f && input.GetHorizonInput() == 0) || !Input.GetKey(KeyCode.Mouse0))
+        {
+            MoveObjectLagTime += Time.deltaTime;
+        }
+        else
+        {
+            MoveObjectLagTime = 0;
+        }
+
+
+        if (MoveObjectLagTime >= 0.2f || Moveable.moved == null)
         {
             Moveable.ready2move = false;
-            Moveable.moved.joint.enabled = false;
+            if(Moveable.moved != null)
+            {
+                Moveable.moved.joint.enabled = false;
+            }
             PlayerManager.instance.isFreeToDoAction = true;
             IdleState(true);
             return;
@@ -742,6 +762,7 @@ public class PlayerMovement : MonoBehaviour
                 return;
             }
         }
+        
         /*------------End of State Transitions------------*/
         if (isFirstFrame)
         {
@@ -849,7 +870,6 @@ public class PlayerMovement : MonoBehaviour
         if (transition) { PlayerManager.state = PlayerManager.StateCode.Climb; setIsFirstFrame(true); return; }
 
         /*------------Start of State Transitions------------*/
-
         if (input.GetKeyDown(InputAction.Jump))
         {
             LeaveClimbState();
@@ -863,6 +883,10 @@ public class PlayerMovement : MonoBehaviour
         if (isFirstFrame)
         {
             isFirstFrame = false;
+            isSprinting = false;
+            isFullSpeed = false;
+            Climbable_StartMoving = true;
+            PlayerManager.instance.CanWalkOnStairs = false;
             if (PlayerManager.onGround)
             {
                 portrait.CrossFade(Animation_Climb_Start);
@@ -873,7 +897,6 @@ public class PlayerMovement : MonoBehaviour
                 portrait.CrossFade(Animation_Climb_Idle);
             }
             StartClimbEnd = false;
-            PlayerManager.instance.CanWalkOnStairs = false;
             StartCoroutine(nameof(StartToClimb));
         }
         if (input.GetKey(InputAction.Up))
@@ -931,6 +954,12 @@ public class PlayerMovement : MonoBehaviour
         }
         else if (input.GetKey(InputAction.Down))
         {
+            if(PlayerManager.onGround)
+            {
+                portrait.CrossFade(Animation_Climb_End, 0.3f, 0, apAnimPlayUnit.BLEND_METHOD.Interpolation, apAnimPlayManager.PLAY_OPTION.StopSameLayer, true);
+                StartCoroutine(nameof(EndClimb));
+                return;
+            }
             float displacement = ClimbSpeed * Time.deltaTime;
             Climbable_pos -= displacement;
             if (Climbable_pos < 0)
@@ -1187,6 +1216,7 @@ public class PlayerMovement : MonoBehaviour
     float Climbable_pos = 0;
     float Climbable_pos_foot = 0;
     bool StartClimbEnd = false;
+
     IEnumerator StartToClimb()
     {
         rig.simulated = false;
@@ -1322,6 +1352,7 @@ public class PlayerMovement : MonoBehaviour
             _isMoveable = true;
             isSprinting = false;
             isFullSpeed = false;
+            PlayerManager.instance.Stamina = 100;
             portrait.CrossFade(Animation_Reborn, 0.3f, 0, apAnimPlayUnit.BLEND_METHOD.Interpolation, apAnimPlayManager.PLAY_OPTION.StopSameLayer, true);
             PlayerManager.instance.isFreeToDoAction = false;
             DissolveValue = 1;
@@ -1346,8 +1377,6 @@ public class PlayerMovement : MonoBehaviour
     bool Crawling = false;
 
     bool EndCrawling = false;
-    Vector2 bottom = Vector2.zero;
-    public float Varaible = -1.35f;
     void CrawlState(bool transition)
     {
         if (transition) 
@@ -1363,13 +1392,15 @@ public class PlayerMovement : MonoBehaviour
         if (input.GetKeyDown(InputAction.Down))
         {
             EndCrawling = true;
-            LeaveCrawState();
+            rig.velocity = Vector2.zero;
+            LeaveCrawlState();
             return;
         }
         if (rig.velocity.y < 0 && !PlayerManager.onGround)
         {
-            LeaveCrawState();
+            LeaveCrawlState();
             FallState(true);
+            return;
         }
         if (EndCrawling)
         {
@@ -1406,14 +1437,16 @@ public class PlayerMovement : MonoBehaviour
             portrait.CrossFadeQueued(Animation_Crawl);
             PlayerManager.instance.isFreeToDoAction = false;
             PlayerManager.instance.CanWalkOnStairs = false;
+            return;
         }
         if (!Crawling)
         {
             Crawling = !portrait.IsPlaying(Animation_Crawl_Start);
+            SlowDown(16);
         }
     }
 
-    void LeaveCrawState()
+    void LeaveCrawlState()
     {
         if (m_collider.direction == CapsuleDirection2D.Horizontal)
         {
@@ -1483,6 +1516,7 @@ public class PlayerMovement : MonoBehaviour
             portrait.CrossFadeQueued(Animation_Idle_Weapon);
             return;
         }
+        SlowDown(16);
         if (!portrait.IsPlaying(Animation_Attack))
         {
             PlayerManager.state = PlayerManager.StateCode.Idle;
@@ -1528,6 +1562,8 @@ public class PlayerMovement : MonoBehaviour
         {
             isFirstFrame = false;
             rig.gravityScale = 0;
+            isSprinting = false;
+            isFullSpeed = false;
             portrait.CrossFade(Animation_Swim);
         }
     }
@@ -1556,6 +1592,8 @@ public class PlayerMovement : MonoBehaviour
         {
             isFirstFrame = false;
             rig.gravityScale = 0;
+            isSprinting = false;
+            isFullSpeed = false;
             portrait.CrossFade(Animation_Float);
         }
     }
@@ -1563,12 +1601,30 @@ public class PlayerMovement : MonoBehaviour
     bool isEnding = false;
     void PortIdleState(bool transition)
     {
-        if (transition) { PlayerManager.state = PlayerManager.StateCode.Action_port_idle; setIsFirstFrame(true); return; }
+        if (transition) 
+        {
+            if ((Portable.ported.transform.position.x - transform.position.x < 0) == orient)
+            {
+                return;
+            }
+            PlayerManager.state = PlayerManager.StateCode.Action_port_idle;
+            setIsFirstFrame(true);
+            return;
+        }
 
         if (isEnding) return;
         if (input.GetKeyDown(InputAction.Interact))
         {
             StartCoroutine(nameof(EndPort));
+        }
+        if (isFirstFrame)
+        {
+            rig.velocity = Vector2.zero;
+            isFirstFrame = false;
+            portrait.CrossFade(Animation_Port_Start, 0.3f, 0, apAnimPlayUnit.BLEND_METHOD.Interpolation, apAnimPlayManager.PLAY_OPTION.StopSameLayer, true);
+            portrait.CrossFadeQueued(Animation_Port);
+            PlayerManager.instance.CanWalkOnStairs = true;
+            return;
         }
         if (rig.velocity.y < 0 && !PlayerManager.onGround)
         {
@@ -1580,14 +1636,7 @@ public class PlayerMovement : MonoBehaviour
             PortWalkState(true);
             return;
         }
-        if (isFirstFrame)
-        {
-            isFirstFrame = false;
-            portrait.CrossFade(Animation_Port_Start, 0.3f, 0, apAnimPlayUnit.BLEND_METHOD.Interpolation, apAnimPlayManager.PLAY_OPTION.StopSameLayer, true);
-            portrait.CrossFadeQueued(Animation_Port);
-            PlayerManager.instance.CanWalkOnStairs = true;
-            return;
-        }
+        
     }
 
     void LeavePortState()
@@ -1669,6 +1718,7 @@ public class PlayerMovement : MonoBehaviour
         LeaveClimbState();
         LeavePortState();
         LeavePortState();
+        LeaveCrawlState();
         LeaveMoveObjectState();
         if (PlayerManager.isTaking)
         {
@@ -1689,6 +1739,12 @@ public class PlayerMovement : MonoBehaviour
         else
         {
             WalkingTime = 0;
+        }
+        if (PlayerManager.instance.ableToSprint != 0xff)
+        {
+            RunHint.SetActive(false);
+            WalkingTime = 0;
+            return;
         }
         if (WalkingTime > WalkTimeToRun)
         {

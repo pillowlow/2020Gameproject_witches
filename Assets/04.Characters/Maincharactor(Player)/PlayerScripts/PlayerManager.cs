@@ -13,6 +13,7 @@ public class PlayerManager:MonoBehaviour
     public Transform LeftHand;
     [HideInInspector] public bool isFreeToDoAction = true;
     [HideInInspector] public bool CanWalkOnStairs = true;
+    [HideInInspector] public byte ableToSprint = 0xff;//true if and only if it equals to 0xff, o.w. false
     [Range(0,100)] public float Stamina = 100;
     public bool isInWater = false;
     private void Awake()
