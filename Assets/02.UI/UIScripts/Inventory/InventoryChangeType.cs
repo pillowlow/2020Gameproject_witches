@@ -38,7 +38,7 @@ public class InventoryChangeType : MonoBehaviour,IPointerEnterHandler,IPointerEx
     {
         if (ReferenceEquals( gameObject , Current)) { return; }
         Current.GetComponent<RectTransform>().localScale = Vector3.one;
-        Inventory.Current = (Inventory.ItemType)type;
+        //Inventory.Current = (Inventory.ItemType)type;
         switch(type)
         {
             case 0: { Title.GetComponent<Text>().text = "道具";break; }
@@ -46,7 +46,6 @@ public class InventoryChangeType : MonoBehaviour,IPointerEnterHandler,IPointerEx
             case 2: { Title.GetComponent<Text>().text = "重要道具"; break; }
             case 3: { Title.GetComponent<Text>().text = "紋身"; break; }
         }
-        Inventory.UpdateUI();
         Current = gameObject;
     }
 }

@@ -1,5 +1,4 @@
-using System;
-using System.Collections;
+
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -11,7 +10,13 @@ public class BackpackUIManager : MonoBehaviour
 
     public static BackpackUIManager Instance;
     private static PlayerManager playerManager;
-    private static bool _isOpened = false;
+    private bool _isOpened = false;
+
+    enum Page
+    {
+        Inventory=0,Setting=1
+    }
+    
     private void Awake()
     {
         foreach (GameObject ui in UI)
@@ -22,6 +27,9 @@ public class BackpackUIManager : MonoBehaviour
 
     private void Start()
     {
+        Inventory.AddItem(Item.GetItemById("iron_gate_key"));
+        Inventory.AddItem(Item.GetItemById("sword_of_thousand_truth"));
+        Inventory.AddItem(Item.GetItemById("letter_from_past"));
         Instance = this;
         playerManager = PlayerManager.instance;
     }
@@ -77,4 +85,9 @@ public class BackpackUIManager : MonoBehaviour
     }
 
     public int GetPage() { return _page; }
+
+    public bool IsOpen()
+    {
+        return _isOpened;
+    }
 }

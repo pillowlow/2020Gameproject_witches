@@ -26,7 +26,7 @@ public class InputConfig
         {InputAction.Down, KeyCode.S },
         {InputAction.Interact, KeyCode.E },
         {InputAction.Attack, KeyCode.Mouse1 },
-        {InputAction.Backpack, KeyCode.E}
+        {InputAction.Backpack, KeyCode.B}
     };
     public Dictionary<InputAction, KeyCode> KeyCodes;
     public InputConfig()
