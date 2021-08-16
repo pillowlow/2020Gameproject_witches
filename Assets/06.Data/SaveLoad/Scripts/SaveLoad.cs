@@ -4,10 +4,9 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 public static class SaveLoad
 {
-    private static Type[] SceneTypes = { typeof(SceneData01_01) };
-    public static void Save(PlayerData.SceneID SceneID, SceneDataHolderBaseClass SceneData)
+    public static void Save(PlayerData.SceneID SceneID)
     {
-        SaveScene(SceneID, SceneData);
+        SaveScene(SceneID);
         Vector2 Pos = GetSpawnPosition(SceneID);
         PlayerData Data = new PlayerData
         {
@@ -44,7 +43,7 @@ public static class SaveLoad
     {
         SpawnPos = Pos;
     }
-    public static void SetSaving(int s)
+    public static void SetSavingSlot(int s)
     {
         Saving = s;
     }
@@ -77,23 +76,20 @@ public static class SaveLoad
         SceneManager.sceneLoaded -= OnSceneLoaded;
         //LoadScene
         GameObject SceneDataHolder = GameObject.FindWithTag("SceneDataHolder");
-        SceneDataHolderBaseClass dataHolder = SceneDataHolder.GetComponent<SceneDataHolderBaseClass>();
-        SceneDataBaseClass data = LoadScene(Data.CurrentScene);
-        dataHolder.Load(data);
+        LoadSceneData(Data.CurrentScene);
     }
 
-    public static void SaveScene(PlayerData.SceneID SceneID, SceneDataHolderBaseClass SceneData)
+    public static void SaveScene(PlayerData.SceneID SceneID)
     {
-        SceneDataBaseClass data = SceneData.Save();
         //Save To The Disk
         string path = GetSavingDirectory(Saving);
         string file = Enum.GetName(typeof(PlayerData.SceneID), SceneID) + Saving.ToString();
         //file do hash
         path = Path.Combine(path, file);
-        File.WriteAllText(path, JsonUtility.ToJson(data));
+        SaveManager.manager.SaveAll(path);
     }
 
-    public static SceneDataBaseClass LoadScene(PlayerData.SceneID SceneID)
+    public static void LoadSceneData(PlayerData.SceneID SceneID)
     {
         string path = GetSavingDirectory(Saving);
         string file = Enum.GetName(typeof(PlayerData.SceneID), SceneID) + Saving.ToString();
@@ -101,10 +97,9 @@ public static class SaveLoad
         path = Path.Combine(path, file);
         if(File.Exists(path))
         {
-            System.Reflection.MethodInfo mif = typeof(JsonUtility).GetMethod("FromJson", new Type[] { typeof(string) }).MakeGenericMethod(SceneTypes[Saving]);
-            return (SceneDataBaseClass)mif.Invoke(null, new object[] { File.ReadAllText(path) });
+            SaveManager.manager.LoadAll(path);
+            SaveManager.manager.ResetAll();
         }
-        return null;
     }
 
     //Get the number of savings

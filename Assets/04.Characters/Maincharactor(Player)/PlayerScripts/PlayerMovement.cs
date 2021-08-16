@@ -192,7 +192,6 @@ public class PlayerMovement : MonoBehaviour
         States[(int)PlayerManager.StateCode.Action_port_idle] = PortIdleState;
         States[(int)PlayerManager.StateCode.Action_port_walk] = PortWalkState;
         States[(int)PlayerManager.StateCode.None] = (bool a) => { };
-        States[(int)PlayerManager.StateCode.Stop] = (bool a) => { };
 
     }
     
@@ -1713,7 +1712,7 @@ public class PlayerMovement : MonoBehaviour
         _isJumpAble = jumpAble;
     }
 
-    void LeaveAllState()
+    public void LeaveAllState()
     {
         LeaveClimbState();
         LeavePortState();
@@ -1846,5 +1845,17 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-
+    public static void Continue(bool value)
+    {
+        if(value)
+        {
+            Time.timeScale = 1;
+            instance.portrait.SetPhysicEnabled(true);
+        }
+        else
+        {
+            Time.timeScale = 0;
+            instance.portrait.SetPhysicEnabled(false);
+        }
+    }
 }

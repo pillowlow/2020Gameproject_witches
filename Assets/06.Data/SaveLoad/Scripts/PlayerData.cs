@@ -1,5 +1,6 @@
 ﻿public class PlayerData
 {
+    [System.Serializable]
     public enum SceneID
     {
         scene_01_01,

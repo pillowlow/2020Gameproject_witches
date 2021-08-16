@@ -6,6 +6,7 @@ public class InputManager
 {
     private readonly InputConfig inputConfig;
     KeyCode[] Keys;
+    public bool enable = true;
     float LastRightTap = -1;
     float LastLeftTap = -1;
     public InputManager()
@@ -19,17 +20,17 @@ public class InputManager
     }
     public bool GetKey(InputAction action)
     {
-        return Input.GetKey(Keys[(int)action]);
+        return Input.GetKey(Keys[(int)action]) && enable;
     }
 
     public bool GetKeyDown(InputAction action)
     {
-        return Input.GetKeyDown(Keys[(int)action]);
+        return Input.GetKeyDown(Keys[(int)action]) && enable;
     }
 
     public bool GetKeyUp(InputAction action)
     {
-        return Input.GetKeyUp(Keys[(int)action]);
+        return Input.GetKeyUp(Keys[(int)action]) && enable;
     }
 
     public void BindKey(InputAction action, KeyCode key)
@@ -52,12 +53,12 @@ public class InputManager
 
     public float GetHorizonInput()
     {
-        return Input.GetKey(Keys[(int)InputAction.Right]) ? 1 : (Input.GetKey(Keys[(int)InputAction.Left]) ? -1 : 0);
+        return Input.GetKey(Keys[(int)InputAction.Right]) && enable ? 1 : (Input.GetKey(Keys[(int)InputAction.Left]) && enable ? -1 : 0);
     }
 
     public float GetVerticalInput()
     {
-        return Input.GetKey(Keys[(int)InputAction.Up]) ? 1 : (Input.GetKey(Keys[(int)InputAction.Down]) ? -1 : 0);
+        return Input.GetKey(Keys[(int)InputAction.Up]) && enable ? 1 : (Input.GetKey(Keys[(int)InputAction.Down]) && enable ? -1 : 0);
     }
 
     public void SaveSetting()
@@ -95,7 +96,7 @@ public class InputManager
 
     public bool DoubleTapRight()
     {
-        if(GetKeyDown(InputAction.Right))
+        if(GetKeyDown(InputAction.Right) && enable)
         {
             float time = Time.time;
             bool result = time - LastRightTap < 1f;
@@ -107,7 +108,7 @@ public class InputManager
 
     public bool DoubleTapLeft()
     {
-        if (GetKeyDown(InputAction.Left))
+        if (GetKeyDown(InputAction.Left) && enable)
         {
             float time = Time.time;
             bool result = time - LastLeftTap < 1f;
@@ -118,7 +119,7 @@ public class InputManager
     }
     public bool Investigate(Collider2D target_collider)
     {
-        if(Input.GetKey(KeyCode.Mouse0))
+        if(Input.GetKey(KeyCode.Mouse0) && enable)
         {
             Vector2 mouse = CameraController.ScreenToWorldPoint(Input.mousePosition);
             if (target_collider == null) { return true; }
