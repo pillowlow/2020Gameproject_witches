@@ -7,7 +7,7 @@ public class Trap : MonoBehaviour
     Animator animator;
     Rigidbody2D rigidbody2D;
     [SerializeField] ParticleSystem particleSystem;
-    [SerializeField] int hight;
+    [SerializeField] int hight = 200;
     bool used; //save
     void Start()
     {
@@ -17,6 +17,12 @@ public class Trap : MonoBehaviour
     void OnTriggerEnter2D(Collider2D Player)
     {
         if(Player.gameObject.layer != 12 || used) { return; }
+        PlayerMovement playerMovement = Player.gameObject.GetComponent<PlayerMovement>();
+        if(playerMovement != null)
+        {
+            playerMovement.Killed();
+            Debug.Log(1);
+        }
         animator.SetTrigger("Trigger");
         rigidbody2D.AddForce(Vector2.up * hight);
         used = true;
