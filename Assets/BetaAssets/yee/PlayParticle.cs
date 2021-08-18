@@ -5,6 +5,7 @@ using UnityEngine;
 public class PlayParticle : MonoBehaviour
 {
     [SerializeField] List<ParticleSystem> Particles;
+
     void OnTriggerEnter2D(Collider2D Player)
     {
         if(Player.gameObject.layer != 12) { return; }
