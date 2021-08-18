@@ -21,7 +21,6 @@ public class Trap : MonoBehaviour
         if(playerMovement != null)
         {
             playerMovement.Killed();
-            Debug.Log(1);
         }
         animator.SetTrigger("Trigger");
         rigidbody2D.AddForce(Vector2.up * hight);
