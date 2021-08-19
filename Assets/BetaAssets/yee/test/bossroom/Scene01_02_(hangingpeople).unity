@@ -98,7 +98,7 @@ LightmapSettings:
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
   m_LightingDataAsset: {fileID: 0}
-  m_UseShadowmask: 0
+  m_UseShadowmask: 1
 --- !u!196 &4
 NavMeshSettings:
   serializedVersion: 2
@@ -12743,6 +12743,11 @@ PrefabInstance:
       propertyPath: m_RootOrder
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: 4222092738353356110, guid: 47d8d12440c83b046b8aa15b7a25a3a1,
+        type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 47d8d12440c83b046b8aa15b7a25a3a1, type: 3}
 --- !u!1 &345532204
@@ -13076,7 +13081,7 @@ GameObject:
   - component: {fileID: 658342384}
   - component: {fileID: 658342383}
   - component: {fileID: 658342382}
-  m_Layer: 10
+  m_Layer: 0
   m_Name: OilLamp
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -13655,7 +13660,7 @@ GameObject:
   - component: {fileID: 1621196706}
   - component: {fileID: 1621196705}
   - component: {fileID: 1621196704}
-  m_Layer: 10
+  m_Layer: 0
   m_Name: OilLamp (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -13876,7 +13881,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!212 &1779378227
 SpriteRenderer:
   m_ObjectHideFlags: 0
