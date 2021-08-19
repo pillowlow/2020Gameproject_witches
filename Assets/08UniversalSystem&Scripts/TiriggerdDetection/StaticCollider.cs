@@ -31,33 +31,60 @@ public class StaticCollider : MonoBehaviour
             {
                 if (PlayerManager.instance.input.GetKeyDown(InputAction.Down))
                 {
-                    StartCoroutine(nameof(FallDownPlatform));
+                    m_collider.isTrigger = true;
+                    isNotDropping = false;
+                    PlayerMovement.instance.rig.gravityScale += AdditionalGravity;
                 }
             }
             else
             {
-                notFading = false;
-                if (currentAlpha > Opaque)
-                {
-                    currentAlpha = (currentAlpha >= Opaque) ? (currentAlpha - FadingSpeed * Time.deltaTime) : Opaque;
-                    spriteRenderer.color = new Color(spriteRenderer.color.r, spriteRenderer.color.g, spriteRenderer.color.b, currentAlpha);
-                }
+                Stay();
             }
         }
     }
+    private void OnTriggerStay2D(Collider2D collision)
+    {
+        if ((((1 << collision.gameObject.layer) & PlayerManager.instance.layer) != 0))
+        {
+            Stay();
+        }    
+    }
+    private void Stay()
+    {
+        notFading = false;
+        if (currentAlpha > Opaque)
+        {
+            currentAlpha = (currentAlpha >= Opaque) ? (currentAlpha - FadingSpeed * Time.deltaTime) : Opaque;
+            spriteRenderer.color = new Color(spriteRenderer.color.r, spriteRenderer.color.g, spriteRenderer.color.b, currentAlpha);
+        }
+    }
 
+    private void OnTriggerExit2D(Collider2D collision)
+    {
+        if ((((1 << collision.gameObject.layer) & PlayerManager.instance.layer) != 0))
+        {
+            Exit();
+        }
+    }
     private void OnCollisionExit2D(Collision2D collision)
     {
         if ((((1 << collision.gameObject.layer) & PlayerManager.instance.layer) != 0))
         {
-            notFading = true;
-            if(notFadingIn)
-            {
-                StartCoroutine(nameof(FadeIn));
-            }
+            Exit();
         }
     }
 
+    private void Exit()
+    {
+        notFading = true;
+        if (notFadingIn)
+        {
+            StartCoroutine(nameof(FadeIn));
+        }
+        m_collider.isTrigger = false;
+        PlayerMovement.instance.rig.gravityScale = 1;
+        isNotDropping = true;
+    }
 
     IEnumerator FadeIn()
     {
@@ -69,16 +96,5 @@ public class StaticCollider : MonoBehaviour
             yield return new WaitForEndOfFrame();
         }
         notFadingIn = true;
-    }
-
-    IEnumerator FallDownPlatform()
-    {
-        m_collider.enabled = false;
-        isNotDropping = false;
-        PlayerMovement.instance.rig.gravityScale += AdditionalGravity;
-        yield return new WaitForSeconds(ColliderInvalidTime);
-        m_collider.enabled = true;
-        PlayerMovement.instance.rig.gravityScale -= AdditionalGravity;
-        isNotDropping = true;
     }
 }

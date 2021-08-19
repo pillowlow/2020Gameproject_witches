@@ -25,6 +25,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float WalkTimeToRun = 1;
     private float WalkingTime = 0;
     [SerializeField] private GameObject RunHint;
+    [SerializeField] private TMPro.TextMeshPro RunHintText;
    
 
     [Header("Jump")]
@@ -1308,7 +1309,13 @@ public class PlayerMovement : MonoBehaviour
 
     void DieState(bool transition)
     {
-        if (transition) { PlayerManager.state = PlayerManager.StateCode.Die; setIsFirstFrame(true); return; }
+        if (transition) 
+        {
+            PlayerManager.state = PlayerManager.StateCode.Die;
+            setIsFirstFrame(true);
+            PlayerManager.instance.CanWalkOnStairs = false;
+            PlayerManager.instance.isFreeToDoAction = false;
+            return; }
 
         if (Input.GetKeyDown(KeyCode.R))
         {
@@ -1322,8 +1329,6 @@ public class PlayerMovement : MonoBehaviour
             isFirstFrame = false;
             OnDie?.Invoke();
             portrait.CrossFade(Animation_Die);
-            PlayerManager.instance.isFreeToDoAction = false;
-            PlayerManager.instance.CanWalkOnStairs = false;
             DissolveValue = 0;
         }
         else if (DissolveValue != 1 && portrait.IsPlaying(Animation_Die))
@@ -1750,6 +1755,16 @@ public class PlayerMovement : MonoBehaviour
             if (!isSprinting)
             {
                 RunHint.SetActive(true);
+                if(orient)
+                {
+                    RunHint.transform.localScale = new Vector3(-Mathf.Abs(RunHint.transform.localScale.x), RunHint.transform.localScale.y, RunHint.transform.localScale.z);
+                    RunHintText.text = input.GetKeyCode(InputAction.Right).ToString();
+                }
+                else
+                {
+                    RunHint.transform.localScale = new Vector3(Mathf.Abs(RunHint.transform.localScale.x), RunHint.transform.localScale.y, RunHint.transform.localScale.z);
+                    RunHintText.text = input.GetKeyCode(InputAction.Left).ToString();
+                }
             }
             else
             {
