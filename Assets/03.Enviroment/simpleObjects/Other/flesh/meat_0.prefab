@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 7361226641736990596}
   - component: {fileID: 7361226641736990597}
   - component: {fileID: 7361226641736990598}
-  m_Layer: 0
+  m_Layer: 16
   m_Name: bone_9
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -83,7 +83,7 @@ GameObject:
   - component: {fileID: 7361226641854201310}
   - component: {fileID: 7361226641854201309}
   - component: {fileID: 7361226641854201308}
-  m_Layer: 0
+  m_Layer: 16
   m_Name: bone_5
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -215,7 +215,7 @@ GameObject:
   - component: {fileID: 7361226642421228673}
   - component: {fileID: 7361226642421228672}
   - component: {fileID: 7361226642421228703}
-  m_Layer: 0
+  m_Layer: 16
   m_Name: bone_2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -347,7 +347,7 @@ GameObject:
   - component: {fileID: 7361226642647195221}
   - component: {fileID: 7361226642647195220}
   - component: {fileID: 7361226642647195219}
-  m_Layer: 0
+  m_Layer: 16
   m_Name: bone_1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -479,7 +479,7 @@ GameObject:
   - component: {fileID: 7361226642708378499}
   - component: {fileID: 7361226642708378498}
   - component: {fileID: 7361226642708378497}
-  m_Layer: 0
+  m_Layer: 16
   m_Name: bone_4
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -611,7 +611,7 @@ GameObject:
   - component: {fileID: 7361226642856466631}
   - component: {fileID: 7361226642856466630}
   - component: {fileID: 7361226642856466629}
-  m_Layer: 0
+  m_Layer: 16
   m_Name: bone_3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -743,7 +743,7 @@ GameObject:
   - component: {fileID: 7361226642937062841}
   - component: {fileID: 7361226642937062840}
   - component: {fileID: 7361226642937062839}
-  m_Layer: 0
+  m_Layer: 16
   m_Name: bone_8
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -875,7 +875,7 @@ GameObject:
   - component: {fileID: 7361226642938725374}
   - component: {fileID: 7361226642938725373}
   - component: {fileID: 7361226642938725372}
-  m_Layer: 0
+  m_Layer: 16
   m_Name: bone_6
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1004,7 +1004,9 @@ GameObject:
   - component: {fileID: 7361226642967469724}
   - component: {fileID: 7361226642967469723}
   - component: {fileID: 7361226642967469722}
-  m_Layer: 10
+  - component: {fileID: 8711542946356051762}
+  - component: {fileID: 41044111227373638}
+  m_Layer: 19
   m_Name: meat_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1109,10 +1111,41 @@ MonoBehaviour:
   - {fileID: 7361226642937062838}
   - {fileID: 7361226641736990596}
   m_Bounds:
-    m_Center: {x: -0.003478825, y: -0.0018199086, z: 0}
-    m_Extent: {x: 0.7184788, y: 0.45817992, z: 0}
+    m_Center: {x: -0.003478825, y: -0.0018199384, z: 0}
+    m_Extent: {x: 0.7184788, y: 0.4581799, z: 0}
   m_UseBatching: 1
   m_AlwaysUpdate: 1
+--- !u!58 &8711542946356051762
+CircleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7361226642967469721}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0.09, y: -0.0018199384}
+  serializedVersion: 2
+  m_Radius: 0.57
+--- !u!114 &41044111227373638
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7361226642967469721}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a408b35f802901f4f9df92012721bb85, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Opaque: 0.5
+  FadingSpeed: 1
+  Sprites: {fileID: 7361226642967469723}
 --- !u!1 &7361226643516448054
 GameObject:
   m_ObjectHideFlags: 0
@@ -1127,7 +1160,7 @@ GameObject:
   - component: {fileID: 7361226643516448058}
   - component: {fileID: 7361226643516448057}
   - component: {fileID: 7361226643516448056}
-  m_Layer: 0
+  m_Layer: 16
   m_Name: bone_7
   m_TagString: Untagged
   m_Icon: {fileID: 0}

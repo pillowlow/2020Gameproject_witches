@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 1554684368192167176}
   - component: {fileID: 1554684368192167177}
   - component: {fileID: 1554684368192167182}
-  m_Layer: 0
+  m_Layer: 16
   m_Name: bone_3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -144,7 +144,7 @@ GameObject:
   - component: {fileID: 1554684368206287920}
   - component: {fileID: 1554684368206287921}
   - component: {fileID: 1554684368206287926}
-  m_Layer: 0
+  m_Layer: 16
   m_Name: bone_7
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -240,7 +240,7 @@ GameObject:
   - component: {fileID: 1554684368243476820}
   - component: {fileID: 1554684368243476821}
   - component: {fileID: 1554684368243476826}
-  m_Layer: 0
+  m_Layer: 16
   m_Name: bone_2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -369,7 +369,9 @@ GameObject:
   - component: {fileID: 1554684368388584698}
   - component: {fileID: 1554684368388584699}
   - component: {fileID: 1554684368388584696}
-  m_Layer: 10
+  - component: {fileID: 7252831799087994391}
+  - component: {fileID: 5060614805355277453}
+  m_Layer: 19
   m_Name: meat_3 (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -476,6 +478,37 @@ MonoBehaviour:
     m_Extent: {x: 0.34670985, y: 0.42984498, z: 0}
   m_UseBatching: 1
   m_AlwaysUpdate: 1
+--- !u!58 &7252831799087994391
+CircleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1554684368388584697}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0.00055995584, y: -0.00015503168}
+  serializedVersion: 2
+  m_Radius: 0.42984498
+--- !u!114 &5060614805355277453
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1554684368388584697}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a408b35f802901f4f9df92012721bb85, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Opaque: 0.5
+  FadingSpeed: 1
+  Sprites: {fileID: 1554684368388584699}
 --- !u!1 &1554684368440215525
 GameObject:
   m_ObjectHideFlags: 0
@@ -487,7 +520,7 @@ GameObject:
   - component: {fileID: 1554684368440215524}
   - component: {fileID: 1554684368440215520}
   - component: {fileID: 1554684368440215521}
-  m_Layer: 0
+  m_Layer: 16
   m_Name: bone_8
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -563,7 +596,7 @@ GameObject:
   - component: {fileID: 1554684368817502270}
   - component: {fileID: 1554684368817502271}
   - component: {fileID: 1554684368817502268}
-  m_Layer: 0
+  m_Layer: 16
   m_Name: bone_6
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -695,7 +728,7 @@ GameObject:
   - component: {fileID: 1554684368989226269}
   - component: {fileID: 1554684368989226338}
   - component: {fileID: 1554684368989226339}
-  m_Layer: 0
+  m_Layer: 16
   m_Name: bone_4
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -827,7 +860,7 @@ GameObject:
   - component: {fileID: 1554684369257657240}
   - component: {fileID: 1554684369257657241}
   - component: {fileID: 1554684369257657246}
-  m_Layer: 0
+  m_Layer: 16
   m_Name: bone_5
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -959,7 +992,7 @@ GameObject:
   - component: {fileID: 1554684369582505642}
   - component: {fileID: 1554684369582505643}
   - component: {fileID: 1554684369582505640}
-  m_Layer: 0
+  m_Layer: 16
   m_Name: bone_1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
