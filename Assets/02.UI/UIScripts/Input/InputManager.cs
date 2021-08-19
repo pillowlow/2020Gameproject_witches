@@ -117,6 +117,7 @@ public class InputManager
         }
         return false;
     }
+
     public bool Investigate(Collider2D target_collider)
     {
         if(Input.GetKey(KeyCode.Mouse0) && enable)
@@ -126,5 +127,10 @@ public class InputManager
             return target_collider.OverlapPoint(mouse);
         }
         return false;
+    }
+
+    public KeyCode GetKeyCode(InputAction action)
+    {
+        return Keys[(int)action];
     }
 }
