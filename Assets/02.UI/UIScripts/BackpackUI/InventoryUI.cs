@@ -24,8 +24,9 @@ public class InventoryUI : MonoBehaviour
     private bool IsOpen = false;
     int Focusx = 0;
     int FocusY = 0;
-    
-    
+    [SerializeField]
+    TMP_InputField SearchBar;
+
     public void Awake()
     {
         foreach (Transform child in ItemPage.transform)
@@ -39,11 +40,12 @@ public class InventoryUI : MonoBehaviour
         UpdateInventory();
     }
 
-    private void UpdateInventory()
+    private void UpdateInventory(LinkedList<Item> DisplayItems = null)
     {
+        if(DisplayItems == null) DisplayItems = Inventory.GetItemList(CurrentType);
         ClearInventory();
         int i = 0;
-        foreach (Item item in Inventory.GetItemList(CurrentType))
+        foreach (Item item in DisplayItems)
         {
             GameObject icon = ItemIcons[i];
             icon.SetActive(true);
@@ -106,6 +108,10 @@ public class InventoryUI : MonoBehaviour
         }
     }
     
-    
+    public void SearchItems()
+    {
+        ClearInventory();
+        UpdateInventory(Inventory.SearchItems(SearchBar.text));
+    }
 
 }
