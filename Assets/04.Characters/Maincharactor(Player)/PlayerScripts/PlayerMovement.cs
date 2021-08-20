@@ -1860,7 +1860,7 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    public static void Continue(bool value)
+    public static void SetContinue(bool value)
     {
         if(value)
         {

@@ -45,13 +45,13 @@ public class BackpackUIManager : MonoBehaviour
         {
             if (!_isOpened)
             {
-                PlayerManager.SetState(PlayerManager.StateCode.Stop);
+                PlayerMovement.SetContinue(false);
                 _isOpened = true;
                 UI[_page].SetActive(true);
             }
             else
             {
-                PlayerManager.SetState(PlayerManager.StateCode.Idle);
+                PlayerMovement.SetContinue(true);
                 _isOpened = false;
                 UI[_page].SetActive(false);
             }
@@ -62,12 +62,12 @@ public class BackpackUIManager : MonoBehaviour
     {
         if (open && !_isOpened)
         {
-            PlayerManager.SetState(PlayerManager.StateCode.Stop);
+            PlayerMovement.SetContinue(false);
             _isOpened = true;
             UI[_page].SetActive(true);
         }else if (!open && _isOpened)
         {
-            PlayerManager.SetState(PlayerManager.StateCode.Idle);
+            PlayerMovement.SetContinue(true);
             _isOpened = false;
             UI[_page].SetActive(false);
         }

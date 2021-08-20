@@ -109,9 +109,8 @@ public class InventoryUI : MonoBehaviour
     }
     
     public void SearchItems()
-    {
-        ClearInventory();
-        UpdateInventory(Inventory.SearchItems(SearchBar.text));
+    {   
+        if(SearchBar.text!="") UpdateInventory(Inventory.SearchItems(SearchBar.text));
+        else UpdateInventory();
     }
-
 }
