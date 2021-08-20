@@ -70,10 +70,19 @@ public static class Inventory
         return Items[(int)p];
     }
 
-    public static List<Item> SearchItems()
+    public static LinkedList<Item> SearchItems(string name)
     {
-
-        return null;
+        LinkedList<Item> SearchedItems = new LinkedList<Item>();
+        foreach (LinkedList<Item> list in Items)
+        {
+            foreach (Item item in list)
+            {             
+                if(item.GetName().Contains(name))
+                { 
+                    SearchedItems.AddLast(item);
+                }
+            }
+        }  
+        return SearchedItems;
     }
-        
 }

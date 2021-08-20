@@ -5,14 +5,14 @@ using UnityEngine;
 public class Trap : MonoBehaviour
 {
     Animator animator;
-    Rigidbody2D rigidbody2D;
-    [SerializeField] ParticleSystem particleSystem;
+    Rigidbody2D rig2D;
+    [SerializeField] ParticleSystem particle;
     [SerializeField] int hight = 200;
     bool used; //save
     void Start()
     {
         animator = GetComponent<Animator>();
-        rigidbody2D = transform.parent.GetComponent<Rigidbody2D>();
+        rig2D = transform.parent.GetComponent<Rigidbody2D>();
     }
     void OnTriggerEnter2D(Collider2D Player)
     {
@@ -23,11 +23,11 @@ public class Trap : MonoBehaviour
             playerMovement.Killed();
         }
         animator.SetTrigger("Trigger");
-        rigidbody2D.AddForce(Vector2.up * hight);
+        rig2D.AddForce(Vector2.up * hight);
         used = true;
     }
     public void TriggerParticle() //animation event
     {
-        particleSystem.Play(); 
+        particle.Play(); 
     }
 }

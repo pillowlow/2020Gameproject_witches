@@ -18,6 +18,12 @@ public class InputManager
         Keys = inputConfig.ToKeys();
         SaveSetting();
     }
+
+    public void StopInput(bool b)
+    {
+        enable = !b;
+    }
+    
     public bool GetKey(InputAction action)
     {
         return Input.GetKey(Keys[(int)action]) && enable;

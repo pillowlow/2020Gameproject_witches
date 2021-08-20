@@ -29,7 +29,7 @@ namespace CustomEventNamespace
         {
             if(coll.CompareTag("Player")&&!string.IsNullOrEmpty(_showText))
             {
-                PlayerManager.state = PlayerManager.StateCode.Stop;
+                PlayerMovement.SetContinue(false);
                 _camera.enabled = true;
                 Invoke(nameof(ShowDialog), 2.0f);
                 Invoke(nameof(ResetCamera),hightLightTime);
@@ -44,20 +44,20 @@ namespace CustomEventNamespace
         {
             _camera.enabled = false;
             Dialog.Instance.HideTextArea();
-            PlayerManager.state = PlayerManager.StateCode.Idle;
+            PlayerMovement.SetContinue(true);
             Destroy(gameObject);
         }
         void ResetEventCamera()
         {
             _camera.enabled = false;
             Dialog.Instance.HideTextArea();
-            PlayerManager.state = PlayerManager.StateCode.Idle;
+            PlayerMovement.SetContinue(true);
         }
         
     
         public void StartEvent(OnInteract action)
         {
-            PlayerManager.state = PlayerManager.StateCode.Stop;
+            PlayerMovement.SetContinue(false);
             _camera.enabled = true;
             Invoke(nameof(ShowDialog), 2.0f);
             Invoke(nameof(ResetEventCamera),hightLightTime);
