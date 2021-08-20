@@ -52,8 +52,9 @@ public class OnInteract : MonoBehaviour
     public float maxEffectStrength = 0.04f;
     public bool canInteract = true;
 
+    private PlayerManager player;
+    
     //get all CustomEvents using Reflection
-
     public static String[] GetEvents()
     {
         String name = nameof(CustomEventNamespace);
@@ -62,20 +63,17 @@ public class OnInteract : MonoBehaviour
             select t.ToString();
         return clazz.Select(n=>n.Replace("CustomEventNamespace.","")).ToArray();
     }
-    
-    private void OnEnable()
-    {
-        HintObject = HintObject == null ? gameObject : HintObject;
-        shader = HintObject.GetComponent<SpriteRenderer>();
-        mat = shader.material;
-        shaderID = Shader.PropertyToID("Vector1_4C8E13CA");
-        mat.SetFloat(shaderID, 0);
-        canInteract = true;
-    }
 
     private void Start()
     {
         playerLayer = PlayerManager.instance.layer;
+        HintObject = HintObject == null ? gameObject : HintObject;
+        shader = HintObject.GetComponent<SpriteRenderer>();
+        mat = shader.material;
+        player = PlayerManager.instance;
+        shaderID = Shader.PropertyToID("Vector1_4C8E13CA");
+        mat.SetFloat(shaderID, 0);
+        canInteract = true;
     }
 
     private void OnTriggerEnter2D(Collider2D col)
@@ -92,9 +90,9 @@ public class OnInteract : MonoBehaviour
     {
         if (((1 << col.gameObject.layer) & playerLayer) != 0 && canInteract)
         {
-            if (EventsQueue.Count==0 && PlayerManager.instance.input.GetKeyDown(InputAction.Interact))
+            if (EventsQueue.Count==0 && player.input.GetKeyDown(InputAction.Interact))
             {
-                if(PlayerManager.state==PlayerManager.StateCode.Stop) return;
+                player.input.StopInput(true);
                 Hint.SetActive(false);
                 DataIndex = 0;
                 foreach (String e in EventsData.EventsList)
@@ -119,7 +117,7 @@ public class OnInteract : MonoBehaviour
     {   
         if(!EventDone || EventsQueue.Count == 0) return;
         EventDone = false;
-        PlayerManager.state = PlayerManager.StateCode.Stop;
+        player.input.StopInput(true);
         Type t = Type.GetType("CustomEventNamespace." + EventsQueue.Peek());
         ICustomEvent _event =(ICustomEvent)Activator.CreateInstance(t,EventsData.Data[DataIndex]);
         _event.StartEvent(this);
@@ -128,7 +126,7 @@ public class OnInteract : MonoBehaviour
     public void SetEventDone(bool success)
     {
         EventDone = true;
-        PlayerManager.state = PlayerManager.StateCode.Idle;
+        player.input.StopInput(false);
         if (success)
         {
             EventsQueue.Dequeue();

@@ -34,7 +34,7 @@ public class PlayerManager:MonoBehaviour
     {
         Idle, Walk, Run, Brake, Crawl, Attack, Float, Jump, Fall, Climb, Stumble,
         Action_pick, Action_move_object, Action_port_idle, Action_port_walk, Swim, Swing,
-        Die,Reborn, Stop, None
+        Die,Reborn, None
     };
     public static bool isTaking = false;
     public static bool onGround = false;
