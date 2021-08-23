@@ -9,32 +9,44 @@ public class exclamation : MonoBehaviour
     [SerializeField] string Message;
     [SerializeField] GameObject Sprite;
     [SerializeField] string item_id;
-    bool StayIn = false;
     bool Picked = false; //save
+    Collider2D collider2D;
 
+    void Start()
+    {
+        collider2D = GetComponent<Collider2D>();
+        if(collider2D == null) Debug.Log(1);
+        Debug.Log(1);
+    }
     void OnTriggerEnter2D(Collider2D Player)
     {
         if(Player.gameObject.layer != 12 || Picked) { return; }
-        StayIn = true;
         Sprite.SetActive(true);
     }
     void OnTriggerExit2D(Collider2D Player)
     {
         if(Player.gameObject.layer != 12) { return; }
-        StayIn = false;
         Sprite.SetActive(false);
     }
-    public void OnMouseDown()
+    void OnTriggerStay2D(Collider2D Player)
     {
-        if(!StayIn) { return; }
+        if(Player.gameObject.layer != 12 || Picked) { return; }
+        if(PlayerManager.instance.input.Investigate(collider2D))
+        {
+            Click();
+        }
+    }
+
+    public void Click()
+    {
         CheckMessage.SetActive(true);
         MessageText.text = Message;
     }
+
     public void CheckPick()
     {
         Inventory.AddItem(Item.GetItemById(item_id));
         Picked = true;
-        StayIn = false;
         Sprite.SetActive(false);
         CheckMessage.SetActive(false);
     }
