@@ -21,6 +21,14 @@ public class CharacterStepBackward : MonoBehaviour
                 {
                     Character.velocity = new Vector2(0, 0.1965f);
                 }
+                else
+                {
+                    float dir = transform.position.x - PlayerManager.instance.player.transform.position.x;
+                    if ((dir > 0 && input > 0) || (dir < 0 && input < 0))
+                    {
+                        PlayerMovement.instance.rig.velocity = new Vector2(dir, 0);
+                    }
+                }
                 //use 1st bit : 0b1
                 PlayerManager.instance.ableToSprint &= 0b11111110;
             }

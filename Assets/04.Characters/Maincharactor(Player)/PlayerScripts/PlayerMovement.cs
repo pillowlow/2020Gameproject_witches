@@ -4,7 +4,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using AnyPortrait;
 using UnityEditor;
-
+/// <summary>
+/// Handles movements and animations state machine of the main character.
+/// </summary>
+/// <remarks>Uses singleton</remarks>
 public class PlayerMovement : MonoBehaviour
 {
     public enum EventType
@@ -65,9 +68,16 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Vector2 Stumble_Force;
     private apPortrait portrait;
     public static PlayerMovement instance;
-    public bool orient { get; private set; } = false;                        //True means the player is facing right.False means the player is facing left.
+    /// <value>bool <c>orient</c>:<br></br>
+    /// True means the player is facing right.
+    /// False means the player is facing left.
+    /// </value>
+    public bool orient { get; private set; } = false;
 
     public bool isSprinting { get; private set; } = false;
+    /// <value>Rigidbody2D <c>rig</c>:<br></br>
+    /// The reference of the main character's rigidbody2D.
+    /// </value>
     public Rigidbody2D rig { get; private set; }
     private CapsuleCollider2D m_collider;
     private float capsuleRadius;
@@ -78,11 +88,11 @@ public class PlayerMovement : MonoBehaviour
     WaitForEndOfFrame waitForEndOfFrame = new WaitForEndOfFrame();
     List<Action<bool>> States;
     #region EventAction
-    [HideInInspector] public event Action OnRunning;
-    [HideInInspector] public event Action OnJump;
-    [HideInInspector] public event Action OnLanding;
-    [HideInInspector] public event Action OnDie;
-    [HideInInspector] public event Action OnStumble;
+    private event Action OnRunning;
+    private event Action OnJump;
+    private event Action OnLanding;
+    private event Action OnDie;
+    private event Action OnStumble;
     #endregion
 
     #region Animation_String
@@ -148,7 +158,10 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
-        Movement();
+        if(isContinue)
+        {
+            Movement();
+        }
     }
 
     /*
@@ -249,6 +262,12 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Smoothly slow down based on physics.
+    /// </summary>
+    /// <param name="force">The force to slow down.</param>
+    /// <returns>Returns true when the x component of the main character speed reaches 0,
+    ///  otherwise returns false.</returns>
     public bool SlowDown(float force)
     {
         if (Mathf.Abs(rig.velocity.x) > 0.1f)
@@ -376,6 +395,10 @@ public class PlayerMovement : MonoBehaviour
                 }
             }
             yield return waitForEndOfFrame;
+        }
+        if (Pickable.held != null)
+        {
+            Pickable.held.Throw(Vector2.zero);
         }
         IdleState(true);
     }
@@ -839,7 +862,12 @@ public class PlayerMovement : MonoBehaviour
         }
         /*------------End of State Transitions------------*/
     }
-
+    /// <summary>
+    /// Transits to climb state.
+    /// </summary>
+    /// <remarks>
+    /// Do not call it outside Climbable.cs.
+    /// </remarks>
     public void Climb()
     {
         ClimbState(true);
@@ -1299,7 +1327,9 @@ public class PlayerMovement : MonoBehaviour
         ClimbJoint.enabled = false;
         FallState(true);
     }
-
+    /// <summary>
+    /// Kill the main character.
+    /// </summary>
     public void Killed()
     {
         LeaveAllState();
@@ -1716,7 +1746,9 @@ public class PlayerMovement : MonoBehaviour
     {
         _isJumpAble = jumpAble;
     }
-
+    /// <summary>
+    /// Leave the current state and detach anything was attached to the main character.
+    /// </summary>
     public void LeaveAllState()
     {
         LeaveClimbState();
@@ -1806,8 +1838,13 @@ public class PlayerMovement : MonoBehaviour
     void setIsFirstFrame(bool value)
     {
         isFirstFrame = value;
+        Debug.Log(PlayerManager.state.ToString());
     }
 
+    /// <summary>
+    /// Update PlayerMovement while the player is walking on stairs.
+    /// </summary>
+    /// <returns>The value of horizontal input.</returns>
     public float WalkOnStaris()
     {
         float speed = input.GetHorizonInput();
@@ -1816,7 +1853,7 @@ public class PlayerMovement : MonoBehaviour
             isSprinting = false;
             isFullSpeed = false;
             WalkingTime = 0;
-            if (input.GetHorizonInput() == 0)
+            if (speed == 0)
             {
                 IdleState(true);
             }
@@ -1827,7 +1864,11 @@ public class PlayerMovement : MonoBehaviour
         }
         return speed;
     }
-
+    /// <summary>
+    /// Assign a function to an event. 
+    /// </summary>
+    /// <param name="type">The event to assign.</param>
+    /// <param name="action">The function to invoke.</param>
     public void AssignEvent(EventType type, Action action)
     {
         switch(type)
@@ -1860,16 +1901,23 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    bool isContinue = true;
+    /// <summary>
+    /// Stop or start the simulation of physics.
+    /// </summary>
+    /// <param name="value">If true, start the simulation. If false, stop the simulation.</param>
     public static void SetContinue(bool value)
     {
         if(value)
         {
             Time.timeScale = 1;
+            instance.isContinue = true;
             instance.portrait.SetPhysicEnabled(true);
         }
         else
         {
             Time.timeScale = 0;
+            instance.isContinue = false;
             instance.portrait.SetPhysicEnabled(false);
         }
     }

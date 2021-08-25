@@ -76,6 +76,10 @@ public class Pickable : MonoBehaviour
         Vector2 final_position;
         Vector3 final_rot_euler = final_rotation.eulerAngles;
         Quaternion _final_rotation = Quaternion.Euler(final_rot_euler.x, final_rot_euler.y, PlayerMovement.instance.orient ? final_rot_euler.z : -final_rot_euler.z);
+        if (PlayerMovement.instance.orient)
+        {
+            Pivot.localScale = new Vector2(1, 1);
+        }
         while (time <= offset_time)
         {
             PlayerMovement.instance.SlowDown(32);
@@ -83,14 +87,11 @@ public class Pickable : MonoBehaviour
             final_position = new Vector2((PlayerMovement.instance.orient ? offset_position.x : -offset_position.x), offset_position.y) + (Vector2)PlayerManager.instance.player.transform.position;
             Vector2 cur_pos = Vector2.Lerp(ori_pos, final_position, ratio);
             Quaternion cur_rot = Quaternion.Lerp(ori_rot, _final_rotation, ratio);
-            if(PlayerMovement.instance.orient)
-            {
-                Pivot.localScale = new Vector2(Mathf.Lerp(-1,1, ratio),1);
-            }
             Pivot.transform.SetPositionAndRotation(cur_pos, cur_rot);
             time += Time.deltaTime;
             yield return new WaitForEndOfFrame();
         }
+        
         final_position = new Vector2((PlayerMovement.instance.orient ? offset_position.x : -offset_position.x), offset_position.y) + (Vector2)PlayerManager.instance.player.transform.position;
         Pivot.transform.SetPositionAndRotation(final_position, _final_rotation);
         Pivot.transform.parent = hand;
